@@ -1,0 +1,28 @@
+[
+  {
+    "id": "section-sp",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-sp",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "sp001",
+            "elType": "widget",
+            "widgetType": "e-spacer",
+            "settings": {
+              "space": {
+                "size": 50,
+                "unit": "px"
+              }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

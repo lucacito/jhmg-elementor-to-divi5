@@ -31,8 +31,16 @@ final class ConverterFixtureTest extends TestCase {
             [ 'text' ],
             [ 'image' ],
             [ 'button' ],
+            [ 'divider' ],
+            [ 'video' ],
+            [ 'spacer' ],
+            [ 'icon' ],
+            [ 'image-box' ],
+            [ 'accordion' ],
+            [ 'tabs' ],
             [ 'simple-container' ],
             [ 'nested-container' ],
+            [ 'real-elementor' ],
         ];
     }
 

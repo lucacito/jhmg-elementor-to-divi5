@@ -1,0 +1,34 @@
+[
+  {
+    "id": "section-tb",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-tb",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "tb001",
+            "elType": "widget",
+            "widgetType": "e-tabs",
+            "settings": {
+              "tabs": [
+                {
+                  "tab_title": "First Tab",
+                  "tab_content": "<p>First tab content.</p>"
+                },
+                {
+                  "tab_title": "Second Tab",
+                  "tab_content": "<p>Second tab content.</p>"
+                }
+              ]
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

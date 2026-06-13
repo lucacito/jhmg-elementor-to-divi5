@@ -48,9 +48,32 @@ class ConverterRegistry {
         $this->register( 'container', '\\ElementorDivi5Converter\\Converter\\Handlers\\ContainerConverter' );
         $this->register( 'column', '\\ElementorDivi5Converter\\Converter\\Handlers\\ColumnConverter' );
 
+        // Real Elementor export widget type names (no prefix).
+        $this->registerWidget( 'heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
+        $this->registerWidget( 'text-editor', '\\ElementorDivi5Converter\\Converter\\Handlers\\TextEditorConverter' );
+        $this->registerWidget( 'image', '\\ElementorDivi5Converter\\Converter\\Handlers\\ImageConverter' );
+        $this->registerWidget( 'button', '\\ElementorDivi5Converter\\Converter\\Handlers\\ButtonConverter' );
+        $this->registerWidget( 'divider', '\\ElementorDivi5Converter\\Converter\\Handlers\\DividerConverter' );
+        $this->registerWidget( 'video', '\\ElementorDivi5Converter\\Converter\\Handlers\\VideoConverter' );
+        $this->registerWidget( 'spacer', '\\ElementorDivi5Converter\\Converter\\Handlers\\SpacerConverter' );
+        $this->registerWidget( 'icon', '\\ElementorDivi5Converter\\Converter\\Handlers\\IconConverter' );
+        $this->registerWidget( 'image-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\ImageBoxConverter' );
+        $this->registerWidget( 'accordion', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
+        $this->registerWidget( 'toggle', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
+        $this->registerWidget( 'tabs', '\\ElementorDivi5Converter\\Converter\\Handlers\\TabsConverter' );
+
+        // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
         $this->registerWidget( 'e-paragraph', '\\ElementorDivi5Converter\\Converter\\Handlers\\TextEditorConverter' );
         $this->registerWidget( 'e-image', '\\ElementorDivi5Converter\\Converter\\Handlers\\ImageConverter' );
         $this->registerWidget( 'e-button', '\\ElementorDivi5Converter\\Converter\\Handlers\\ButtonConverter' );
+        $this->registerWidget( 'e-divider', '\\ElementorDivi5Converter\\Converter\\Handlers\\DividerConverter' );
+        $this->registerWidget( 'e-video', '\\ElementorDivi5Converter\\Converter\\Handlers\\VideoConverter' );
+        $this->registerWidget( 'e-spacer', '\\ElementorDivi5Converter\\Converter\\Handlers\\SpacerConverter' );
+        $this->registerWidget( 'e-icon', '\\ElementorDivi5Converter\\Converter\\Handlers\\IconConverter' );
+        $this->registerWidget( 'e-image-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\ImageBoxConverter' );
+        $this->registerWidget( 'e-accordion', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
+        $this->registerWidget( 'e-toggle', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
+        $this->registerWidget( 'e-tabs', '\\ElementorDivi5Converter\\Converter\\Handlers\\TabsConverter' );
     }
 }

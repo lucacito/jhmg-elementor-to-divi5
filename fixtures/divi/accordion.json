@@ -1,0 +1,69 @@
+{
+  "divi": {
+    "elements": [
+      {
+        "id": "section-ac",
+        "name": "divi/section",
+        "settings": {},
+        "elements": [
+          {
+            "id": "section-ac-row",
+            "name": "divi/row",
+            "settings": {},
+            "elements": [
+              {
+                "id": "column-ac",
+                "name": "divi/column",
+                "settings": {},
+                "elements": [
+                  {
+                    "id": "ac001",
+                    "name": "divi/accordion",
+                    "settings": {},
+                    "elements": [
+                      {
+                        "id": "ac001-item-1",
+                        "name": "divi/accordion-item",
+                        "settings": {
+                          "title": {
+                            "innerContent": {
+                              "desktop": { "value": "Panel One" }
+                            }
+                          },
+                          "content": {
+                            "innerContent": {
+                              "desktop": { "value": "<p>Content for panel one.</p>" }
+                            }
+                          }
+                        },
+                        "elements": []
+                      },
+                      {
+                        "id": "ac001-item-2",
+                        "name": "divi/accordion-item",
+                        "settings": {
+                          "title": {
+                            "innerContent": {
+                              "desktop": { "value": "Panel Two" }
+                            }
+                          },
+                          "content": {
+                            "innerContent": {
+                              "desktop": { "value": "<p>Content for panel two.</p>" }
+                            }
+                          }
+                        },
+                        "elements": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unsupported": []
+}

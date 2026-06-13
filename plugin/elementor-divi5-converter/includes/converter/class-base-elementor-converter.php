@@ -38,39 +38,79 @@ abstract class BaseElementorConverter implements ConverterInterface {
 
         $preserved = [];
         foreach ( $value as $key => $child ) {
-            if ( in_array( $key, [ 'desktop', 'tablet', 'mobile' ], true ) && is_array( $child ) ) {
-                $preserved[ $key ] = $this->preserveResponsiveValue( $child );
-                continue;
-            }
             $preserved[ $key ] = $this->preserveResponsiveValue( $child );
         }
 
         return $preserved;
     }
 
-    protected function normalizeSettings( array $settings ): array {
-        $normalized = [];
+    /**
+     * Build row `settings` from an array of already-converted divi/column children.
+     *
+     * Reads the `module.advanced.type.desktop.value` fraction from each column
+     * and assembles the `module.advanced.columnStructure.desktop.value` string
+     * (e.g. "1_2,1_2") that Divi uses to render multi-column rows.
+     *
+     * Returns an empty array when no column has a type set (no `_column_size`).
+     */
+    protected function rowSettingsFromColumns( array $children ): array {
+        $fractions = [];
 
-        foreach ( $settings as $key => $value ) {
-            $normalized[ $key ] = $this->preserveResponsiveValue( $value );
+        foreach ( $children as $child ) {
+            if ( ( $child['name'] ?? '' ) !== 'divi/column' ) {
+                continue;
+            }
+            $fraction = $child['settings']['module']['advanced']['type']['desktop']['value'] ?? null;
+            if ( $fraction !== null ) {
+                $fractions[] = $fraction;
+            }
         }
 
-        return $normalized;
+        if ( empty( $fractions ) ) {
+            return [];
+        }
+
+        return [
+            'module' => [
+                'advanced' => [
+                    'columnStructure' => [
+                        'desktop' => [ 'value' => implode( ',', $fractions ) ],
+                    ],
+                ],
+            ],
+        ];
     }
 
-    protected function logKnownSkippedSettings( string $element_id, array $settings ): void {
-        static $known = [
-            'background_color',
-            'background_image',
-            'background_video_link',
-            'custom_padding',
-            'custom_margin',
+    /**
+     * Log every settings key that the converter did not explicitly handle.
+     *
+     * Elementor-internal bookkeeping keys (prefixed with __ or known system keys)
+     * are silently ignored since they have no conversion value.
+     *
+     * @param string   $element_id  ID of the element being converted (for context in the report).
+     * @param array    $settings    The full Elementor settings array.
+     * @param string[] $mapped_keys Keys the converter already extracted; these are not logged.
+     */
+    protected function logUnmappedSettings( string $element_id, array $settings, array $mapped_keys = [] ): void {
+        static $always_ignore = [
+            '__globals__', '__dynamic__', '_id', 'css_classes',
+            '_css_custom_property', 'widget_type',
         ];
 
-        foreach ( $known as $key ) {
-            if ( ! empty( $settings[ $key ] ) ) {
-                $this->engine->logSkippedSetting( "{$element_id}: {$key}" );
+        foreach ( $settings as $key => $value ) {
+            if ( in_array( $key, $mapped_keys, true ) ) {
+                continue;
             }
+            if ( str_starts_with( $key, '__' ) ) {
+                continue;
+            }
+            if ( in_array( $key, $always_ignore, true ) ) {
+                continue;
+            }
+            if ( $value === '' || $value === [] || $value === null ) {
+                continue;
+            }
+            $this->engine->logSkippedSetting( "{$element_id}: {$key}" );
         }
     }
 }

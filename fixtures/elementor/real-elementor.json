@@ -1,0 +1,70 @@
+[
+  {
+    "id": "real-section-1",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "real-col-1",
+        "elType": "column",
+        "settings": { "_column_size": 50 },
+        "elements": [
+          {
+            "id": "real-heading-1",
+            "elType": "widget",
+            "widgetType": "heading",
+            "settings": {
+              "title": "Real Heading",
+              "header_size": "h2",
+              "align": "left"
+            },
+            "elements": []
+          },
+          {
+            "id": "real-text-1",
+            "elType": "widget",
+            "widgetType": "text-editor",
+            "settings": {
+              "editor": "<p>Real paragraph text.</p>"
+            },
+            "elements": []
+          }
+        ]
+      },
+      {
+        "id": "real-col-2",
+        "elType": "column",
+        "settings": { "_column_size": 50 },
+        "elements": [
+          {
+            "id": "real-button-1",
+            "elType": "widget",
+            "widgetType": "button",
+            "settings": {
+              "text": "Click Here",
+              "link": {
+                "url": "https://example.com",
+                "is_external": "",
+                "nofollow": ""
+              }
+            },
+            "elements": []
+          },
+          {
+            "id": "real-image-1",
+            "elType": "widget",
+            "widgetType": "image",
+            "settings": {
+              "image": {
+                "url": "https://example.com/real.jpg",
+                "id": 789,
+                "alt": "Real image"
+              }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

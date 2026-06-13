@@ -15,19 +15,27 @@ class SectionConverter extends BaseElementorConverter {
         $children = $this->convertChildren( $element );
 
         $this->engine->logConverted( 'section' );
-        $this->logKnownSkippedSettings( $id, $settings );
+        $this->logUnmappedSettings( $id, $settings );
 
         if ( empty( $children ) ) {
             $this->engine->logWarning( "Empty section after conversion: {$id}" );
         }
 
+        // Build row columnStructure from the converted columns' type attrs.
+        $row_settings = $this->rowSettingsFromColumns( $children );
+
         return [
             'id'       => $id,
             'name'     => 'divi/section',
-            'settings' => [
-                'module' => $this->normalizeSettings( $settings ),
+            'settings' => [],
+            'elements' => [
+                [
+                    'id'       => $id . '-row',
+                    'name'     => 'divi/row',
+                    'settings' => $row_settings,
+                    'elements' => $children,
+                ],
             ],
-            'elements' => $children,
         ];
     }
 }

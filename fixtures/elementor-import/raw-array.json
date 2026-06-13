@@ -1,0 +1,23 @@
+[
+  {
+    "id": "s1",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "col-1",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "h1",
+            "elType": "widget",
+            "widgetType": "heading",
+            "settings": { "title": "Raw Array Heading", "header_size": "h2" },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

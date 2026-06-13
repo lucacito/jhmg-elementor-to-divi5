@@ -1,0 +1,126 @@
+{
+  "divi": {
+    "elements": [
+      {
+        "id": "real-section-1",
+        "name": "divi/section",
+        "settings": {},
+        "elements": [
+          {
+            "id": "real-section-1-row",
+            "name": "divi/row",
+            "settings": {
+              "module": {
+                "advanced": {
+                  "columnStructure": {
+                    "desktop": { "value": "1_2,1_2" }
+                  }
+                }
+              }
+            },
+            "elements": [
+              {
+                "id": "real-col-1",
+                "name": "divi/column",
+                "settings": {
+                  "module": {
+                    "advanced": {
+                      "type": {
+                        "desktop": { "value": "1_2" }
+                      }
+                    }
+                  }
+                },
+                "elements": [
+                  {
+                    "id": "real-heading-1",
+                    "name": "divi/text",
+                    "settings": {
+                      "content": {
+                        "innerContent": {
+                          "desktop": { "value": "<h2>Real Heading</h2>" }
+                        }
+                      },
+                      "title": {
+                        "decoration": {
+                          "font": {
+                            "font": {
+                              "desktop": { "value": { "textAlign": "left" } }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "elements": []
+                  },
+                  {
+                    "id": "real-text-1",
+                    "name": "divi/text",
+                    "settings": {
+                      "content": {
+                        "innerContent": {
+                          "desktop": { "value": "<p>Real paragraph text.</p>" }
+                        }
+                      }
+                    },
+                    "elements": []
+                  }
+                ]
+              },
+              {
+                "id": "real-col-2",
+                "name": "divi/column",
+                "settings": {
+                  "module": {
+                    "advanced": {
+                      "type": {
+                        "desktop": { "value": "1_2" }
+                      }
+                    }
+                  }
+                },
+                "elements": [
+                  {
+                    "id": "real-button-1",
+                    "name": "divi/button",
+                    "settings": {
+                      "button": {
+                        "innerContent": {
+                          "desktop": {
+                            "value": {
+                              "text": "Click Here",
+                              "linkUrl": "https://example.com"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "elements": []
+                  },
+                  {
+                    "id": "real-image-1",
+                    "name": "divi/image",
+                    "settings": {
+                      "image": {
+                        "innerContent": {
+                          "desktop": {
+                            "value": {
+                              "src": "https://example.com/real.jpg",
+                              "alt": "Real image"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "elements": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unsupported": []
+}

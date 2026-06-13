@@ -1,0 +1,30 @@
+[
+  {
+    "id": "section-ib",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-ib",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "ib001",
+            "elType": "widget",
+            "widgetType": "e-image-box",
+            "settings": {
+              "image": {
+                "url": "https://example.com/feature.jpg",
+                "alt": "Feature image"
+              },
+              "title_text": "Feature Title",
+              "description_text": "A short description of the feature."
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

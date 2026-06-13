@@ -1,0 +1,26 @@
+[
+  {
+    "id": "section-vid",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-vid",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "vid001",
+            "elType": "widget",
+            "widgetType": "e-video",
+            "settings": {
+              "video_type": "youtube",
+              "youtube_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

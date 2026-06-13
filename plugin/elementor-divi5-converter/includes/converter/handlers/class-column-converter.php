@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\StyleMapper\StyleMapper;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -14,7 +15,10 @@ class ColumnConverter extends BaseElementorConverter {
         $settings = $element['settings'] ?? [];
         $children = $this->convertChildren( $element );
 
+        $style = ( new StyleMapper() )->map( 'column', $settings );
+
         $this->engine->logConverted( 'column' );
+        $this->logUnmappedSettings( $id, $settings, $style['handled_keys'] );
 
         if ( empty( $children ) ) {
             $this->engine->logWarning( "Empty column after conversion: {$id}" );
@@ -23,9 +27,7 @@ class ColumnConverter extends BaseElementorConverter {
         return [
             'id'       => $id,
             'name'     => 'divi/column',
-            'settings' => [
-                'module' => $this->normalizeSettings( $settings ),
-            ],
+            'settings' => $style['divi_attrs'],
             'elements' => $children,
         ];
     }

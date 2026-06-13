@@ -2,27 +2,29 @@
   "divi": {
     "elements": [
       {
-        "id": "section-1",
+        "id": "section-sp",
         "name": "divi/section",
         "settings": {},
         "elements": [
           {
-            "id": "section-1-row",
+            "id": "section-sp-row",
             "name": "divi/row",
             "settings": {},
             "elements": [
               {
-                "id": "column-1",
+                "id": "column-sp",
                 "name": "divi/column",
                 "settings": {},
                 "elements": [
                   {
-                    "id": "text-1",
-                    "name": "divi/text",
+                    "id": "sp001",
+                    "name": "divi/code",
                     "settings": {
                       "content": {
                         "innerContent": {
-                          "desktop": { "value": "This is sample paragraph text." }
+                          "desktop": {
+                            "value": "<div style=\"height:50px\"></div>"
+                          }
                         }
                       }
                     },

@@ -2,27 +2,31 @@
   "divi": {
     "elements": [
       {
-        "id": "section-1",
+        "id": "section-vid",
         "name": "divi/section",
         "settings": {},
         "elements": [
           {
-            "id": "section-1-row",
+            "id": "section-vid-row",
             "name": "divi/row",
             "settings": {},
             "elements": [
               {
-                "id": "column-1",
+                "id": "column-vid",
                 "name": "divi/column",
                 "settings": {},
                 "elements": [
                   {
-                    "id": "text-1",
-                    "name": "divi/text",
+                    "id": "vid001",
+                    "name": "divi/video",
                     "settings": {
-                      "content": {
+                      "video": {
                         "innerContent": {
-                          "desktop": { "value": "This is sample paragraph text." }
+                          "desktop": {
+                            "value": {
+                              "src": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                            }
+                          }
                         }
                       }
                     },

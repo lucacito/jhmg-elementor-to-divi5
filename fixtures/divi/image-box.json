@@ -2,32 +2,42 @@
   "divi": {
     "elements": [
       {
-        "id": "section-1",
+        "id": "section-ib",
         "name": "divi/section",
         "settings": {},
         "elements": [
           {
-            "id": "section-1-row",
+            "id": "section-ib-row",
             "name": "divi/row",
             "settings": {},
             "elements": [
               {
-                "id": "column-1",
+                "id": "column-ib",
                 "name": "divi/column",
                 "settings": {},
                 "elements": [
                   {
-                    "id": "button-1",
-                    "name": "divi/button",
+                    "id": "ib001",
+                    "name": "divi/blurb",
                     "settings": {
-                      "button": {
+                      "imageIcon": {
                         "innerContent": {
                           "desktop": {
                             "value": {
-                              "text": "Click Here",
-                              "linkUrl": "https://example.com"
+                              "src": "https://example.com/feature.jpg",
+                              "alt": "Feature image"
                             }
                           }
+                        }
+                      },
+                      "title": {
+                        "innerContent": {
+                          "desktop": { "value": "Feature Title" }
+                        }
+                      },
+                      "content": {
+                        "innerContent": {
+                          "desktop": { "value": "A short description of the feature." }
                         }
                       }
                     },

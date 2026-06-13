@@ -15,7 +15,7 @@ class ContainerConverter extends BaseElementorConverter {
         $children = $this->convertChildren( $element );
 
         $this->engine->logConverted( 'section' );
-        $this->logKnownSkippedSettings( $id, $settings );
+        $this->logUnmappedSettings( $id, $settings );
 
         // If every converted child is already a divi/column, place them directly in
         // the row. Otherwise wrap everything in one auto-generated column so that
@@ -30,10 +30,12 @@ class ContainerConverter extends BaseElementorConverter {
             [
                 'id'       => $id . '-col',
                 'name'     => 'divi/column',
-                'settings' => [ 'module' => [] ],
+                'settings' => [],
                 'elements' => $children,
             ],
         ];
+
+        $row_settings = $this->rowSettingsFromColumns( $row_elements );
 
         // A container nested inside another element (e.g. section→column→container)
         // must become a row, not a section — Divi does not allow sections inside columns.
@@ -41,7 +43,7 @@ class ContainerConverter extends BaseElementorConverter {
             return [
                 'id'       => $id,
                 'name'     => 'divi/row',
-                'settings' => [ 'module' => $this->normalizeSettings( $settings ) ],
+                'settings' => $row_settings,
                 'elements' => $row_elements,
             ];
         }
@@ -49,12 +51,12 @@ class ContainerConverter extends BaseElementorConverter {
         return [
             'id'       => $id,
             'name'     => 'divi/section',
-            'settings' => [ 'module' => $this->normalizeSettings( $settings ) ],
+            'settings' => [],
             'elements' => [
                 [
                     'id'       => $id . '-row',
                     'name'     => 'divi/row',
-                    'settings' => [ 'module' => $this->normalizeSettings( $settings ) ],
+                    'settings' => $row_settings,
                     'elements' => $row_elements,
                 ],
             ],

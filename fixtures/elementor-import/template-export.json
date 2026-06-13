@@ -1,0 +1,29 @@
+{
+  "version": "0.4",
+  "title": "My Landing Page",
+  "type": "page",
+  "content": [
+    {
+      "id": "s1",
+      "elType": "section",
+      "settings": {},
+      "elements": [
+        {
+          "id": "col-1",
+          "elType": "column",
+          "settings": {},
+          "elements": [
+            {
+              "id": "h1",
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": { "title": "Template Heading", "header_size": "h1" },
+              "elements": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "page_settings": {}
+}

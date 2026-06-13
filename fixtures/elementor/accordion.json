@@ -1,0 +1,34 @@
+[
+  {
+    "id": "section-ac",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-ac",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "ac001",
+            "elType": "widget",
+            "widgetType": "e-accordion",
+            "settings": {
+              "tabs": [
+                {
+                  "tab_title": "Panel One",
+                  "tab_content": "<p>Content for panel one.</p>"
+                },
+                {
+                  "tab_title": "Panel Two",
+                  "tab_content": "<p>Content for panel two.</p>"
+                }
+              ]
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

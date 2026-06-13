@@ -4,36 +4,31 @@
       {
         "id": "section-1",
         "name": "divi/section",
-        "settings": {
-          "module": {}
-        },
+        "settings": {},
         "elements": [
           {
-            "id": "column-1",
-            "name": "divi/column",
-            "settings": {
-              "module": {}
-            },
+            "id": "section-1-row",
+            "name": "divi/row",
+            "settings": {},
             "elements": [
               {
-                "id": "heading-1",
-                "name": "divi/text",
-                "settings": {
-                  "innerContent": "Hello World",
-                  "tagName": "h2",
-                  "link": [],
-                  "module": {
-                    "title": {
-                      "$$type": "string",
-                      "value": "Hello World"
+                "id": "column-1",
+                "name": "divi/column",
+                "settings": {},
+                "elements": [
+                  {
+                    "id": "heading-1",
+                    "name": "divi/text",
+                    "settings": {
+                      "content": {
+                        "innerContent": {
+                          "desktop": { "value": "<h2>Hello World</h2>" }
+                        }
+                      }
                     },
-                    "tag": {
-                      "$$type": "string",
-                      "value": "h2"
-                    }
+                    "elements": []
                   }
-                },
-                "elements": []
+                ]
               }
             ]
           }

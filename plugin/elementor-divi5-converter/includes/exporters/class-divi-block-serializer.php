@@ -48,29 +48,25 @@ class DiviBlockSerializer {
 
     private function serializeElement( array $element ): string {
         $name     = $element['name'] ?? '';
+        $settings = $element['settings'] ?? [];
         $children = $element['elements'] ?? [];
 
         switch ( $name ) {
             case 'divi/section':
-                return $this->wrapBlock( 'divi/section', [], $this->serializeSectionChildren( $children ) );
+                return $this->wrapBlock( 'divi/section', $settings, $this->serializeSectionChildren( $children ) );
 
             case 'divi/row':
-                return $this->wrapBlock( 'divi/row', [], $this->serializeRowChildren( $children ) );
+                return $this->wrapBlock( 'divi/row', $settings, $this->serializeRowChildren( $children ) );
 
             case 'divi/column':
-                return $this->wrapBlock( 'divi/column', [], $this->serializeElements( $children ) );
-
-            case 'divi/text':
-                return $this->selfClosingBlock( 'divi/text', $this->textAttrs( $element ) );
-
-            case 'divi/button':
-                return $this->selfClosingBlock( 'divi/button', $this->buttonAttrs( $element ) );
-
-            case 'divi/image':
-                return $this->selfClosingBlock( 'divi/image', $this->imageAttrs( $element ) );
+                return $this->wrapBlock( 'divi/column', $settings, $this->serializeElements( $children ) );
 
             default:
-                return $this->serializeElements( $children );
+                // Any module with children wraps them; leaf modules self-close.
+                if ( ! empty( $children ) ) {
+                    return $this->wrapBlock( $name, $settings, $this->serializeElements( $children ) );
+                }
+                return $this->selfClosingBlock( $name, $settings );
         }
     }
 
@@ -137,91 +133,6 @@ class DiviBlockSerializer {
         }
 
         return $output;
-    }
-
-    // -------------------------------------------------------------------------
-    // Module attribute builders
-    // -------------------------------------------------------------------------
-
-    private function textAttrs( array $element ): array {
-        $settings = $element['settings'] ?? [];
-        $raw      = $settings['innerContent'] ?? '';
-        $tag      = $settings['tagName'] ?? '';
-
-        $html = ( $tag !== '' && is_string( $tag ) )
-            ? sprintf( '<%1$s>%2$s</%1$s>', $tag, $raw )
-            : (string) $raw;
-
-        return [
-            'content' => [
-                'innerContent' => [
-                    'desktop' => [
-                        'value' => $html,
-                    ],
-                ],
-            ],
-        ];
-    }
-
-    private function buttonAttrs( array $element ): array {
-        $settings   = $element['settings'] ?? [];
-        $text       = is_string( $settings['text'] ?? '' ) ? $settings['text'] : '';
-        $link       = $settings['link'] ?? [];
-        $url        = ( is_array( $link ) && ! empty( $link['url'] ) ) ? $link['url'] : '';
-        $new_window = ( is_array( $link ) && ! empty( $link['isExternal'] ) );
-        $nofollow   = ( is_array( $link ) && ! empty( $link['nofollow'] ) );
-
-        $value = [];
-
-        if ( $text !== '' ) {
-            $value['text'] = $text;
-        }
-
-        if ( $url !== '' ) {
-            $value['linkUrl'] = $url;
-        }
-
-        if ( $new_window ) {
-            $value['linkTarget'] = '_blank';
-        }
-
-        if ( $nofollow ) {
-            $value['rel'] = [ 'nofollow' ];
-        }
-
-        return [
-            'button' => [
-                'innerContent' => [
-                    'desktop' => [ 'value' => $value ],
-                ],
-            ],
-        ];
-    }
-
-    private function imageAttrs( array $element ): array {
-        $settings = $element['settings'] ?? [];
-        $src_raw  = $settings['src'] ?? '';
-        $alt_raw  = $settings['alt'] ?? '';
-        $src      = is_string( $src_raw ) ? $src_raw : '';
-        $alt      = is_string( $alt_raw ) ? $alt_raw : '';
-
-        $value = [];
-
-        if ( $src !== '' ) {
-            $value['src'] = $src;
-        }
-
-        if ( $alt !== '' ) {
-            $value['alt'] = $alt;
-        }
-
-        return [
-            'image' => [
-                'innerContent' => [
-                    'desktop' => [ 'value' => $value ],
-                ],
-            ],
-        ];
     }
 
     // -------------------------------------------------------------------------

@@ -42,13 +42,18 @@ final class ConverterEngineTest extends TestCase {
         $this->assertSame( 'divi/section', $section['name'] );
         $this->assertCount( 1, $section['elements'] );
 
-        $column = $section['elements'][0];
+        // SectionConverter now wraps all column children in an explicit divi/row.
+        $row = $section['elements'][0];
+        $this->assertSame( 'divi/row', $row['name'] );
+        $this->assertCount( 1, $row['elements'] );
+
+        $column = $row['elements'][0];
         $this->assertSame( 'divi/column', $column['name'] );
         $this->assertCount( 1, $column['elements'] );
 
         $heading = $column['elements'][0];
         $this->assertSame( 'divi/text', $heading['name'] );
-        $this->assertSame( 'Hello World', $heading['settings']['innerContent'] );
+        $this->assertSame( '<h2>Hello World</h2>', $heading['settings']['content']['innerContent']['desktop']['value'] );
     }
 
     public function test_logs_unsupported_elementor_widget_types(): void {

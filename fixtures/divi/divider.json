@@ -2,30 +2,34 @@
   "divi": {
     "elements": [
       {
-        "id": "section-1",
+        "id": "section-div",
         "name": "divi/section",
         "settings": {},
         "elements": [
           {
-            "id": "section-1-row",
+            "id": "section-div-row",
             "name": "divi/row",
             "settings": {},
             "elements": [
               {
-                "id": "column-1",
+                "id": "column-div",
                 "name": "divi/column",
                 "settings": {},
                 "elements": [
                   {
-                    "id": "button-1",
-                    "name": "divi/button",
+                    "id": "div001",
+                    "name": "divi/divider",
                     "settings": {
-                      "button": {
-                        "innerContent": {
-                          "desktop": {
-                            "value": {
-                              "text": "Click Here",
-                              "linkUrl": "https://example.com"
+                      "divider": {
+                        "advanced": {
+                          "line": {
+                            "desktop": {
+                              "value": {
+                                "show": true,
+                                "color": "#e0e0e0",
+                                "style": "solid",
+                                "weight": "2px"
+                              }
                             }
                           }
                         }

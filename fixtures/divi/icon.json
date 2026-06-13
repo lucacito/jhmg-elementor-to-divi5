@@ -2,27 +2,35 @@
   "divi": {
     "elements": [
       {
-        "id": "section-1",
+        "id": "section-ic",
         "name": "divi/section",
         "settings": {},
         "elements": [
           {
-            "id": "section-1-row",
+            "id": "section-ic-row",
             "name": "divi/row",
             "settings": {},
             "elements": [
               {
-                "id": "column-1",
+                "id": "column-ic",
                 "name": "divi/column",
                 "settings": {},
                 "elements": [
                   {
-                    "id": "text-1",
-                    "name": "divi/text",
+                    "id": "ic001",
+                    "name": "divi/icon",
                     "settings": {
-                      "content": {
+                      "icon": {
                         "innerContent": {
-                          "desktop": { "value": "This is sample paragraph text." }
+                          "desktop": { "value": "fa-star" }
+                        },
+                        "advanced": {
+                          "color": {
+                            "desktop": { "value": "#ff6600" }
+                          },
+                          "size": {
+                            "desktop": { "value": "40px" }
+                          }
                         }
                       }
                     },

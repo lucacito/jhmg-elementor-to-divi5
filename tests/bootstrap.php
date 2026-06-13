@@ -186,6 +186,48 @@ if ( ! function_exists( 'has_block' ) ) {
     }
 }
 
+if ( ! class_exists( 'WP_Error' ) ) {
+    class WP_Error {
+        private string $message;
+        public function __construct( string $code = '', string $message = '' ) {
+            $this->message = $message;
+        }
+        public function get_error_message(): string {
+            return $this->message;
+        }
+    }
+}
+
+if ( ! function_exists( 'is_wp_error' ) ) {
+    function is_wp_error( $thing ): bool {
+        return $thing instanceof WP_Error;
+    }
+}
+
+if ( ! function_exists( 'sanitize_key' ) ) {
+    function sanitize_key( $key ): string {
+        return strtolower( preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $key ) ) );
+    }
+}
+
+if ( ! function_exists( 'set_transient' ) ) {
+    $GLOBALS['__test_transients'] = [];
+
+    function set_transient( string $key, $value, int $expiration = 0 ): bool {
+        $GLOBALS['__test_transients'][ $key ] = $value;
+        return true;
+    }
+
+    function get_transient( string $key ) {
+        return $GLOBALS['__test_transients'][ $key ] ?? false;
+    }
+
+    function delete_transient( string $key ): bool {
+        unset( $GLOBALS['__test_transients'][ $key ] );
+        return true;
+    }
+}
+
 if ( ! function_exists( 'wp_get_theme' ) ) {
     function wp_get_theme( $template = null ) {
         return new class {

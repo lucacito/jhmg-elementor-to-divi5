@@ -4,39 +4,25 @@
       {
         "id": "container-1",
         "name": "divi/section",
-        "settings": {
-          "module": {
-            "layout": "boxed"
-          }
-        },
+        "settings": {},
         "elements": [
           {
             "id": "container-1-row",
             "name": "divi/row",
-            "settings": {
-              "module": {
-                "layout": "boxed"
-              }
-            },
+            "settings": {},
             "elements": [
               {
                 "id": "container-1-col",
                 "name": "divi/column",
-                "settings": {
-                  "module": []
-                },
+                "settings": {},
                 "elements": [
                   {
                     "id": "heading-1",
                     "name": "divi/text",
                     "settings": {
-                      "innerContent": "Inside Container",
-                      "tagName": "h2",
-                      "link": [],
-                      "module": {
-                        "title": {
-                          "$$type": "string",
-                          "value": "Inside Container"
+                      "content": {
+                        "innerContent": {
+                          "desktop": { "value": "<h2>Inside Container</h2>" }
                         }
                       }
                     },

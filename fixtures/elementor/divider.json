@@ -1,0 +1,30 @@
+[
+  {
+    "id": "section-div",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-div",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "div001",
+            "elType": "widget",
+            "widgetType": "e-divider",
+            "settings": {
+              "style": "solid",
+              "color": "#e0e0e0",
+              "weight": {
+                "size": 2,
+                "unit": "px"
+              }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

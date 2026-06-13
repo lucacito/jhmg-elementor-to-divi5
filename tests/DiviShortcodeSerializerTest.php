@@ -28,48 +28,54 @@ final class DiviShortcodeSerializerTest extends TestCase {
             'divi' => [
                 'elements' => [
                     [
-                        'name' => 'divi/section',
-                        'settings' => [
-                            'module' => [],
-                        ],
+                        'name'     => 'divi/section',
+                        'settings' => [],
                         'elements' => [
                             [
-                                'name' => 'divi/row',
-                                'settings' => [
-                                    'module' => [],
-                                ],
+                                'name'     => 'divi/row',
+                                'settings' => [],
                                 'elements' => [
                                     [
-                                        'name' => 'divi/column',
-                                        'settings' => [
-                                            'module' => [],
-                                        ],
+                                        'name'     => 'divi/column',
+                                        'settings' => [],
                                         'elements' => [
                                             [
-                                                'name' => 'divi/text',
+                                                'name'     => 'divi/text',
                                                 'settings' => [
-                                                    'innerContent' => 'Hello World',
-                                                    'tagName' => 'h2',
-                                                    'module' => [],
-                                                ],
-                                                'elements' => [],
-                                            ],
-                                            [
-                                                'name' => 'divi/button',
-                                                'settings' => [
-                                                    'text' => 'Click Here',
-                                                    'link' => [
-                                                        'url' => 'https://example.com',
+                                                    'content' => [
+                                                        'innerContent' => [
+                                                            'desktop' => [ 'value' => '<h2>Hello World</h2>' ],
+                                                        ],
                                                     ],
-                                                    'module' => [],
                                                 ],
                                                 'elements' => [],
                                             ],
                                             [
-                                                'name' => 'divi/image',
+                                                'name'     => 'divi/button',
                                                 'settings' => [
-                                                    'src' => 'https://example.com/sample.jpg',
-                                                    'module' => [],
+                                                    'button' => [
+                                                        'innerContent' => [
+                                                            'desktop' => [
+                                                                'value' => [
+                                                                    'text'    => 'Click Here',
+                                                                    'linkUrl' => 'https://example.com',
+                                                                ],
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                                'elements' => [],
+                                            ],
+                                            [
+                                                'name'     => 'divi/image',
+                                                'settings' => [
+                                                    'image' => [
+                                                        'innerContent' => [
+                                                            'desktop' => [
+                                                                'value' => [ 'src' => 'https://example.com/sample.jpg' ],
+                                                            ],
+                                                        ],
+                                                    ],
                                                 ],
                                                 'elements' => [],
                                             ],
@@ -101,5 +107,48 @@ final class DiviShortcodeSerializerTest extends TestCase {
             . '<!-- /wp:divi/section -->';
 
         $this->assertSame( $expected, $blocks );
+    }
+
+    public function test_accordion_serialized_as_wrap_block_with_items(): void {
+        $engine  = new ConverterEngine();
+        $payload = json_decode( file_get_contents( __DIR__ . '/../fixtures/elementor/accordion.json' ), true );
+        $blocks  = ( new DiviBlockSerializer() )->serialize( $engine->convert( $payload ) );
+
+        $this->assertStringContainsString( '<!-- wp:divi/accordion {} -->', $blocks );
+        $this->assertStringContainsString( '<!-- /wp:divi/accordion -->', $blocks );
+        $this->assertStringContainsString( 'divi/accordion-item', $blocks );
+        $this->assertStringContainsString( 'Panel One', $blocks );
+        $this->assertStringContainsString( 'Panel Two', $blocks );
+    }
+
+    public function test_tabs_serialized_as_wrap_block_with_tab_children(): void {
+        $engine  = new ConverterEngine();
+        $payload = json_decode( file_get_contents( __DIR__ . '/../fixtures/elementor/tabs.json' ), true );
+        $blocks  = ( new DiviBlockSerializer() )->serialize( $engine->convert( $payload ) );
+
+        $this->assertStringContainsString( '<!-- wp:divi/tabs {} -->', $blocks );
+        $this->assertStringContainsString( '<!-- /wp:divi/tabs -->', $blocks );
+        $this->assertStringContainsString( 'divi/tab', $blocks );
+        $this->assertStringContainsString( 'First Tab', $blocks );
+    }
+
+    public function test_spacer_serialized_as_code_self_closing_block(): void {
+        $engine  = new ConverterEngine();
+        $payload = json_decode( file_get_contents( __DIR__ . '/../fixtures/elementor/spacer.json' ), true );
+        $blocks  = ( new DiviBlockSerializer() )->serialize( $engine->convert( $payload ) );
+
+        $this->assertStringContainsString( '<!-- wp:divi/code', $blocks );
+        $this->assertStringContainsString( 'height:50px', $blocks );
+        $this->assertStringContainsString( '/-->', $blocks );
+    }
+
+    public function test_icon_serialized_with_color_and_size(): void {
+        $engine  = new ConverterEngine();
+        $payload = json_decode( file_get_contents( __DIR__ . '/../fixtures/elementor/icon.json' ), true );
+        $blocks  = ( new DiviBlockSerializer() )->serialize( $engine->convert( $payload ) );
+
+        $this->assertStringContainsString( '<!-- wp:divi/icon', $blocks );
+        $this->assertStringContainsString( '#ff6600', $blocks );
+        $this->assertStringContainsString( '40px', $blocks );
     }
 }

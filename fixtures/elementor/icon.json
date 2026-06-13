@@ -1,0 +1,33 @@
+[
+  {
+    "id": "section-ic",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-ic",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "ic001",
+            "elType": "widget",
+            "widgetType": "e-icon",
+            "settings": {
+              "selected_icon": {
+                "library": "fa-solid",
+                "value": "fa-star"
+              },
+              "primary_color": "#ff6600",
+              "size": {
+                "size": 40,
+                "unit": "px"
+              }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]
