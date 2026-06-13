@@ -15,6 +15,7 @@ class ConverterEngine {
     private array $conversionCounts   = [];
     private array $conversionWarnings = [];
     private array $skippedSettings    = [];
+    private int   $nestingDepth       = 0;
 
     public function __construct() {
         $this->registry = new ConverterRegistry( $this );
@@ -53,6 +54,7 @@ class ConverterEngine {
     }
 
     public function convertChildren( array $elements ): array {
+        $this->nestingDepth++;
         $converted = [];
 
         foreach ( $elements as $element ) {
@@ -67,7 +69,12 @@ class ConverterEngine {
             }
         }
 
+        $this->nestingDepth--;
         return $converted;
+    }
+
+    public function getNestingDepth(): int {
+        return $this->nestingDepth;
     }
 
     public function convertElement( array $element ): array {

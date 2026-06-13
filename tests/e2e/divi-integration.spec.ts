@@ -185,6 +185,20 @@ test.describe.serial('Divi 5 runtime validation', () => {
       await page.waitForSelector(fixture.frontendSelector, { timeout: 15000 });
       expect(await page.locator(fixture.frontendSelector).isVisible()).toBe(true);
 
+      // Verify Divi CSS assets are present. In Docker the et-cache dir is root-owned so
+      // CSS is emitted as inline <style id="et-..."> blocks rather than external files.
+      const diviStylePresent = await page.evaluate(() => {
+        const styles = Array.from(document.querySelectorAll('style[id]'));
+        return styles.some((el) => el.id.startsWith('et-'));
+      });
+      expect(diviStylePresent, `Divi CSS must be enqueued on ${fixture.name} frontend`).toBe(true);
+
+      // Verify Divi section module has non-zero padding — confirms styles are actually applied.
+      const sectionPadding = await page.locator('.et_pb_section').first().evaluate(
+        (el) => getComputedStyle(el).paddingTop
+      );
+      expect(sectionPadding, `Divi section padding must be non-zero on ${fixture.name} frontend`).not.toBe('0px');
+
       const frontendScreenshot = path.join(screenshotsDir, `${fixture.name}-frontend.png`);
       await page.screenshot({ path: frontendScreenshot, fullPage: true });
 

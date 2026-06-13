@@ -35,18 +35,29 @@ class ContainerConverter extends BaseElementorConverter {
             ],
         ];
 
-        $row = [
-            'id'       => $id . '-row',
-            'name'     => 'divi/row',
-            'settings' => [ 'module' => $this->normalizeSettings( $settings ) ],
-            'elements' => $row_elements,
-        ];
+        // A container nested inside another element (e.g. section→column→container)
+        // must become a row, not a section — Divi does not allow sections inside columns.
+        if ( $this->engine->getNestingDepth() > 1 ) {
+            return [
+                'id'       => $id,
+                'name'     => 'divi/row',
+                'settings' => [ 'module' => $this->normalizeSettings( $settings ) ],
+                'elements' => $row_elements,
+            ];
+        }
 
         return [
             'id'       => $id,
             'name'     => 'divi/section',
             'settings' => [ 'module' => $this->normalizeSettings( $settings ) ],
-            'elements' => [ $row ],
+            'elements' => [
+                [
+                    'id'       => $id . '-row',
+                    'name'     => 'divi/row',
+                    'settings' => [ 'module' => $this->normalizeSettings( $settings ) ],
+                    'elements' => $row_elements,
+                ],
+            ],
         ];
     }
 }

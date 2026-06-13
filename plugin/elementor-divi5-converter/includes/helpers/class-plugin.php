@@ -23,6 +23,8 @@ class Plugin {
     }
 
     public function register_hooks(): void {
-        // Placeholder for plugin hook registration.
+        if ( is_admin() ) {
+            ( new \ElementorDivi5Converter\Admin\AdminPage() )->init();
+        }
     }
 }

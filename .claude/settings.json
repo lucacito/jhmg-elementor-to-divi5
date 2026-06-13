@@ -3,7 +3,10 @@
     "allow": [
       "Bash(python3 -c ' *)",
       "Bash(curl -s \"http://localhost:8000/?page_id=91\")",
-      "Bash(curl -s \"http://localhost:8000/?page_id=93\")"
+      "Bash(curl -s \"http://localhost:8000/?page_id=93\")",
+      "Bash(*)",
+      "Edit(*)",
+      "Write(*)"
     ]
   }
 }

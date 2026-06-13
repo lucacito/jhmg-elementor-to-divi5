@@ -30,8 +30,17 @@ final class DiviExporterTest extends TestCase {
         $this->assertStringContainsString( '<!-- wp:divi/section', $post->post_content );
         $this->assertStringContainsString( '<!-- wp:divi/text', $post->post_content );
 
+        // _et_pb_old_content is a D4 concept (stores pre-builder content backup); must be absent on D5 pages.
         $old_content = get_post_meta( $post_id, '_et_pb_old_content', true );
-        $this->assertSame( $post->post_content, $old_content );
+        $this->assertSame( '', $old_content );
+
+        // Divi checks _et_pb_use_divi_5 === 'on'; '1' would fail that check.
+        $use_divi_5 = get_post_meta( $post_id, '_et_pb_use_divi_5', true );
+        $this->assertSame( 'on', $use_divi_5 );
+
+        // Dynamic asset caches must be absent after save so Divi regenerates them.
+        $cached_modules = get_post_meta( $post_id, '_divi_dynamic_assets_cached_modules', true );
+        $this->assertSame( '', $cached_modules );
 
         $serialized = get_post_meta( $post_id, '_edc_divi_data', true );
         $this->assertIsString( $serialized );

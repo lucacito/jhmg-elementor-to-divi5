@@ -57,11 +57,15 @@ if ( ! function_exists( 'update_post_meta' ) ) {
         if ( $meta_key === '' ) {
             return $GLOBALS['__test_postmeta'][ $id ] ?? [];
         }
-        $value = $GLOBALS['__test_postmeta'][ $id ][ $meta_key ] ?? null;
+        $exists = isset( $GLOBALS['__test_postmeta'][ $id ] ) && array_key_exists( $meta_key, $GLOBALS['__test_postmeta'][ $id ] );
+        if ( ! $exists ) {
+            return $single ? '' : [];
+        }
+        $value = $GLOBALS['__test_postmeta'][ $id ][ $meta_key ];
         if ( $single ) {
             return $value;
         }
-        return $value === null ? [] : [ $value ];
+        return [ $value ];
     }
 
     function delete_post_meta( $post_id, $meta_key = '', $meta_value = '' ) {
@@ -167,6 +171,12 @@ if ( ! function_exists( 'is_singular' ) ) {
 if ( ! function_exists( 'wp_json_encode' ) ) {
     function wp_json_encode( $data, $options = 0, $depth = 512 ) {
         return json_encode( $data, $options, $depth );
+    }
+}
+
+if ( ! function_exists( 'wp_slash' ) ) {
+    function wp_slash( $value ) {
+        return addslashes( is_string( $value ) ? $value : '' );
     }
 }
 
