@@ -28,7 +28,7 @@ final class DiviExporterTest extends TestCase {
         $post = get_post( $post_id );
         $this->assertNotNull( $post );
         $this->assertStringContainsString( '<!-- wp:divi/section', $post->post_content );
-        $this->assertStringContainsString( '<!-- wp:divi/text', $post->post_content );
+        $this->assertStringContainsString( '<!-- wp:divi/heading', $post->post_content );
 
         // _et_pb_old_content is a D4 concept (stores pre-builder content backup); must be absent on D5 pages.
         $old_content = get_post_meta( $post_id, '_et_pb_old_content', true );

@@ -145,12 +145,13 @@ final class ConversionReportTest extends TestCase {
             ],
         ] );
 
+        // background_color is now mapped by the section converter via StyleMapper,
+        // so it should NOT appear in skipped settings.
         $skipped = $result['report']['skipped_settings'];
-        $this->assertNotEmpty( $skipped );
-
         $hasBackgroundColor = array_filter( $skipped, static fn( $s ) => str_contains( $s, 'background_color' ) );
-        $this->assertNotEmpty( $hasBackgroundColor, 'Expected skipped_settings entry for background_color' );
+        $this->assertEmpty( $hasBackgroundColor, 'background_color should be mapped, not skipped' );
 
+        // custom_padding is not a standard key handled by StyleMapper (uses 'padding'), so it stays skipped.
         $hasPadding = array_filter( $skipped, static fn( $s ) => str_contains( $s, 'custom_padding' ) );
         $this->assertNotEmpty( $hasPadding, 'Expected skipped_settings entry for custom_padding' );
     }

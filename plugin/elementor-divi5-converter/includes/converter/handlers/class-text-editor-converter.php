@@ -17,16 +17,10 @@ class TextEditorConverter extends BaseElementorConverter {
         $content = $this->getSettingValue( $settings, 'paragraph', $this->getSettingValue( $settings, 'editor', '' ) );
 
         $style = ( new StyleMapper() )->map( 'text-editor', $settings );
-        $attrs = array_merge(
-            [
-                'content' => [
-                    'innerContent' => [
-                        'desktop' => [ 'value' => (string) $content ],
-                    ],
-                ],
-            ],
-            $style['divi_attrs']
-        );
+        // Start from StyleMapper attrs (may include content.decoration) then inject
+        // innerContent alongside it — array_merge would clobber the whole content key.
+        $attrs = $style['divi_attrs'];
+        $attrs['content']['innerContent']['desktop']['value'] = (string) $content;
 
         $this->engine->logConverted( 'text' );
         $this->logUnmappedSettings( $id, $settings, array_merge(

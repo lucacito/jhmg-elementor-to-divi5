@@ -56,7 +56,8 @@ final class DiviIntegrationTest extends TestCase {
         $post = get_post( $post_id );
         $this->assertNotNull( $post );
         $this->assertStringContainsString( '<!-- wp:divi/section', $post->post_content );
-        $this->assertStringContainsString( '<h2>Hello World</h2>', $post->post_content );
+        $this->assertStringContainsString( '<!-- wp:divi/heading', $post->post_content );
+        $this->assertStringContainsString( 'Hello World', $post->post_content );
 
         $builder_version = get_post_meta( $post_id, '_et_builder_version', true );
         $this->assertIsString( $builder_version );

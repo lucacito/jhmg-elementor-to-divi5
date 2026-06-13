@@ -73,7 +73,7 @@ class DiviExporter {
 
         // Clear stale Divi CSS cache so the next page load regenerates assets.
         if ( class_exists( 'ET_Core_PageResource' ) ) {
-            ET_Core_PageResource::remove_static_resources( $post_id, 'all' );
+            \ET_Core_PageResource::remove_static_resources( $post_id, 'all' );
         }
         delete_post_meta( $post_id, '_divi_dynamic_assets_cached_modules' );
         delete_post_meta( $post_id, '_divi_dynamic_assets_cached_feature_used' );

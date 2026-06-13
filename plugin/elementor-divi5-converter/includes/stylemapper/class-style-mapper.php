@@ -90,6 +90,7 @@ class StyleMapper {
 
         $this->mapSpacing( $settings, $divi_attrs, $handled_keys );
         $this->mapBackgroundColor( $settings, $divi_attrs, $handled_keys );
+        $this->mapBackgroundImage( $settings, $divi_attrs, $handled_keys );
         $this->mapTypography( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapTextColor( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapAlignment( $widget_type, $settings, $divi_attrs, $handled_keys );
@@ -97,6 +98,10 @@ class StyleMapper {
 
         if ( $widget_type === 'column' ) {
             $this->mapColumnSize( $settings, $divi_attrs, $handled_keys );
+        }
+
+        if ( $widget_type === 'section' ) {
+            $this->markSectionKeys( $settings, $handled_keys );
         }
 
         return [
@@ -286,6 +291,71 @@ class StyleMapper {
     }
 
     /**
+     * Maps Elementor `background_image` (and related position/size/repeat controls)
+     * to `module.decoration.background.desktop.value.image.*`.
+     *
+     * Responsive image variants (_tablet, _mobile) are marked handled but not
+     * mapped since they are uncommon and rarely set in real Elementor exports.
+     */
+    private function mapBackgroundImage( array $settings, array &$attrs, array &$handled ): void {
+        // Mark all related keys as handled regardless.
+        foreach ( self::BREAKPOINT_MAP as $suffix => $_ ) {
+            $handled[] = 'background_image' . $suffix;
+            $handled[] = 'background_position' . $suffix;
+            $handled[] = 'background_size' . $suffix;
+            $handled[] = 'background_repeat' . $suffix;
+        }
+        $handled[] = 'background_background';
+
+        $image = $settings['background_image'] ?? null;
+        $url   = '';
+        if ( is_array( $image ) ) {
+            $url = is_string( $image['url'] ?? '' ) ? ( $image['url'] ?? '' ) : '';
+        } elseif ( is_string( $image ) ) {
+            $url = $image;
+        }
+
+        if ( $url === '' ) {
+            return;
+        }
+
+        self::transformPath( $attrs, 'module.decoration.background.desktop.value.image.url', $url );
+
+        // Position: Elementor "center center" → Divi "center|center".
+        $pos = $settings['background_position'] ?? '';
+        if ( is_string( $pos ) && $pos !== '' ) {
+            self::transformPath(
+                $attrs,
+                'module.decoration.background.desktop.value.image.position',
+                str_replace( ' ', '|', $pos )
+            );
+        }
+    }
+
+    /**
+     * Silently absorbs section-level Elementor keys that have no Divi equivalent,
+     * preventing them from appearing in the unmapped-settings log.
+     */
+    private function markSectionKeys( array $settings, array &$handled ): void {
+        // Keys that describe layout/structure hints with no direct Divi mapping.
+        $ignore = [
+            'gap', 'structure', 'reverse_order_mobile',
+            'background_overlay_background', 'background_overlay_color',
+            'background_overlay_opacity',
+        ];
+        foreach ( $ignore as $key ) {
+            $handled[] = $key;
+        }
+
+        // Parallax / motion FX: prefix match.
+        foreach ( array_keys( $settings ) as $key ) {
+            if ( str_starts_with( $key, 'background_motion_fx_' ) ) {
+                $handled[] = $key;
+            }
+        }
+    }
+
+    /**
      * Maps Elementor border controls to `module.decoration.border`.
      *
      * Elementor groups border style, width, color, and radius under keys with
@@ -294,7 +364,7 @@ class StyleMapper {
      *   border_border        → Divi styles.all.style   (e.g. 'solid')
      *   border_width         → Divi styles.{side}.width (uniform → .all, per-side → individual)
      *   border_color         → Divi styles.all.color
-     *   border_radius        → Divi radius              (uniform → simple string, mixed → skipped)
+     *   border_radius        → Divi radius              ({topLeft, topRight, bottomRight, bottomLeft})
      */
     private function mapBorder( array $settings, array &$attrs, array &$handled ): void {
         foreach ( self::BORDER_KEYS as $base ) {
@@ -330,15 +400,22 @@ class StyleMapper {
                 self::transformPath( $attrs, "{$base_path}.styles.all.width", $width_raw );
             }
 
-            // Radius.
+            // Radius — Divi 5 expects per-corner object {topLeft, topRight, bottomRight, bottomLeft}.
             $radius_raw = $settings[ 'border_radius' . $suffix ] ?? null;
             if ( is_array( $radius_raw ) ) {
-                $radius_str = $this->uniformRadius( $radius_raw );
-                if ( $radius_str !== '' ) {
-                    self::transformPath( $attrs, "{$base_path}.radius", $radius_str );
+                $radius_obj = $this->normalizeRadius( $radius_raw );
+                if ( ! empty( $radius_obj ) ) {
+                    self::transformPath( $attrs, "{$base_path}.radius", $radius_obj );
                 }
             } elseif ( is_string( $radius_raw ) && $radius_raw !== '' ) {
-                self::transformPath( $attrs, "{$base_path}.radius", $radius_raw );
+                // Plain string shorthand — apply uniformly.
+                $radius_obj = [
+                    'topLeft'     => $radius_raw,
+                    'topRight'    => $radius_raw,
+                    'bottomRight' => $radius_raw,
+                    'bottomLeft'  => $radius_raw,
+                ];
+                self::transformPath( $attrs, "{$base_path}.radius", $radius_obj );
             }
         }
     }
@@ -421,27 +498,33 @@ class StyleMapper {
     }
 
     /**
-     * Return a uniform border-radius CSS string from an Elementor radius object.
-     * Returns an empty string when corners differ (caller should skip).
+     * Convert an Elementor border-radius object `{top, right, bottom, left, unit}`
+     * to the Divi 5 per-corner format `{topLeft, topRight, bottomRight, bottomLeft}`.
+     *
+     * Elementor's top/right/bottom/left match CSS border-radius shorthand corners:
+     * top-left, top-right, bottom-right, bottom-left.
+     *
+     * Returns an empty array when no values are present.
      */
-    private function uniformRadius( array $raw ): string {
-        $unit   = is_string( $raw['unit'] ?? '' ) ? ( $raw['unit'] ?? 'px' ) : 'px';
-        $values = array_filter(
-            [
-                (string) ( $raw['top'] ?? '' ),
-                (string) ( $raw['right'] ?? '' ),
-                (string) ( $raw['bottom'] ?? '' ),
-                (string) ( $raw['left'] ?? '' ),
-            ],
-            fn( string $v ) => $v !== ''
-        );
+    private function normalizeRadius( array $raw ): array {
+        $unit = is_string( $raw['unit'] ?? '' ) ? ( $raw['unit'] ?? 'px' ) : 'px';
 
-        if ( empty( $values ) ) {
-            return '';
+        $corners = [
+            'topLeft'     => (string) ( $raw['top']    ?? '' ),
+            'topRight'    => (string) ( $raw['right']  ?? '' ),
+            'bottomRight' => (string) ( $raw['bottom'] ?? '' ),
+            'bottomLeft'  => (string) ( $raw['left']   ?? '' ),
+        ];
+
+        $has_value = array_filter( $corners, fn( string $v ) => $v !== '' );
+        if ( empty( $has_value ) ) {
+            return [];
         }
 
-        $unique = array_unique( array_values( $values ) );
-        return count( $unique ) === 1 ? reset( $unique ) . $unit : '';
+        return array_map(
+            fn( string $v ) => $v !== '' ? $v . $unit : '0px',
+            $corners
+        );
     }
 
     // -------------------------------------------------------------------------

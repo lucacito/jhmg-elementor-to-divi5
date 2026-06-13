@@ -33,7 +33,8 @@ class ImageBoxConverter extends BaseElementorConverter {
         }
 
         if ( $title !== '' ) {
-            $attrs['title'] = [ 'innerContent' => [ 'desktop' => [ 'value' => $title ] ] ];
+            // Divi blurb has_header_text resolver checks $value['text'], not a plain string.
+            $attrs['title']['innerContent']['desktop']['value'] = [ 'text' => $title ];
         }
 
         if ( $description !== '' ) {

@@ -37,16 +37,10 @@ class ButtonConverter extends BaseElementorConverter {
         }
 
         $style = ( new StyleMapper() )->map( 'button', $settings );
-        $attrs = array_merge(
-            [
-                'button' => [
-                    'innerContent' => [
-                        'desktop' => [ 'value' => $button_value ],
-                    ],
-                ],
-            ],
-            $style['divi_attrs']
-        );
+        // Inject innerContent alongside any button.decoration from StyleMapper.
+        // array_merge would clobber the entire 'button' key.
+        $attrs = $style['divi_attrs'];
+        $attrs['button']['innerContent']['desktop']['value'] = $button_value;
 
         $this->engine->logConverted( 'button' );
         $this->logUnmappedSettings( $id, $settings, array_merge(

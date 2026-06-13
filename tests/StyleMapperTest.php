@@ -268,17 +268,21 @@ final class StyleMapperTest extends TestCase {
         $result = $this->mapper->map( 'heading', $settings );
         $radius = $result['divi_attrs']['module']['decoration']['border']['desktop']['value']['radius'];
 
-        $this->assertSame( '8px', $radius );
+        $this->assertSame( [ 'topLeft' => '8px', 'topRight' => '8px', 'bottomRight' => '8px', 'bottomLeft' => '8px' ], $radius );
     }
 
-    public function test_skips_mixed_border_radius(): void {
+    public function test_maps_mixed_border_radius_per_corner(): void {
         $settings = [
             'border_radius' => [ 'top' => '8', 'right' => '0', 'bottom' => '8', 'left' => '0', 'unit' => 'px' ],
         ];
 
         $result = $this->mapper->map( 'heading', $settings );
+        $radius = $result['divi_attrs']['module']['decoration']['border']['desktop']['value']['radius'];
 
-        $this->assertArrayNotHasKey( 'radius', $result['divi_attrs']['module']['decoration']['border']['desktop']['value'] ?? [] );
+        $this->assertSame( '8px', $radius['topLeft'] );
+        $this->assertSame( '0px', $radius['topRight'] );
+        $this->assertSame( '8px', $radius['bottomRight'] );
+        $this->assertSame( '0px', $radius['bottomLeft'] );
     }
 
     public function test_maps_border_responsive_tablet_variant(): void {
@@ -366,8 +370,8 @@ final class StyleMapperTest extends TestCase {
         ] );
 
         $element = $result['divi']['elements'][0];
-        $this->assertSame( 'divi/text', $element['name'] );
-        $this->assertSame( '<h3>Styled Heading</h3>', $element['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'divi/heading', $element['name'] );
+        $this->assertSame( 'Styled Heading', $element['settings']['title']['innerContent']['desktop']['value'] );
         $this->assertSame( '#26476c', $element['settings']['module']['decoration']['background']['desktop']['value']['color'] );
     }
 }

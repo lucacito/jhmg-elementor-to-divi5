@@ -34,18 +34,16 @@
                 "elements": [
                   {
                     "id": "real-heading-1",
-                    "name": "divi/text",
+                    "name": "divi/heading",
                     "settings": {
-                      "content": {
-                        "innerContent": {
-                          "desktop": { "value": "<h2>Real Heading</h2>" }
-                        }
-                      },
                       "title": {
+                        "innerContent": {
+                          "desktop": { "value": "Real Heading" }
+                        },
                         "decoration": {
                           "font": {
                             "font": {
-                              "desktop": { "value": { "textAlign": "left" } }
+                              "desktop": { "value": { "textAlign": "left", "headingLevel": "h2" } }
                             }
                           }
                         }

@@ -52,8 +52,8 @@ final class ConverterEngineTest extends TestCase {
         $this->assertCount( 1, $column['elements'] );
 
         $heading = $column['elements'][0];
-        $this->assertSame( 'divi/text', $heading['name'] );
-        $this->assertSame( '<h2>Hello World</h2>', $heading['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'divi/heading', $heading['name'] );
+        $this->assertSame( 'Hello World', $heading['settings']['title']['innerContent']['desktop']['value'] );
     }
 
     public function test_logs_unsupported_elementor_widget_types(): void {

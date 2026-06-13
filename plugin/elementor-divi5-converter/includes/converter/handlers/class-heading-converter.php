@@ -18,19 +18,28 @@ class HeadingConverter extends BaseElementorConverter {
         $tag_raw  = $this->getSettingValue( $settings, 'tag', '' );
         $tag      = $tag_raw !== '' ? $tag_raw : $this->getSettingValue( $settings, 'header_size', 'h2' );
 
-        $html = ( $tag !== '' ) ? "<{$tag}>{$title}</{$tag}>" : (string) $title;
+        $style = ( new StyleMapper() )->map( 'heading', $settings );
 
-        $style  = ( new StyleMapper() )->map( 'heading', $settings );
-        $attrs  = array_merge(
-            [
-                'content' => [
-                    'innerContent' => [
-                        'desktop' => [ 'value' => $html ],
-                    ],
-                ],
+        // Build title attrs with a stable key order: innerContent → decoration.
+        $text        = html_entity_decode( (string) $title, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+        $title_attrs = [
+            'innerContent' => [
+                'desktop' => [ 'value' => $text ],
             ],
-            $style['divi_attrs']
-        );
+        ];
+
+        // Carry over any decoration keys produced by StyleMapper (e.g. textAlign).
+        if ( ! empty( $style['divi_attrs']['title']['decoration'] ) ) {
+            $title_attrs['decoration'] = $style['divi_attrs']['title']['decoration'];
+        }
+
+        // Heading level lives alongside other font values in the decoration.
+        if ( $tag !== '' ) {
+            $title_attrs['decoration']['font']['font']['desktop']['value']['headingLevel'] = $tag;
+        }
+
+        $attrs          = $style['divi_attrs'];
+        $attrs['title'] = $title_attrs;
 
         $this->engine->logConverted( 'heading' );
         $this->logUnmappedSettings( $id, $settings, array_merge(
@@ -40,7 +49,7 @@ class HeadingConverter extends BaseElementorConverter {
 
         return [
             'id'       => $id,
-            'name'     => 'divi/text',
+            'name'     => 'divi/heading',
             'settings' => $attrs,
             'elements' => [],
         ];

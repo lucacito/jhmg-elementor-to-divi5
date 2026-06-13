@@ -64,8 +64,20 @@ class ConverterEngine {
 
             $result = $this->convertElement( $element );
 
-            if ( ! empty( $result ) ) {
+            if ( empty( $result ) ) {
+                continue;
+            }
+
+            // Converters return either a single block (has 'name' key) or a list
+            // of blocks (numeric array). Spread the list into siblings.
+            if ( isset( $result['name'] ) ) {
                 $converted[] = $result;
+            } else {
+                foreach ( $result as $block ) {
+                    if ( ! empty( $block ) ) {
+                        $converted[] = $block;
+                    }
+                }
             }
         }
 

@@ -18,11 +18,18 @@
                 "elements": [
                   {
                     "id": "heading-1",
-                    "name": "divi/text",
+                    "name": "divi/heading",
                     "settings": {
-                      "content": {
+                      "title": {
                         "innerContent": {
-                          "desktop": { "value": "<h2>Inside Container</h2>" }
+                          "desktop": { "value": "Inside Container" }
+                        },
+                        "decoration": {
+                          "font": {
+                            "font": {
+                              "desktop": { "value": { "headingLevel": "h2" } }
+                            }
+                          }
                         }
                       }
                     },

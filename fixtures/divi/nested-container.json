@@ -28,11 +28,18 @@
                         "elements": [
                           {
                             "id": "heading-1",
-                            "name": "divi/text",
+                            "name": "divi/heading",
                             "settings": {
-                              "content": {
+                              "title": {
                                 "innerContent": {
-                                  "desktop": { "value": "<h2>Nested Heading</h2>" }
+                                  "desktop": { "value": "Nested Heading" }
+                                },
+                                "decoration": {
+                                  "font": {
+                                    "font": {
+                                      "desktop": { "value": { "headingLevel": "h2" } }
+                                    }
+                                  }
                                 }
                               }
                             },

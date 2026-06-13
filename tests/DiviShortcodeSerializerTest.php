@@ -17,8 +17,8 @@ final class DiviShortcodeSerializerTest extends TestCase {
         $blocks = $serializer->serialize( $converted );
 
         $this->assertStringContainsString( '<!-- wp:divi/section', $blocks );
-        $this->assertStringContainsString( '<!-- wp:divi/text', $blocks );
-        $this->assertStringContainsString( '<h2>Hello World</h2>', $blocks );
+        $this->assertStringContainsString( '<!-- wp:divi/heading', $blocks );
+        $this->assertStringContainsString( 'Hello World', $blocks );
         $this->assertStringNotContainsString( '{"divi"', $blocks );
         $this->assertStringNotContainsString( '[et_pb_', $blocks );
     }

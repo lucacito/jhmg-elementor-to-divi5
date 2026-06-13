@@ -61,6 +61,9 @@ class ConverterRegistry {
         $this->registerWidget( 'accordion', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
         $this->registerWidget( 'toggle', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
         $this->registerWidget( 'tabs', '\\ElementorDivi5Converter\\Converter\\Handlers\\TabsConverter' );
+        $this->registerWidget( 'elementskit-testimonial', '\\ElementorDivi5Converter\\Converter\\Handlers\\ElementskitTestimonialConverter' );
+        $this->registerWidget( 'icon-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\IconBoxConverter' );
+        $this->registerWidget( 'menu-anchor', '\\ElementorDivi5Converter\\Converter\\Handlers\\MenuAnchorConverter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
@@ -72,6 +75,7 @@ class ConverterRegistry {
         $this->registerWidget( 'e-spacer', '\\ElementorDivi5Converter\\Converter\\Handlers\\SpacerConverter' );
         $this->registerWidget( 'e-icon', '\\ElementorDivi5Converter\\Converter\\Handlers\\IconConverter' );
         $this->registerWidget( 'e-image-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\ImageBoxConverter' );
+        $this->registerWidget( 'e-icon-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\IconBoxConverter' );
         $this->registerWidget( 'e-accordion', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
         $this->registerWidget( 'e-toggle', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
         $this->registerWidget( 'e-tabs', '\\ElementorDivi5Converter\\Converter\\Handlers\\TabsConverter' );

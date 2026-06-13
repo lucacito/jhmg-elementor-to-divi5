@@ -26,5 +26,16 @@ class Plugin {
         if ( is_admin() ) {
             ( new \ElementorDivi5Converter\Admin\AdminPage() )->init();
         }
+
+        add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_styles' ] );
+    }
+
+    public function enqueue_frontend_styles(): void {
+        wp_enqueue_style(
+            'edc-frontend',
+            EDC_PLUGIN_URL . 'assets/css/frontend.css',
+            [],
+            EDC_PLUGIN_VERSION
+        );
     }
 }

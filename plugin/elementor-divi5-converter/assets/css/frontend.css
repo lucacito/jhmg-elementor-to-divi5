@@ -1,0 +1,10 @@
+/* Clearfix for Divi 5 block rows — columns are floated and need clearing. */
+.et_block_row::after {
+  content: "";
+  display: block;
+  clear: both;
+  visibility: hidden;
+  line-height: 0;
+  height: 0;
+  width: 0;
+}

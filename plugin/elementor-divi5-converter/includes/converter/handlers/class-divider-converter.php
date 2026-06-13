@@ -41,7 +41,7 @@ class DividerConverter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'divider' );
         $this->logUnmappedSettings( $id, $settings, array_merge(
-            [ 'color', 'style', 'weight', 'width', 'gap', 'look', 'align', 'icon', 'icon_type', 'view' ],
+            [ 'color', 'style', 'weight', 'width', 'gap', 'look', 'align', 'icon', 'icon_type', 'view', 'text', 'html_tag' ],
             $style_result['handled_keys']
         ) );
 

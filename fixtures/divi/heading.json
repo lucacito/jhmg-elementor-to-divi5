@@ -18,11 +18,18 @@
                 "elements": [
                   {
                     "id": "heading-1",
-                    "name": "divi/text",
+                    "name": "divi/heading",
                     "settings": {
-                      "content": {
+                      "title": {
                         "innerContent": {
-                          "desktop": { "value": "<h2>Hello World</h2>" }
+                          "desktop": { "value": "Hello World" }
+                        },
+                        "decoration": {
+                          "font": {
+                            "font": {
+                              "desktop": { "value": { "headingLevel": "h2" } }
+                            }
+                          }
                         }
                       }
                     },

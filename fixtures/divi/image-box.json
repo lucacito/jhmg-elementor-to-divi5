@@ -32,7 +32,7 @@
                       },
                       "title": {
                         "innerContent": {
-                          "desktop": { "value": "Feature Title" }
+                          "desktop": { "value": { "text": "Feature Title" } }
                         }
                       },
                       "content": {
