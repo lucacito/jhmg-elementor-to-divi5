@@ -1,0 +1,586 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2867
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fmodern\fcharset0 Courier;\f1\froman\fcharset0 Times-Roman;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs26 \cf0 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 # Elementor to Divi 5 Converter Project Instructions\
+\
+## Project Goal\
+\
+Build a WordPress plugin that converts Elementor-built pages into Divi 5 pages.\
+\
+The converter must transform Elementor's internal data structure into Divi 5's internal structure.\
+\
+The goal is NOT HTML conversion.\
+\
+The conversion pipeline is:\
+\
+Elementor JSON Tree\
+        |\
+        |\
+Converter Engine\
+        |\
+        |\
+Divi 5 JSON Structure\
+        |\
+        |\
+Rendered Divi Page\
+\
+\
+---\
+\
+# Core Development Rules\
+\
+## Never convert HTML\
+\
+Do not scrape rendered HTML.\
+\
+Always work with:\
+\
+Elementor:\
+- post meta\
+- Elementor document JSON\
+- widget structures\
+- settings arrays\
+\
+Divi:\
+- module data\
+- layout structures\
+- attributes\
+- design settings\
+\
+\
+---\
+\
+# Project Structure\
+\
+Maintain this structure:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 plugin/\uc0\u8232 \u9492 \u9472 \u9472  elementor-divi5-converter/\u8232 \u9500 \u9472 \u9472  elementor-divi5-converter.php\u8232 \u9500 \u9472 \u9472  includes/\u8232 \u9474  \u9500 \u9472 \u9472  converter/\u8232 \u9474  \u9500 \u9472 \u9472  parsers/\u8232 \u9474  \u9500 \u9472 \u9472  exporters/\u8232 \u9474  \u9492 \u9472 \u9472  helpers/\u8232 \u9474 \u8232 \u9500 \u9472 \u9472  mappings/\u8232 \u9474  \u9500 \u9472 \u9472  heading.php\u8232 \u9474  \u9500 \u9472 \u9472  text.php\u8232 \u9474  \u9500 \u9472 \u9472  image.php\u8232 \u9474  \u9492 \u9472 \u9472  button.php\u8232 \u9474 \u8232 \u9492 \u9472 \u9472  tests/\
+docs/\
+fixtures/\uc0\u8232 \u9500 \u9472 \u9472  elementor/\u8232 \u9492 \u9472 \u9472  divi/
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+---\
+\
+# Elementor Research\
+\
+The Elementor source code is available locally.\
+\
+Analyze:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 wp-content/plugins/elementor/
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 Important areas:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 includes/documents/\uc0\u8232 includes/base/\u8232 modules/\u8232 widgets/
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 Understand:\
+\
+- Elementor document model\
+- sections\
+- containers\
+- columns\
+- widgets\
+- controls\
+- settings storage\
+\
+\
+The main source data is usually:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 _elementor_data
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 stored in WordPress post meta.\
+\
+\
+Example structure:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 Section\uc0\u8232 |\u8232 \u9492 \u9472 \u9472  Container\u8232 |\u8232 \u9492 \u9472 \u9472  Widget
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 The converter must preserve this hierarchy.\
+\
+\
+---\
+\
+# Divi 5 Research\
+\
+The Divi 5 theme/plugin source is available locally.\
+\
+Analyze:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 wp-content/themes/Divi/
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 Understand:\
+\
+- module registration\
+- module attributes\
+- design settings\
+- responsive settings\
+- presets\
+- layout storage\
+\
+\
+Create documentation:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 docs/divi5-schema.md
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 before writing conversion logic.\
+\
+\
+---\
+\
+# First Development Task\
+\
+Before coding:\
+\
+Create:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 docs/elementor-schema.md
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 Document:\
+\
+- Elementor JSON format\
+- available element types\
+- widget structures\
+- important settings\
+\
+\
+Create:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 docs/divi5-schema.md
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 Document:\
+\
+- Divi 5 layout format\
+- modules\
+- attributes\
+- settings\
+\
+\
+Create:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 docs/conversion-map.md
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 Example:\
+\
+| Elementor | Divi 5 |\
+|---|---|\
+| Heading Widget | Text Module |\
+| Text Editor | Text Module |\
+| Image Widget | Image Module |\
+| Button Widget | Button Module |\
+| Container | Section / Row |\
+\
+---\
+\
+# Coding Architecture\
+\
+Do not create one large converter file.\
+\
+Use independent converters.\
+\
+Example:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 mappings/\
+heading.php\uc0\u8232 image.php\u8232 button.php\u8232 text.php
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 Each Elementor widget should have its own conversion handler.\
+\
+\
+Avoid:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 if widget == heading\uc0\u8232 if widget == image\u8232 if widget == button
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 Use a registry system:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 Elementor Widget\uc0\u8232 |\u8232 |\u8232 Converter Handler\u8232 |\u8232 |\u8232 Divi Module
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+---\
+\
+# Local WordPress Test Environment\
+\
+Use a local WordPress installation.\
+\
+Preferred:\
+\
+LocalWP\
+\
+Install:\
+\
+- WordPress latest\
+- Elementor\
+- Divi 5\
+- Converter plugin\
+\
+\
+The plugin must be symlinked.\
+\
+Development files:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 ~/Projects/converter/plugin/
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+WordPress loads:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 wp-content/plugins/
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+Use:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 ln -s source-folder wordpress-plugin-folder
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+Changes made in VS Code must immediately appear in WordPress.\
+\
+\
+---\
+\
+# Automated Testing\
+\
+Do not rely only on manual testing.\
+\
+\
+Create:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 fixtures/\
+elementor/\uc0\u8232 heading.json\u8232 image.json\u8232 hero.json\
+divi/\
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs26 \cf0 expected-heading.json\
+expected-image.json\
+\
+Tests should:\
+\
+1. Load Elementor JSON\
+2. Run converter\
+3. Generate Divi output\
+4. Compare result\
+\
+\
+Use PHPUnit.\
+\
+Every new converter needs tests.\
+\
+\
+---\
+\
+# Visual Testing\
+\
+Add screenshot testing.\
+\
+Recommended:\
+\
+Playwright\
+\
+Workflow:\
+\
+1. Create Elementor test page\
+2. Convert page\
+3. Render Divi page\
+4. Screenshot\
+5. Compare output\
+\
+\
+Visual differences should help improve mappings.\
+\
+\
+---\
+\
+# Development Roadmap\
+\
+\
+## Phase 1\
+\
+Support:\
+\
+- Sections\
+- Containers\
+- Columns\
+- Heading\
+- Text\
+- Image\
+- Button\
+\
+\
+## Phase 2\
+\
+Support:\
+\
+- typography\
+- colors\
+- spacing\
+- backgrounds\
+- responsive settings\
+\
+\
+## Phase 3\
+\
+Support:\
+\
+- forms\
+- sliders\
+- dynamic content\
+- WooCommerce\
+- advanced widgets\
+\
+\
+---\
+\
+# Conversion Principles\
+\
+\
+Always preserve:\
+\
+- text content\
+- images\
+- links\
+- CSS values\
+- responsive settings\
+- spacing\
+- typography\
+\
+\
+Never destroy:\
+\
+- original Elementor page\
+\
+\
+Conversion should create:\
+\
+Original Elementor page\
+\
++\
+\
+New Divi converted page\
+\
+\
+---\
+\
+# Logging\
+\
+Every conversion should generate a report.\
+\
+Example:\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 Converted:\
+Heading Widget\uc0\u8232 Image Widget\
+Warnings:\
+Unsupported widget:\uc0\u8232 Elementor Form Widget\
+Ignored:\uc0\u8232 Custom CSS
+\f0\fs26 \
+\pard\pardeftab720\partightenfactor0
+\cf0 ---\
+\
+# Claude Working Rules\
+\
+Before making code changes:\
+\
+1. Inspect existing architecture\
+2. Explain proposed changes\
+3. Create tests\
+4. Implement\
+5. Run tests\
+\
+\
+Do not make large rewrites without confirmation.\
+\
+\
+---\
+\
+# Quality Standard\
+\
+The plugin should eventually be production-ready.\
+\
+Prioritize:\
+\
+- clean architecture\
+- extensibility\
+- test coverage\
+- predictable conversions\
+- safe WordPress practices\
+\
+# Autonomous Testing Workflow\
+\
+Claude must test every important change automatically.\
+\
+Do not assume the code works after editing.\
+\
+For every converter feature:\
+\
+1. Create or update a test fixture\
+2. Run the converter\
+3. Verify generated Divi output\
+4. Report failures\
+5. Fix issues before moving on\
+\
+\
+## WordPress Test Environment\
+\
+The project uses a local WordPress installation.\
+\
+Available environment:\
+\
+- WordPress\
+- Elementor\
+- Divi 5\
+- Converter plugin\
+\
+\
+Claude should use WP CLI when possible.\
+\
+Examples:\
+\
+Activate plugin:\
+\
+wp plugin activate elementor-divi5-converter\
+\
+\
+Create test content:\
+\
+wp post create\
+\
+\
+Reset test environment:\
+\
+wp db reset --yes\
+\
+\
+## Conversion Tests\
+\
+Every Elementor widget converter needs:\
+\
+Input:\
+\
+fixtures/elementor/example.json\
+\
+\
+Expected:\
+\
+fixtures/divi/example.json\
+\
+\
+Test:\
+\
+Elementor JSON\
+        |\
+        |\
+Converter\
+        |\
+        |\
+Compare with expected Divi JSON\
+\
+\
+A conversion is successful when:\
+\
+- correct Divi module created\
+- text preserved\
+- images preserved\
+- links preserved\
+- styles mapped\
+- responsive settings preserved\
+\
+\
+## Browser Testing\
+\
+Use Playwright for visual testing.\
+\
+Workflow:\
+\
+1. Import Elementor test page\
+2. Convert page\
+3. Open converted Divi page\
+4. Take screenshot\
+5. Compare screenshot\
+\
+\
+If visual differences exist:\
+\
+- identify the cause\
+- update converter\
+- rerun test\
+\
+\
+## Before finishing any task\
+\
+Always provide:\
+\
+- files changed\
+- tests executed\
+- test results\
+- remaining warnings\
+\
+\pard\pardeftab720\partightenfactor0
+
+\f1\fs24 \cf0 \strokec2 ## Testing Commands\
+\
+Before declaring any task complete, run:\
+\
+./test.sh\
+\
+If tests fail:\
+- inspect error\
+- fix code\
+- rerun tests
+\f0\fs26 \strokec2 \
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\fs24 \cf0 \
+}

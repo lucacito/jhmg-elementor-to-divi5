@@ -1,0 +1,23 @@
+[
+  {
+    "id": "container-1",
+    "elType": "container",
+    "settings": {
+      "layout": "boxed"
+    },
+    "elements": [
+      {
+        "id": "heading-1",
+        "elType": "widget",
+        "widgetType": "e-heading",
+        "settings": {
+          "title": {
+            "$$type": "string",
+            "value": "Inside Container"
+          }
+        },
+        "elements": []
+      }
+    ]
+  }
+]

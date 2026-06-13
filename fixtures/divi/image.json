@@ -1,0 +1,41 @@
+{
+  "divi": {
+    "elements": [
+      {
+        "id": "section-1",
+        "name": "divi/section",
+        "settings": {
+          "module": {}
+        },
+        "elements": [
+          {
+            "id": "column-1",
+            "name": "divi/column",
+            "settings": {
+              "module": {}
+            },
+            "elements": [
+              {
+                "id": "image-1",
+                "name": "divi/image",
+                "settings": {
+                  "src": "https://example.com/sample.jpg",
+                  "link": [],
+                  "module": {
+                    "image": {
+                      "src": "https://example.com/sample.jpg",
+                      "id": 123,
+                      "alt": "Sample image"
+                    }
+                  }
+                },
+                "elements": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unsupported": []
+}

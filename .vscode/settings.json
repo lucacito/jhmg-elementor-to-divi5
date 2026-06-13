@@ -1,0 +1,12 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "composer": true,
+        "npm install": true,
+        "npx playwright": true,
+        "vendor/bin/phpunit": true,
+        "/^pwd && ls -l vendor/bin/phpunit && file vendor/bin/phpunit && php -v$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

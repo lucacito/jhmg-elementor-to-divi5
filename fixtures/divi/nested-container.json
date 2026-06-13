@@ -1,0 +1,104 @@
+{
+  "divi": {
+    "elements": [
+      {
+        "id": "section-1",
+        "name": "divi/section",
+        "settings": {
+          "module": {}
+        },
+        "elements": [
+          {
+            "id": "column-1",
+            "name": "divi/column",
+            "settings": {
+              "module": {}
+            },
+            "elements": [
+              {
+                "id": "container-1",
+                "name": "divi/section",
+                "settings": {
+                  "module": {}
+                },
+                "elements": [
+                  {
+                    "id": "container-1-row",
+                    "name": "divi/row",
+                    "settings": {
+                      "module": {}
+                    },
+                    "elements": [
+                      {
+                        "id": "container-1-col",
+                        "name": "divi/column",
+                        "settings": {
+                          "module": {}
+                        },
+                        "elements": [
+                          {
+                            "id": "column-2",
+                            "name": "divi/column",
+                            "settings": {
+                              "module": {}
+                            },
+                            "elements": [
+                              {
+                                "id": "heading-1",
+                                "name": "divi/text",
+                                "settings": {
+                                  "innerContent": "Nested Heading",
+                                  "tagName": "h2",
+                                  "link": [],
+                                  "module": {
+                                    "title": {
+                                      "$$type": "string",
+                                      "value": "Nested Heading"
+                                    },
+                                    "tag": {
+                                      "$$type": "string",
+                                      "value": "h2"
+                                    }
+                                  }
+                                },
+                                "elements": []
+                              }
+                            ]
+                          },
+                          {
+                            "id": "column-3",
+                            "name": "divi/column",
+                            "settings": {
+                              "module": {}
+                            },
+                            "elements": [
+                              {
+                                "id": "text-1",
+                                "name": "divi/text",
+                                "settings": {
+                                  "innerContent": "Nested paragraph text.",
+                                  "module": {
+                                    "paragraph": {
+                                      "$$type": "string",
+                                      "value": "Nested paragraph text."
+                                    }
+                                  }
+                                },
+                                "elements": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unsupported": []
+}

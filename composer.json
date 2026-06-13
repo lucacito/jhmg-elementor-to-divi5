@@ -1,0 +1,15 @@
+{
+  "require-dev": {
+    "phpunit/phpunit": "^13.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "ElementorDivi5Converter\\": "plugin/elementor-divi5-converter/includes/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "ElementorDivi5Converter\\Tests\\": "tests/"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "jhmg-elementor-to-divi5",
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "^1.44.0"
+  },
+  "scripts": {
+    "test": "vendor/bin/phpunit && npx playwright test",
+    "test:all": "npm run test:php && npm run test:browser",
+    "test:php": "vendor/bin/phpunit",
+    "test:browser": "npx playwright test"
+  }
+}

@@ -1,0 +1,33 @@
+[
+  {
+    "id": "section-1",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-1",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "button-1",
+            "elType": "widget",
+            "widgetType": "e-button",
+            "settings": {
+              "text": {
+                "$$type": "string",
+                "value": "Click Here"
+              },
+              "link": {
+                "url": "https://example.com",
+                "isExternal": false,
+                "nofollow": false
+              }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

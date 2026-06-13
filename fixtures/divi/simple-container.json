@@ -1,0 +1,54 @@
+{
+  "divi": {
+    "elements": [
+      {
+        "id": "container-1",
+        "name": "divi/section",
+        "settings": {
+          "module": {
+            "layout": "boxed"
+          }
+        },
+        "elements": [
+          {
+            "id": "container-1-row",
+            "name": "divi/row",
+            "settings": {
+              "module": {
+                "layout": "boxed"
+              }
+            },
+            "elements": [
+              {
+                "id": "container-1-col",
+                "name": "divi/column",
+                "settings": {
+                  "module": []
+                },
+                "elements": [
+                  {
+                    "id": "heading-1",
+                    "name": "divi/text",
+                    "settings": {
+                      "innerContent": "Inside Container",
+                      "tagName": "h2",
+                      "link": [],
+                      "module": {
+                        "title": {
+                          "$$type": "string",
+                          "value": "Inside Container"
+                        }
+                      }
+                    },
+                    "elements": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unsupported": []
+}

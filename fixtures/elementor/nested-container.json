@@ -1,0 +1,65 @@
+[
+  {
+    "id": "section-1",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-1",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "container-1",
+            "elType": "container",
+            "settings": {},
+            "elements": [
+              {
+                "id": "column-2",
+                "elType": "column",
+                "settings": {},
+                "elements": [
+                  {
+                    "id": "heading-1",
+                    "elType": "widget",
+                    "widgetType": "e-heading",
+                    "settings": {
+                      "title": {
+                        "$$type": "string",
+                        "value": "Nested Heading"
+                      },
+                      "tag": {
+                        "$$type": "string",
+                        "value": "h2"
+                      }
+                    },
+                    "elements": []
+                  }
+                ]
+              },
+              {
+                "id": "column-3",
+                "elType": "column",
+                "settings": {},
+                "elements": [
+                  {
+                    "id": "text-1",
+                    "elType": "widget",
+                    "widgetType": "e-paragraph",
+                    "settings": {
+                      "paragraph": {
+                        "$$type": "string",
+                        "value": "Nested paragraph text."
+                      }
+                    },
+                    "elements": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

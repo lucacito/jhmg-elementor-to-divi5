@@ -1,0 +1,49 @@
+{
+  "divi": {
+    "elements": [
+      {
+        "id": "section-1",
+        "name": "divi/section",
+        "settings": {
+          "module": {}
+        },
+        "elements": [
+          {
+            "id": "column-1",
+            "name": "divi/column",
+            "settings": {
+              "module": {}
+            },
+            "elements": [
+              {
+                "id": "button-1",
+                "name": "divi/button",
+                "settings": {
+                  "text": "Click Here",
+                  "link": {
+                    "url": "https://example.com",
+                    "isExternal": false,
+                    "nofollow": false
+                  },
+                  "module": {
+                    "text": {
+                      "$$type": "string",
+                      "value": "Click Here"
+                    },
+                    "link": {
+                      "url": "https://example.com",
+                      "isExternal": false,
+                      "nofollow": false
+                    }
+                  }
+                },
+                "elements": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unsupported": []
+}

@@ -1,0 +1,28 @@
+[
+  {
+    "id": "section-1",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-1",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "text-1",
+            "elType": "widget",
+            "widgetType": "e-paragraph",
+            "settings": {
+              "paragraph": {
+                "$$type": "string",
+                "value": "This is sample paragraph text."
+              }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

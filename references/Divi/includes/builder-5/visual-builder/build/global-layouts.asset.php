@@ -1,0 +1,1 @@
+<?php return array('dependencies' => array('divi-conversion', 'divi-data', 'divi-edit-post', 'divi-middleware', 'divi-module-utils', 'divi-rest', 'divi-serialized-post', 'lodash'), 'version' => '33e975388a988b083fcb');

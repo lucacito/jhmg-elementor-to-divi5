@@ -1,0 +1,23 @@
+/*!
+* https://github.com/Starcounter-Jack/JSON-Patch
+* (c) 2017-2022 Joachim Wester
+* MIT licensed
+*/
+
+/*! http://mths.be/fromcodepoint v0.1.0 by @mathias */
+
+/**
+  * postmate - A powerful, simple, promise-based postMessage library
+  * @version 1.1.9
+  * @link https://github.com/dollarshaveclub/postmate
+  * @author Jacob Kelley <jakie8@gmail.com>
+  * @license MIT */
+
+/**
+* [js-sha256]{@link https://github.com/emn178/js-sha256}
+*
+* @version 0.11.1
+* @author Chen, Yi-Cyuan [emn178@gmail.com]
+* @copyright Chen, Yi-Cyuan 2014-2025
+* @license MIT
+*/

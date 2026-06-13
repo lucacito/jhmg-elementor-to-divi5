@@ -1,0 +1,32 @@
+[
+  {
+    "id": "section-1",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-1",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "heading-1",
+            "elType": "widget",
+            "widgetType": "e-heading",
+            "settings": {
+              "title": {
+                "$$type": "string",
+                "value": "Hello World"
+              },
+              "tag": {
+                "$$type": "string",
+                "value": "h2"
+              }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

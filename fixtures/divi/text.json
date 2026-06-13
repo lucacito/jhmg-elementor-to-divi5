@@ -1,0 +1,39 @@
+{
+  "divi": {
+    "elements": [
+      {
+        "id": "section-1",
+        "name": "divi/section",
+        "settings": {
+          "module": {}
+        },
+        "elements": [
+          {
+            "id": "column-1",
+            "name": "divi/column",
+            "settings": {
+              "module": {}
+            },
+            "elements": [
+              {
+                "id": "text-1",
+                "name": "divi/text",
+                "settings": {
+                  "innerContent": "This is sample paragraph text.",
+                  "module": {
+                    "paragraph": {
+                      "$$type": "string",
+                      "value": "This is sample paragraph text."
+                    }
+                  }
+                },
+                "elements": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unsupported": []
+}

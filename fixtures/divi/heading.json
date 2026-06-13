@@ -1,0 +1,45 @@
+{
+  "divi": {
+    "elements": [
+      {
+        "id": "section-1",
+        "name": "divi/section",
+        "settings": {
+          "module": {}
+        },
+        "elements": [
+          {
+            "id": "column-1",
+            "name": "divi/column",
+            "settings": {
+              "module": {}
+            },
+            "elements": [
+              {
+                "id": "heading-1",
+                "name": "divi/text",
+                "settings": {
+                  "innerContent": "Hello World",
+                  "tagName": "h2",
+                  "link": [],
+                  "module": {
+                    "title": {
+                      "$$type": "string",
+                      "value": "Hello World"
+                    },
+                    "tag": {
+                      "$$type": "string",
+                      "value": "h2"
+                    }
+                  }
+                },
+                "elements": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unsupported": []
+}
