@@ -20,6 +20,7 @@
                 "name": "divi/image",
                 "settings": {
                   "src": "https://example.com/sample.jpg",
+                  "alt": "Sample image",
                   "link": [],
                   "module": {
                     "image": {

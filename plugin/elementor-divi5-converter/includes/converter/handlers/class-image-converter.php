@@ -13,6 +13,7 @@ class ImageConverter extends BaseElementorConverter {
         $settings = $element['settings'] ?? [];
         $image = $this->getSettingValue( $settings, 'image', '' );
         $url = $this->extractImageSource( $image );
+        $alt = $this->extractImageAlt( $image );
         $link = $this->preserveResponsiveValue( $settings['link'] ?? [] );
 
         return [
@@ -20,6 +21,7 @@ class ImageConverter extends BaseElementorConverter {
             'name' => 'divi/image',
             'settings' => [
                 'src' => $url,
+                'alt' => $alt,
                 'link' => $link,
                 'module' => $this->normalizeSettings( $settings ),
             ],
@@ -34,6 +36,14 @@ class ImageConverter extends BaseElementorConverter {
 
         if ( is_string( $image ) ) {
             return $image;
+        }
+
+        return '';
+    }
+
+    private function extractImageAlt( mixed $image ): string {
+        if ( is_array( $image ) && isset( $image['alt'] ) && is_string( $image['alt'] ) ) {
+            return $image['alt'];
         }
 
         return '';

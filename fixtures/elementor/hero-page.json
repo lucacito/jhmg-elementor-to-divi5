@@ -1,0 +1,201 @@
+[
+  {
+    "id": "hero-section",
+    "elType": "section",
+    "settings": {
+      "padding": {
+        "unit": "px",
+        "top": "80",
+        "right": "0",
+        "bottom": "80",
+        "left": "0",
+        "isLinked": false
+      }
+    },
+    "elements": [
+      {
+        "id": "hero-column",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "hero-heading",
+            "elType": "widget",
+            "widgetType": "e-heading",
+            "settings": {
+              "title": {
+                "$$type": "string",
+                "value": "Welcome to Our Site"
+              },
+              "tag": {
+                "$$type": "string",
+                "value": "h1"
+              }
+            },
+            "elements": []
+          },
+          {
+            "id": "hero-text",
+            "elType": "widget",
+            "widgetType": "e-paragraph",
+            "settings": {
+              "paragraph": {
+                "$$type": "string",
+                "value": "Build beautiful pages with ease. Our platform makes it simple to create stunning experiences."
+              }
+            },
+            "elements": []
+          },
+          {
+            "id": "hero-button",
+            "elType": "widget",
+            "widgetType": "e-button",
+            "settings": {
+              "text": {
+                "$$type": "string",
+                "value": "Get Started"
+              },
+              "link": {
+                "url": "https://example.com/start",
+                "isExternal": false,
+                "nofollow": false
+              }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "about-section",
+    "elType": "section",
+    "settings": {
+      "padding": {
+        "unit": "px",
+        "top": "60",
+        "right": "0",
+        "bottom": "60",
+        "left": "0",
+        "isLinked": false
+      }
+    },
+    "elements": [
+      {
+        "id": "about-col-left",
+        "elType": "column",
+        "settings": {
+          "_column_size": 50
+        },
+        "elements": [
+          {
+            "id": "about-heading",
+            "elType": "widget",
+            "widgetType": "e-heading",
+            "settings": {
+              "title": {
+                "$$type": "string",
+                "value": "About Us"
+              },
+              "tag": {
+                "$$type": "string",
+                "value": "h2"
+              }
+            },
+            "elements": []
+          },
+          {
+            "id": "about-text",
+            "elType": "widget",
+            "widgetType": "e-paragraph",
+            "settings": {
+              "paragraph": {
+                "$$type": "string",
+                "value": "We are a creative agency dedicated to building world-class digital experiences."
+              }
+            },
+            "elements": []
+          }
+        ]
+      },
+      {
+        "id": "about-col-right",
+        "elType": "column",
+        "settings": {
+          "_column_size": 50
+        },
+        "elements": [
+          {
+            "id": "about-image",
+            "elType": "widget",
+            "widgetType": "e-image",
+            "settings": {
+              "image": {
+                "src": "https://example.com/about.jpg",
+                "id": 456,
+                "alt": "About our team"
+              }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cta-section",
+    "elType": "section",
+    "settings": {
+      "padding": {
+        "unit": "px",
+        "top": "80",
+        "right": "0",
+        "bottom": "80",
+        "left": "0",
+        "isLinked": false
+      }
+    },
+    "elements": [
+      {
+        "id": "cta-column",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "cta-heading",
+            "elType": "widget",
+            "widgetType": "e-heading",
+            "settings": {
+              "title": {
+                "$$type": "string",
+                "value": "Ready to Begin?"
+              },
+              "tag": {
+                "$$type": "string",
+                "value": "h2"
+              }
+            },
+            "elements": []
+          },
+          {
+            "id": "cta-button",
+            "elType": "widget",
+            "widgetType": "e-button",
+            "settings": {
+              "text": {
+                "$$type": "string",
+                "value": "Contact Us"
+              },
+              "link": {
+                "url": "https://example.com/contact",
+                "isExternal": false,
+                "nofollow": false
+              }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

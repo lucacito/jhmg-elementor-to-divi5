@@ -87,8 +87,8 @@ final class DiviShortcodeSerializerTest extends TestCase {
         $blocks = $serializer->serialize( $divi_data );
 
         $text_attrs   = '{"content":{"innerContent":{"desktop":{"value":"<h2>Hello World</h2>"}}}}';
-        $button_attrs = '{"button":{"innerContent":{"text":{"desktop":{"value":"Click Here"}},"linkUrl":{"desktop":{"value":"https://example.com"}}}}}';
-        $image_attrs  = '{"image":{"innerContent":{"src":{"desktop":{"value":"https://example.com/sample.jpg"}}}}}';
+        $button_attrs = '{"button":{"innerContent":{"desktop":{"value":{"text":"Click Here","linkUrl":"https://example.com"}}}}}';
+        $image_attrs  = '{"image":{"innerContent":{"desktop":{"value":{"src":"https://example.com/sample.jpg"}}}}}';
 
         $expected = '<!-- wp:divi/section {} -->'
             . '<!-- wp:divi/row {} -->'

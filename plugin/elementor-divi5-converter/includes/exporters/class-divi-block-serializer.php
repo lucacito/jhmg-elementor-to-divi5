@@ -164,45 +164,64 @@ class DiviBlockSerializer {
     }
 
     private function buttonAttrs( array $element ): array {
-        $settings    = $element['settings'] ?? [];
-        $text        = is_string( $settings['text'] ?? '' ) ? $settings['text'] : '';
-        $link        = $settings['link'] ?? [];
-        $url         = ( is_array( $link ) && ! empty( $link['url'] ) ) ? $link['url'] : '';
-        $new_window  = ( is_array( $link ) && ! empty( $link['isExternal'] ) );
-        $nofollow    = ( is_array( $link ) && ! empty( $link['nofollow'] ) );
+        $settings   = $element['settings'] ?? [];
+        $text       = is_string( $settings['text'] ?? '' ) ? $settings['text'] : '';
+        $link       = $settings['link'] ?? [];
+        $url        = ( is_array( $link ) && ! empty( $link['url'] ) ) ? $link['url'] : '';
+        $new_window = ( is_array( $link ) && ! empty( $link['isExternal'] ) );
+        $nofollow   = ( is_array( $link ) && ! empty( $link['nofollow'] ) );
 
-        $inner = [];
+        $value = [];
 
         if ( $text !== '' ) {
-            $inner['text'] = [ 'desktop' => [ 'value' => $text ] ];
+            $value['text'] = $text;
         }
 
         if ( $url !== '' ) {
-            $inner['linkUrl'] = [ 'desktop' => [ 'value' => $url ] ];
+            $value['linkUrl'] = $url;
         }
 
         if ( $new_window ) {
-            $inner['linkTarget'] = [ 'desktop' => [ 'value' => 'on' ] ];
+            $value['linkTarget'] = '_blank';
         }
 
         if ( $nofollow ) {
-            $inner['linkRel'] = [ 'desktop' => [ 'value' => 'nofollow' ] ];
+            $value['rel'] = 'nofollow';
         }
 
-        return [ 'button' => [ 'innerContent' => $inner ] ];
+        return [
+            'button' => [
+                'innerContent' => [
+                    'desktop' => [ 'value' => $value ],
+                ],
+            ],
+        ];
     }
 
     private function imageAttrs( array $element ): array {
         $settings = $element['settings'] ?? [];
-        $src      = is_string( $settings['src'] ?? '' ) ? $settings['src'] : '';
+        $src_raw  = $settings['src'] ?? '';
+        $alt_raw  = $settings['alt'] ?? '';
+        $src      = is_string( $src_raw ) ? $src_raw : '';
+        $alt      = is_string( $alt_raw ) ? $alt_raw : '';
 
-        $inner = [];
+        $value = [];
 
         if ( $src !== '' ) {
-            $inner['src'] = [ 'desktop' => [ 'value' => $src ] ];
+            $value['src'] = $src;
         }
 
-        return [ 'image' => [ 'innerContent' => $inner ] ];
+        if ( $alt !== '' ) {
+            $value['alt'] = $alt;
+        }
+
+        return [
+            'image' => [
+                'innerContent' => [
+                    'desktop' => [ 'value' => $value ],
+                ],
+            ],
+        ];
     }
 
     // -------------------------------------------------------------------------
