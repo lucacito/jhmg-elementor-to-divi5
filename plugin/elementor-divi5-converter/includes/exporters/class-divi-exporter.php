@@ -36,6 +36,14 @@ class DiviExporter {
         // Preserve the converted structure for debugging and later export.
         $meta['_edc_divi_data'] = json_encode( $divi_data );
 
+        // Store the conversion report (counts, warnings, skipped settings, unsupported).
+        if ( isset( $divi_data['report'] ) ) {
+            $report = array_merge( $divi_data['report'], [
+                'unsupported' => $divi_data['unsupported'] ?? [],
+            ] );
+            $meta['_edc_conversion_report'] = json_encode( $report );
+        }
+
         // Optionally include a flag that indicates Divi 5 format.
         $meta['_et_pb_use_divi_5'] = '1';
 

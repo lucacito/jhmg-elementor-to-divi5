@@ -10,13 +10,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class ColumnConverter extends BaseElementorConverter {
     public function convert( array $element ): array {
+        $id       = $element['id'] ?? uniqid( 'divi_column_' );
+        $settings = $element['settings'] ?? [];
+        $children = $this->convertChildren( $element );
+
+        $this->engine->logConverted( 'column' );
+
+        if ( empty( $children ) ) {
+            $this->engine->logWarning( "Empty column after conversion: {$id}" );
+        }
+
         return [
-            'id' => $element['id'] ?? uniqid( 'divi_column_' ),
-            'name' => 'divi/column',
+            'id'       => $id,
+            'name'     => 'divi/column',
             'settings' => [
-                'module' => $this->normalizeSettings( $element['settings'] ?? [] ),
+                'module' => $this->normalizeSettings( $settings ),
             ],
-            'elements' => $this->convertChildren( $element ),
+            'elements' => $children,
         ];
     }
 }

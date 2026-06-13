@@ -186,7 +186,7 @@ class DiviBlockSerializer {
         }
 
         if ( $nofollow ) {
-            $value['rel'] = 'nofollow';
+            $value['rel'] = [ 'nofollow' ];
         }
 
         return [

@@ -11,14 +11,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 class TextEditorConverter extends BaseElementorConverter {
     public function convert( array $element ): array {
         $settings = $element['settings'] ?? [];
-        $content = $this->getSettingValue( $settings, 'paragraph', $this->getSettingValue( $settings, 'editor', '' ) );
+        $content  = $this->getSettingValue( $settings, 'paragraph', $this->getSettingValue( $settings, 'editor', '' ) );
+
+        $this->engine->logConverted( 'text' );
 
         return [
-            'id' => $element['id'] ?? uniqid( 'divi_text_' ),
-            'name' => 'divi/text',
+            'id'       => $element['id'] ?? uniqid( 'divi_text_' ),
+            'name'     => 'divi/text',
             'settings' => [
                 'innerContent' => $content,
-                'module' => $this->normalizeSettings( $settings ),
+                'module'       => $this->normalizeSettings( $settings ),
             ],
             'elements' => [],
         ];

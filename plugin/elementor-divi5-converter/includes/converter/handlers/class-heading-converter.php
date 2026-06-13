@@ -11,18 +11,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 class HeadingConverter extends BaseElementorConverter {
     public function convert( array $element ): array {
         $settings = $element['settings'] ?? [];
-        $title = $this->getSettingValue( $settings, 'title' );
-        $tag = $this->getSettingValue( $settings, 'tag', 'h2' );
-        $link = $this->preserveResponsiveValue( $settings['link'] ?? [] );
+        $title    = $this->getSettingValue( $settings, 'title' );
+        $tag      = $this->getSettingValue( $settings, 'tag', 'h2' );
+        $link     = $this->preserveResponsiveValue( $settings['link'] ?? [] );
+
+        $this->engine->logConverted( 'heading' );
 
         return [
-            'id' => $element['id'] ?? uniqid( 'divi_text_' ),
-            'name' => 'divi/text',
+            'id'       => $element['id'] ?? uniqid( 'divi_text_' ),
+            'name'     => 'divi/text',
             'settings' => [
                 'innerContent' => $title,
-                'tagName' => $tag,
-                'link' => $link,
-                'module' => $this->normalizeSettings( $settings ),
+                'tagName'      => $tag,
+                'link'         => $link,
+                'module'       => $this->normalizeSettings( $settings ),
             ],
             'elements' => [],
         ];

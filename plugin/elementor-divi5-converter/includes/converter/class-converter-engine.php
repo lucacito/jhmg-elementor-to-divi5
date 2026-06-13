@@ -12,19 +12,43 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ConverterEngine {
     private ConverterRegistry $registry;
     private array $unsupportedWidgets = [];
+    private array $conversionCounts   = [];
+    private array $conversionWarnings = [];
+    private array $skippedSettings    = [];
 
     public function __construct() {
         $this->registry = new ConverterRegistry( $this );
+    }
+
+    public function logConverted( string $type ): void {
+        $this->conversionCounts[ $type ] = ( $this->conversionCounts[ $type ] ?? 0 ) + 1;
+    }
+
+    public function logWarning( string $message ): void {
+        $this->conversionWarnings[] = $message;
+    }
+
+    public function logSkippedSetting( string $message ): void {
+        $this->skippedSettings[] = $message;
+    }
+
+    public function getReport(): array {
+        return [
+            'converted'        => $this->conversionCounts,
+            'warnings'         => $this->conversionWarnings,
+            'skipped_settings' => $this->skippedSettings,
+        ];
     }
 
     public function convert( array $elementor_data ): array {
         $elements = $this->extractRootElements( $elementor_data );
 
         return [
-            'divi' => [
+            'divi'        => [
                 'elements' => $this->convertChildren( $elements ),
             ],
             'unsupported' => $this->unsupportedWidgets,
+            'report'      => $this->getReport(),
         ];
     }
 

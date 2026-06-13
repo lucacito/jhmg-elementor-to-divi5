@@ -1,0 +1,290 @@
+[
+  {
+    "id": "stress-section-1",
+    "elType": "section",
+    "settings": {
+      "background_color": "#f5f5f5",
+      "background_image": {
+        "url": "https://example.com/bg-hero.jpg"
+      },
+      "custom_padding": {
+        "unit": "px",
+        "top": "60",
+        "right": "20",
+        "bottom": "60",
+        "left": "20",
+        "isLinked": false
+      }
+    },
+    "elements": [
+      {
+        "id": "stress-col-1",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "stress-h1",
+            "elType": "widget",
+            "widgetType": "e-heading",
+            "settings": {
+              "title": { "$$type": "string", "value": "Stress Test Heading H1" },
+              "tag":   { "$$type": "string", "value": "h1" }
+            },
+            "elements": []
+          },
+          {
+            "id": "stress-h2",
+            "elType": "widget",
+            "widgetType": "e-heading",
+            "settings": {
+              "title": { "$$type": "string", "value": "Stress Test Heading H2" },
+              "tag":   { "$$type": "string", "value": "h2" }
+            },
+            "elements": []
+          },
+          {
+            "id": "stress-h3",
+            "elType": "widget",
+            "widgetType": "e-heading",
+            "settings": {
+              "title": { "$$type": "string", "value": "Stress Test Heading H3" },
+              "tag":   { "$$type": "string", "value": "h3" }
+            },
+            "elements": []
+          },
+          {
+            "id": "stress-h4",
+            "elType": "widget",
+            "widgetType": "e-heading",
+            "settings": {
+              "title": { "$$type": "string", "value": "Stress Test Heading H4" },
+              "tag":   { "$$type": "string", "value": "h4" }
+            },
+            "elements": []
+          },
+          {
+            "id": "stress-long-text",
+            "elType": "widget",
+            "widgetType": "e-paragraph",
+            "settings": {
+              "paragraph": { "$$type": "string", "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident." }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "stress-section-2",
+    "elType": "section",
+    "settings": {
+      "custom_margin": {
+        "unit": "px",
+        "top": "0",
+        "right": "0",
+        "bottom": "40",
+        "left": "0",
+        "isLinked": false
+      }
+    },
+    "elements": [
+      {
+        "id": "stress-col-2a",
+        "elType": "column",
+        "settings": { "_column_size": 50 },
+        "elements": [
+          {
+            "id": "stress-button-external",
+            "elType": "widget",
+            "widgetType": "e-button",
+            "settings": {
+              "text": { "$$type": "string", "value": "External Link" },
+              "link": {
+                "url": "https://external-site.com",
+                "isExternal": true,
+                "nofollow": true
+              }
+            },
+            "elements": []
+          },
+          {
+            "id": "stress-image-alt",
+            "elType": "widget",
+            "widgetType": "e-image",
+            "settings": {
+              "image": {
+                "src": "https://example.com/team.jpg",
+                "id": 101,
+                "alt": "Team photo"
+              }
+            },
+            "elements": []
+          }
+        ]
+      },
+      {
+        "id": "stress-col-2b",
+        "elType": "column",
+        "settings": { "_column_size": 50 },
+        "elements": [
+          {
+            "id": "stress-image-noalt",
+            "elType": "widget",
+            "widgetType": "e-image",
+            "settings": {
+              "image": {
+                "src": "https://example.com/product.jpg",
+                "id": 102
+              }
+            },
+            "elements": []
+          },
+          {
+            "id": "stress-button-internal",
+            "elType": "widget",
+            "widgetType": "e-button",
+            "settings": {
+              "text": { "$$type": "string", "value": "Learn More" },
+              "link": {
+                "url": "https://example.com/about",
+                "isExternal": false,
+                "nofollow": false
+              }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "stress-section-3",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "stress-col-3",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "stress-carousel",
+            "elType": "widget",
+            "widgetType": "e-carousel",
+            "settings": { "slides": [] },
+            "elements": []
+          },
+          {
+            "id": "stress-form",
+            "elType": "widget",
+            "widgetType": "e-form",
+            "settings": { "form_fields": [] },
+            "elements": []
+          },
+          {
+            "id": "stress-video",
+            "elType": "widget",
+            "widgetType": "e-video",
+            "settings": { "youtube_url": "https://www.youtube.com/watch?v=test" },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "stress-section-4",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "stress-col-4a",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "stress-h4-standalone",
+            "elType": "widget",
+            "widgetType": "e-heading",
+            "settings": {
+              "title": { "$$type": "string", "value": "Features" },
+              "tag":   { "$$type": "string", "value": "h4" }
+            },
+            "elements": []
+          }
+        ]
+      },
+      {
+        "id": "stress-col-4b",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "stress-text-3col",
+            "elType": "widget",
+            "widgetType": "e-paragraph",
+            "settings": {
+              "paragraph": { "$$type": "string", "value": "Discover everything our platform has to offer." }
+            },
+            "elements": []
+          }
+        ]
+      },
+      {
+        "id": "stress-col-4c",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "stress-button-cta",
+            "elType": "widget",
+            "widgetType": "e-button",
+            "settings": {
+              "text": { "$$type": "string", "value": "Explore Now" },
+              "link": {
+                "url": "https://example.com/features",
+                "isExternal": false,
+                "nofollow": false
+              }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "stress-container-5",
+    "elType": "container",
+    "settings": {},
+    "elements": [
+      {
+        "id": "stress-col-5",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "stress-nested-heading",
+            "elType": "widget",
+            "widgetType": "e-heading",
+            "settings": {
+              "title": { "$$type": "string", "value": "Nested Container Heading" },
+              "tag":   { "$$type": "string", "value": "h2" }
+            },
+            "elements": []
+          },
+          {
+            "id": "stress-nested-text",
+            "elType": "widget",
+            "widgetType": "e-paragraph",
+            "settings": {
+              "paragraph": { "$$type": "string", "value": "Content inside a nested Elementor container." }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

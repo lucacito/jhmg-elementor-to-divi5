@@ -57,4 +57,20 @@ abstract class BaseElementorConverter implements ConverterInterface {
 
         return $normalized;
     }
+
+    protected function logKnownSkippedSettings( string $element_id, array $settings ): void {
+        static $known = [
+            'background_color',
+            'background_image',
+            'background_video_link',
+            'custom_padding',
+            'custom_margin',
+        ];
+
+        foreach ( $known as $key ) {
+            if ( ! empty( $settings[ $key ] ) ) {
+                $this->engine->logSkippedSetting( "{$element_id}: {$key}" );
+            }
+        }
+    }
 }

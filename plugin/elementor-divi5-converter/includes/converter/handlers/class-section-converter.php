@@ -10,13 +10,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class SectionConverter extends BaseElementorConverter {
     public function convert( array $element ): array {
+        $id       = $element['id'] ?? uniqid( 'divi_section_' );
+        $settings = $element['settings'] ?? [];
+        $children = $this->convertChildren( $element );
+
+        $this->engine->logConverted( 'section' );
+        $this->logKnownSkippedSettings( $id, $settings );
+
+        if ( empty( $children ) ) {
+            $this->engine->logWarning( "Empty section after conversion: {$id}" );
+        }
+
         return [
-            'id' => $element['id'] ?? uniqid( 'divi_section_' ),
-            'name' => 'divi/section',
+            'id'       => $id,
+            'name'     => 'divi/section',
             'settings' => [
-                'module' => $this->normalizeSettings( $element['settings'] ?? [] ),
+                'module' => $this->normalizeSettings( $settings ),
             ],
-            'elements' => $this->convertChildren( $element ),
+            'elements' => $children,
         ];
     }
 }

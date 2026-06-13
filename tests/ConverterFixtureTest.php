@@ -44,9 +44,16 @@ final class ConverterFixtureTest extends TestCase {
 
         $result = $engine->convert( $elementorPayload );
 
+        // Compare only the structural output. The `report` key contains conversion
+        // metrics that are not part of the expected fixture files.
+        $structural = [
+            'divi'        => $result['divi'],
+            'unsupported' => $result['unsupported'],
+        ];
+
         $this->assertSame(
             $expected,
-            $result,
+            $structural,
             "Converter output did not match expected Divi fixture for {$fixture}."
         );
     }

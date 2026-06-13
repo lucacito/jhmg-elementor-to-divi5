@@ -10,33 +10,42 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class ContainerConverter extends BaseElementorConverter {
     public function convert( array $element ): array {
-        $row_id = isset( $element['id'] ) ? $element['id'] . '-row' : uniqid( 'divi_row_' );
-        $column_id = isset( $element['id'] ) ? $element['id'] . '-col' : uniqid( 'divi_column_' );
+        $id       = $element['id'] ?? uniqid( 'divi_section_' );
+        $settings = $element['settings'] ?? [];
+        $children = $this->convertChildren( $element );
 
-        $row = [
-            'id' => $row_id,
-            'name' => 'divi/row',
-            'settings' => [
-                'module' => $this->normalizeSettings( $element['settings'] ?? [] ),
-            ],
-            'elements' => [
-                [
-                    'id' => $column_id,
-                    'name' => 'divi/column',
-                    'settings' => [
-                        'module' => [],
-                    ],
-                    'elements' => $this->convertChildren( $element ),
-                ],
+        $this->engine->logConverted( 'section' );
+        $this->logKnownSkippedSettings( $id, $settings );
+
+        // If every converted child is already a divi/column, place them directly in
+        // the row. Otherwise wrap everything in one auto-generated column so that
+        // widgets are never siblings of columns.
+        $all_columns = ! empty( $children ) && array_reduce(
+            $children,
+            static fn( bool $carry, array $child ) => $carry && ( $child['name'] ?? '' ) === 'divi/column',
+            true
+        );
+
+        $row_elements = $all_columns ? $children : [
+            [
+                'id'       => $id . '-col',
+                'name'     => 'divi/column',
+                'settings' => [ 'module' => [] ],
+                'elements' => $children,
             ],
         ];
 
+        $row = [
+            'id'       => $id . '-row',
+            'name'     => 'divi/row',
+            'settings' => [ 'module' => $this->normalizeSettings( $settings ) ],
+            'elements' => $row_elements,
+        ];
+
         return [
-            'id' => $element['id'] ?? uniqid( 'divi_section_' ),
-            'name' => 'divi/section',
-            'settings' => [
-                'module' => $this->normalizeSettings( $element['settings'] ?? [] ),
-            ],
+            'id'       => $id,
+            'name'     => 'divi/section',
+            'settings' => [ 'module' => $this->normalizeSettings( $settings ) ],
             'elements' => [ $row ],
         ];
     }

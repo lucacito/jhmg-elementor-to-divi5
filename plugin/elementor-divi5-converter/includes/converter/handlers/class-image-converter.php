@@ -11,18 +11,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ImageConverter extends BaseElementorConverter {
     public function convert( array $element ): array {
         $settings = $element['settings'] ?? [];
-        $image = $this->getSettingValue( $settings, 'image', '' );
-        $url = $this->extractImageSource( $image );
-        $alt = $this->extractImageAlt( $image );
-        $link = $this->preserveResponsiveValue( $settings['link'] ?? [] );
+        $id       = $element['id'] ?? uniqid( 'divi_image_' );
+        $image    = $this->getSettingValue( $settings, 'image', '' );
+        $url      = $this->extractImageSource( $image );
+        $alt      = $this->extractImageAlt( $image );
+        $link     = $this->preserveResponsiveValue( $settings['link'] ?? [] );
+
+        $this->engine->logConverted( 'image' );
+
+        if ( $alt === '' ) {
+            $this->engine->logWarning( "Image missing alt text: {$id}" );
+        }
 
         return [
-            'id' => $element['id'] ?? uniqid( 'divi_image_' ),
-            'name' => 'divi/image',
+            'id'       => $id,
+            'name'     => 'divi/image',
             'settings' => [
-                'src' => $url,
-                'alt' => $alt,
-                'link' => $link,
+                'src'    => $url,
+                'alt'    => $alt,
+                'link'   => $link,
                 'module' => $this->normalizeSettings( $settings ),
             ],
             'elements' => [],
