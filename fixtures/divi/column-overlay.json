@@ -1,0 +1,50 @@
+{
+  "divi": {
+    "elements": [
+      {
+        "id": "section-co",
+        "name": "divi/section",
+        "settings": {},
+        "elements": [
+          {
+            "id": "section-co-row",
+            "name": "divi/row",
+            "settings": {},
+            "elements": [
+              {
+                "id": "column-co",
+                "name": "divi/column",
+                "settings": {
+                  "module": {
+                    "decoration": {
+                      "background": {
+                        "desktop": {
+                          "value": {
+                            "image": {
+                              "url": "https://example.com/photo.jpg"
+                            },
+                            "gradient": {
+                              "enabled": "on",
+                              "overlaysImage": "on",
+                              "type": "linear",
+                              "stops": [
+                                { "color": "rgba(7, 81, 133, 0.6)", "position": "0%" },
+                                { "color": "rgba(7, 81, 133, 0.6)", "position": "100%" }
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "elements": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unsupported": []
+}

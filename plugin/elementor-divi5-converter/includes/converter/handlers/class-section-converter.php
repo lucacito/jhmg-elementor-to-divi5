@@ -15,6 +15,13 @@ class SectionConverter extends BaseElementorConverter {
         $settings = $element['settings'] ?? [];
         $is_inner = ! empty( $element['isInner'] );
 
+        // When a section's single 100%-wide column owns the background image (a
+        // common Elementor "hero" pattern), move that background up to the section
+        // so it spans the full viewport in Divi.  Must run before
+        // liftBannerImageToBackground so the section URL is already set when that
+        // check runs.
+        $this->liftColumnBackgroundToSection( $element, $settings );
+
         // When a section declares "classic" background but the exported URL is empty
         // (media-library reference lost on export), the banner image is often placed as
         // the first image widget inside a column.  Lift it into background_image so
@@ -56,6 +63,79 @@ class SectionConverter extends BaseElementorConverter {
                 ],
             ],
         ];
+    }
+
+    /**
+     * Detects the "hero column" pattern: a section whose single child is a 100%-wide
+     * column that carries the background image while the section itself has none.
+     *
+     * This is common in Elementor when a full-width section contains a 100% column
+     * with a background image + a spacer widget to define height.  In Elementor the
+     * column is visually indistinguishable from the section because it fills the whole
+     * row.  In Divi 5, column backgrounds are confined to the column box, so the image
+     * must be placed on the section to span the full viewport width.
+     *
+     * The background-related settings are copied to $settings (the section's settings
+     * array that StyleMapper will read) and removed from the column element so the
+     * column is rendered with no background.
+     */
+    private function liftColumnBackgroundToSection( array &$element, array &$settings ): void {
+        // Skip if the section already has a background image.
+        $existing_bg  = $settings['background_image'] ?? [];
+        $existing_url = is_array( $existing_bg )
+            ? ( $existing_bg['url'] ?? '' )
+            : ( is_string( $existing_bg ) ? $existing_bg : '' );
+        if ( $existing_url !== '' ) {
+            return;
+        }
+
+        // Must be exactly one column at 100% width.
+        $columns = $element['elements'] ?? [];
+        if ( count( $columns ) !== 1 ) {
+            return;
+        }
+        $col = $columns[0];
+        if ( ( $col['elType'] ?? '' ) !== 'column' ) {
+            return;
+        }
+        if ( (int) ( $col['settings']['_column_size'] ?? 0 ) !== 100 ) {
+            return;
+        }
+
+        // The column must have a background image URL.
+        $col_bg_image = $col['settings']['background_image'] ?? null;
+        $col_bg_url   = is_array( $col_bg_image )
+            ? ( $col_bg_image['url'] ?? '' )
+            : ( is_string( $col_bg_image ) ? $col_bg_image : '' );
+        if ( $col_bg_url === '' ) {
+            return;
+        }
+
+        // Keys to promote from column → section.
+        $lift_keys = [
+            'background_background',
+            'background_image',
+            'background_color',
+            'background_position',
+            'background_size',
+            'background_repeat',
+            'background_attachment',
+            'background_overlay_background',
+            'background_overlay_image',
+            'background_overlay_color',
+            'background_overlay_opacity',
+        ];
+
+        foreach ( $lift_keys as $key ) {
+            if ( isset( $col['settings'][ $key ] ) ) {
+                $settings[ $key ]                         = $col['settings'][ $key ];
+                unset( $element['elements'][0]['settings'][ $key ] );
+            }
+        }
+
+        $this->engine->logWarning(
+            "Section {$element['id']}: lifted background from 100%-column {$col['id']} to section level."
+        );
     }
 
     /**

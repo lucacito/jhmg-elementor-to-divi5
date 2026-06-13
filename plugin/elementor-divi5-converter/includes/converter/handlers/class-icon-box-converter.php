@@ -16,16 +16,39 @@ class IconBoxConverter extends BaseElementorConverter {
 
         $title       = is_string( $settings['title_text'] ?? '' ) ? ( $settings['title_text'] ?? '' ) : '';
         $description = is_string( $settings['description_text'] ?? '' ) ? ( $settings['description_text'] ?? '' ) : '';
-        $icon_value  = $this->extractIconValue( $settings );
+        $has_icon    = $this->hasIcon( $settings );
         $icon_size   = $this->sizeString( $settings['icon_size'] ?? null );
+        $icon_color  = is_string( $settings['icon_color'] ?? '' ) ? ( $settings['icon_color'] ?? '' ) : '';
 
         $style_result = ( new StyleMapper() )->map( 'blurb', $settings );
         $attrs        = $style_result['divi_attrs'];
 
-        if ( $icon_value !== '' ) {
-            $icon_content = [ 'innerContent' => [ 'desktop' => [ 'value' => $icon_value ] ] ];
+        if ( $has_icon ) {
+            // Elementor uses FontAwesome icons; Divi 5 has a different icon library.
+            // Always fall back to a default Divi star icon rather than trying to map FA classes.
+            $icon_content = [
+                'innerContent' => [
+                    'desktop' => [
+                        'value' => [
+                            'useIcon' => 'on',
+                            'icon'    => [
+                                'type'    => 'fa',
+                                'unicode' => '&#xf005;',
+                                'weight'  => '900',
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+            $advanced = [];
+            if ( $icon_color !== '' ) {
+                $advanced['color'] = [ 'desktop' => [ 'value' => $icon_color ] ];
+            }
             if ( $icon_size !== '' ) {
-                $icon_content['advanced'] = [ 'size' => [ 'desktop' => [ 'value' => $icon_size ] ] ];
+                $advanced['size'] = [ 'desktop' => [ 'value' => $icon_size ] ];
+            }
+            if ( ! empty( $advanced ) ) {
+                $icon_content['advanced'] = $advanced;
             }
             $attrs['imageIcon'] = $icon_content;
         }
@@ -63,16 +86,17 @@ class IconBoxConverter extends BaseElementorConverter {
         ];
     }
 
-    private function extractIconValue( array $settings ): string {
+    private function hasIcon( array $settings ): bool {
         $selected = $settings['selected_icon'] ?? null;
         if ( is_array( $selected ) ) {
-            return is_string( $selected['value'] ?? '' ) ? ( $selected['value'] ?? '' ) : '';
+            $val = $selected['value'] ?? '';
+            return is_string( $val ) && $val !== '';
         }
         if ( is_string( $selected ) && $selected !== '' ) {
-            return $selected;
+            return true;
         }
         $legacy = $settings['icon'] ?? '';
-        return is_string( $legacy ) ? $legacy : '';
+        return is_string( $legacy ) && $legacy !== '';
     }
 
     private function sizeString( mixed $raw ): string {

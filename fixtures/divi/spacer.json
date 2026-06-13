@@ -18,12 +18,19 @@
                 "elements": [
                   {
                     "id": "sp001",
-                    "name": "divi/code",
+                    "name": "divi/divider",
                     "settings": {
-                      "content": {
-                        "innerContent": {
-                          "desktop": {
-                            "value": "<div style=\"height:50px\"></div>"
+                      "divider": {
+                        "advanced": {
+                          "line": {
+                            "desktop": { "value": { "show": "off" } }
+                          }
+                        }
+                      },
+                      "module": {
+                        "decoration": {
+                          "sizing": {
+                            "desktop": { "value": { "minHeight": "50px" } }
                           }
                         }
                       }

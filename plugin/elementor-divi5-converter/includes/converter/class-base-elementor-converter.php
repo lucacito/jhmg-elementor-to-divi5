@@ -45,6 +45,106 @@ abstract class BaseElementorConverter implements ConverterInterface {
     }
 
     /**
+     * Converts a flat list of Elementor elements with explicit structure awareness.
+     *
+     * This is the single routing point for layout conversion:
+     * - elType "section" or "container" → convertInnerAsRow() (nested divi/row)
+     * - elType "column" or widget      → engine.convertElement() (normal dispatch)
+     *
+     * Use this in any converter whose children might include inner sections or
+     * containers (ColumnConverter, ContainerConverter). Never rely on nesting
+     * depth counters for this decision — the elType in the JSON is the
+     * authoritative signal.
+     */
+    protected function convertStructureChildren( array $elements ): array {
+        $result = [];
+
+        foreach ( $elements as $child ) {
+            if ( ! is_array( $child ) ) {
+                continue;
+            }
+
+            $elType = $child['elType'] ?? '';
+
+            if ( $elType === 'section' || $elType === 'container' ) {
+                $result[] = $this->convertInnerAsRow( $child );
+            } else {
+                $converted = $this->engine->convertElement( $child );
+
+                if ( empty( $converted ) ) {
+                    continue;
+                }
+
+                // Converters may return a single block (has 'name') or a list.
+                if ( isset( $converted['name'] ) ) {
+                    $result[] = $converted;
+                } else {
+                    foreach ( $converted as $block ) {
+                        if ( ! empty( $block ) ) {
+                            $result[] = $block;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Converts an inner Elementor section or container into a divi/row block.
+     *
+     * The element's own children are converted recursively with structure
+     * awareness via convertStructureChildren(). Non-column children (e.g. a
+     * container whose children are plain widgets) are auto-wrapped in a single
+     * divi/column so that the row always contains only columns.
+     */
+    protected function convertInnerAsRow( array $element ): array {
+        $id           = $element['id'] ?? uniqid( 'divi_row_' );
+        $inner        = $this->convertStructureChildren( $element['elements'] ?? [] );
+        $row_elements = $this->ensureColumnChildren( $id, $inner );
+
+        return [
+            'id'       => $id,
+            'name'     => 'divi/row',
+            'settings' => $this->rowSettingsFromColumns( $row_elements ),
+            'elements' => $row_elements,
+        ];
+    }
+
+    /**
+     * Guarantees a list contains only divi/column blocks.
+     *
+     * When every item is already a divi/column the list is returned unchanged.
+     * Otherwise all items are wrapped in one auto-generated divi/column so that
+     * Divi's invariant (rows contain only columns) is preserved.
+     */
+    protected function ensureColumnChildren( string $id, array $children ): array {
+        if ( empty( $children ) ) {
+            return [];
+        }
+
+        $all_columns = array_reduce(
+            $children,
+            static fn( bool $carry, array $child ) => $carry && ( $child['name'] ?? '' ) === 'divi/column',
+            true
+        );
+
+        if ( $all_columns ) {
+            return $children;
+        }
+
+        return [
+            [
+                'id'       => $id . '-col',
+                'name'     => 'divi/column',
+                'settings' => [],
+                'elements' => $children,
+            ],
+        ];
+    }
+
+    /**
      * Build row `settings` from an array of already-converted divi/column children.
      *
      * Reads the `module.advanced.type.desktop.value` fraction from each column

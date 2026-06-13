@@ -88,9 +88,10 @@ class StyleMapper {
         $divi_attrs   = [];
         $handled_keys = [];
 
-        $this->mapSpacing( $settings, $divi_attrs, $handled_keys );
+        $this->mapSpacing( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapBackgroundColor( $settings, $divi_attrs, $handled_keys );
         $this->mapBackgroundImage( $settings, $divi_attrs, $handled_keys );
+        $this->mapBackgroundOverlay( $settings, $divi_attrs, $handled_keys );
         $this->mapTypography( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapTextColor( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapAlignment( $widget_type, $settings, $divi_attrs, $handled_keys );
@@ -122,11 +123,23 @@ class StyleMapper {
     // Per-property mappers
     // -------------------------------------------------------------------------
 
-    private function mapSpacing( array $settings, array &$attrs, array &$handled ): void {
+    private function mapSpacing( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
+        // Divi 5 rows use flex layout and manage inter-column spacing via their own
+        // gutter system. Column margin-right/left applied with !important breaks that
+        // layout — so skip margin entirely for columns (padding is safe to keep).
+        $props = $widget_type === 'column'
+            ? [ 'padding' ]
+            : self::SPACING_KEYS;
+
         foreach ( self::SPACING_KEYS as $prop ) {
             foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+                $handled[] = $prop . $suffix;
+            }
+        }
+
+        foreach ( $props as $prop ) {
+            foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
                 $key = $prop . $suffix;
-                $handled[] = $key;
 
                 if ( ! isset( $settings[ $key ] ) || $settings[ $key ] === '' || $settings[ $key ] === [] ) {
                     continue;
@@ -283,6 +296,9 @@ class StyleMapper {
 
             if ( $widget_type === 'heading' ) {
                 self::transformPath( $attrs, "title.decoration.font.font.{$breakpoint}.value.textAlign", $value );
+            } elseif ( $widget_type === 'button' ) {
+                // Button alignment controls button position in its container, not text orientation.
+                self::transformPath( $attrs, "module.advanced.alignment.{$breakpoint}.value", $value );
             } else {
                 $orientation = ( $value === 'justify' ) ? 'left' : $value;
                 self::transformPath( $attrs, "module.advanced.text.text.{$breakpoint}.value.orientation", $orientation );
@@ -333,6 +349,92 @@ class StyleMapper {
     }
 
     /**
+     * Maps Elementor background overlay (color + optional image) to Divi 5 gradient.
+     *
+     * Two Elementor patterns:
+     * - Pattern A: image in `background_overlay_image`, color in `background_overlay_color`
+     * - Pattern B: image already in `background_image`, color overlay on top
+     * - No image: overlay color converted to rgba applied as plain background color
+     *
+     * Divi 5 renders the gradient on top of the background image when
+     * `gradient.overlaysImage` is "on".
+     */
+    private function mapBackgroundOverlay( array $settings, array &$attrs, array &$handled ): void {
+        foreach ( [
+            'background_overlay_background',
+            'background_overlay_color',
+            'background_overlay_opacity',
+            'background_overlay_image',
+            'background_overlay_position',
+            'background_overlay_size',
+            'background_overlay_repeat',
+            'background_overlay_blend_mode',
+        ] as $k ) {
+            $handled[] = $k;
+        }
+
+        $overlay_color = $settings['background_overlay_color'] ?? '';
+        if ( ! is_string( $overlay_color ) || $overlay_color === '' ) {
+            return;
+        }
+
+        $opacity_raw = $settings['background_overlay_opacity'] ?? null;
+        $opacity     = 1.0;
+        if ( is_array( $opacity_raw ) && isset( $opacity_raw['size'] ) ) {
+            $opacity = (float) $opacity_raw['size'];
+        } elseif ( is_numeric( $opacity_raw ) ) {
+            $opacity = (float) $opacity_raw;
+        }
+
+        // Pattern A: image lives in the overlay_image field.
+        $overlay_image     = $settings['background_overlay_image'] ?? null;
+        $overlay_image_url = '';
+        if ( is_array( $overlay_image ) && ! empty( $overlay_image['url'] ) ) {
+            $overlay_image_url = (string) $overlay_image['url'];
+        }
+
+        // Pattern B: image lives in the standard background_image field.
+        $bg_image     = $settings['background_image'] ?? null;
+        $bg_image_url = '';
+        if ( is_array( $bg_image ) && ! empty( $bg_image['url'] ) ) {
+            $bg_image_url = (string) $bg_image['url'];
+        }
+
+        $rgba = $this->hexToRgba( $overlay_color, $opacity );
+
+        if ( $overlay_image_url !== '' ) {
+            // Pattern A: write the overlay image as the background image.
+            self::transformPath( $attrs, 'module.decoration.background.desktop.value.image.url', $overlay_image_url );
+        }
+
+        if ( $overlay_image_url !== '' || $bg_image_url !== '' ) {
+            // Gradient overlay on top of background image.
+            $stops = [
+                [ 'color' => $rgba, 'position' => '0%' ],
+                [ 'color' => $rgba, 'position' => '100%' ],
+            ];
+            self::transformPath( $attrs, 'module.decoration.background.desktop.value.gradient.enabled', 'on' );
+            self::transformPath( $attrs, 'module.decoration.background.desktop.value.gradient.overlaysImage', 'on' );
+            self::transformPath( $attrs, 'module.decoration.background.desktop.value.gradient.type', 'linear' );
+            self::transformPath( $attrs, 'module.decoration.background.desktop.value.gradient.stops', $stops );
+        } else {
+            // No image — apply rgba color as semi-transparent background.
+            self::transformPath( $attrs, 'module.decoration.background.desktop.value.color', $rgba );
+        }
+    }
+
+    private function hexToRgba( string $hex, float $opacity ): string {
+        $hex = ltrim( $hex, '#' );
+        if ( strlen( $hex ) === 3 ) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        $r = hexdec( substr( $hex, 0, 2 ) );
+        $g = hexdec( substr( $hex, 2, 2 ) );
+        $b = hexdec( substr( $hex, 4, 2 ) );
+        return 'rgba(' . $r . ', ' . $g . ', ' . $b . ', ' . (string) round( $opacity, 4 ) . ')';
+    }
+
+    /**
      * Silently absorbs section-level Elementor keys that have no Divi equivalent,
      * preventing them from appearing in the unmapped-settings log.
      */
@@ -340,8 +442,7 @@ class StyleMapper {
         // Keys that describe layout/structure hints with no direct Divi mapping.
         $ignore = [
             'gap', 'structure', 'reverse_order_mobile',
-            'background_overlay_background', 'background_overlay_color',
-            'background_overlay_opacity',
+            'layout', 'stretch_section', 'content_width',
         ];
         foreach ( $ignore as $key ) {
             $handled[] = $key;

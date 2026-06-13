@@ -20,6 +20,13 @@
                     "id": "button-1",
                     "name": "divi/button",
                     "settings": {
+                      "module": {
+                        "advanced": {
+                          "alignment": {
+                            "desktop": { "value": "center" }
+                          }
+                        }
+                      },
                       "button": {
                         "innerContent": {
                           "desktop": {

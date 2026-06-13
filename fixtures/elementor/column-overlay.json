@@ -1,0 +1,24 @@
+[
+  {
+    "id": "section-co",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-co",
+        "elType": "column",
+        "settings": {
+          "background_background": "classic",
+          "background_image": {
+            "url": "https://example.com/photo.jpg",
+            "id": 1,
+            "size": ""
+          },
+          "background_overlay_color": "#075185",
+          "background_overlay_opacity": { "unit": "px", "size": 0.6, "sizes": [] }
+        },
+        "elements": []
+      }
+    ]
+  }
+]

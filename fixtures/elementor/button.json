@@ -22,7 +22,8 @@
                 "url": "https://example.com",
                 "isExternal": false,
                 "nofollow": false
-              }
+              },
+              "align": "center"
             },
             "elements": []
           }

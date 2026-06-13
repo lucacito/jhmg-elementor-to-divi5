@@ -40,7 +40,58 @@ class ConverterRegistry {
             return new $this->registry[ $elementType ]( $this->engine );
         }
 
+        $fallbackClass = $this->detectByShape( $element );
+        if ( $fallbackClass !== null ) {
+            $widgetType = $element['widgetType'] ?? $elementType;
+            $this->engine->logWarning( "Widget '{$widgetType}' not registered; matched by settings shape to " . basename( str_replace( '\\', '/', $fallbackClass ) ) );
+            return new $fallbackClass( $this->engine );
+        }
+
         return null;
+    }
+
+    private function detectByShape( array $element ): ?string {
+        if ( ( $element['elType'] ?? '' ) !== 'widget' ) {
+            return null;
+        }
+        $settings    = $element['settings'] ?? [];
+        $has_content = ! empty( $settings['title_text'] ) || ! empty( $settings['description_text'] );
+
+        if ( ! $has_content ) {
+            return null;
+        }
+
+        if ( $this->settingsHasIcon( $settings ) ) {
+            return '\\ElementorDivi5Converter\\Converter\\Handlers\\IconBoxConverter';
+        }
+
+        if ( $this->settingsHasImage( $settings ) ) {
+            return '\\ElementorDivi5Converter\\Converter\\Handlers\\ImageBoxConverter';
+        }
+
+        return null;
+    }
+
+    private function settingsHasIcon( array $settings ): bool {
+        $selected = $settings['selected_icon'] ?? null;
+        if ( is_array( $selected ) ) {
+            $val = $selected['value'] ?? '';
+            return is_string( $val ) && $val !== '';
+        }
+        if ( is_string( $selected ) && $selected !== '' ) {
+            return true;
+        }
+        $legacy = $settings['icon'] ?? '';
+        return is_string( $legacy ) && $legacy !== '';
+    }
+
+    private function settingsHasImage( array $settings ): bool {
+        $image = $settings['image'] ?? null;
+        if ( ! is_array( $image ) ) {
+            return false;
+        }
+        $url = $image['url'] ?? '';
+        return is_string( $url ) && $url !== '';
     }
 
     private function registerDefaults(): void {

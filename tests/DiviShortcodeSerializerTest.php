@@ -132,13 +132,14 @@ final class DiviShortcodeSerializerTest extends TestCase {
         $this->assertStringContainsString( 'First Tab', $blocks );
     }
 
-    public function test_spacer_serialized_as_code_self_closing_block(): void {
+    public function test_spacer_serialized_as_divider_with_hidden_line(): void {
         $engine  = new ConverterEngine();
         $payload = json_decode( file_get_contents( __DIR__ . '/../fixtures/elementor/spacer.json' ), true );
         $blocks  = ( new DiviBlockSerializer() )->serialize( $engine->convert( $payload ) );
 
-        $this->assertStringContainsString( '<!-- wp:divi/code', $blocks );
-        $this->assertStringContainsString( 'height:50px', $blocks );
+        $this->assertStringContainsString( '<!-- wp:divi/divider', $blocks );
+        $this->assertStringContainsString( '"show":"off"', $blocks );
+        $this->assertStringContainsString( '"minHeight":"50px"', $blocks );
         $this->assertStringContainsString( '/-->', $blocks );
     }
 
