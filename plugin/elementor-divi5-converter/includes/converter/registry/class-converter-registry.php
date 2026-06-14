@@ -115,6 +115,9 @@ class ConverterRegistry {
         $this->registerWidget( 'elementskit-testimonial', '\\ElementorDivi5Converter\\Converter\\Handlers\\ElementskitTestimonialConverter' );
         $this->registerWidget( 'icon-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\IconBoxConverter' );
         $this->registerWidget( 'menu-anchor', '\\ElementorDivi5Converter\\Converter\\Handlers\\MenuAnchorConverter' );
+        $this->registerWidget( 'icon-list', '\\ElementorDivi5Converter\\Converter\\Handlers\\IconListConverter' );
+        $this->registerWidget( 'image-carousel', '\\ElementorDivi5Converter\\Converter\\Handlers\\ImageCarouselConverter' );
+        $this->registerWidget( 'elementskit-dual-button', '\\ElementorDivi5Converter\\Converter\\Handlers\\ElementsKitDualButtonConverter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );

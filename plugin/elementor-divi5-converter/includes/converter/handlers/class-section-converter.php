@@ -174,7 +174,7 @@ class SectionConverter extends BaseElementorConverter {
 
                 // Inject the URL so StyleMapper picks it up with the section's other
                 // background settings (position, size, repeat).
-                if ( is_array( $settings['background_image'] ) ) {
+                if ( isset( $settings['background_image'] ) && is_array( $settings['background_image'] ) ) {
                     $settings['background_image']['url'] = $url;
                 } else {
                     $settings['background_image'] = [ 'url' => $url ];

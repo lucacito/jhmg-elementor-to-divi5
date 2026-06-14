@@ -74,6 +74,7 @@ class IconBoxConverter extends BaseElementorConverter {
                 'description_typography_typography', 'description_typography_font_size',
                 'description_typography_font_weight', 'description_color',
                 'pa_condition_repeater', 'premium_tooltip_text', 'premium_tooltip_position',
+                'icon_space', 'title_bottom_space', 'description_typography_line_height',
             ],
             $style_result['handled_keys']
         ) );

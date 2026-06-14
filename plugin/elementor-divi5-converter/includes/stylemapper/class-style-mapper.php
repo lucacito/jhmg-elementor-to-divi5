@@ -99,10 +99,19 @@ class StyleMapper {
 
         if ( $widget_type === 'column' ) {
             $this->mapColumnSize( $settings, $divi_attrs, $handled_keys );
+            $this->markColumnKeys( $settings, $handled_keys );
         }
 
         if ( $widget_type === 'section' ) {
             $this->markSectionKeys( $settings, $handled_keys );
+        }
+
+        if ( $widget_type === 'image' ) {
+            $this->mapImageBorderRadius( $settings, $divi_attrs, $handled_keys );
+        }
+
+        if ( $widget_type === 'button' ) {
+            $this->mapButtonPadding( $settings, $divi_attrs, $handled_keys );
         }
 
         return [
@@ -131,32 +140,43 @@ class StyleMapper {
             ? [ 'padding' ]
             : self::SPACING_KEYS;
 
+        // Mark both standard keys and their Elementor Advanced-tab underscore variants
+        // (_padding, _margin) as handled for every widget type.
         foreach ( self::SPACING_KEYS as $prop ) {
-            foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            foreach ( self::BREAKPOINT_MAP as $suffix => $_ ) {
                 $handled[] = $prop . $suffix;
+                $handled[] = '_' . $prop . $suffix;
             }
         }
 
         foreach ( $props as $prop ) {
             foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
-                $key = $prop . $suffix;
+                // Prefer the widget-specific key; fall back to the Advanced-tab
+                // prefixed variant (_padding/_margin) when the plain key is absent.
+                $value = $settings[ $prop . $suffix ] ?? $settings[ '_' . $prop . $suffix ] ?? null;
 
-                if ( ! isset( $settings[ $key ] ) || $settings[ $key ] === '' || $settings[ $key ] === [] ) {
+                if ( $value === '' || $value === [] || $value === null ) {
                     continue;
                 }
 
-                $value = $this->normalizeSpacingValue( $settings[ $key ] );
-                if ( $value === null ) {
+                $normalized = $this->normalizeSpacingValue( $value );
+                if ( $normalized === null ) {
                     continue;
                 }
 
-                self::transformPath( $attrs, "module.decoration.spacing.{$breakpoint}.value.{$prop}", $value );
+                self::transformPath( $attrs, "module.decoration.spacing.{$breakpoint}.value.{$prop}", $normalized );
             }
         }
     }
 
     private function mapColumnSize( array $settings, array &$attrs, array &$handled ): void {
         $handled[] = '_column_size';
+        // _inline_size is Elementor's flex-basis override (arbitrary percentage).
+        // Divi 5 only supports standard fraction strings, so we acknowledge these
+        // keys without mapping them to avoid false "skipped" reports.
+        $handled[] = '_inline_size';
+        $handled[] = '_inline_size_tablet';
+        $handled[] = '_inline_size_mobile';
 
         $raw = $settings['_column_size'] ?? null;
         if ( $raw === null || ! is_numeric( $raw ) ) {
@@ -369,6 +389,16 @@ class StyleMapper {
             'background_overlay_size',
             'background_overlay_repeat',
             'background_overlay_blend_mode',
+            // Extended offset / sizing controls — acknowledged without mapping.
+            'background_overlay_xpos',
+            'background_overlay_ypos',
+            'background_overlay_bg_width',
+            'background_overlay_xpos_mobile',
+            'background_overlay_ypos_mobile',
+            'background_overlay_bg_width_mobile',
+            'background_overlay_xpos_tablet',
+            'background_overlay_ypos_tablet',
+            'background_overlay_bg_width_tablet',
         ] as $k ) {
             $handled[] = $k;
         }
@@ -439,10 +469,15 @@ class StyleMapper {
      * preventing them from appearing in the unmapped-settings log.
      */
     private function markSectionKeys( array $settings, array &$handled ): void {
-        // Keys that describe layout/structure hints with no direct Divi mapping.
         $ignore = [
             'gap', 'structure', 'reverse_order_mobile',
             'layout', 'stretch_section', 'content_width',
+            // Custom column gap — Divi manages gutter differently.
+            'gap_columns_custom',
+            // Section minimum-height controls.
+            'height_inner', 'custom_height_inner', 'custom_height_inner_tablet',
+            // Vertical alignment of section content — no direct Divi 5 section attr.
+            'content_position',
         ];
         foreach ( $ignore as $key ) {
             $handled[] = $key;
@@ -453,6 +488,86 @@ class StyleMapper {
             if ( str_starts_with( $key, 'background_motion_fx_' ) ) {
                 $handled[] = $key;
             }
+        }
+    }
+
+    /**
+     * Silently absorbs column-level Elementor keys that have no direct Divi 5
+     * equivalent, preventing them from appearing in the unmapped-settings log.
+     */
+    private function markColumnKeys( array $settings, array &$handled ): void {
+        foreach ( [
+            // Elementor widget-wrap gutter — Divi manages this via row settings.
+            'space_between_widgets',
+            // Vertical alignment of column content — no Divi 5 column attr.
+            'content_position', 'content_position_tablet',
+            // HTML tag override for the column wrapper.
+            'html_tag',
+            // Column-level default colour overrides (heading, body, link).
+            'heading_color', 'color_text', 'color_link',
+            // Secondary gradient stop colour — gradient not yet mapped.
+            'background_color_b',
+            // Granular background position offsets beyond the main position string.
+            'background_ypos', 'background_xpos', 'background_bg_width',
+        ] as $key ) {
+            $handled[] = $key;
+        }
+    }
+
+    /**
+     * Maps the Elementor `image_border_radius` control (image widget) to the
+     * Divi 5 border radius path `module.decoration.border.desktop.value.radius`.
+     *
+     * Also marks `image_size` as handled (preset names like "large" / "full" have
+     * no direct Divi 5 block attribute equivalent).
+     */
+    private function mapImageBorderRadius( array $settings, array &$attrs, array &$handled ): void {
+        $handled[] = 'image_border_radius';
+        $handled[] = 'image_size';
+
+        $raw = $settings['image_border_radius'] ?? null;
+        if ( $raw === null ) {
+            return;
+        }
+
+        if ( is_array( $raw ) ) {
+            $radius = $this->normalizeRadius( $raw );
+            if ( ! empty( $radius ) ) {
+                self::transformPath( $attrs, 'module.decoration.border.desktop.value.radius', $radius );
+            }
+        } elseif ( is_string( $raw ) && $raw !== '' ) {
+            self::transformPath( $attrs, 'module.decoration.border.desktop.value.radius', [
+                'topLeft'     => $raw,
+                'topRight'    => $raw,
+                'bottomRight' => $raw,
+                'bottomLeft'  => $raw,
+            ] );
+        }
+    }
+
+    /**
+     * Maps the Elementor `text_padding` control (button widget inner padding) to
+     * `button.decoration.spacing.{breakpoint}.value.padding` in Divi 5.
+     *
+     * Responsive variants (`text_padding_tablet`, `text_padding_mobile`) are
+     * handled using the standard BREAKPOINT_MAP suffix convention.
+     */
+    private function mapButtonPadding( array $settings, array &$attrs, array &$handled ): void {
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $key       = 'text_padding' . $suffix;
+            $handled[] = $key;
+
+            $raw = $settings[ $key ] ?? null;
+            if ( $raw === null || $raw === '' || $raw === [] ) {
+                continue;
+            }
+
+            $value = $this->normalizeSpacingValue( $raw );
+            if ( $value === null ) {
+                continue;
+            }
+
+            self::transformPath( $attrs, "button.decoration.spacing.{$breakpoint}.value.padding", $value );
         }
     }
 
@@ -471,30 +586,38 @@ class StyleMapper {
         foreach ( self::BORDER_KEYS as $base ) {
             foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
                 $handled[] = $base . $suffix;
+                // Advanced-tab border keys (underscore prefix) map to the same Divi path.
+                $handled[] = '_' . $base . $suffix;
             }
         }
-        // Also absorb 'border_style' as an alias for 'border_border'.
-        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+        // Also absorb 'border_style' / '_border_style' as aliases for 'border_border'.
+        foreach ( self::BREAKPOINT_MAP as $suffix => $_ ) {
             $handled[] = 'border_style' . $suffix;
+            $handled[] = '_border_style' . $suffix;
         }
 
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
             $base_path = "module.decoration.border.{$breakpoint}.value";
 
-            // Style (border type).
-            $style = $settings[ 'border_border' . $suffix ] ?? $settings[ 'border_style' . $suffix ] ?? '';
+            // Style (border type). Widget-level key takes precedence; fall back to Advanced-tab
+            // underscore variant so decorative borders set via the Advanced tab are preserved.
+            $style = $settings[ 'border_border' . $suffix ]
+                ?? $settings[ '_border_border' . $suffix ]
+                ?? $settings[ 'border_style' . $suffix ]
+                ?? $settings[ '_border_style' . $suffix ]
+                ?? '';
             if ( is_string( $style ) && $style !== '' ) {
                 self::transformPath( $attrs, "{$base_path}.styles.all.style", $style );
             }
 
             // Color.
-            $color = $settings[ 'border_color' . $suffix ] ?? '';
+            $color = $settings[ 'border_color' . $suffix ] ?? $settings[ '_border_color' . $suffix ] ?? '';
             if ( is_string( $color ) && $color !== '' ) {
                 self::transformPath( $attrs, "{$base_path}.styles.all.color", $color );
             }
 
             // Width.
-            $width_raw = $settings[ 'border_width' . $suffix ] ?? null;
+            $width_raw = $settings[ 'border_width' . $suffix ] ?? $settings[ '_border_width' . $suffix ] ?? null;
             if ( is_array( $width_raw ) ) {
                 $this->applyBorderWidth( $width_raw, $attrs, "{$base_path}.styles" );
             } elseif ( is_string( $width_raw ) && $width_raw !== '' ) {
@@ -502,7 +625,7 @@ class StyleMapper {
             }
 
             // Radius — Divi 5 expects per-corner object {topLeft, topRight, bottomRight, bottomLeft}.
-            $radius_raw = $settings[ 'border_radius' . $suffix ] ?? null;
+            $radius_raw = $settings[ 'border_radius' . $suffix ] ?? $settings[ '_border_radius' . $suffix ] ?? null;
             if ( is_array( $radius_raw ) ) {
                 $radius_obj = $this->normalizeRadius( $radius_raw );
                 if ( ! empty( $radius_obj ) ) {

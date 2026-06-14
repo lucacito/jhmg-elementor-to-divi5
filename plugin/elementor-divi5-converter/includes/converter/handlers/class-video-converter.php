@@ -21,6 +21,11 @@ class VideoConverter extends BaseElementorConverter {
             $video_value['src'] = $src;
         }
 
+        $poster = $settings['poster'] ?? null;
+        if ( is_array( $poster ) && ! empty( $poster['url'] ) ) {
+            $video_value['cover'] = (string) $poster['url'];
+        }
+
         $style_result = ( new StyleMapper() )->map( 'video', $settings );
         $attrs        = array_merge(
             [
@@ -39,6 +44,8 @@ class VideoConverter extends BaseElementorConverter {
                 'video_type', 'youtube_url', 'vimeo_url', 'hosted_url',
                 'autoplay', 'mute', 'loop', 'controls', 'show_controls',
                 'image_overlay', 'show_image_overlay', 'lightbox',
+                // poster is mapped above; alternative platform URLs are not used.
+                'poster', 'dailymotion_url', 'videopress_url',
             ],
             $style_result['handled_keys']
         ) );

@@ -193,8 +193,71 @@ abstract class BaseElementorConverter implements ConverterInterface {
      */
     protected function logUnmappedSettings( string $element_id, array $settings, array $mapped_keys = [] ): void {
         static $always_ignore = [
-            '__globals__', '__dynamic__', '_id', 'css_classes',
+            // Elementor / WordPress internals.
+            '__globals__', '__dynamic__', '_id', '_element_id', 'css_classes', '_css_classes',
             '_css_custom_property', 'widget_type',
+            // Element-width / layout overrides — no Divi equivalent via block attrs.
+            '_element_width', '_element_custom_width',
+            // Elementor render cache hint.
+            '_element_cache',
+            // Section/column content-width hint — no Divi equivalent; suppressed globally
+            // so stray copies on non-section elements don't generate noise.
+            'content_width',
+            // Advanced-tab spacing keys (_padding, _margin) with all standard responsive
+            // suffixes. Converters that use StyleMapper already mark these via handled_keys;
+            // this entry catches converters (e.g. menu-anchor) that skip StyleMapper.
+            '_padding', '_padding_tablet', '_padding_mobile',
+            '_margin', '_margin_tablet', '_margin_mobile',
+            // Premium Addons for Elementor UI tooltips — third-party plugin, no Divi mapping.
+            'premium_tooltip_text', 'premium_tooltip_position',
+            // Custom-link plugin field.
+            'ra_element_link',
+            // Entrance animations — Divi has its own animation system; not mappable as static attrs.
+            '_animation', 'animation', '_animation_widescreen',
+            '_animation_mobile', 'animation_mobile',
+            'animation_duration', '_animation_delay', 'animation_delay',
+            // Responsive visibility toggles — no Divi 5 block attr equivalent.
+            'hide_tablet', 'hide_mobile',
+            // Column order reversal on tablet — no Divi 5 block attr equivalent.
+            'reverse_order_tablet',
+            // CSS overflow — no block attr equivalent.
+            'overflow',
+            // CSS z-index — no block attr equivalent.
+            '_z_index', '_z_index_tablet', '_z_index_mobile',
+            // CSS absolute positioning and offset — no block attr equivalent.
+            '_position',
+            '_offset_x', '_offset_x_end', '_offset_x_tablet',
+            '_offset_y', '_offset_y_end',
+            '_offset_orientation_v', '_offset_orientation_h',
+            // Image-specific controls without Divi 5 block-attr equivalents.
+            'object-fit', 'css_filters_css_filter',
+            'css_filters_brightness', 'css_filters_contrast',
+            'css_filters_saturate', 'css_filters_hue',
+            'image_custom_dimension',
+            // Image link controls — not yet mapped.
+            'link_to', 'open_lightbox',
+            // Motion FX / transform effects — no block attr equivalent.
+            '_transform_scale_effect',
+            'motion_fx_transform_x_anchor_point', 'motion_fx_transform_y_anchor_point',
+            // Heading size preset ("xxl", "xl", etc.) — no Divi 5 block-attr equivalent.
+            'size',
+            // Arbitrary width / space overrides on positioned elements.
+            'width', 'space',
+            // Hover / interaction states — cannot be expressed as static Divi 5 block attributes.
+            'hover_color', 'button_background_hover_color',
+            'button_hover_box_shadow_box_shadow_type', 'button_hover_box_shadow_box_shadow',
+            'button_hover_transition_duration',
+            'background_hover_background', 'background_hover_color',
+            // Shadow effects — not yet mapped to Divi 5 schema.
+            'text_shadow_text_shadow_type', 'text_shadow_text_shadow',
+            'button_box_shadow_box_shadow_type', 'button_box_shadow_box_shadow',
+            'box_shadow_box_shadow_type', 'box_shadow_box_shadow',
+        ];
+
+        // Elementor custom breakpoints (laptop, tablet_extra, widescreen …) that
+        // Divi 5 does not expose; suppress these keys without mapping.
+        static $extra_bp_suffixes = [
+            '_laptop', '_tablet_extra', '_widescreen', '_mobile_extra', '_mobile_intermediate',
         ];
 
         foreach ( $settings as $key => $value ) {
@@ -209,6 +272,11 @@ abstract class BaseElementorConverter implements ConverterInterface {
             }
             if ( $value === '' || $value === [] || $value === null ) {
                 continue;
+            }
+            foreach ( $extra_bp_suffixes as $suffix ) {
+                if ( str_ends_with( $key, $suffix ) ) {
+                    continue 2;
+                }
             }
             $this->engine->logSkippedSetting( "{$element_id}: {$key}" );
         }
