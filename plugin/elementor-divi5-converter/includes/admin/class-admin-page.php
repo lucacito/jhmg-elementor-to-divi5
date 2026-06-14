@@ -94,6 +94,8 @@ class AdminPage {
             $post_status = 'draft';
         }
 
+        $convert_headers = isset( $_POST['edc_convert_headers'] ) && $_POST['edc_convert_headers'] === '1';
+
         $parser = new ElementorImportParser();
 
         try {
@@ -108,8 +110,9 @@ class AdminPage {
 
         $importer = new BatchImporter();
         $results  = $importer->import( $items, [
-            'post_type'   => $post_type,
-            'post_status' => $post_status,
+            'post_type'       => $post_type,
+            'post_status'     => $post_status,
+            'convert_headers' => $convert_headers,
         ] );
 
         $import_id = $this->generate_import_id();
@@ -202,11 +205,22 @@ class AdminPage {
                         </select>
                     </div>
 
-                    <div class="edc-import-submit">
-                        <button type="submit" class="button button-primary">
-                            <?php esc_html_e( 'Import and Convert', 'elementor-divi5-converter' ); ?>
-                        </button>
-                    </div>
+                </div>
+
+                <div class="edc-import-field edc-import-field--checkbox">
+                    <label>
+                        <input type="checkbox" name="edc_convert_headers" value="1">
+                        <strong><?php esc_html_e( 'Convert header templates as Divi Theme Builder headers', 'elementor-divi5-converter' ); ?></strong>
+                    </label>
+                    <p class="description">
+                        <?php esc_html_e( 'When checked, Elementor header templates are imported as Divi Theme Builder global headers. Uncheck to import them as regular draft pages instead.', 'elementor-divi5-converter' ); ?>
+                    </p>
+                </div>
+
+                <div class="edc-import-submit">
+                    <button type="submit" class="button button-primary">
+                        <?php esc_html_e( 'Import and Convert', 'elementor-divi5-converter' ); ?>
+                    </button>
                 </div>
             </form>
         </div>
@@ -418,7 +432,11 @@ class AdminPage {
 .edc-import-field label strong { display: block; margin-bottom: 2px; }
 .edc-import-field input[type="file"] { padding: 4px 0; }
 .edc-import-field .description { margin: 4px 0 0; font-size: 11px; color: #757575; }
-.edc-import-submit { display: flex; align-items: flex-end; padding-bottom: 2px; }
+.edc-import-field--checkbox { margin-top: 14px; }
+.edc-import-field--checkbox label { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.edc-import-field--checkbox input[type="checkbox"] { margin: 0; flex-shrink: 0; }
+.edc-import-field--checkbox .description { margin: 5px 0 0 22px; }
+.edc-import-submit { display: flex; align-items: flex-end; padding-bottom: 2px; margin-top: 16px; }
 
 /* Status badges */
 .edc-status { font-weight: 600; }

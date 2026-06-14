@@ -44,12 +44,25 @@ if ( ! function_exists( 'update_post_meta' ) ) {
         if ( ! isset( $GLOBALS['__test_postmeta'][ $id ] ) ) {
             $GLOBALS['__test_postmeta'][ $id ] = [];
         }
-        $GLOBALS['__test_postmeta'][ $id ][ $meta_key ] = $meta_value;
+        // Store as a single-value array (overwrites previous single value).
+        $GLOBALS['__test_postmeta'][ $id ][ $meta_key ] = [ $meta_value ];
         return true;
     }
 
-    function add_post_meta( $post_id, $meta_key, $meta_value ) {
-        return update_post_meta( $post_id, $meta_key, $meta_value );
+    // add_post_meta appends a new value (multiple values per key, like WordPress).
+    function add_post_meta( $post_id, $meta_key, $meta_value, $unique = false ) {
+        $id = (int) $post_id;
+        if ( ! isset( $GLOBALS['__test_postmeta'][ $id ] ) ) {
+            $GLOBALS['__test_postmeta'][ $id ] = [];
+        }
+        if ( ! isset( $GLOBALS['__test_postmeta'][ $id ][ $meta_key ] ) ) {
+            $GLOBALS['__test_postmeta'][ $id ][ $meta_key ] = [];
+        }
+        if ( $unique && ! empty( $GLOBALS['__test_postmeta'][ $id ][ $meta_key ] ) ) {
+            return false;
+        }
+        $GLOBALS['__test_postmeta'][ $id ][ $meta_key ][] = $meta_value;
+        return true;
     }
 
     function get_post_meta( $post_id, $meta_key = '', $single = false ) {
@@ -61,11 +74,11 @@ if ( ! function_exists( 'update_post_meta' ) ) {
         if ( ! $exists ) {
             return $single ? '' : [];
         }
-        $value = $GLOBALS['__test_postmeta'][ $id ][ $meta_key ];
+        $values = $GLOBALS['__test_postmeta'][ $id ][ $meta_key ];
         if ( $single ) {
-            return $value;
+            return $values[0] ?? '';
         }
-        return [ $value ];
+        return $values;
     }
 
     function delete_post_meta( $post_id, $meta_key = '', $meta_value = '' ) {
@@ -75,6 +88,15 @@ if ( ! function_exists( 'update_post_meta' ) ) {
             return true;
         }
         return false;
+    }
+}
+
+// Minimal WP_Query stub: returns empty results, forcing post creation in Theme Builder logic.
+if ( ! class_exists( 'WP_Query' ) ) {
+    class WP_Query {
+        public array $posts = [];
+        public function __construct( array $args = [] ) {}
+        public function have_posts(): bool { return ! empty( $this->posts ); }
     }
 }
 
@@ -129,6 +151,11 @@ if ( ! function_exists( 'wp_insert_post' ) ) {
     function wp_set_post_terms( $post_id, $terms, $taxonomy ) {
         // No-op for tests.
         return true;
+    }
+
+    function wp_set_object_terms( $post_id, $terms, $taxonomy, $append = false ) {
+        // No-op for tests.
+        return [];
     }
 }
 

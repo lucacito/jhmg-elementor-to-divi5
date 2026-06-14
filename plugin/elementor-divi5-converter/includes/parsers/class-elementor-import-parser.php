@@ -85,10 +85,11 @@ class ElementorImportParser {
 
         return [
             $this->makeItem(
-                $meta['title']     ?? $title,
+                $meta['title']         ?? $title,
                 $elements,
-                $meta['post_type'] ?? 'page',
-                $meta['post_name'] ?? ''
+                $meta['post_type']     ?? 'page',
+                $meta['post_name']     ?? '',
+                $meta['template_type'] ?? ''
             ),
         ];
     }
@@ -173,11 +174,17 @@ class ElementorImportParser {
                     continue;
                 }
 
+                $raw_post_type = $entry['post_type'] ?? $meta['post_type'] ?? 'page';
+                $template_type = $meta['template_type'] ?? '';
+                if ( $template_type === '' && $this->isHeaderTemplateType( $raw_post_type ) ) {
+                    $template_type = 'header';
+                }
                 $items[] = $this->makeItem(
                     $entry['post_title'] ?? $meta['title'] ?? (string) $key,
                     $elements,
-                    $entry['post_type'] ?? $meta['post_type'] ?? 'page',
-                    $entry['post_name'] ?? $meta['post_name'] ?? ''
+                    $raw_post_type,
+                    $entry['post_name'] ?? $meta['post_name'] ?? '',
+                    $template_type
                 );
 
                 if ( count( $items ) >= self::MAX_PAGES ) {
@@ -214,10 +221,11 @@ class ElementorImportParser {
             }
 
             $items[] = $this->makeItem(
-                $meta['title']     ?? $this->titleFromFileName( basename( $stat['name'] ) ),
+                $meta['title']         ?? $this->titleFromFileName( basename( $stat['name'] ) ),
                 $elements,
-                $meta['post_type'] ?? 'page',
-                $meta['post_name'] ?? ''
+                $meta['post_type']     ?? 'page',
+                $meta['post_name']     ?? '',
+                $meta['template_type'] ?? ''
             );
 
             if ( count( $items ) >= self::MAX_PAGES ) {
@@ -269,6 +277,12 @@ class ElementorImportParser {
             $meta['post_name'] = $decoded['post_name'];
         }
 
+        // Detect Elementor Theme Builder template types (header, footer, etc.).
+        $raw_type = $meta['post_type'] ?? '';
+        if ( $this->isHeaderTemplateType( $raw_type ) ) {
+            $meta['template_type'] = 'header';
+        }
+
         // Format 2: Elementor template export — {version, title, type, content: [...]}.
         if ( isset( $decoded['content'] ) && is_array( $decoded['content'] ) ) {
             return $decoded['content'];
@@ -286,13 +300,29 @@ class ElementorImportParser {
     // Helpers
     // -------------------------------------------------------------------------
 
-    private function makeItem( string $title, array $elements, string $post_type = 'page', string $post_name = '' ): array {
-        return [
+    private function makeItem( string $title, array $elements, string $post_type = 'page', string $post_name = '', string $template_type = '' ): array {
+        $item = [
             'title'     => $title ?: 'Imported Page',
             'post_type' => in_array( $post_type, [ 'page', 'post' ], true ) ? $post_type : 'page',
             'post_name' => $post_name,
             'elements'  => $elements,
         ];
+        if ( $template_type !== '' ) {
+            $item['template_type'] = $template_type;
+        }
+        return $item;
+    }
+
+    /**
+     * Elementor Theme Builder headers export with type='header' (or legacy variants).
+     * Also covers HFE (Header Footer Elementor) templates.
+     */
+    private function isHeaderTemplateType( string $type ): bool {
+        return in_array( strtolower( $type ), [
+            'header',
+            'et_header_layout',
+            'hfe-template',   // HFE plugin template post type
+        ], true );
     }
 
     private function titleFromFileName( string $file_name ): string {

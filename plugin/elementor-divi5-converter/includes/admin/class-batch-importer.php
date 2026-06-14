@@ -4,6 +4,7 @@ namespace ElementorDivi5Converter\Admin;
 
 use ElementorDivi5Converter\Converter\ConverterEngine;
 use ElementorDivi5Converter\Exporters\DiviExporter;
+use ElementorDivi5Converter\Exporters\DiviThemeBuilderExporter;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -21,10 +22,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 class BatchImporter {
     private ConverterEngine $engine;
     private DiviExporter $exporter;
+    private DiviThemeBuilderExporter $themeBuilderExporter;
 
-    public function __construct( ?ConverterEngine $engine = null, ?DiviExporter $exporter = null ) {
-        $this->engine   = $engine   ?? new ConverterEngine();
-        $this->exporter = $exporter ?? new DiviExporter();
+    public function __construct(
+        ?ConverterEngine $engine = null,
+        ?DiviExporter $exporter = null,
+        ?DiviThemeBuilderExporter $themeBuilderExporter = null
+    ) {
+        $this->engine               = $engine               ?? new ConverterEngine();
+        $this->exporter             = $exporter             ?? new DiviExporter();
+        $this->themeBuilderExporter = $themeBuilderExporter ?? new DiviThemeBuilderExporter( $this->exporter );
 
         $global_colors = $this->extractElementorGlobalColors();
         if ( ! empty( $global_colors ) ) {
@@ -81,57 +88,99 @@ class BatchImporter {
      * @return array[] Per-item results.
      */
     public function import( array $items, array $options = [] ): array {
-        $default_post_type   = $options['post_type']   ?? 'page';
-        $default_post_status = $options['post_status'] ?? 'draft';
+        $default_post_type   = $options['post_type']      ?? 'page';
+        $default_post_status = $options['post_status']    ?? 'draft';
+        $convert_headers     = $options['convert_headers'] ?? true;
 
         $results = [];
 
         foreach ( $items as $item ) {
-            $title     = (string) ( $item['title']     ?? 'Imported Page' );
-            $post_type = $default_post_type;
-            $post_name = (string) ( $item['post_name'] ?? '' );
-            $elements  = $item['elements'] ?? [];
+            $template_type = (string) ( $item['template_type'] ?? '' );
 
-            try {
-                $post_args = [
-                    'post_type'    => $post_type,
-                    'post_title'   => $title ?: 'Imported Page',
-                    'post_status'  => $default_post_status,
-                    'post_content' => '',
-                ];
-
-                if ( $post_name !== '' ) {
-                    $post_args['post_name'] = $post_name;
-                }
-
-                $post_id = wp_insert_post( $post_args );
-
-                if ( is_wp_error( $post_id ) || (int) $post_id === 0 ) {
-                    $error = is_wp_error( $post_id ) ? $post_id->get_error_message() : 'wp_insert_post returned 0';
-                    $results[] = $this->failResult( $title, $error );
-                    continue;
-                }
-
-                $post_id  = (int) $post_id;
-                $converted = $this->engine->convert( $elements );
-                $this->exporter->save( $post_id, $converted );
-
-                update_post_meta( $post_id, '_edc_import_source', 'file_upload' );
-
-                $results[] = [
-                    'title'   => $title,
-                    'post_id' => $post_id,
-                    'success' => true,
-                    'error'   => '',
-                    'report'  => $converted['report']  ?? [],
-                    'unsupported' => $converted['unsupported'] ?? [],
-                ];
-            } catch ( \Throwable $e ) {
-                $results[] = $this->failResult( $title, $e->getMessage() );
+            if ( $template_type === 'header' && $convert_headers ) {
+                $results[] = $this->importHeaderTemplate( $item, $default_post_status );
+                continue;
             }
+
+            $results[] = $this->importPageItem( $item, $default_post_type, $default_post_status );
         }
 
         return $results;
+    }
+
+    /**
+     * Import a standard page/post item.
+     */
+    private function importPageItem( array $item, string $post_type, string $post_status ): array {
+        $title     = (string) ( $item['title']     ?? 'Imported Page' );
+        $post_name = (string) ( $item['post_name'] ?? '' );
+        $elements  = $item['elements'] ?? [];
+
+        try {
+            $post_args = [
+                'post_type'    => $post_type,
+                'post_title'   => $title ?: 'Imported Page',
+                'post_status'  => $post_status,
+                'post_content' => '',
+            ];
+
+            if ( $post_name !== '' ) {
+                $post_args['post_name'] = $post_name;
+            }
+
+            $post_id = wp_insert_post( $post_args );
+
+            if ( is_wp_error( $post_id ) || (int) $post_id === 0 ) {
+                $error = is_wp_error( $post_id ) ? $post_id->get_error_message() : 'wp_insert_post returned 0';
+                return $this->failResult( $title, $error );
+            }
+
+            $post_id   = (int) $post_id;
+            $converted = $this->engine->convert( $elements );
+            $this->exporter->save( $post_id, $converted );
+
+            update_post_meta( $post_id, '_edc_import_source', 'file_upload' );
+
+            return [
+                'title'       => $title,
+                'post_id'     => $post_id,
+                'success'     => true,
+                'error'       => '',
+                'report'      => $converted['report']      ?? [],
+                'unsupported' => $converted['unsupported'] ?? [],
+            ];
+        } catch ( \Throwable $e ) {
+            return $this->failResult( $title, $e->getMessage() );
+        }
+    }
+
+    /**
+     * Import an Elementor header template into the Divi Theme Builder.
+     */
+    private function importHeaderTemplate( array $item, string $post_status ): array {
+        $title    = (string) ( $item['title']    ?? 'Imported Header' );
+        $elements = $item['elements'] ?? [];
+
+        try {
+            $converted = $this->engine->convert( $elements );
+            $tb_result = $this->themeBuilderExporter->saveHeader( $title, $converted );
+
+            update_post_meta( $tb_result['post_id'], '_edc_import_source', 'file_upload' );
+
+            return [
+                'title'            => $title,
+                'post_id'          => $tb_result['post_id'],
+                'template_id'      => $tb_result['template_id'],
+                'theme_builder_id' => $tb_result['theme_builder_id'],
+                'template_type'    => 'header',
+                'success'          => $tb_result['success'],
+                'error'            => $tb_result['error'],
+                'report'           => $converted['report']      ?? [],
+                'unsupported'      => $converted['unsupported'] ?? [],
+            ];
+        } catch ( \Throwable $e ) {
+            return $this->failResult( $title, $e->getMessage() );
+        }
     }
 
     private function failResult( string $title, string $error ): array {

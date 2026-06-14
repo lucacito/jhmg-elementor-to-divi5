@@ -158,6 +158,10 @@ class ConverterRegistry {
         $this->registerWidget( 'e-toggle', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
         $this->registerWidget( 'e-tabs', '\\ElementorDivi5Converter\\Converter\\Handlers\\TabsConverter' );
 
+        // ── Native Elementor header widgets ──────────────────────────────────
+        // nav-menu is the native Elementor Nav Menu widget (stores menu ID in 'menu').
+        $this->registerWidget( 'nav-menu', '\\ElementorDivi5Converter\\Converter\\Handlers\\NavMenuConverter' );
+
         // ── Header Footer Elementor (HFE) ────────────────────────────────────
         $this->registerWidget( 'hfe-site-title',         '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeSiteTitleConverter' );
         $this->registerWidget( 'hfe-site-tagline',       '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeSiteTaglineConverter' );
