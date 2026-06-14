@@ -96,7 +96,8 @@ final class DiviShortcodeSerializerTest extends TestCase {
         $button_attrs = '{"button":{"innerContent":{"desktop":{"value":{"text":"Click Here","linkUrl":"https://example.com"}}}}}';
         $image_attrs  = '{"image":{"innerContent":{"desktop":{"value":{"src":"https://example.com/sample.jpg"}}}}}';
 
-        $expected = '<!-- wp:divi/section {} -->'
+        $expected = '<!-- wp:divi/placeholder -->'
+            . '<!-- wp:divi/section {} -->'
             . '<!-- wp:divi/row {} -->'
             . '<!-- wp:divi/column {} -->'
             . "<!-- wp:divi/text {$text_attrs} /-->"
@@ -104,7 +105,8 @@ final class DiviShortcodeSerializerTest extends TestCase {
             . "<!-- wp:divi/image {$image_attrs} /-->"
             . '<!-- /wp:divi/column -->'
             . '<!-- /wp:divi/row -->'
-            . '<!-- /wp:divi/section -->';
+            . '<!-- /wp:divi/section -->'
+            . '<!-- /wp:divi/placeholder -->';
 
         $this->assertSame( $expected, $blocks );
     }

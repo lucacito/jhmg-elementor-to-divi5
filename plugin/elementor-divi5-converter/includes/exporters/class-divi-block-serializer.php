@@ -17,7 +17,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 class DiviBlockSerializer {
     public function serialize( array $divi_data ): string {
         $elements = $this->resolveElements( $divi_data );
-        return $this->serializeElements( $elements );
+        $inner    = $this->serializeElements( $elements );
+        return "<!-- wp:divi/placeholder -->{$inner}<!-- /wp:divi/placeholder -->";
     }
 
     private function resolveElements( array $divi_data ): array {

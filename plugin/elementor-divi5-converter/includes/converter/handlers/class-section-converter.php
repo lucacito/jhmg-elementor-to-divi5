@@ -196,17 +196,9 @@ class SectionConverter extends BaseElementorConverter {
             }
         }
 
-        if ( $first_url === null ) {
-            return;
-        }
-
-        // Only promote to background image when the section has no existing background
-        // image AND no background color — to avoid overriding a solid fill (which may
-        // have been resolved from a __globals__ reference) with a decorative shape.
-        $existing_color = $settings['background_color'] ?? '';
-        if ( $existing_url === '' && ( $existing_color === '' || $existing_color === null ) ) {
-            $settings['background_image'] = [ 'url' => $first_url ];
-        }
+        // Decorative shapes are stripped but not repurposed as background images —
+        // they are small overlays, not full-bleed backgrounds, and using them as
+        // backgrounds produces visually incorrect results.
     }
 
     /**
