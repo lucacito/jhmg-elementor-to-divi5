@@ -184,9 +184,14 @@ final class StyleMapperTest extends TestCase {
 
     public function test_maps_button_text_color(): void {
         $result = $this->mapper->map( 'button', [ 'button_text_color' => '#ffffff' ] );
-        $color  = $result['divi_attrs']['button']['decoration']['font']['font']['desktop']['value']['color'];
+        // Button font color lives in the button-specific decoration sub-group, one per breakpoint.
+        $color_desktop = $result['divi_attrs']['button']['decoration']['button']['desktop']['value']['font']['color'];
+        $color_tablet  = $result['divi_attrs']['button']['decoration']['button']['tablet']['value']['font']['color'];
+        $color_phone   = $result['divi_attrs']['button']['decoration']['button']['phone']['value']['font']['color'];
 
-        $this->assertSame( '#ffffff', $color );
+        $this->assertSame( '#ffffff', $color_desktop );
+        $this->assertSame( '#ffffff', $color_tablet );
+        $this->assertSame( '#ffffff', $color_phone );
     }
 
     // -------------------------------------------------------------------------
@@ -351,6 +356,255 @@ final class StyleMapperTest extends TestCase {
     public function test_column_size_to_fraction_static_helper(): void {
         $this->assertSame( '3_4', StyleMapper::columnSizeToFraction( 75 ) );
         $this->assertNull( StyleMapper::columnSizeToFraction( 99 ) );
+    }
+
+    // -------------------------------------------------------------------------
+    // parseSizeValue fixes
+    // -------------------------------------------------------------------------
+
+    public function test_parse_size_value_empty_size_returns_empty_string(): void {
+        // Before fix, this produced "px" (empty string + unit).
+        $result = $this->mapper->map( 'heading', [ 'typography_font_size' => [ 'size' => '', 'unit' => 'px' ] ] );
+        $attrs  = $result['divi_attrs'];
+        // Should produce no font size attr (empty value is skipped).
+        $this->assertArrayNotHasKey(
+            'title',
+            $attrs,
+            'Empty font_size should not write any attr (would produce "px" without fix)'
+        );
+    }
+
+    public function test_parse_size_value_null_size_returns_empty_string(): void {
+        $result = $this->mapper->map( 'heading', [ 'typography_font_size' => [ 'size' => null, 'unit' => 'em' ] ] );
+        $attrs  = $result['divi_attrs'];
+        $this->assertArrayNotHasKey( 'title', $attrs );
+    }
+
+    public function test_parse_size_value_handles_elementor_3x_sizes_format(): void {
+        $result = $this->mapper->map( 'heading', [
+            'typography_font_size' => [
+                'sizes' => [
+                    'desktop' => [ 'size' => 24, 'unit' => 'px' ],
+                ],
+            ],
+        ] );
+        $size = $result['divi_attrs']['title']['decoration']['font']['font']['desktop']['value']['size'] ?? null;
+        $this->assertSame( '24px', $size );
+    }
+
+    // -------------------------------------------------------------------------
+    // normalizeRadius fixes
+    // -------------------------------------------------------------------------
+
+    public function test_normalize_radius_with_pre_formatted_values_does_not_double_unit(): void {
+        // Corner values that already carry a "px" suffix must not become "0pxpx".
+        $settings = [
+            'border_radius' => [ 'top' => '0px', 'right' => '8px', 'bottom' => '0px', 'left' => '8px', 'unit' => 'px' ],
+        ];
+        $result = $this->mapper->map( 'heading', $settings );
+        $radius = $result['divi_attrs']['module']['decoration']['border']['desktop']['value']['radius'];
+
+        $this->assertSame( '0px', $radius['topLeft'] );
+        $this->assertSame( '8px', $radius['topRight'] );
+        $this->assertSame( '0px', $radius['bottomRight'] );
+        $this->assertSame( '8px', $radius['bottomLeft'] );
+    }
+
+    // -------------------------------------------------------------------------
+    // Font family, style flags, responsive weight
+    // -------------------------------------------------------------------------
+
+    public function test_maps_font_family_to_heading_path(): void {
+        $result = $this->mapper->map( 'heading', [ 'typography_font_family' => 'Montserrat' ] );
+        $family = $result['divi_attrs']['title']['decoration']['font']['font']['desktop']['value']['family'] ?? null;
+        $this->assertSame( 'Montserrat', $family );
+    }
+
+    public function test_maps_font_weight_responsive(): void {
+        $result = $this->mapper->map( 'heading', [
+            'typography_font_weight'        => '700',
+            'typography_font_weight_tablet' => '400',
+        ] );
+        $desktop = $result['divi_attrs']['title']['decoration']['font']['font']['desktop']['value']['weight'] ?? null;
+        $tablet  = $result['divi_attrs']['title']['decoration']['font']['font']['tablet']['value']['weight'] ?? null;
+        $this->assertSame( '700', $desktop );
+        $this->assertSame( '400', $tablet );
+    }
+
+    public function test_maps_italic_font_style_flag(): void {
+        $result = $this->mapper->map( 'heading', [ 'typography_font_style' => 'italic' ] );
+        $style  = $result['divi_attrs']['title']['decoration']['font']['font']['desktop']['value']['style'] ?? null;
+        $this->assertContains( 'italic', $style );
+    }
+
+    public function test_maps_uppercase_text_transform_flag(): void {
+        $result = $this->mapper->map( 'heading', [ 'typography_text_transform' => 'uppercase' ] );
+        $style  = $result['divi_attrs']['title']['decoration']['font']['font']['desktop']['value']['style'] ?? null;
+        $this->assertContains( 'uppercase', $style );
+    }
+
+    public function test_maps_underline_text_decoration_flag(): void {
+        $result = $this->mapper->map( 'heading', [ 'typography_text_decoration' => 'underline' ] );
+        $style  = $result['divi_attrs']['title']['decoration']['font']['font']['desktop']['value']['style'] ?? null;
+        $this->assertContains( 'underline', $style );
+    }
+
+    public function test_maps_line_through_to_strikethrough_flag(): void {
+        $result = $this->mapper->map( 'heading', [ 'typography_text_decoration' => 'line-through' ] );
+        $style  = $result['divi_attrs']['title']['decoration']['font']['font']['desktop']['value']['style'] ?? null;
+        $this->assertContains( 'strikethrough', $style );
+    }
+
+    public function test_combines_multiple_style_flags(): void {
+        $result = $this->mapper->map( 'heading', [
+            'typography_font_style'      => 'italic',
+            'typography_text_transform'  => 'uppercase',
+            'typography_text_decoration' => 'underline',
+        ] );
+        $style = $result['divi_attrs']['title']['decoration']['font']['font']['desktop']['value']['style'] ?? [];
+        $this->assertContains( 'italic', $style );
+        $this->assertContains( 'uppercase', $style );
+        $this->assertContains( 'underline', $style );
+    }
+
+    // -------------------------------------------------------------------------
+    // Background gradient
+    // -------------------------------------------------------------------------
+
+    public function test_maps_linear_gradient_background(): void {
+        $result = $this->mapper->map( 'section', [
+            'background_background'   => 'gradient',
+            'background_gradient_type'  => 'linear',
+            'background_gradient_angle' => [ 'size' => 135, 'unit' => 'deg' ],
+            'background_gradient_stops' => [
+                [ 'color' => '#ff0000', 'position' => [ 'size' => 0,   'unit' => '%' ] ],
+                [ 'color' => '#0000ff', 'position' => [ 'size' => 100, 'unit' => '%' ] ],
+            ],
+        ] );
+        $gradient = $result['divi_attrs']['module']['decoration']['background']['desktop']['value']['gradient'] ?? null;
+        $this->assertSame( 'on', $gradient['enabled'] );
+        $this->assertSame( 'linear', $gradient['type'] );
+        $this->assertSame( '135deg', $gradient['direction'] );
+        $this->assertSame( '#ff0000', $gradient['stops'][0]['color'] );
+        $this->assertSame( '0%', $gradient['stops'][0]['position'] );
+        $this->assertSame( '#0000ff', $gradient['stops'][1]['color'] );
+    }
+
+    public function test_maps_gradient_with_two_color_shorthand(): void {
+        $result = $this->mapper->map( 'section', [
+            'background_background' => 'gradient',
+            'background_color'      => '#aabbcc',
+            'background_color_b'    => '#112233',
+        ] );
+        $stops = $result['divi_attrs']['module']['decoration']['background']['desktop']['value']['gradient']['stops'] ?? [];
+        $this->assertCount( 2, $stops );
+        $this->assertSame( '#aabbcc', $stops[0]['color'] );
+        $this->assertSame( '#112233', $stops[1]['color'] );
+        // Solid color path must NOT be set for gradient type
+        $solid = $result['divi_attrs']['module']['decoration']['background']['desktop']['value']['color'] ?? null;
+        $this->assertNull( $solid );
+    }
+
+    // -------------------------------------------------------------------------
+    // Box shadow
+    // -------------------------------------------------------------------------
+
+    public function test_maps_box_shadow_to_module_decoration(): void {
+        $result = $this->mapper->map( 'heading', [
+            'box_shadow_box_shadow_type' => 'yes',
+            'box_shadow_box_shadow'      => [
+                'horizontal' => 2,
+                'vertical'   => 4,
+                'blur'       => 10,
+                'spread'     => 0,
+                'color'      => 'rgba(0,0,0,0.2)',
+                'position'   => '',
+            ],
+        ] );
+        $shadow = $result['divi_attrs']['module']['decoration']['boxShadow']['desktop']['value'] ?? null;
+        $this->assertSame( '2px', $shadow['horizontal'] );
+        $this->assertSame( '4px', $shadow['vertical'] );
+        $this->assertSame( '10px', $shadow['blur'] );
+        $this->assertSame( 'rgba(0,0,0,0.2)', $shadow['color'] );
+        $this->assertSame( 'outer', $shadow['position'] );
+    }
+
+    public function test_maps_inset_box_shadow_position(): void {
+        $result = $this->mapper->map( 'heading', [
+            'box_shadow_box_shadow' => [
+                'horizontal' => 0, 'vertical' => 2, 'blur' => 5,
+                'spread' => 0, 'color' => '#000000', 'position' => 'inset',
+            ],
+        ] );
+        $pos = $result['divi_attrs']['module']['decoration']['boxShadow']['desktop']['value']['position'] ?? null;
+        $this->assertSame( 'inner', $pos );
+    }
+
+    // -------------------------------------------------------------------------
+    // Text shadow
+    // -------------------------------------------------------------------------
+
+    public function test_maps_text_shadow_to_font_path(): void {
+        $result = $this->mapper->map( 'heading', [
+            'text_shadow_text_shadow_type' => 'yes',
+            'text_shadow_text_shadow'      => [
+                'horizontal' => 1, 'vertical' => 2, 'blur' => 3, 'color' => 'rgba(0,0,0,0.5)',
+            ],
+        ] );
+        $shadow = $result['divi_attrs']['title']['decoration']['font']['font']['desktop']['value']['textShadow'] ?? null;
+        $this->assertSame( 'rgba(0,0,0,0.5)', $shadow['color'] );
+        $this->assertSame( '1px', $shadow['horizontal'] );
+    }
+
+    // -------------------------------------------------------------------------
+    // Opacity
+    // -------------------------------------------------------------------------
+
+    public function test_maps_opacity_to_module_decoration(): void {
+        $result  = $this->mapper->map( 'heading', [ '_opacity' => '0.5' ] );
+        $opacity = $result['divi_attrs']['module']['decoration']['opacity']['desktop']['value'] ?? null;
+        $this->assertSame( '0.5', $opacity );
+    }
+
+    public function test_opacity_of_1_is_not_written(): void {
+        $result = $this->mapper->map( 'heading', [ '_opacity' => '1' ] );
+        $this->assertArrayNotHasKey( 'opacity', $result['divi_attrs']['module']['decoration'] ?? [] );
+    }
+
+    // -------------------------------------------------------------------------
+    // Min height
+    // -------------------------------------------------------------------------
+
+    public function test_maps_min_height_for_section(): void {
+        $result = $this->mapper->map( 'section', [
+            'height'        => 'min-height',
+            'custom_height' => [ 'size' => 500, 'unit' => 'px' ],
+        ] );
+        $min_h = $result['divi_attrs']['module']['decoration']['sizing']['desktop']['value']['minHeight'] ?? null;
+        $this->assertSame( '500px', $min_h );
+    }
+
+    public function test_maps_min_height_responsive_for_column(): void {
+        $result = $this->mapper->map( 'column', [
+            'custom_height'        => [ 'size' => 400, 'unit' => 'px' ],
+            'custom_height_tablet' => [ 'size' => 300, 'unit' => 'px' ],
+        ] );
+        $desktop = $result['divi_attrs']['module']['decoration']['sizing']['desktop']['value']['minHeight'] ?? null;
+        $tablet  = $result['divi_attrs']['module']['decoration']['sizing']['tablet']['value']['minHeight'] ?? null;
+        $this->assertSame( '400px', $desktop );
+        $this->assertSame( '300px', $tablet );
+    }
+
+    // -------------------------------------------------------------------------
+    // Button background color
+    // -------------------------------------------------------------------------
+
+    public function test_maps_button_background_color_per_breakpoint(): void {
+        $result = $this->mapper->map( 'button', [ 'button_background_color' => '#1a73e8' ] );
+        $desktop = $result['divi_attrs']['button']['decoration']['button']['desktop']['value']['background']['color'] ?? null;
+        $tablet  = $result['divi_attrs']['button']['decoration']['button']['tablet']['value']['background']['color'] ?? null;
+        $this->assertSame( '#1a73e8', $desktop );
+        $this->assertSame( '#1a73e8', $tablet );
     }
 
     public function test_heading_converter_uses_style_mapper_for_background_color(): void {

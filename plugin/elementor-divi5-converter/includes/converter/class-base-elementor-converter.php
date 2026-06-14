@@ -248,10 +248,8 @@ abstract class BaseElementorConverter implements ConverterInterface {
             'button_hover_box_shadow_box_shadow_type', 'button_hover_box_shadow_box_shadow',
             'button_hover_transition_duration',
             'background_hover_background', 'background_hover_color',
-            // Shadow effects — not yet mapped to Divi 5 schema.
-            'text_shadow_text_shadow_type', 'text_shadow_text_shadow',
+            // Button-specific shadow (separate from module box shadow — not yet mapped).
             'button_box_shadow_box_shadow_type', 'button_box_shadow_box_shadow',
-            'box_shadow_box_shadow_type', 'box_shadow_box_shadow',
         ];
 
         // Elementor custom breakpoints (laptop, tablet_extra, widescreen …) that

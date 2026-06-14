@@ -118,6 +118,16 @@ class ConverterRegistry {
         $this->registerWidget( 'icon-list', '\\ElementorDivi5Converter\\Converter\\Handlers\\IconListConverter' );
         $this->registerWidget( 'image-carousel', '\\ElementorDivi5Converter\\Converter\\Handlers\\ImageCarouselConverter' );
         $this->registerWidget( 'elementskit-dual-button', '\\ElementorDivi5Converter\\Converter\\Handlers\\ElementsKitDualButtonConverter' );
+        $this->registerWidget( 'elementskit-accordion', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
+        $this->registerWidget( 'html', '\\ElementorDivi5Converter\\Converter\\Handlers\\HtmlConverter' );
+        $this->registerWidget( 'gallery', '\\ElementorDivi5Converter\\Converter\\Handlers\\GalleryConverter' );
+        $this->registerWidget( 'counter', '\\ElementorDivi5Converter\\Converter\\Handlers\\CounterConverter' );
+        $this->registerWidget( 'call-to-action', '\\ElementorDivi5Converter\\Converter\\Handlers\\CtaConverter' );
+        $this->registerWidget( 'progress-bar', '\\ElementorDivi5Converter\\Converter\\Handlers\\ProgressBarConverter' );
+        $this->registerWidget( 'social-icons', '\\ElementorDivi5Converter\\Converter\\Handlers\\SocialIconsConverter' );
+        $this->registerWidget( 'slides', '\\ElementorDivi5Converter\\Converter\\Handlers\\SliderConverter' );
+        $this->registerWidget( 'star-rating', '\\ElementorDivi5Converter\\Converter\\Handlers\\StarRatingConverter' );
+        $this->registerWidget( 'alert', '\\ElementorDivi5Converter\\Converter\\Handlers\\AlertConverter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );

@@ -20,16 +20,24 @@ class AccordionConverter extends BaseElementorConverter {
         $id       = $element['id'] ?? uniqid( 'divi_accordion_' );
         $settings = $element['settings'] ?? [];
 
-        // Elementor accordion/toggle uses 'tabs'; some versions use 'items'.
-        $items    = $settings['tabs'] ?? $settings['items'] ?? [];
-        $children = [];
+        // Native Elementor uses 'tabs'; some versions use 'items'.
+        // ElementsKit accordion uses 'ekit_accordion_items' with 'acc_title'/'acc_content' keys.
+        $raw_items  = $settings['ekit_accordion_items'] ?? $settings['tabs'] ?? $settings['items'] ?? [];
+        $is_ekit    = isset( $settings['ekit_accordion_items'] );
+        $children   = [];
 
-        foreach ( $items as $idx => $item ) {
+        foreach ( $raw_items as $idx => $item ) {
             if ( ! is_array( $item ) ) {
                 continue;
             }
-            $title   = is_string( $item['tab_title'] ?? '' ) ? ( $item['tab_title'] ?? '' ) : '';
-            $content = is_string( $item['tab_content'] ?? '' ) ? ( $item['tab_content'] ?? '' ) : '';
+
+            if ( $is_ekit ) {
+                $title   = is_string( $item['acc_title'] ?? '' ) ? ( $item['acc_title'] ?? '' ) : '';
+                $content = is_string( $item['acc_content'] ?? '' ) ? ( $item['acc_content'] ?? '' ) : '';
+            } else {
+                $title   = is_string( $item['tab_title'] ?? '' ) ? ( $item['tab_title'] ?? '' ) : '';
+                $content = is_string( $item['tab_content'] ?? '' ) ? ( $item['tab_content'] ?? '' ) : '';
+            }
 
             $child_attrs = [];
             if ( $title !== '' ) {
@@ -49,7 +57,12 @@ class AccordionConverter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'accordion' );
         $this->logUnmappedSettings( $id, $settings, [
-            'tabs', 'items', 'selected_icon', 'selected_active_icon',
+            'tabs', 'items',
+            'ekit_accordion_items', 'ekit_accordion_open_first_slide',
+            'ekit_accordion_right_icon_actives',
+            'ekit_accordion_background_background', 'ekit_accordion_background_close_background',
+            'ekit_accordion_title_padding',
+            'selected_icon', 'selected_active_icon',
             'title_html_tag', 'faq_schema',
         ] );
 

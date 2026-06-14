@@ -17,10 +17,15 @@ class SectionConverter extends BaseElementorConverter {
 
         // When a section's single 100%-wide column owns the background image (a
         // common Elementor "hero" pattern), move that background up to the section
-        // so it spans the full viewport in Divi.  Must run before
-        // liftBannerImageToBackground so the section URL is already set when that
-        // check runs.
+        // so it spans the full viewport in Divi.  Must run before the other lifters
+        // so the section URL is already set when they check for an existing background.
         $this->liftColumnBackgroundToSection( $element, $settings );
+
+        // Elementor allows image widgets to be placed with _position:absolute so they
+        // float behind section content as decorative shapes.  Divi 5 has no equivalent
+        // block attribute, so we strip these widgets and promote the first one's URL to
+        // the section background image (when no real background is already present).
+        $this->liftAbsolutePositionedImages( $element, $settings );
 
         // When a section declares "classic" background but the exported URL is empty
         // (media-library reference lost on export), the banner image is often placed as
@@ -136,6 +141,72 @@ class SectionConverter extends BaseElementorConverter {
         $this->engine->logWarning(
             "Section {$element['id']}: lifted background from 100%-column {$col['id']} to section level."
         );
+    }
+
+    /**
+     * Finds image widgets inside section columns that carry `_position: absolute`,
+     * strips them from the column (they cannot be reproduced as Divi 5 block elements),
+     * and promotes the first one's URL to the section's background image when no real
+     * background image is already present.
+     *
+     * This pattern is used in Elementor to layer decorative shapes (e.g. a grey geometric
+     * graphic) behind section content by placing an image widget with absolute positioning
+     * and a negative z-index.
+     */
+    private function liftAbsolutePositionedImages( array &$element, array &$settings ): void {
+        // Determine whether a background image already exists (set by liftColumnBackgroundToSection
+        // or by the original export data).
+        $existing_url = '';
+        $existing_bg  = $settings['background_image'] ?? [];
+        if ( is_array( $existing_bg ) ) {
+            $existing_url = is_string( $existing_bg['url'] ?? '' ) ? ( $existing_bg['url'] ?? '' ) : '';
+        } elseif ( is_string( $existing_bg ) ) {
+            $existing_url = $existing_bg;
+        }
+
+        $first_url = null;
+
+        foreach ( $element['elements'] as $col_idx => $column ) {
+            // Collect indices in reverse so array_splice doesn't shift remaining items.
+            $to_remove = [];
+
+            foreach ( $column['elements'] as $widget_idx => $widget ) {
+                if ( ( $widget['widgetType'] ?? '' ) !== 'image' ) {
+                    continue;
+                }
+                if ( ( $widget['settings']['_position'] ?? '' ) !== 'absolute' ) {
+                    continue;
+                }
+
+                $img = $widget['settings']['image'] ?? [];
+                $url = is_array( $img )
+                    ? ( is_string( $img['url'] ?? '' ) ? ( $img['url'] ?? '' ) : '' )
+                    : ( is_string( $img ) ? $img : '' );
+
+                if ( $url !== '' && $first_url === null ) {
+                    $first_url = $url;
+                }
+
+                $to_remove[] = $widget_idx;
+            }
+
+            // Remove in reverse order to keep earlier indices stable.
+            foreach ( array_reverse( $to_remove ) as $idx ) {
+                array_splice( $element['elements'][ $col_idx ]['elements'], $idx, 1 );
+            }
+        }
+
+        if ( $first_url === null ) {
+            return;
+        }
+
+        // Only promote to background image when the section has no existing background
+        // image AND no background color — to avoid overriding a solid fill (which may
+        // have been resolved from a __globals__ reference) with a decorative shape.
+        $existing_color = $settings['background_color'] ?? '';
+        if ( $existing_url === '' && ( $existing_color === '' || $existing_color === null ) ) {
+            $settings['background_image'] = [ 'url' => $first_url ];
+        }
     }
 
     /**

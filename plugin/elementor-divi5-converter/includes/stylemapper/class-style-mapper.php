@@ -69,16 +69,21 @@ class StyleMapper {
     ];
 
     /**
-     * Elementor `typography_*` keys that are acknowledged but not directly
-     * mappable to Divi 5 properties we convert (font family, decorations, etc.).
-     * Marking them as handled prevents them appearing in the unmapped log.
+     * Elementor `typography_*` keys that are acknowledged but deliberately not
+     * mapped (preset selector names that have no per-block Divi 5 equivalent).
      */
     private const TYPOGRAPHY_SKIP_KEYS = [
         'typography_typography',
-        'typography_font_family',
-        'typography_text_transform',
-        'typography_font_style',
-        'typography_text_decoration',
+    ];
+
+    /**
+     * Maps Elementor `typography_text_decoration` values to the flag name used
+     * in Divi 5's `font.{bp}.value.style` array.
+     */
+    private const DECORATION_TO_DIVI_FLAG = [
+        'underline'    => 'underline',
+        'line-through' => 'strikethrough',
+        'overline'     => 'underline', // best approximation
     ];
 
     /** Elementor border control keys whose values we map (base names without breakpoint suffix). */
@@ -91,11 +96,19 @@ class StyleMapper {
         $this->mapSpacing( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapBackgroundColor( $settings, $divi_attrs, $handled_keys );
         $this->mapBackgroundImage( $settings, $divi_attrs, $handled_keys );
+        $this->mapBackgroundGradient( $settings, $divi_attrs, $handled_keys );
         $this->mapBackgroundOverlay( $settings, $divi_attrs, $handled_keys );
         $this->mapTypography( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapTextColor( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapAlignment( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapBorder( $settings, $divi_attrs, $handled_keys );
+        $this->mapBoxShadow( $settings, $divi_attrs, $handled_keys );
+        $this->mapTextShadow( $widget_type, $settings, $divi_attrs, $handled_keys );
+        $this->mapOpacity( $settings, $divi_attrs, $handled_keys );
+
+        if ( in_array( $widget_type, [ 'section', 'column' ], true ) ) {
+            $this->mapMinHeight( $settings, $divi_attrs, $handled_keys );
+        }
 
         if ( $widget_type === 'column' ) {
             $this->mapColumnSize( $settings, $divi_attrs, $handled_keys );
@@ -112,6 +125,7 @@ class StyleMapper {
 
         if ( $widget_type === 'button' ) {
             $this->mapButtonPadding( $settings, $divi_attrs, $handled_keys );
+            $this->mapButtonBackground( $settings, $divi_attrs, $handled_keys );
         }
 
         return [
@@ -194,6 +208,12 @@ class StyleMapper {
     private function mapBackgroundColor( array $settings, array &$attrs, array &$handled ): void {
         $handled[] = 'background_color';
 
+        // When background type is gradient, background_color is the first gradient stop —
+        // it should not ALSO be written as a solid color (mapBackgroundGradient handles it).
+        if ( ( $settings['background_background'] ?? '' ) === 'gradient' ) {
+            return;
+        }
+
         $color = $settings['background_color'] ?? '';
         if ( ! is_string( $color ) || $color === '' ) {
             return;
@@ -247,22 +267,77 @@ class StyleMapper {
             }
         }
 
-        // Font weight — desktop only; mark tablet/mobile handled to suppress log noise.
+        // Font weight — responsive; Elementor rarely exports tablet/mobile but we mark all as handled.
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
-            $handled[] = 'typography_font_weight' . $suffix;
+            $key       = 'typography_font_weight' . $suffix;
+            $handled[] = $key;
+
+            if ( $font_path !== null ) {
+                $weight = $settings[ $key ] ?? '';
+                if ( is_string( $weight ) && $weight !== '' ) {
+                    self::transformPath( $attrs, "{$font_path}.{$breakpoint}.value.weight", $weight );
+                }
+            }
         }
 
-        if ( $font_path !== null ) {
-            $weight = $settings['typography_font_weight'] ?? '';
-            if ( is_string( $weight ) && $weight !== '' ) {
-                self::transformPath( $attrs, "{$font_path}.desktop.value.weight", $weight );
+        // Font family — mark all breakpoints handled; map when present.
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $key       = 'typography_font_family' . $suffix;
+            $handled[] = $key;
+
+            if ( $font_path !== null ) {
+                $family = $settings[ $key ] ?? '';
+                if ( is_string( $family ) && $family !== '' ) {
+                    self::transformPath( $attrs, "{$font_path}.{$breakpoint}.value.family", $family );
+                }
+            }
+        }
+
+        // Style flags array: italic, text-transform, text-decoration — per breakpoint.
+        // Divi 5 stores these as an array of flag strings on font.{bp}.value.style.
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $style_key      = 'typography_font_style' . $suffix;
+            $transform_key  = 'typography_text_transform' . $suffix;
+            $decoration_key = 'typography_text_decoration' . $suffix;
+
+            $handled[] = $style_key;
+            $handled[] = $transform_key;
+            $handled[] = $decoration_key;
+
+            if ( $font_path === null ) {
+                continue;
+            }
+
+            $flags = [];
+
+            $font_style = is_string( $settings[ $style_key ] ?? '' ) ? ( $settings[ $style_key ] ?? '' ) : '';
+            if ( $font_style === 'italic' ) {
+                $flags[] = 'italic';
+            }
+
+            $transform = is_string( $settings[ $transform_key ] ?? '' ) ? ( $settings[ $transform_key ] ?? '' ) : '';
+            if ( in_array( $transform, [ 'uppercase', 'lowercase', 'capitalize' ], true ) ) {
+                $flags[] = $transform;
+            }
+
+            $decoration = is_string( $settings[ $decoration_key ] ?? '' ) ? ( $settings[ $decoration_key ] ?? '' ) : '';
+            $divi_flag  = self::DECORATION_TO_DIVI_FLAG[ $decoration ] ?? '';
+            if ( $divi_flag !== '' ) {
+                $flags[] = $divi_flag;
+            }
+
+            if ( ! empty( $flags ) ) {
+                self::transformPath( $attrs, "{$font_path}.{$breakpoint}.value.style", $flags );
             }
         }
     }
 
     /**
-     * Maps the widget-specific text/font color control to the Divi 5 font color
-     * path for that widget type's primary element.
+     * Maps the widget-specific text/font color control to the Divi 5 font color path.
+     *
+     * Button font color goes to `button.decoration.button.{breakpoint}.value.font.color`
+     * (the button-specific decoration sub-group), not the generic font.font path.
+     * All other widgets use `{font_path}.desktop.value.color` as before.
      */
     private function mapTextColor( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
         $color_key = self::WIDGET_COLOR_KEY[ $widget_type ] ?? null;
@@ -279,7 +354,14 @@ class StyleMapper {
             return;
         }
 
-        self::transformPath( $attrs, "{$font_path}.desktop.value.color", $color );
+        if ( $widget_type === 'button' ) {
+            // Button font color lives inside the button's own decoration sub-group.
+            foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+                self::transformPath( $attrs, "button.decoration.button.{$breakpoint}.value.font.color", $color );
+            }
+        } else {
+            self::transformPath( $attrs, "{$font_path}.desktop.value.color", $color );
+        }
     }
 
     /**
@@ -334,7 +416,7 @@ class StyleMapper {
      * mapped since they are uncommon and rarely set in real Elementor exports.
      */
     private function mapBackgroundImage( array $settings, array &$attrs, array &$handled ): void {
-        // Mark all related keys as handled regardless.
+        // Mark all image and gradient background keys as handled regardless of value.
         foreach ( self::BREAKPOINT_MAP as $suffix => $_ ) {
             $handled[] = 'background_image' . $suffix;
             $handled[] = 'background_position' . $suffix;
@@ -342,6 +424,15 @@ class StyleMapper {
             $handled[] = 'background_repeat' . $suffix;
         }
         $handled[] = 'background_background';
+        // Gradient-specific keys (handled here globally so mapBackgroundGradient doesn't double-mark).
+        foreach ( [
+            'background_color_b',
+            'background_gradient_type', 'background_gradient_angle',
+            'background_gradient_position', 'background_gradient_stops',
+            'background_gradient_color', 'background_gradient_color_b',
+        ] as $k ) {
+            $handled[] = $k;
+        }
 
         $image = $settings['background_image'] ?? null;
         $url   = '';
@@ -474,7 +565,10 @@ class StyleMapper {
             'layout', 'stretch_section', 'content_width',
             // Custom column gap — Divi manages gutter differently.
             'gap_columns_custom',
-            // Section minimum-height controls.
+            // Section height mode selector ('default', 'min-height', 'full', 'fit-to-content').
+            // The actual min-height pixel value is mapped by mapMinHeight().
+            'height', 'height_tablet', 'height_mobile',
+            // Inner section height — no direct Divi 5 equivalent.
             'height_inner', 'custom_height_inner', 'custom_height_inner_tablet',
             // Vertical alignment of section content — no direct Divi 5 section attr.
             'content_position',
@@ -503,10 +597,10 @@ class StyleMapper {
             'content_position', 'content_position_tablet',
             // HTML tag override for the column wrapper.
             'html_tag',
+            // Column height mode selector — actual pixel value mapped by mapMinHeight().
+            'height', 'height_tablet', 'height_mobile',
             // Column-level default colour overrides (heading, body, link).
             'heading_color', 'color_text', 'color_link',
-            // Secondary gradient stop colour — gradient not yet mapped.
-            'background_color_b',
             // Granular background position offsets beyond the main position string.
             'background_ypos', 'background_xpos', 'background_bg_width',
         ] as $key ) {
@@ -644,6 +738,256 @@ class StyleMapper {
         }
     }
 
+    /**
+     * Maps Elementor `background_background: gradient` settings to Divi 5
+     * `module.decoration.background.desktop.value.gradient.*`.
+     *
+     * Handles two Elementor formats:
+     * - stops array: `background_gradient_stops` (Elementor 3.x)
+     * - two-color shorthand: `background_color` + `background_color_b`
+     */
+    private function mapBackgroundGradient( array $settings, array &$attrs, array &$handled ): void {
+        if ( ( $settings['background_background'] ?? '' ) !== 'gradient' ) {
+            return;
+        }
+
+        $grad_type = is_string( $settings['background_gradient_type'] ?? '' )
+            ? ( $settings['background_gradient_type'] ?? 'linear' )
+            : 'linear';
+        if ( $grad_type === '' ) {
+            $grad_type = 'linear';
+        }
+
+        // Direction / angle.
+        $direction = '180deg';
+        if ( $grad_type === 'linear' ) {
+            $angle_raw = $settings['background_gradient_angle'] ?? null;
+            if ( is_array( $angle_raw ) && isset( $angle_raw['size'] ) ) {
+                $direction = (string) $angle_raw['size'] . ( $angle_raw['unit'] ?? 'deg' );
+            } elseif ( is_string( $angle_raw ) && $angle_raw !== '' ) {
+                $direction = $angle_raw;
+            }
+        } elseif ( $grad_type === 'radial' ) {
+            $pos       = is_string( $settings['background_gradient_position'] ?? '' )
+                ? ( $settings['background_gradient_position'] ?? 'center center' )
+                : 'center center';
+            $direction = $pos !== '' ? $pos : 'center center';
+        }
+
+        // Build stops array.
+        $stops     = [];
+        $raw_stops = $settings['background_gradient_stops'] ?? [];
+        if ( is_array( $raw_stops ) && ! empty( $raw_stops ) ) {
+            foreach ( $raw_stops as $stop ) {
+                if ( ! is_array( $stop ) ) {
+                    continue;
+                }
+                $color = is_string( $stop['color'] ?? '' ) ? ( $stop['color'] ?? '' ) : '';
+                if ( $color === '' ) {
+                    continue;
+                }
+                $pos_raw = $stop['position'] ?? null;
+                $pos_str = '0%';
+                if ( is_array( $pos_raw ) && isset( $pos_raw['size'] ) ) {
+                    $pos_str = (string) $pos_raw['size'] . ( $pos_raw['unit'] ?? '%' );
+                } elseif ( is_string( $pos_raw ) && $pos_raw !== '' ) {
+                    $pos_str = $pos_raw;
+                }
+                $stops[] = [ 'color' => $color, 'position' => $pos_str ];
+            }
+        }
+
+        // Fallback: two-color shorthand.
+        if ( empty( $stops ) ) {
+            $c1_key = 'background_gradient_color';
+            $c2_key = 'background_gradient_color_b';
+            $c1 = is_string( $settings[ $c1_key ] ?? $settings['background_color'] ?? '' )
+                ? ( $settings[ $c1_key ] ?? $settings['background_color'] ?? '' )
+                : '';
+            $c2 = is_string( $settings[ $c2_key ] ?? $settings['background_color_b'] ?? '' )
+                ? ( $settings[ $c2_key ] ?? $settings['background_color_b'] ?? '' )
+                : '';
+            if ( $c1 !== '' ) {
+                $stops[] = [ 'color' => $c1, 'position' => '0%' ];
+            }
+            if ( $c2 !== '' ) {
+                $stops[] = [ 'color' => $c2, 'position' => '100%' ];
+            }
+        }
+
+        if ( empty( $stops ) ) {
+            return;
+        }
+
+        $base = 'module.decoration.background.desktop.value.gradient';
+        self::transformPath( $attrs, "{$base}.enabled", 'on' );
+        self::transformPath( $attrs, "{$base}.type", $grad_type );
+        if ( $grad_type === 'radial' ) {
+            self::transformPath( $attrs, "{$base}.directionRadial", $direction );
+        } else {
+            self::transformPath( $attrs, "{$base}.direction", $direction );
+        }
+        self::transformPath( $attrs, "{$base}.stops", $stops );
+    }
+
+    /**
+     * Maps the Elementor box-shadow control to Divi 5
+     * `module.decoration.boxShadow.{breakpoint}.value.*`.
+     *
+     * Elementor exports `box_shadow_box_shadow` as an object with numeric
+     * horizontal/vertical/blur/spread values (in px) and a string color.
+     * `box_shadow_box_shadow_type` = 'yes' enables the shadow.
+     */
+    private function mapBoxShadow( array $settings, array &$attrs, array &$handled ): void {
+        $handled[] = 'box_shadow_box_shadow_type';
+
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $key       = 'box_shadow_box_shadow' . $suffix;
+            $handled[] = $key;
+
+            $raw = $settings[ $key ] ?? null;
+            if ( ! is_array( $raw ) ) {
+                continue;
+            }
+
+            $color = is_string( $raw['color'] ?? '' ) ? ( $raw['color'] ?? '' ) : '';
+            if ( $color === '' && empty( $raw['horizontal'] ) && empty( $raw['vertical'] ) ) {
+                continue;
+            }
+
+            $to_px = static fn( mixed $v ): string => ( $v !== '' && $v !== null )
+                ? ( is_numeric( $v ) ? $v . 'px' : (string) $v )
+                : '0px';
+
+            $position_raw = is_string( $raw['position'] ?? '' ) ? ( $raw['position'] ?? '' ) : '';
+
+            $shadow = [
+                'style'      => 'preset1',
+                'position'   => $position_raw === 'inset' ? 'inner' : 'outer',
+                'color'      => $color,
+                'horizontal' => $to_px( $raw['horizontal'] ?? '' ),
+                'vertical'   => $to_px( $raw['vertical'] ?? '' ),
+                'blur'       => $to_px( $raw['blur'] ?? '' ),
+                'spread'     => $to_px( $raw['spread'] ?? '' ),
+            ];
+
+            self::transformPath( $attrs, "module.decoration.boxShadow.{$breakpoint}.value", $shadow );
+        }
+    }
+
+    /**
+     * Maps the Elementor text-shadow control to Divi 5's font value `textShadow` sub-object.
+     *
+     * The shadow is written into the widget-specific font path so it applies to the
+     * element's primary text rather than to the module container.
+     */
+    private function mapTextShadow( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
+        $handled[] = 'text_shadow_text_shadow_type';
+
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $key       = 'text_shadow_text_shadow' . $suffix;
+            $handled[] = $key;
+
+            $raw = $settings[ $key ] ?? null;
+            if ( ! is_array( $raw ) ) {
+                continue;
+            }
+
+            $color = is_string( $raw['color'] ?? '' ) ? ( $raw['color'] ?? '' ) : '';
+            if ( $color === '' ) {
+                continue;
+            }
+
+            $font_path = self::WIDGET_FONT_PATH[ $widget_type ] ?? null;
+            if ( $font_path === null ) {
+                continue;
+            }
+
+            $to_px = static fn( mixed $v ): string => ( $v !== '' && $v !== null )
+                ? ( is_numeric( $v ) ? $v . 'px' : (string) $v )
+                : '0px';
+
+            $shadow_value = [
+                'style'      => 'preset1',
+                'color'      => $color,
+                'horizontal' => $to_px( $raw['horizontal'] ?? '' ),
+                'vertical'   => $to_px( $raw['vertical'] ?? '' ),
+                'blur'       => $to_px( $raw['blur'] ?? '' ),
+            ];
+
+            self::transformPath( $attrs, "{$font_path}.{$breakpoint}.value.textShadow", $shadow_value );
+        }
+    }
+
+    /**
+     * Maps Elementor element opacity (`_opacity`) to
+     * `module.decoration.opacity.{breakpoint}.value`.
+     */
+    private function mapOpacity( array $settings, array &$attrs, array &$handled ): void {
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $key       = '_opacity' . $suffix;
+            $handled[] = $key;
+
+            $raw = $settings[ $key ] ?? null;
+            if ( $raw === null || $raw === '' ) {
+                continue;
+            }
+            $val = (float) $raw;
+            // Elementor default is 1.0; skip if exactly 1.
+            if ( $val === 1.0 ) {
+                continue;
+            }
+            self::transformPath( $attrs, "module.decoration.opacity.{$breakpoint}.value", (string) round( $val, 4 ) );
+        }
+    }
+
+    /**
+     * Maps Elementor section / column min-height (`custom_height`) to
+     * `module.decoration.sizing.{breakpoint}.value.minHeight`.
+     *
+     * Elementor's `height` selector ('min-height', 'full', etc.) is acknowledged
+     * in `markSectionKeys()` / `markColumnKeys()`; here we only act when the
+     * pixel value is non-empty.
+     */
+    private function mapMinHeight( array $settings, array &$attrs, array &$handled ): void {
+        $suffixes = [
+            ''        => 'desktop',
+            '_tablet' => 'tablet',
+            '_mobile' => 'phone',
+        ];
+
+        foreach ( $suffixes as $suffix => $breakpoint ) {
+            $key       = 'custom_height' . $suffix;
+            $handled[] = $key;
+
+            $raw   = $settings[ $key ] ?? null;
+            $value = $this->parseSizeValue( $raw );
+            if ( $value !== '' ) {
+                self::transformPath( $attrs, "module.decoration.sizing.{$breakpoint}.value.minHeight", $value );
+            }
+        }
+    }
+
+    /**
+     * Maps the Elementor button background colour (`button_background_color`) to
+     * `button.decoration.button.{breakpoint}.value.background.color` in Divi 5.
+     *
+     * This is the actual button-face background — distinct from
+     * `module.decoration.background.*.value.color` which is the module wrapper.
+     */
+    private function mapButtonBackground( array $settings, array &$attrs, array &$handled ): void {
+        $handled[] = 'button_background_color';
+
+        $color = $settings['button_background_color'] ?? '';
+        if ( ! is_string( $color ) || $color === '' ) {
+            return;
+        }
+
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            self::transformPath( $attrs, "button.decoration.button.{$breakpoint}.value.background.color", $color );
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Value normalizers
     // -------------------------------------------------------------------------
@@ -674,11 +1018,33 @@ class StyleMapper {
     /**
      * Convert an Elementor responsive size object `{size, unit}` to a CSS string.
      * Returns an empty string when the value cannot be parsed.
+     *
+     * Handles two Elementor formats:
+     * - Flat:          {size: 16, unit: 'px'}
+     * - Elementor 3.x: {sizes: {desktop: {size: 16, unit: 'px'}, tablet: {...}, ...}}
      */
     private function parseSizeValue( mixed $raw ): string {
-        if ( is_array( $raw ) && isset( $raw['size'] ) ) {
-            $unit = is_string( $raw['unit'] ?? '' ) ? ( $raw['unit'] ?? 'px' ) : 'px';
-            return (string) $raw['size'] . $unit;
+        if ( is_array( $raw ) ) {
+            // Elementor 3.x responsive shape: {sizes: {desktop: {size, unit}, ...}}.
+            if ( isset( $raw['sizes'] ) && is_array( $raw['sizes'] ) ) {
+                foreach ( [ 'desktop', 'tablet', 'mobile' ] as $bp ) {
+                    $entry = $raw['sizes'][ $bp ] ?? null;
+                    if ( is_array( $entry ) && isset( $entry['size'] ) && $entry['size'] !== '' && $entry['size'] !== null ) {
+                        $unit = is_string( $entry['unit'] ?? '' ) ? ( $entry['unit'] ?? 'px' ) : 'px';
+                        return (string) $entry['size'] . $unit;
+                    }
+                }
+                return '';
+            }
+
+            if ( isset( $raw['size'] ) ) {
+                $size = $raw['size'];
+                if ( $size === '' || $size === null ) {
+                    return '';
+                }
+                $unit = is_string( $raw['unit'] ?? '' ) ? ( $raw['unit'] ?? 'px' ) : 'px';
+                return (string) $size . $unit;
+            }
         }
         if ( is_string( $raw ) && $raw !== '' ) {
             return $raw;
@@ -746,7 +1112,9 @@ class StyleMapper {
         }
 
         return array_map(
-            fn( string $v ) => $v !== '' ? $v . $unit : '0px',
+            // Only append the unit when the value is purely numeric; values that
+            // already carry a unit suffix (e.g. "0px") must not be doubled.
+            fn( string $v ) => $v !== '' ? ( is_numeric( $v ) ? $v . $unit : $v ) : '0px',
             $corners
         );
     }

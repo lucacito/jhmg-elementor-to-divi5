@@ -25,6 +25,54 @@ class BatchImporter {
     public function __construct( ?ConverterEngine $engine = null, ?DiviExporter $exporter = null ) {
         $this->engine   = $engine   ?? new ConverterEngine();
         $this->exporter = $exporter ?? new DiviExporter();
+
+        $global_colors = $this->extractElementorGlobalColors();
+        if ( ! empty( $global_colors ) ) {
+            $this->engine->setGlobalColors( $global_colors );
+        }
+    }
+
+    /**
+     * Reads Elementor global colors from the active Kit post so they can be
+     * resolved during conversion.
+     *
+     * Elementor stores the active Kit post ID in the `elementor_active_kit`
+     * option. The Kit's `_elementor_page_settings` meta holds `system_colors`
+     * and `custom_colors` arrays, each containing `{_id, color}` objects.
+     *
+     * @return array<string,string> Map of color id → hex value.
+     */
+    private function extractElementorGlobalColors(): array {
+        if ( ! function_exists( 'get_option' ) ) {
+            return [];
+        }
+
+        $kit_id = (int) get_option( 'elementor_active_kit', 0 );
+        if ( $kit_id <= 0 ) {
+            return [];
+        }
+
+        $kit_settings = get_post_meta( $kit_id, '_elementor_page_settings', true );
+        if ( ! is_array( $kit_settings ) ) {
+            return [];
+        }
+
+        $colors = [];
+        foreach ( [ 'system_colors', 'custom_colors' ] as $group_key ) {
+            $group = $kit_settings[ $group_key ] ?? [];
+            if ( ! is_array( $group ) ) {
+                continue;
+            }
+            foreach ( $group as $color_item ) {
+                $id  = $color_item['_id']   ?? '';
+                $hex = $color_item['color'] ?? '';
+                if ( $id !== '' && $hex !== '' ) {
+                    $colors[ $id ] = $hex;
+                }
+            }
+        }
+
+        return $colors;
     }
 
     /**
