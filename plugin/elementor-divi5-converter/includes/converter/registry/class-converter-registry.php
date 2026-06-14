@@ -18,11 +18,11 @@ class ConverterRegistry {
         $this->registerDefaults();
     }
 
-    public function register( string $elementorType, string $converterClass ): void {
+    public function register( string $elementorType, $converterClass ): void {
         $this->registry[ $elementorType ] = $converterClass;
     }
 
-    public function registerWidget( string $widgetType, string $converterClass ): void {
+    public function registerWidget( string $widgetType, $converterClass ): void {
         $this->registry[ 'widget:' . $widgetType ] = $converterClass;
     }
 
@@ -30,14 +30,14 @@ class ConverterRegistry {
         if ( isset( $element['elType'] ) && $element['elType'] === 'widget' && ! empty( $element['widgetType'] ) ) {
             $widgetKey = 'widget:' . $element['widgetType'];
             if ( isset( $this->registry[ $widgetKey ] ) ) {
-                return new $this->registry[ $widgetKey ]( $this->engine );
+                return $this->instantiate( $this->registry[ $widgetKey ] );
             }
         }
 
         $elementType = $element['elType'] ?? '';
 
         if ( isset( $this->registry[ $elementType ] ) ) {
-            return new $this->registry[ $elementType ]( $this->engine );
+            return $this->instantiate( $this->registry[ $elementType ] );
         }
 
         $fallbackClass = $this->detectByShape( $element );
@@ -48,6 +48,20 @@ class ConverterRegistry {
         }
 
         return null;
+    }
+
+    /**
+     * Instantiate a converter from a class-name string or a factory closure.
+     *
+     * Closures receive the ConverterEngine as their sole argument and must
+     * return a ConverterInterface. This allows converters with extra constructor
+     * parameters (e.g. EaelFormShortcodeConverter) to be registered cleanly.
+     */
+    private function instantiate( $entry ): ConverterInterface {
+        if ( is_callable( $entry ) ) {
+            return $entry( $this->engine );
+        }
+        return new $entry( $this->engine );
     }
 
     private function detectByShape( array $element ): ?string {
@@ -143,5 +157,106 @@ class ConverterRegistry {
         $this->registerWidget( 'e-accordion', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
         $this->registerWidget( 'e-toggle', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
         $this->registerWidget( 'e-tabs', '\\ElementorDivi5Converter\\Converter\\Handlers\\TabsConverter' );
+
+        // ── Header Footer Elementor (HFE) ────────────────────────────────────
+        $this->registerWidget( 'hfe-site-title',         '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeSiteTitleConverter' );
+        $this->registerWidget( 'hfe-site-tagline',       '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeSiteTaglineConverter' );
+        $this->registerWidget( 'site-logo',              '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeSiteLogoConverter' );
+        $this->registerWidget( 'retina',                 '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeSiteLogoConverter' );
+        $this->registerWidget( 'navigation-menu',        '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeNavigationMenuConverter' );
+        $this->registerWidget( 'copyright',              '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeCopyrightConverter' );
+        $this->registerWidget( 'page-title',             '\\ElementorDivi5Converter\\Converter\\Handlers\\HfePageTitleConverter' );
+        $this->registerWidget( 'hfe-search-button',      '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeSearchConverter' );
+        $this->registerWidget( 'hfe-counter',            '\\ElementorDivi5Converter\\Converter\\Handlers\\CounterConverter' );
+        $this->registerWidget( 'hfe-breadcrumbs-widget', '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeBreadcrumbsConverter' );
+        $this->registerWidget( 'infocard',               '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeInfocardConverter' );
+        $this->registerWidget( 'post-info-widget',       '\\ElementorDivi5Converter\\Converter\\Handlers\\HfePostInfoConverter' );
+        $this->registerWidget( 'hfe-basic-posts',        '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeBasicPostsConverter' );
+        $this->registerWidget( 'hfe-cart',               $this->fallbackCode( '[woocommerce_cart]' ) );
+        $this->registerWidget( 'woo-product-grid',       $this->fallbackCode( '[products limit="12" columns="4"]' ) );
+
+        // ── Essential Addons for Elementor (EAEL) — Tier 1 ──────────────────
+        $this->registerWidget( 'eael-adv-accordion',      '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelAccordionConverter' );
+        $this->registerWidget( 'eael-adv-tabs',           '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelTabsConverter' );
+        $this->registerWidget( 'eael-countdown',          '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelCountdownConverter' );
+        $this->registerWidget( 'eael-team-member',        '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelTeamMemberConverter' );
+        $this->registerWidget( 'eael-testimonial',        '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelTestimonialConverter' );
+        $this->registerWidget( 'eael-info-box',           '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelInfoBoxConverter' );
+        $this->registerWidget( 'eael-flip-box',           '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelFlipBoxConverter' );
+        $this->registerWidget( 'eael-pricing-table',      '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelPricingTableConverter' );
+        $this->registerWidget( 'eael-post-grid',          '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelPostGridConverter' );
+        $this->registerWidget( 'eael-creative-button',    '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelCreativeButtonConverter' );
+        $this->registerWidget( 'eael-cta-box',            '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelCtaBoxConverter' );
+        $this->registerWidget( 'eael-dual-color-header',  '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelDualColorHeaderConverter' );
+        $this->registerWidget( 'eael-breadcrumbs',        '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelBreadcrumbsConverter' );
+        $this->registerWidget( 'eael-progress-bar',       '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelProgressBarConverter' );
+        $this->registerWidget( 'eael-filterable-gallery', '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelFilterableGalleryConverter' );
+
+        // ── EAEL — Tier 2 (partial / code-based) ────────────────────────────
+        $this->registerWidget( 'eael-contact-form-7', '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelContactForm7Converter' );
+        $this->registerWidget( 'eael-feature-list',   '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelFeatureListConverter' );
+        $this->registerWidget( 'eael-sticky-video',   '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelStickyVideoConverter' );
+        $this->registerWidget( 'eael-code-snippet',   '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelCodeSnippetConverter' );
+        $this->registerWidget( 'eael-ninja',          $this->formShortcode( 'ninja_form', 'eael_ninjaform_id' ) );
+        $this->registerWidget( 'eael-wpforms',        $this->formShortcode( 'wpforms', 'eael_wpforms_form_id' ) );
+        $this->registerWidget( 'eael-gravity-form',   $this->formShortcode( 'gravityforms', 'eael_gravity_form_id' ) );
+        $this->registerWidget( 'eael-fluentform',     $this->formShortcode( 'fluentform', 'eael_fluentform_form_id' ) );
+        $this->registerWidget( 'eael-weform',         $this->formShortcode( 'weforms', 'eael_weforms_form_id' ) );
+        $this->registerWidget( 'eael-caldera-form',   $this->formShortcode( 'caldera_form', 'eael_caldera_form_id' ) );
+
+        // ── EAEL — Tier 3/4 (no equivalent, generic placeholder) ────────────
+        foreach ( [
+            'eael-nft-gallery', 'eael-career-page', 'eael-interactive-circle',
+            'eael-svg-draw', 'eael-betterdocs-category-box', 'eael-betterdocs-category-grid',
+            'eael-betterdocs-search-form', 'eael-better-payment', 'eael-typeform',
+            'eael-formstack', 'eael-event-calendar', 'eael-business-reviews',
+            'eael-image-accordion', 'eael-login-register', 'eael-facebook-feed',
+            'eael-twitter-feed', 'eael-embedpress', 'eael-fancy-text',
+            'eael-content-ticker', 'eael-data-table', 'eael-advanced-data-table',
+            'eael-tooltip', 'eael-post-timeline', 'eael-simple-menu',
+            'eael-woo-add-to-cart', 'eael-woo-cart', 'eael-woo-checkout',
+            'eael-woo-product-carousel', 'eael-woo-product-compare',
+            'eael-woo-product-gallery', 'eael-woo-product-images',
+            'eael-woo-product-list', 'eael-woo-product-price',
+            'eael-woo-product-rating',
+        ] as $slug ) {
+            $this->registerWidget( $slug, $this->genericFallback( $slug ) );
+        }
+    }
+
+    private function formShortcode( string $tag, string $id_key ): \Closure {
+        return function( $engine ) use ( $tag, $id_key ) {
+            return new \ElementorDivi5Converter\Converter\Handlers\EaelFormShortcodeConverter( $engine, $tag, $id_key );
+        };
+    }
+
+    private function genericFallback( string $widget_type ): \Closure {
+        return function( $engine ) use ( $widget_type ) {
+            return new \ElementorDivi5Converter\Converter\Handlers\GenericFallbackConverter( $engine, $widget_type );
+        };
+    }
+
+    private function fallbackCode( string $html ): \Closure {
+        return function( $engine ) use ( $html ) {
+            return new class( $engine, $html ) extends \ElementorDivi5Converter\Converter\BaseElementorConverter {
+                private string $html;
+                public function __construct( $engine, string $html ) {
+                    parent::__construct( $engine );
+                    $this->html = $html;
+                }
+                public function convert( array $element ): array {
+                    $id = $element['id'] ?? uniqid( 'divi_code_' );
+                    $this->engine->logConverted( 'code' );
+                    return [
+                        'id'       => $id,
+                        'name'     => 'divi/code',
+                        'settings' => [
+                            'content' => [ 'innerContent' => [ 'desktop' => [ 'value' => $this->html ] ] ],
+                        ],
+                        'elements' => [],
+                    ];
+                }
+            };
+        };
     }
 }
