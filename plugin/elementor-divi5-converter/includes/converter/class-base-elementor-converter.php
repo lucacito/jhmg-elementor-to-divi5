@@ -2,6 +2,8 @@
 
 namespace ElementorDivi5Converter\Converter;
 
+use ElementorDivi5Converter\StyleMapper\StyleMapper;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -94,14 +96,32 @@ abstract class BaseElementorConverter implements ConverterInterface {
     /**
      * Converts an inner Elementor section or container into a divi/row block.
      *
-     * The element's own children are converted recursively with structure
-     * awareness via convertStructureChildren(). Non-column children (e.g. a
-     * container whose children are plain widgets) are auto-wrapped in a single
-     * divi/column so that the row always contains only columns.
+     * When the element is a flex-row container with container children, those
+     * children become divi/column flex items rather than nested rows, and the
+     * row receives flex layout settings. Otherwise falls back to the original
+     * behaviour: convert children structurally, then ensure only columns remain.
      */
     protected function convertInnerAsRow( array $element ): array {
-        $id           = $element['id'] ?? uniqid( 'divi_row_' );
-        $inner        = $this->convertStructureChildren( $element['elements'] ?? [] );
+        $id       = $element['id'] ?? uniqid( 'divi_row_' );
+        $settings = $element['settings'] ?? [];
+        $children = $element['elements'] ?? [];
+
+        if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
+            $columns      = $this->convertFlexRowChildren( $children );
+            $row_settings = $this->deepMergeSettings(
+                $this->rowSettingsFromColumns( $columns ),
+                $this->rowFlexSettingsFromContainer( $settings )
+            );
+
+            return [
+                'id'       => $id,
+                'name'     => 'divi/row',
+                'settings' => $row_settings,
+                'elements' => $columns,
+            ];
+        }
+
+        $inner        = $this->convertStructureChildren( $children );
         $row_elements = $this->ensureColumnChildren( $id, $inner );
 
         return [
@@ -110,6 +130,234 @@ abstract class BaseElementorConverter implements ConverterInterface {
             'settings' => $this->rowSettingsFromColumns( $row_elements ),
             'elements' => $row_elements,
         ];
+    }
+
+    /**
+     * Returns true when the Elementor element is a flex container whose main
+     * axis is horizontal (row or row-reverse). This is the default for all
+     * containers when no explicit direction is set.
+     *
+     * Grid containers are excluded — they use a different layout model.
+     */
+    protected function isFlexRowContainer( array $settings ): bool {
+        if ( ( $settings['container_type'] ?? 'flex' ) === 'grid' ) {
+            return false;
+        }
+        $dir = $settings['flex_direction'] ?? '';
+        return ! in_array( $dir, [ 'column', 'column-reverse' ], true );
+    }
+
+    /**
+     * Returns true when $elements contains at least one element with
+     * elType === 'container'. Used to detect whether a flex-row's children
+     * are column-like containers rather than plain widgets.
+     */
+    protected function hasContainerChildren( array $elements ): bool {
+        foreach ( $elements as $el ) {
+            if ( ( $el['elType'] ?? '' ) === 'container' ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Converts a list of Elementor elements where every direct child should
+     * become a divi/column flex item. Container children are converted via
+     * convertContainerAsColumn(); widget children are auto-wrapped in a column;
+     * column-type children are dispatched normally.
+     */
+    protected function convertFlexRowChildren( array $elements ): array {
+        $columns = [];
+
+        foreach ( $elements as $child ) {
+            if ( ! is_array( $child ) ) {
+                continue;
+            }
+
+            $el_type = $child['elType'] ?? '';
+
+            if ( $el_type === 'container' ) {
+                $columns[] = $this->convertContainerAsColumn( $child );
+            } elseif ( $el_type === 'column' ) {
+                $converted = $this->engine->convertElement( $child );
+                if ( ! empty( $converted ) ) {
+                    $columns[] = $converted;
+                }
+            } else {
+                // Widget or unknown element — auto-wrap in a column.
+                $converted = $this->engine->convertElement( $child );
+                if ( empty( $converted ) ) {
+                    continue;
+                }
+                $widget_id = $child['id'] ?? uniqid( 'divi_widget_' );
+                $columns[] = [
+                    'id'       => $widget_id . '-col',
+                    'name'     => 'divi/column',
+                    'settings' => [],
+                    'elements' => isset( $converted['name'] ) ? [ $converted ] : $converted,
+                ];
+            }
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Converts an Elementor container element into a divi/column block so it
+     * acts as a flex item within a parent flex-row row.
+     *
+     * If the container itself is a flex-row with container children a nested
+     * divi/row is created inside the column so those children stay side-by-side.
+     * Otherwise the container's children are converted normally (stacked in the
+     * column via the standard block flow).
+     */
+    protected function convertContainerAsColumn( array $element ): array {
+        $id       = $element['id'] ?? uniqid( 'divi_col_' );
+        $settings = $element['settings'] ?? [];
+        $children = $element['elements'] ?? [];
+
+        $col_settings = $this->extractFlexItemColumnSettings( $settings );
+
+        // Nested flex-row: wrap the sub-columns in a divi/row inside this column.
+        if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
+            $sub_columns      = $this->convertFlexRowChildren( $children );
+            $nested_settings  = $this->deepMergeSettings(
+                $this->rowSettingsFromColumns( $sub_columns ),
+                $this->rowFlexSettingsFromContainer( $settings )
+            );
+
+            return [
+                'id'       => $id,
+                'name'     => 'divi/column',
+                'settings' => $col_settings,
+                'elements' => [
+                    [
+                        'id'       => $id . '-row',
+                        'name'     => 'divi/row',
+                        'settings' => $nested_settings,
+                        'elements' => $sub_columns,
+                    ],
+                ],
+            ];
+        }
+
+        // Plain column: convert children normally (stacked vertically).
+        $converted_children = $this->convertStructureChildren( $children );
+
+        return [
+            'id'       => $id,
+            'name'     => 'divi/column',
+            'settings' => $col_settings,
+            'elements' => $converted_children,
+        ];
+    }
+
+    /**
+     * Extracts Divi column sizing from Elementor flex-item settings.
+     *
+     * Checks _inline_size (Elementor's flex-basis override) then falls back to
+     * the explicit width control. Only standard percentage sizes that map to a
+     * Divi fraction string are written.
+     */
+    protected function extractFlexItemColumnSettings( array $settings ): array {
+        $inline = $settings['_inline_size'] ?? null;
+        if ( is_array( $inline ) && isset( $inline['size'] ) && $inline['size'] !== '' && $inline['size'] !== null ) {
+            $fraction = StyleMapper::columnSizeToFraction( (int) round( (float) $inline['size'] ) );
+            if ( $fraction !== null ) {
+                return [ 'module' => [ 'advanced' => [ 'type' => [ 'desktop' => [ 'value' => $fraction ] ] ] ] ];
+            }
+        }
+
+        $width = $settings['width'] ?? null;
+        if ( is_array( $width ) && isset( $width['size'] ) && $width['size'] !== '' && ( $width['unit'] ?? '%' ) === '%' ) {
+            $fraction = StyleMapper::columnSizeToFraction( (int) round( (float) $width['size'] ) );
+            if ( $fraction !== null ) {
+                return [ 'module' => [ 'advanced' => [ 'type' => [ 'desktop' => [ 'value' => $fraction ] ] ] ] ];
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Builds Divi row flex layout settings from an Elementor container's flex
+     * settings. The resulting array can be merged into a divi/row's settings at
+     * `module.decoration.layout.desktop.value`.
+     *
+     * Only responsive desktop settings are mapped; Elementor tablet/mobile flex
+     * direction overrides are intentionally deferred.
+     */
+    protected function rowFlexSettingsFromContainer( array $settings ): array {
+        $layout = [];
+
+        $dir = $settings['flex_direction'] ?? '';
+        // Only write when direction is non-default (Divi rows default to row).
+        if ( is_string( $dir ) && $dir !== '' && $dir !== 'row' ) {
+            $layout['flexDirection'] = $dir;
+        }
+
+        $justify = $settings['flex_justify_content'] ?? '';
+        if ( is_string( $justify ) && $justify !== '' ) {
+            $layout['justifyContent'] = $justify;
+        }
+
+        $align_items = $settings['flex_align_items'] ?? '';
+        if ( is_string( $align_items ) && $align_items !== '' ) {
+            $layout['alignItems'] = $align_items;
+        }
+
+        $wrap = $settings['flex_wrap'] ?? '';
+        if ( is_string( $wrap ) && $wrap !== '' ) {
+            $layout['flexWrap'] = $wrap;
+        }
+
+        $align_content = $settings['flex_align_content'] ?? '';
+        if ( is_string( $align_content ) && $align_content !== '' ) {
+            $layout['alignContent'] = $align_content;
+        }
+
+        $gap = $settings['flex_gap'] ?? null;
+        if ( is_array( $gap ) ) {
+            $unit    = is_string( $gap['unit'] ?? '' ) ? ( $gap['unit'] ?? 'px' ) : 'px';
+            $col_gap = $gap['column'] ?? '';
+            $row_gap = $gap['row'] ?? '';
+            if ( $col_gap !== '' && $col_gap !== null ) {
+                $layout['columnGap'] = (string) $col_gap . $unit;
+            }
+            if ( $row_gap !== '' && $row_gap !== null ) {
+                $layout['rowGap'] = (string) $row_gap . $unit;
+            }
+        }
+
+        if ( empty( $layout ) ) {
+            return [];
+        }
+
+        return [
+            'module' => [
+                'decoration' => [
+                    'layout' => [
+                        'desktop' => [ 'value' => $layout ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Recursively merges two settings arrays without losing sibling keys.
+     * Unlike array_merge, nested arrays are merged rather than replaced.
+     */
+    protected function deepMergeSettings( array $a, array $b ): array {
+        foreach ( $b as $k => $v ) {
+            if ( is_array( $v ) && isset( $a[ $k ] ) && is_array( $a[ $k ] ) ) {
+                $a[ $k ] = $this->deepMergeSettings( $a[ $k ], $v );
+            } else {
+                $a[ $k ] = $v;
+            }
+        }
+        return $a;
     }
 
     /**
@@ -250,6 +498,31 @@ abstract class BaseElementorConverter implements ConverterInterface {
             'background_hover_background', 'background_hover_color',
             // Button-specific shadow (separate from module box shadow — not yet mapped).
             'button_box_shadow_box_shadow_type', 'button_box_shadow_box_shadow',
+            // Elementor Flexbox Container layout — handled by rowFlexSettingsFromContainer().
+            'container_type',
+            'flex_direction', 'flex_direction_tablet', 'flex_direction_mobile',
+            'flex_justify_content', 'flex_justify_content_tablet', 'flex_justify_content_mobile',
+            'flex_align_items', 'flex_align_items_tablet', 'flex_align_items_mobile',
+            'flex_gap', 'flex_gap_tablet', 'flex_gap_mobile',
+            'flex_wrap', 'flex_wrap_tablet', 'flex_wrap_mobile',
+            'flex_align_content', 'flex_align_content_tablet', 'flex_align_content_mobile',
+            // Hidden direction-mode fields produced by the flex-container group control.
+            'flex__is_row', 'flex__is_column',
+            // Boxed/full container width controls.
+            'boxed_width', 'boxed_width_tablet', 'boxed_width_mobile',
+            // Container min-height (handled by StyleMapper for section/column).
+            'min_height', 'min_height_tablet', 'min_height_mobile',
+            // Container HTML tag and grid controls.
+            'html_tag',
+            // Flex-item (child) controls — handled via extractFlexItemColumnSettings().
+            '_inline_size', '_inline_size_tablet', '_inline_size_mobile',
+            '_flex_basis_type', '_flex_basis_type_tablet', '_flex_basis_type_mobile',
+            '_flex_basis', '_flex_basis_tablet', '_flex_basis_mobile',
+            '_flex_align_self', '_flex_align_self_tablet', '_flex_align_self_mobile',
+            '_flex_order', '_flex_order_tablet', '_flex_order_mobile',
+            '_flex_order_custom', '_flex_order_custom_tablet', '_flex_order_custom_mobile',
+            // Width / tablet / mobile for container (responsive).
+            'width_tablet', 'width_mobile',
         ];
 
         // Elementor custom breakpoints (laptop, tablet_extra, widescreen …) that
