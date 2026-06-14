@@ -96,15 +96,24 @@ abstract class BaseElementorConverter implements ConverterInterface {
     /**
      * Converts an inner Elementor section or container into a divi/row block.
      *
-     * When the element is a flex-row container with container children, those
-     * children become divi/column flex items rather than nested rows, and the
-     * row receives flex layout settings. Otherwise falls back to the original
-     * behaviour: convert children structurally, then ensure only columns remain.
+     * CSS Grid containers produce a row with grid layout settings. Flex-row
+     * containers with container children produce a multi-column flex row.
+     * Otherwise falls back to the original behaviour.
      */
     protected function convertInnerAsRow( array $element ): array {
         $id       = $element['id'] ?? uniqid( 'divi_row_' );
         $settings = $element['settings'] ?? [];
         $children = $element['elements'] ?? [];
+
+        if ( $this->isGridContainer( $settings ) ) {
+            $columns = $this->convertGridChildren( $children );
+            return [
+                'id'       => $id,
+                'name'     => 'divi/row',
+                'settings' => $this->rowGridSettingsFromContainer( $settings ),
+                'elements' => $columns,
+            ];
+        }
 
         if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
             $columns      = $this->convertFlexRowChildren( $children );
@@ -130,6 +139,14 @@ abstract class BaseElementorConverter implements ConverterInterface {
             'settings' => $this->rowSettingsFromColumns( $row_elements ),
             'elements' => $row_elements,
         ];
+    }
+
+    /**
+     * Returns true when the Elementor element is a CSS Grid container.
+     * Detected by `container_type === 'grid'` in the settings JSON.
+     */
+    protected function isGridContainer( array $settings ): bool {
+        return ( $settings['container_type'] ?? '' ) === 'grid';
     }
 
     /**
@@ -218,6 +235,26 @@ abstract class BaseElementorConverter implements ConverterInterface {
         $children = $element['elements'] ?? [];
 
         $col_settings = $this->extractFlexItemColumnSettings( $settings );
+
+        // Nested grid container: wrap grid items in a grid-mode row inside the column.
+        if ( $this->isGridContainer( $settings ) ) {
+            $grid_items      = $this->convertGridChildren( $children );
+            $nested_settings = $this->rowGridSettingsFromContainer( $settings );
+
+            return [
+                'id'       => $id,
+                'name'     => 'divi/column',
+                'settings' => $col_settings,
+                'elements' => [
+                    [
+                        'id'       => $id . '-row',
+                        'name'     => 'divi/row',
+                        'settings' => $nested_settings,
+                        'elements' => $grid_items,
+                    ],
+                ],
+            ];
+        }
 
         // Nested flex-row: wrap the sub-columns in a divi/row inside this column.
         if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
@@ -342,6 +379,216 @@ abstract class BaseElementorConverter implements ConverterInterface {
                     ],
                 ],
             ],
+        ];
+    }
+
+    /**
+     * Builds Divi row grid layout settings from an Elementor grid container's
+     * settings. Maps `grid_columns_grid`, `grid_gaps`, and their responsive
+     * variants to Divi's `module.decoration.layout` attribute path.
+     *
+     * Elementor keys (prefixed with `grid_` from Group_Control_Grid_Container):
+     *   grid_columns_grid / _tablet / _mobile  — columns slider {size, unit}
+     *   grid_rows_grid / _tablet / _mobile      — rows slider {size, unit}
+     *   grid_gaps / _tablet / _mobile           — gaps {column, row, unit}
+     *   grid_auto_flow                          — 'row' | 'column'
+     *   grid_justify_items                      — justify-items value
+     *   grid_align_items                        — align-items value
+     */
+    protected function rowGridSettingsFromContainer( array $settings ): array {
+        $bp_map = [
+            'desktop' => '',
+            'tablet'  => '_tablet',
+            'phone'   => '_mobile',
+        ];
+
+        $responsive = [];
+
+        foreach ( $bp_map as $divi_bp => $suffix ) {
+            $value = [ 'display' => 'grid' ];
+
+            // Column count / template.
+            $cols = $settings[ 'grid_columns_grid' . $suffix ] ?? null;
+            if ( is_array( $cols ) ) {
+                $unit = $cols['unit'] ?? 'fr';
+                $size = isset( $cols['size'] ) ? (string) $cols['size'] : '';
+                if ( $size !== '' ) {
+                    if ( $unit === 'fr' ) {
+                        $value['gridColumnWidths'] = 'equal';
+                        $value['gridColumnCount']  = $size;
+                    } else {
+                        $value['gridColumnWidths']    = 'manual';
+                        $value['gridTemplateColumns'] = $size;
+                    }
+                }
+            }
+
+            // Row count / template.
+            $rows = $settings[ 'grid_rows_grid' . $suffix ] ?? null;
+            if ( is_array( $rows ) ) {
+                $unit = $rows['unit'] ?? 'fr';
+                $size = isset( $rows['size'] ) ? (string) $rows['size'] : '';
+                if ( $size !== '' && $unit === 'fr' ) {
+                    $value['gridRowCount'] = $size;
+                }
+            }
+
+            // Gaps.
+            $gaps = $settings[ 'grid_gaps' . $suffix ] ?? null;
+            if ( is_array( $gaps ) ) {
+                $gap_unit = is_string( $gaps['unit'] ?? '' ) ? ( $gaps['unit'] ?? 'px' ) : 'px';
+                $col_gap  = $gaps['column'] ?? '';
+                $row_gap  = $gaps['row'] ?? '';
+                if ( $col_gap !== '' && $col_gap !== null ) {
+                    $value['columnGap'] = (string) $col_gap . $gap_unit;
+                }
+                if ( $row_gap !== '' && $row_gap !== null ) {
+                    $value['rowGap'] = (string) $row_gap . $gap_unit;
+                }
+            }
+
+            // Auto flow (desktop only; 'row' is the default, omit it).
+            if ( $divi_bp === 'desktop' ) {
+                $auto_flow = $settings['grid_auto_flow'] ?? '';
+                if ( is_string( $auto_flow ) && $auto_flow !== '' && $auto_flow !== 'row' ) {
+                    $value['gridAutoFlow'] = $auto_flow;
+                }
+
+                $justify_items = $settings['grid_justify_items'] ?? '';
+                if ( is_string( $justify_items ) && $justify_items !== '' ) {
+                    $value['gridJustifyItems'] = $justify_items;
+                }
+
+                $align_items = $settings['grid_align_items'] ?? '';
+                if ( is_string( $align_items ) && $align_items !== '' ) {
+                    $value['alignItems'] = $align_items;
+                }
+            }
+
+            // Only write non-desktop breakpoints when they carry something beyond
+            // the bare `display:grid` marker (which desktop always emits).
+            if ( $divi_bp !== 'desktop' && count( $value ) <= 1 ) {
+                continue;
+            }
+
+            $responsive[ $divi_bp ] = [ 'value' => $value ];
+        }
+
+        return [
+            'module' => [
+                'decoration' => [
+                    'layout' => $responsive,
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Converts children of an Elementor grid container so that each direct
+     * child becomes a `divi/column` grid item.
+     *
+     * - Container children are converted via convertContainerAsGridItem().
+     * - Widget / other children are converted normally then auto-wrapped.
+     */
+    protected function convertGridChildren( array $elements ): array {
+        $columns = [];
+
+        foreach ( $elements as $child ) {
+            if ( ! is_array( $child ) ) {
+                continue;
+            }
+
+            $el_type = $child['elType'] ?? '';
+
+            if ( $el_type === 'container' ) {
+                $columns[] = $this->convertContainerAsGridItem( $child );
+            } elseif ( $el_type === 'column' ) {
+                $converted = $this->engine->convertElement( $child );
+                if ( ! empty( $converted ) ) {
+                    $columns[] = $converted;
+                }
+            } else {
+                $converted = $this->engine->convertElement( $child );
+                if ( empty( $converted ) ) {
+                    continue;
+                }
+                $widget_id = $child['id'] ?? uniqid( 'divi_gi_' );
+                $columns[] = [
+                    'id'       => $widget_id . '-gi',
+                    'name'     => 'divi/column',
+                    'settings' => [],
+                    'elements' => isset( $converted['name'] ) ? [ $converted ] : $converted,
+                ];
+            }
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Converts an Elementor container that is a direct child of a grid container
+     * into a divi/column that acts as a grid item.
+     *
+     * If the child container is itself a grid, its grid settings are applied
+     * as a nested divi/row inside the column. Otherwise children are stacked
+     * normally inside the column.
+     */
+    protected function convertContainerAsGridItem( array $element ): array {
+        $id       = $element['id'] ?? uniqid( 'divi_gi_' );
+        $settings = $element['settings'] ?? [];
+        $children = $element['elements'] ?? [];
+
+        // Nested grid container → row-with-grid inside this column.
+        if ( $this->isGridContainer( $settings ) ) {
+            $sub_columns     = $this->convertGridChildren( $children );
+            $nested_settings = $this->rowGridSettingsFromContainer( $settings );
+
+            return [
+                'id'       => $id,
+                'name'     => 'divi/column',
+                'settings' => [],
+                'elements' => [
+                    [
+                        'id'       => $id . '-row',
+                        'name'     => 'divi/row',
+                        'settings' => $nested_settings,
+                        'elements' => $sub_columns,
+                    ],
+                ],
+            ];
+        }
+
+        // Nested flex row with container children → a flex row inside the column.
+        if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
+            $sub_columns     = $this->convertFlexRowChildren( $children );
+            $nested_settings = $this->deepMergeSettings(
+                $this->rowSettingsFromColumns( $sub_columns ),
+                $this->rowFlexSettingsFromContainer( $settings )
+            );
+
+            return [
+                'id'       => $id,
+                'name'     => 'divi/column',
+                'settings' => [],
+                'elements' => [
+                    [
+                        'id'       => $id . '-row',
+                        'name'     => 'divi/row',
+                        'settings' => $nested_settings,
+                        'elements' => $sub_columns,
+                    ],
+                ],
+            ];
+        }
+
+        // Plain container grid item: children stacked in the column.
+        $converted_children = $this->convertStructureChildren( $children );
+
+        return [
+            'id'       => $id,
+            'name'     => 'divi/column',
+            'settings' => [],
+            'elements' => $converted_children,
         ];
     }
 
@@ -512,8 +759,18 @@ abstract class BaseElementorConverter implements ConverterInterface {
             'boxed_width', 'boxed_width_tablet', 'boxed_width_mobile',
             // Container min-height (handled by StyleMapper for section/column).
             'min_height', 'min_height_tablet', 'min_height_mobile',
-            // Container HTML tag and grid controls.
+            // Container HTML tag.
             'html_tag',
+            // Elementor Grid Container controls — handled by rowGridSettingsFromContainer().
+            'grid_columns_grid', 'grid_columns_grid_tablet', 'grid_columns_grid_mobile',
+            'grid_rows_grid', 'grid_rows_grid_tablet', 'grid_rows_grid_mobile',
+            'grid_gaps', 'grid_gaps_tablet', 'grid_gaps_mobile',
+            'grid_auto_flow', 'grid_auto_flow_tablet', 'grid_auto_flow_mobile',
+            'grid_justify_items', 'grid_justify_items_tablet', 'grid_justify_items_mobile',
+            'grid_align_items', 'grid_align_items_tablet', 'grid_align_items_mobile',
+            'grid_justify_content', 'grid_justify_content_tablet', 'grid_justify_content_mobile',
+            'grid_align_content', 'grid_align_content_tablet', 'grid_align_content_mobile',
+            'grid_outline', 'grid__is_row', 'grid__is_column',
             // Flex-item (child) controls — handled via extractFlexItemColumnSettings().
             '_inline_size', '_inline_size_tablet', '_inline_size_mobile',
             '_flex_basis_type', '_flex_basis_type_tablet', '_flex_basis_type_mobile',

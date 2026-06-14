@@ -27,6 +27,29 @@ class ContainerConverter extends BaseElementorConverter {
         $settings = $element['settings'] ?? [];
         $children = $element['elements'] ?? [];
 
+        // CSS Grid container → section with a grid-mode row.
+        if ( $this->isGridContainer( $settings ) ) {
+            $columns      = $this->convertGridChildren( $children );
+            $row_settings = $this->rowGridSettingsFromContainer( $settings );
+
+            $this->engine->logConverted( 'section' );
+            $this->logUnmappedSettings( $id, $settings );
+
+            return [
+                'id'       => $id,
+                'name'     => 'divi/section',
+                'settings' => [],
+                'elements' => [
+                    [
+                        'id'       => $id . '-row',
+                        'name'     => 'divi/row',
+                        'settings' => $row_settings,
+                        'elements' => $columns,
+                    ],
+                ],
+            ];
+        }
+
         // Flex-row container with container children → multi-column flex row.
         if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
             $columns      = $this->convertFlexRowChildren( $children );

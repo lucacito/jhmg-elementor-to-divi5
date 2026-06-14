@@ -491,9 +491,14 @@ final class FlexContainerConversionTest extends TestCase {
     }
 
     // -------------------------------------------------------------------------
-    // Test 10 — Grid container is not treated as flex row
+    // Test 10 — Grid container uses the grid path, not the flex-row path
     // -------------------------------------------------------------------------
 
+    /**
+     * A grid container must NOT be treated as a flex-row (producing a multi-column
+     * flex row from container children). Instead it must produce a divi/row with
+     * display:grid in its layout settings and one divi/column per grid item.
+     */
     public function test_grid_container_is_not_treated_as_flex_row(): void {
         $result = $this->convert( [
             $this->container( 'parent', [
@@ -504,8 +509,13 @@ final class FlexContainerConversionTest extends TestCase {
 
         $row = $result[0]['elements'][0];
 
-        // Grid container falls through to original path → ensureColumnChildren
-        // wraps the two inner rows in a single column.
-        $this->assertCount( 1, $row['elements'], 'Grid container uses original path (one wrapper column)' );
+        // Two grid-item columns, one per child container.
+        $this->assertCount( 2, $row['elements'], 'Grid container produces one column per grid item' );
+        $this->assertSame( 'divi/column', $row['elements'][0]['name'] );
+        $this->assertSame( 'divi/column', $row['elements'][1]['name'] );
+
+        // Row must carry display:grid — not treated as a flex row.
+        $display = $row['settings']['module']['decoration']['layout']['desktop']['value']['display'] ?? null;
+        $this->assertSame( 'grid', $display, 'Row layout mode must be grid' );
     }
 }
