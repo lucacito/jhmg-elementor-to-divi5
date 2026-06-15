@@ -58,8 +58,13 @@ class AdminPage {
     // ------------------------------------------------------------------
 
     public function handle_post(): void {
-        if ( ( $_POST['action'] ?? '' ) === 'edc_import' ) {
+        $action = $_POST['action'] ?? '';
+        if ( $action === 'edc_import' ) {
             $this->handle_import();
+        }
+
+        if ( sanitize_key( $_GET['edc_action'] ?? '' ) === 'publish' ) {
+            $this->handle_publish();
         }
     }
 
@@ -117,6 +122,38 @@ class AdminPage {
 
         $import_id = $this->generate_import_id();
         set_transient( 'edc_batch_' . $import_id, $results, HOUR_IN_SECONDS );
+
+        wp_safe_redirect(
+            add_query_arg(
+                [
+                    'page'      => self::MENU_SLUG,
+                    'action'    => 'batch_result',
+                    'import_id' => $import_id,
+                ],
+                admin_url( 'tools.php' )
+            )
+        );
+        exit;
+    }
+
+    private function handle_publish(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'Insufficient permissions.', 'jhmg-converter-for-elementor-to-divi' ) );
+        }
+
+        $post_id   = (int) ( $_GET['post_id'] ?? 0 );
+        $import_id = sanitize_key( $_GET['import_id'] ?? '' );
+
+        check_admin_referer( 'edc_publish_' . $post_id );
+
+        if ( $post_id <= 0 ) {
+            wp_die( esc_html__( 'Invalid post ID.', 'jhmg-converter-for-elementor-to-divi' ) );
+        }
+
+        wp_update_post( [
+            'ID'          => $post_id,
+            'post_status' => 'publish',
+        ] );
 
         wp_safe_redirect(
             add_query_arg(
@@ -304,9 +341,31 @@ class AdminPage {
                         </td>
                         <td class="column-issues">
                             <?php if ( $result['success'] && $warn_count > 0 ) : ?>
-                                <span class="edc-badge edc-badge--warn"><?php echo $warn_count; ?></span>
+                                <details class="edc-issues-details">
+                                    <summary class="edc-issues-summary">
+                                        <span class="edc-badge edc-badge--warn"><?php echo $warn_count; ?></span>
+                                        <?php esc_html_e( 'issues', 'jhmg-converter-for-elementor-to-divi' ); ?>
+                                    </summary>
+                                    <ul class="edc-issues-list">
+                                        <?php foreach ( $result['report']['warnings'] ?? [] as $warning ) : ?>
+                                            <li class="edc-issue edc-issue--warn"><?php echo esc_html( $warning ); ?></li>
+                                        <?php endforeach; ?>
+                                        <?php foreach ( $result['unsupported'] ?? [] as $item ) : ?>
+                                            <li class="edc-issue edc-issue--unsupported">
+                                                <?php esc_html_e( 'Unsupported:', 'jhmg-converter-for-elementor-to-divi' ); ?>
+                                                <code><?php echo esc_html( $item['widgetType'] ?? $item['elType'] ?? 'unknown' ); ?></code>
+                                            </li>
+                                        <?php endforeach; ?>
+                                        <?php foreach ( $result['report']['skipped_settings'] ?? [] as $setting ) : ?>
+                                            <li class="edc-issue edc-issue--skipped">
+                                                <?php esc_html_e( 'Skipped:', 'jhmg-converter-for-elementor-to-divi' ); ?>
+                                                <code><?php echo esc_html( $setting ); ?></code>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </details>
                             <?php elseif ( $result['success'] ) : ?>
-                                <span class="edc-status--clean">&#10003;</span>
+                                <span class="edc-status--clean">&#10003; <?php esc_html_e( 'Clean', 'jhmg-converter-for-elementor-to-divi' ); ?></span>
                             <?php else : ?>
                                 &mdash;
                             <?php endif; ?>
@@ -319,6 +378,27 @@ class AdminPage {
                                 <a href="<?php echo esc_url( get_permalink( $result['post_id'] ) ); ?>" class="button button-small" target="_blank" rel="noopener">
                                     <?php esc_html_e( 'View', 'jhmg-converter-for-elementor-to-divi' ); ?>
                                 </a>
+                                <?php if ( get_post_status( $result['post_id'] ) !== 'publish' ) :
+                                    $publish_url = wp_nonce_url(
+                                        add_query_arg(
+                                            [
+                                                'page'       => self::MENU_SLUG,
+                                                'action'     => 'batch_result',
+                                                'import_id'  => $import_id,
+                                                'edc_action' => 'publish',
+                                                'post_id'    => $result['post_id'],
+                                            ],
+                                            admin_url( 'tools.php' )
+                                        ),
+                                        'edc_publish_' . $result['post_id']
+                                    );
+                                ?>
+                                    <a href="<?php echo esc_url( $publish_url ); ?>" class="button button-small button-primary">
+                                        <?php esc_html_e( 'Publish', 'jhmg-converter-for-elementor-to-divi' ); ?>
+                                    </a>
+                                <?php else : ?>
+                                    <span class="edc-published-label">&#10003; <?php esc_html_e( 'Published', 'jhmg-converter-for-elementor-to-divi' ); ?></span>
+                                <?php endif; ?>
                             <?php else : ?>
                                 &mdash;
                             <?php endif; ?>
@@ -457,9 +537,23 @@ class AdminPage {
 .edc-summary-stat--fail  { background: #f8d7da; color: #58151c; }
 
 /* Batch table */
-.edc-batch-table .column-status  { width: 160px; }
-.edc-batch-table .column-issues  { width: 90px; }
-.edc-batch-table .column-actions { width: 160px; }
+.edc-batch-table .column-status  { width: 140px; }
+.edc-batch-table .column-issues  { width: 230px; }
+.edc-batch-table .column-actions { width: 210px; }
+
+/* Issues expand/collapse */
+.edc-issues-details summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 5px; }
+.edc-issues-details summary::-webkit-details-marker { display: none; }
+.edc-issues-summary::before { content: "▶"; font-size: 9px; color: #888; transition: transform .15s; display: inline-block; }
+.edc-issues-details[open] .edc-issues-summary::before { transform: rotate(90deg); }
+.edc-issues-list { margin: 8px 0 0; padding-left: 14px; font-size: 12px; }
+.edc-issues-list li { margin-bottom: 4px; line-height: 1.4; }
+.edc-issue--warn { color: #7a4f00; }
+.edc-issue--unsupported { color: #c62828; }
+.edc-issue--skipped { color: #555; }
+
+/* Publish action */
+.edc-published-label { color: #2e7d32; font-size: 12px; font-weight: 600; }
 
 /* Result views */
 .edc-result-actions { display: flex; gap: 8px; margin: 16px 0 24px; flex-wrap: wrap; }
