@@ -81,6 +81,28 @@ final class StyleMapperTest extends TestCase {
         $this->assertArrayNotHasKey( 'module', $result['divi_attrs'] );
     }
 
+    public function test_maps_background_color_via_global_reference(): void {
+        $settings = [
+            '__globals__' => [ 'background_color' => 'globals/colors?id=primary' ],
+        ];
+
+        $result = $this->mapper->map( 'column', $settings );
+        $color  = $result['divi_attrs']['module']['decoration']['background']['desktop']['value']['color'] ?? null;
+
+        $this->assertSame( '#070707', $color, 'Global background color must resolve for columns' );
+    }
+
+    public function test_maps_background_color_via_global_for_section(): void {
+        $settings = [
+            '__globals__' => [ 'background_color' => 'globals/colors?id=secondary' ],
+        ];
+
+        $result = $this->mapper->map( 'section', $settings );
+        $color  = $result['divi_attrs']['module']['decoration']['background']['desktop']['value']['color'] ?? null;
+
+        $this->assertSame( '#110A72', $color, 'Global background color must resolve for sections' );
+    }
+
     public function test_handled_keys_includes_all_spacing_and_background_keys(): void {
         $result = $this->mapper->map( 'heading', [] );
         $keys   = $result['handled_keys'];
@@ -831,6 +853,31 @@ final class StyleMapperTest extends TestCase {
         $this->assertStringNotContainsString( 'width: 300px', $result['css_main'] );
     }
 
+    public function test_image_without_explicit_width_gets_auto_css(): void {
+        // No 'width' key → must emit width:auto so images don't expand to 100% of the Divi column.
+        $result = $this->mapper->map( 'image', [] );
+        $this->assertStringContainsString( 'width: auto',    $result['css_main'] );
+        $this->assertStringContainsString( 'max-width: 100%', $result['css_main'] );
+    }
+
+    public function test_image_with_empty_size_gets_auto_css(): void {
+        // size: '' is Elementor's default empty slider state; must be treated as no explicit width.
+        $result = $this->mapper->map( 'image', [
+            'width' => [ 'size' => '', 'unit' => '%' ],
+        ] );
+        $this->assertStringContainsString( 'width: auto', $result['css_main'] );
+        $this->assertStringNotContainsString( 'width: 0', $result['css_main'] );
+    }
+
+    public function test_image_with_explicit_width_uses_explicit_not_auto(): void {
+        // An explicit size must override the auto fallback.
+        $result = $this->mapper->map( 'image', [
+            'width' => [ 'size' => 250, 'unit' => 'px' ],
+        ] );
+        $this->assertStringContainsString( 'width: 250px', $result['css_main'] );
+        $this->assertStringNotContainsString( 'width: auto', $result['css_main'] );
+    }
+
     // ── M2: image alignment ───────────────────────────────────────────────────
 
     public function test_maps_image_align_to_module_advanced_align(): void {
@@ -1085,5 +1132,113 @@ final class StyleMapperTest extends TestCase {
         ] );
         $module_advanced = $result['divi']['elements'][0]['settings']['module']['advanced'] ?? [];
         $this->assertArrayNotHasKey( 'link', $module_advanced );
+    }
+
+    // -------------------------------------------------------------------------
+    // Image widget: border, shadow, height
+    // -------------------------------------------------------------------------
+
+    public function test_image_border_style_width_color_mapped(): void {
+        $settings = [
+            'image_border_border' => 'solid',
+            'image_border_width'  => [ 'top' => '2', 'right' => '2', 'bottom' => '2', 'left' => '2', 'unit' => 'px' ],
+            'image_border_color'  => '#ff0000',
+        ];
+
+        $result = $this->mapper->map( 'image', $settings );
+        $border = $result['divi_attrs']['module']['decoration']['border']['desktop']['value'] ?? [];
+
+        $this->assertSame( 'solid',   $border['styles']['all']['style'] ?? null );
+        $this->assertSame( '2px',     $border['styles']['all']['width'] ?? null );
+        $this->assertSame( '#ff0000', $border['styles']['all']['color'] ?? null );
+    }
+
+    public function test_image_border_color_css_variable(): void {
+        $settings = [
+            'image_border_border' => 'solid',
+            'image_border_color'  => 'var(--e-global-color-308e809)',
+        ];
+
+        $result = $this->mapper->map( 'image', $settings );
+        $color  = $result['divi_attrs']['module']['decoration']['border']['desktop']['value']['styles']['all']['color'] ?? null;
+
+        $this->assertSame( 'var(--e-global-color-308e809)', $color );
+    }
+
+    public function test_image_border_radius_responsive(): void {
+        $settings = [
+            'image_border_radius'        => [ 'top' => '50', 'right' => '50', 'bottom' => '50', 'left' => '50', 'unit' => '%' ],
+            'image_border_radius_tablet' => [ 'top' => '10', 'right' => '10', 'bottom' => '10', 'left' => '10', 'unit' => 'px' ],
+        ];
+
+        $result = $this->mapper->map( 'image', $settings );
+        $border = $result['divi_attrs']['module']['decoration']['border'] ?? [];
+
+        $this->assertSame( '50%', $border['desktop']['value']['radius']['topLeft'] ?? null );
+        $this->assertSame( '10px', $border['tablet']['value']['radius']['topLeft'] ?? null );
+    }
+
+    public function test_image_box_shadow_mapped(): void {
+        $settings = [
+            'image_box_shadow_box_shadow_type' => 'yes',
+            'image_box_shadow_box_shadow'       => [
+                'horizontal' => 0,
+                'vertical'   => 2,
+                'blur'       => 10,
+                'spread'     => 0,
+                'color'      => 'rgba(0, 0, 0, 0.15)',
+                'position'   => '',
+            ],
+        ];
+
+        $result = $this->mapper->map( 'image', $settings );
+        $shadow = $result['divi_attrs']['module']['decoration']['boxShadow']['desktop']['value'] ?? [];
+
+        $this->assertSame( 'rgba(0, 0, 0, 0.15)', $shadow['color'] ?? null );
+        $this->assertSame( '0px',  $shadow['horizontal'] ?? null );
+        $this->assertSame( '2px',  $shadow['vertical']   ?? null );
+        $this->assertSame( '10px', $shadow['blur']       ?? null );
+        $this->assertSame( '0px',  $shadow['spread']     ?? null );
+        $this->assertSame( 'outer', $shadow['position']  ?? null );
+    }
+
+    public function test_image_height_mapped_to_css(): void {
+        $settings = [
+            'height' => [ 'size' => 55, 'unit' => 'px' ],
+        ];
+
+        $result = $this->mapper->map( 'image', $settings );
+        $css    = $result['divi_attrs']['css']['desktop']['value']['main'] ?? '';
+
+        $this->assertStringContainsString( 'height: 55px', $css );
+    }
+
+    public function test_image_full_hero_styles(): void {
+        $settings = [
+            'width'                           => [ 'size' => 100, 'unit' => '%' ],
+            'height'                          => [ 'size' => 55, 'unit' => 'px' ],
+            'image_border_border'             => 'solid',
+            'image_border_width'              => [ 'top' => '2', 'right' => '2', 'bottom' => '2', 'left' => '2', 'unit' => 'px' ],
+            'image_border_color'              => 'var(--e-global-color-308e809)',
+            'image_border_radius'             => [ 'top' => '50', 'right' => '50', 'bottom' => '50', 'left' => '50', 'unit' => '%' ],
+            'image_box_shadow_box_shadow_type' => 'yes',
+            'image_box_shadow_box_shadow'      => [
+                'horizontal' => 0, 'vertical' => 2, 'blur' => 10, 'spread' => 0,
+                'color' => 'rgba(0, 0, 0, 0.15)', 'position' => '',
+            ],
+        ];
+
+        $result = $this->mapper->map( 'image', $settings );
+        $attrs  = $result['divi_attrs'];
+        $border = $attrs['module']['decoration']['border']['desktop']['value'] ?? [];
+        $shadow = $attrs['module']['decoration']['boxShadow']['desktop']['value'] ?? [];
+        $css    = $attrs['css']['desktop']['value']['main'] ?? '';
+
+        $this->assertSame( 'solid',                       $border['styles']['all']['style'] ?? null );
+        $this->assertSame( '2px',                         $border['styles']['all']['width'] ?? null );
+        $this->assertSame( 'var(--e-global-color-308e809)', $border['styles']['all']['color'] ?? null );
+        $this->assertSame( '50%',                         $border['radius']['topLeft'] ?? null );
+        $this->assertSame( 'rgba(0, 0, 0, 0.15)',         $shadow['color'] ?? null );
+        $this->assertStringContainsString( 'height: 55px', $css );
     }
 }

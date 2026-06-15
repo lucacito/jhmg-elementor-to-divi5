@@ -139,6 +139,20 @@ class ContainerConverter extends BaseElementorConverter {
         }
 
         $row_elements = $this->ensureColumnChildren( $id, $converted );
+
+        // Propagate flex-column layout (gap, align-items, justify-content) to the
+        // single auto-generated wrapping column so that the Elementor container's
+        // flex intent is reflected in the Divi column that holds its children.
+        if ( count( $row_elements ) === 1 && ( $row_elements[0]['name'] ?? '' ) === 'divi/column' ) {
+            $col_flex = $this->columnFlexSettingsFromContainer( $settings );
+            if ( ! empty( $col_flex ) ) {
+                $row_elements[0]['settings'] = $this->deepMergeSettings(
+                    $row_elements[0]['settings'] ?? [],
+                    $col_flex
+                );
+            }
+        }
+
         $row_settings = $this->applyBoxedWidthToRow(
             $this->deepMergeSettings(
                 $this->rowSettingsFromColumns( $row_elements ),

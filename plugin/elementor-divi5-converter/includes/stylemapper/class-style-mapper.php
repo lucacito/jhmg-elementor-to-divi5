@@ -194,6 +194,9 @@ class StyleMapper {
 
         if ( $widget_type === 'image' ) {
             $this->mapImageBorderRadius( $settings, $divi_attrs, $handled_keys );
+            $this->mapImageBorder( $settings, $divi_attrs, $handled_keys );
+            $this->mapImageBoxShadow( $settings, $divi_attrs, $handled_keys );
+            $this->mapImageHeight( $settings, $divi_attrs, $handled_keys );
         }
 
         if ( $widget_type === 'button' ) {
@@ -204,6 +207,7 @@ class StyleMapper {
 
         $this->mapCustomCssClass( $settings, $divi_attrs, $handled_keys );
         $this->mapZIndex( $settings, $divi_attrs, $handled_keys );
+        $this->mapElementPosition( $settings, $divi_attrs, $handled_keys );
         $this->mapOverflow( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapFilters( $settings, $divi_attrs, $handled_keys );
         $this->mapBlendMode( $settings, $divi_attrs, $handled_keys );
@@ -308,8 +312,8 @@ class StyleMapper {
             return;
         }
 
-        $color = $settings['background_color'] ?? '';
-        if ( ! is_string( $color ) || $color === '' ) {
+        $color = $this->resolveColorSetting( $settings, 'background_color' );
+        if ( $color === '' ) {
             return;
         }
 
@@ -708,40 +712,55 @@ class StyleMapper {
             return;
         }
 
-        $image = $settings['background_image'] ?? null;
-        $url   = '';
-        if ( is_array( $image ) ) {
-            $url = is_string( $image['url'] ?? '' ) ? ( $image['url'] ?? '' ) : '';
-        } elseif ( is_string( $image ) ) {
-            $url = $image;
+        $desktop_image = $settings['background_image'] ?? null;
+        $desktop_url   = '';
+        if ( is_array( $desktop_image ) ) {
+            $desktop_url = is_string( $desktop_image['url'] ?? '' ) ? ( $desktop_image['url'] ?? '' ) : '';
+        } elseif ( is_string( $desktop_image ) ) {
+            $desktop_url = $desktop_image;
         }
 
-        if ( $url === '' ) {
+        if ( $desktop_url === '' ) {
             return;
         }
 
-        self::transformPath( $attrs, 'module.decoration.background.desktop.value.image.url', $url );
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $base_path = "module.decoration.background.{$breakpoint}.value.image";
 
-        // Position: Elementor "center center" → Divi "center|center".
-        $pos = $settings['background_position'] ?? '';
-        if ( is_string( $pos ) && $pos !== '' ) {
-            self::transformPath(
-                $attrs,
-                'module.decoration.background.desktop.value.image.position',
-                str_replace( ' ', '|', $pos )
-            );
-        }
+            // URL: always use desktop image for all breakpoints (responsive images not supported by Divi 5).
+            // Only write tablet/phone breakpoint image attrs when a per-breakpoint image is present.
+            $image = $settings[ 'background_image' . $suffix ] ?? null;
+            $url   = '';
+            if ( is_array( $image ) ) {
+                $url = is_string( $image['url'] ?? '' ) ? ( $image['url'] ?? '' ) : '';
+            } elseif ( is_string( $image ) ) {
+                $url = $image;
+            }
+            if ( $suffix === '' ) {
+                $url = $desktop_url;
+            }
+            if ( $url === '' ) {
+                continue;
+            }
+            self::transformPath( $attrs, "{$base_path}.url", $url );
 
-        // Size: map cover/contain and any other explicit value.
-        $size = $settings['background_size'] ?? '';
-        if ( is_string( $size ) && $size !== '' && $size !== 'initial' && $size !== 'auto' ) {
-            self::transformPath( $attrs, 'module.decoration.background.desktop.value.image.size', $size );
-        }
+            // Position: Elementor "center center" → Divi "center|center".
+            $pos = $settings[ 'background_position' . $suffix ] ?? '';
+            if ( is_string( $pos ) && $pos !== '' ) {
+                self::transformPath( $attrs, "{$base_path}.position", str_replace( ' ', '|', $pos ) );
+            }
 
-        // Repeat.
-        $repeat = $settings['background_repeat'] ?? '';
-        if ( is_string( $repeat ) && $repeat !== '' ) {
-            self::transformPath( $attrs, 'module.decoration.background.desktop.value.image.repeat', $repeat );
+            // Size: map cover/contain and any other explicit value.
+            $size = $settings[ 'background_size' . $suffix ] ?? '';
+            if ( is_string( $size ) && $size !== '' && $size !== 'initial' && $size !== 'auto' ) {
+                self::transformPath( $attrs, "{$base_path}.size", $size );
+            }
+
+            // Repeat.
+            $repeat = $settings[ 'background_repeat' . $suffix ] ?? '';
+            if ( is_string( $repeat ) && $repeat !== '' ) {
+                self::transformPath( $attrs, "{$base_path}.repeat", $repeat );
+            }
         }
     }
 
@@ -816,7 +835,43 @@ class StyleMapper {
                 ? ( $settings['background_color'] ?? '' )
                 : '';
             if ( $bg_image_url === '' && $existing_bg_color === '' ) {
-                self::transformPath( $attrs, 'module.decoration.background.desktop.value.image.url', $overlay_image_url );
+                $img_base = 'module.decoration.background.desktop.value.image';
+                self::transformPath( $attrs, "{$img_base}.url", $overlay_image_url );
+
+                // Position: when `background_overlay_position` is "initial", Elementor
+                // uses the xpos/ypos slider controls to set an arbitrary percentage position.
+                $ov_pos = (string) ( $settings['background_overlay_position'] ?? '' );
+                if ( $ov_pos !== '' && $ov_pos !== 'initial' ) {
+                    self::transformPath( $attrs, "{$img_base}.position", str_replace( ' ', '|', $ov_pos ) );
+                } else {
+                    $xpos_raw = $settings['background_overlay_xpos'] ?? null;
+                    $ypos_raw = $settings['background_overlay_ypos'] ?? null;
+                    if ( is_array( $xpos_raw ) && isset( $xpos_raw['size'] ) && $xpos_raw['size'] !== '' &&
+                         is_array( $ypos_raw ) && isset( $ypos_raw['size'] ) && $ypos_raw['size'] !== '' ) {
+                        $xpos_str = $xpos_raw['size'] . ( $xpos_raw['unit'] ?? '%' );
+                        $ypos_str = $ypos_raw['size'] . ( $ypos_raw['unit'] ?? '%' );
+                        self::transformPath( $attrs, "{$img_base}.position", "{$xpos_str}|{$ypos_str}" );
+                    }
+                }
+
+                // Size: when `background_overlay_size` is "initial", Elementor uses the
+                // bg_width slider to set a custom width (height is implicitly "auto").
+                $ov_size = (string) ( $settings['background_overlay_size'] ?? '' );
+                if ( $ov_size !== '' && $ov_size !== 'initial' && $ov_size !== 'auto' ) {
+                    self::transformPath( $attrs, "{$img_base}.size", $ov_size );
+                } else {
+                    $width_raw = $settings['background_overlay_bg_width'] ?? null;
+                    if ( is_array( $width_raw ) && isset( $width_raw['size'] ) && $width_raw['size'] !== '' ) {
+                        $width_str = $width_raw['size'] . ( $width_raw['unit'] ?? 'px' );
+                        self::transformPath( $attrs, "{$img_base}.size", "{$width_str} auto" );
+                    }
+                }
+
+                // Repeat.
+                $ov_repeat = (string) ( $settings['background_overlay_repeat'] ?? '' );
+                if ( $ov_repeat !== '' ) {
+                    self::transformPath( $attrs, "{$img_base}.repeat", $ov_repeat );
+                }
             }
         }
 
@@ -916,7 +971,6 @@ class StyleMapper {
             '_element_',               // Advanced-tab element-width / visibility overrides
             '_flex_',                  // Advanced-tab flex-size override
             '_transform_',             // Advanced-tab CSS transform
-            '_offset_',                // Advanced-tab position offset
             '_box_shadow_',            // Advanced-tab box-shadow (distinct from widget-level box_shadow_*)
             '_border_radius',          // Advanced-tab border-radius (handled in mapBorder for own key)
             'button_background_hover_',// Hover-state button background — no static Divi mapping
@@ -1082,32 +1136,153 @@ class StyleMapper {
 
     /**
      * Maps the Elementor `image_border_radius` control (image widget) to the
-     * Divi 5 border radius path `module.decoration.border.desktop.value.radius`.
+     * Divi 5 border radius path `module.decoration.border.{breakpoint}.value.radius`.
      *
      * Also marks `image_size` as handled (preset names like "large" / "full" have
      * no direct Divi 5 block attribute equivalent).
      */
     private function mapImageBorderRadius( array $settings, array &$attrs, array &$handled ): void {
-        $handled[] = 'image_border_radius';
         $handled[] = 'image_size';
 
-        $raw = $settings['image_border_radius'] ?? null;
-        if ( $raw === null ) {
-            return;
-        }
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $handled[] = 'image_border_radius' . $suffix;
 
-        if ( is_array( $raw ) ) {
-            $radius = $this->normalizeRadius( $raw );
-            if ( ! empty( $radius ) ) {
-                self::transformPath( $attrs, 'module.decoration.border.desktop.value.radius', $radius );
+            $raw = $settings[ 'image_border_radius' . $suffix ] ?? null;
+            if ( $raw === null ) {
+                continue;
             }
-        } elseif ( is_string( $raw ) && $raw !== '' ) {
-            self::transformPath( $attrs, 'module.decoration.border.desktop.value.radius', [
-                'topLeft'     => $raw,
-                'topRight'    => $raw,
-                'bottomRight' => $raw,
-                'bottomLeft'  => $raw,
-            ] );
+
+            $path = "module.decoration.border.{$breakpoint}.value.radius";
+
+            if ( is_array( $raw ) ) {
+                $radius = $this->normalizeRadius( $raw );
+                if ( ! empty( $radius ) ) {
+                    self::transformPath( $attrs, $path, $radius );
+                }
+            } elseif ( is_string( $raw ) && $raw !== '' ) {
+                self::transformPath( $attrs, $path, [
+                    'topLeft'     => $raw,
+                    'topRight'    => $raw,
+                    'bottomRight' => $raw,
+                    'bottomLeft'  => $raw,
+                ] );
+            }
+        }
+    }
+
+    /**
+     * Maps the Elementor image widget `image_border_*` sub-element controls to
+     * Divi 5's `module.decoration.border.{breakpoint}.value` path.
+     *
+     * Elementor uses an `image_` prefix for styles that target the `<img>` element
+     * rather than the module wrapper. In Divi 5 the same `module.decoration.border`
+     * path applies to the image element so the mapping is direct.
+     */
+    private function mapImageBorder( array $settings, array &$attrs, array &$handled ): void {
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $handled[] = 'image_border_border' . $suffix;
+            $handled[] = 'image_border_width'  . $suffix;
+            $handled[] = 'image_border_color'  . $suffix;
+
+            $base_path = "module.decoration.border.{$breakpoint}.value";
+
+            $style = $settings[ 'image_border_border' . $suffix ] ?? '';
+            if ( is_string( $style ) && $style !== '' ) {
+                self::transformPath( $attrs, "{$base_path}.styles.all.style", $style );
+            }
+
+            $color = $settings[ 'image_border_color' . $suffix ] ?? '';
+            if ( is_string( $color ) && $color !== '' ) {
+                self::transformPath( $attrs, "{$base_path}.styles.all.color", $color );
+            }
+
+            $width_raw = $settings[ 'image_border_width' . $suffix ] ?? null;
+            if ( is_array( $width_raw ) ) {
+                $this->applyBorderWidth( $width_raw, $attrs, "{$base_path}.styles" );
+            } elseif ( is_string( $width_raw ) && $width_raw !== '' ) {
+                self::transformPath( $attrs, "{$base_path}.styles.all.width", $width_raw );
+            }
+        }
+    }
+
+    /**
+     * Maps the Elementor image widget `image_box_shadow_box_shadow` control to
+     * `module.decoration.boxShadow.{breakpoint}.value` in Divi 5.
+     *
+     * Mirrors `mapBoxShadow()` but reads from the `image_box_shadow_*` prefix that
+     * Elementor uses for the `<img>` sub-element shadow.
+     */
+    private function mapImageBoxShadow( array $settings, array &$attrs, array &$handled ): void {
+        $handled[] = 'image_box_shadow_box_shadow_type';
+
+        $to_px = static fn( mixed $v ): string => ( $v !== '' && $v !== null )
+            ? ( is_numeric( $v ) ? $v . 'px' : (string) $v )
+            : '0px';
+
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $key       = 'image_box_shadow_box_shadow' . $suffix;
+            $handled[] = $key;
+
+            $raw = $settings[ $key ] ?? null;
+            if ( ! is_array( $raw ) ) {
+                continue;
+            }
+
+            $color = is_string( $raw['color'] ?? '' ) ? ( $raw['color'] ?? '' ) : '';
+            if ( $color === '' && empty( $raw['horizontal'] ) && empty( $raw['vertical'] ) ) {
+                continue;
+            }
+
+            $position_raw = is_string( $raw['position'] ?? '' ) ? ( $raw['position'] ?? '' ) : '';
+
+            $shadow = [
+                'style'      => 'preset1',
+                'position'   => $position_raw === 'inset' ? 'inner' : 'outer',
+                'color'      => $color,
+                'horizontal' => $to_px( $raw['horizontal'] ?? '' ),
+                'vertical'   => $to_px( $raw['vertical'] ?? '' ),
+                'blur'       => $to_px( $raw['blur'] ?? '' ),
+                'spread'     => $to_px( $raw['spread'] ?? '' ),
+            ];
+
+            self::transformPath( $attrs, "module.decoration.boxShadow.{$breakpoint}.value", $shadow );
+        }
+    }
+
+    /**
+     * Maps the Elementor image widget `height` control to a CSS `height` rule on
+     * the module's main selector. Divi 5 has no native block attribute for image
+     * height, so raw CSS is the only available slot.
+     *
+     * `height_tablet` and `height_mobile` are handled for responsive overrides.
+     * Only positive numeric values are emitted; empty / zero / "auto" are skipped.
+     */
+    private function mapImageHeight( array $settings, array &$attrs, array &$handled ): void {
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $handled[] = 'height' . $suffix;
+
+            $raw = $settings[ 'height' . $suffix ] ?? null;
+            if ( $raw === null ) {
+                continue;
+            }
+
+            $height_str = '';
+            if ( is_array( $raw ) && isset( $raw['size'] ) && $raw['size'] !== '' && $raw['size'] !== null && (float) $raw['size'] > 0 ) {
+                $height_str = $this->parseSizeValue( $raw );
+            } elseif ( is_string( $raw ) && $raw !== '' && $raw !== 'auto' ) {
+                $height_str = $raw;
+            }
+
+            if ( $height_str === '' ) {
+                continue;
+            }
+
+            $existing = $attrs['css'][ $breakpoint ]['value']['main'] ?? '';
+            $rule     = "height: {$height_str};";
+            $merged   = ( is_string( $existing ) && $existing !== '' )
+                ? rtrim( $existing, '; ' ) . '; ' . $rule
+                : $rule;
+            self::transformPath( $attrs, "css.{$breakpoint}.value.main", $merged );
         }
     }
 
@@ -1554,6 +1729,97 @@ class StyleMapper {
     }
 
     /**
+     * Maps Elementor absolute/relative/fixed positioning to Divi 5
+     * `module.decoration.position.{breakpoint}.value`.
+     *
+     * Elementor stores the mode in `_position` (widgets) or `position` (containers).
+     * Offsets are stored in `_offset_x` / `_offset_y` (or `_offset_x_end` /
+     * `_offset_y_end` when the orientation is "end"), with `_offset_orientation_h`
+     * and `_offset_orientation_v` controlling which side is the anchor.
+     *
+     * Divi 5 value shape:
+     *   { mode: "absolute", origin: { absolute: "top left" }, offset: { vertical: "10px", horizontal: "20px" } }
+     */
+    private function mapElementPosition( array $settings, array &$attrs, array &$handled ): void {
+        // Mark all offset/orientation/position keys as handled.
+        foreach ( self::BREAKPOINT_MAP as $suffix => $_ ) {
+            $handled[] = '_offset_x' . $suffix;
+            $handled[] = '_offset_x_end' . $suffix;
+            $handled[] = '_offset_y' . $suffix;
+            $handled[] = '_offset_y_end' . $suffix;
+        }
+        // Non-standard Elementor breakpoints — mark handled only, not mapped.
+        foreach ( [ '_widescreen', '_laptop', '_tablet_extra', '_mobile_extra' ] as $xbp ) {
+            $handled[] = '_offset_x' . $xbp;
+            $handled[] = '_offset_x_end' . $xbp;
+            $handled[] = '_offset_y' . $xbp;
+            $handled[] = '_offset_y_end' . $xbp;
+        }
+        $handled[] = '_offset_orientation_h';
+        $handled[] = '_offset_orientation_v';
+        $handled[] = '_position';
+        $handled[] = 'position';
+
+        $valid_modes = [ 'absolute', 'relative', 'fixed' ];
+
+        // Widgets use '_position'; containers use 'position'.
+        $mode = '';
+        foreach ( [ '_position', 'position' ] as $key ) {
+            $v = $settings[ $key ] ?? '';
+            if ( is_string( $v ) && in_array( $v, $valid_modes, true ) ) {
+                $mode = $v;
+                break;
+            }
+        }
+
+        if ( $mode === '' ) {
+            return;
+        }
+
+        // Determine origin sides from orientation keys (default: top-left / start-start).
+        $h_orient = (string) ( $settings['_offset_orientation_h'] ?? 'start' );
+        $v_orient = (string) ( $settings['_offset_orientation_v'] ?? 'start' );
+        $h_side   = $h_orient === 'end' ? 'right' : 'left';
+        $v_side   = $v_orient === 'end' ? 'bottom' : 'top';
+
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $base = "module.decoration.position.{$breakpoint}.value";
+
+            $h_key = ( $h_orient === 'end' ? '_offset_x_end' : '_offset_x' ) . $suffix;
+            $v_key = ( $v_orient === 'end' ? '_offset_y_end' : '_offset_y' ) . $suffix;
+
+            $h_raw = $settings[ $h_key ] ?? null;
+            $v_raw = $settings[ $v_key ] ?? null;
+
+            $h_val = ( is_array( $h_raw ) && isset( $h_raw['size'] ) && $h_raw['size'] !== '' )
+                ? $h_raw['size'] . ( $h_raw['unit'] ?? 'px' )
+                : null;
+
+            $v_val = ( is_array( $v_raw ) && isset( $v_raw['size'] ) && $v_raw['size'] !== '' )
+                ? $v_raw['size'] . ( $v_raw['unit'] ?? 'px' )
+                : null;
+
+            // Only write tablet/phone breakpoints when they have explicit offset values.
+            if ( $suffix !== '' && $h_val === null && $v_val === null ) {
+                continue;
+            }
+
+            self::transformPath( $attrs, "{$base}.mode", $mode );
+
+            if ( in_array( $mode, [ 'absolute', 'fixed' ], true ) ) {
+                self::transformPath( $attrs, "{$base}.origin.{$mode}", "{$v_side} {$h_side}" );
+            }
+
+            if ( $h_val !== null ) {
+                self::transformPath( $attrs, "{$base}.offset.horizontal", $h_val );
+            }
+            if ( $v_val !== null ) {
+                self::transformPath( $attrs, "{$base}.offset.vertical", $v_val );
+            }
+        }
+    }
+
+    /**
      * Maps Elementor overflow to `module.decoration.overflow.desktop.value`
      * (native Divi 5 attr, value format: `{x: 'hidden', y: 'hidden'}`).
      *
@@ -1668,14 +1934,35 @@ class StyleMapper {
     private function mapImageWidth( array $settings, array &$attrs, array &$handled ): void {
         $handled[] = 'width';
 
-        $width_str = $this->parseSizeValue( $settings['width'] ?? null );
-        if ( $width_str === '' ) {
-            return;
+        $raw = $settings['width'] ?? null;
+
+        // Detect an explicitly-set non-zero width (size > 0, not empty/null).
+        $has_explicit = false;
+        $width_str    = '';
+        if ( is_array( $raw ) && isset( $raw['size'] ) ) {
+            $size = $raw['size'];
+            if ( $size !== '' && $size !== null && (float) $size > 0 ) {
+                $has_explicit = true;
+                $width_str    = $this->parseSizeValue( $raw );
+            }
+        } elseif ( is_string( $raw ) && $raw !== '' && $raw !== '0' && $raw !== 'auto' ) {
+            $has_explicit = true;
+            $width_str    = $raw;
         }
 
         $existing = $attrs['css']['desktop']['value']['main'] ?? '';
-        $rule     = "width: {$width_str}; max-width: 100%";
-        $merged   = ( is_string( $existing ) && $existing !== '' )
+
+        if ( $has_explicit && $width_str !== '' ) {
+            // Explicit pixel/percent width — apply it with max-width safety cap.
+            $rule = "width: {$width_str}; max-width: 100%";
+        } else {
+            // No explicit width — use auto so the image renders at its natural/
+            // container-constrained size instead of Divi defaulting to 100% wide.
+            // This matches Elementor's behavior where images respect their container.
+            $rule = 'width: auto; max-width: 100%';
+        }
+
+        $merged = ( is_string( $existing ) && $existing !== '' )
             ? rtrim( $existing, '; ' ) . '; ' . $rule . ';'
             : $rule . ';';
         self::transformPath( $attrs, 'css.desktop.value.main', $merged );

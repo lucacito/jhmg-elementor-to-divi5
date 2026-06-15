@@ -69,7 +69,19 @@ abstract class BaseElementorConverter implements ConverterInterface {
             $elType = $child['elType'] ?? '';
 
             if ( $elType === 'section' || $elType === 'container' ) {
-                $result[] = $this->convertInnerAsRow( $child );
+                $child_settings = $child['settings'] ?? [];
+                $pos            = $child_settings['_position'] ?? $child_settings['position'] ?? '';
+
+                if ( $pos === 'absolute' ) {
+                    // Absolute-positioned container: unwrap it and apply position:absolute
+                    // to its child modules so they overlay the parent rather than create a
+                    // full-width row that disrupts the normal flow layout.
+                    foreach ( $this->convertAbsoluteContainerChildren( $child ) as $abs_block ) {
+                        $result[] = $abs_block;
+                    }
+                } else {
+                    $result[] = $this->convertInnerAsRow( $child );
+                }
             } else {
                 $converted = $this->engine->convertElement( $child );
 
@@ -91,6 +103,74 @@ abstract class BaseElementorConverter implements ConverterInterface {
         }
 
         return $result;
+    }
+
+    /**
+     * Converts an absolute-positioned Elementor container by unwrapping it:
+     * the container's own styles (background, padding, border-radius, etc.) are
+     * forwarded onto each child module, and `position: absolute` CSS is appended
+     * so the module overlays the parent rather than creating a full-width row.
+     *
+     * @return array<int, array> Flat list of converted Divi module blocks.
+     */
+    protected function convertAbsoluteContainerChildren( array $element ): array {
+        $settings = $element['settings'] ?? [];
+        $children = $element['elements'] ?? [];
+        $blocks   = [];
+
+        foreach ( $children as $child ) {
+            if ( ! is_array( $child ) ) {
+                continue;
+            }
+
+            $elType = $child['elType'] ?? '';
+
+            if ( $elType === 'section' || $elType === 'container' ) {
+                // Recurse: nested absolute containers are also unwrapped.
+                foreach ( $this->convertAbsoluteContainerChildren( $child ) as $b ) {
+                    $blocks[] = $b;
+                }
+            } else {
+                $converted = $this->engine->convertElement( $child );
+                if ( empty( $converted ) ) {
+                    continue;
+                }
+                if ( isset( $converted['name'] ) ) {
+                    $blocks[] = $converted;
+                } else {
+                    foreach ( $converted as $b ) {
+                        if ( ! empty( $b ) ) {
+                            $blocks[] = $b;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Map the container's own styles (background, border-radius, padding, etc.)
+        // so they are not lost when the wrapper is discarded.
+        $container_style = ( new StyleMapper() )->map( 'column', $settings );
+        $container_attrs = $container_style['divi_attrs'];
+
+        foreach ( $blocks as &$block ) {
+            if ( ! isset( $block['settings'] ) ) {
+                $block['settings'] = [];
+            }
+
+            // Merge container decoration (background, border, spacing) as the base;
+            // the child module's own settings take priority where keys overlap.
+            $block['settings'] = $this->deepMergeSettings( $container_attrs, $block['settings'] );
+
+            // Append position: absolute after the merge so it always wins.
+            $existing = $block['settings']['css']['desktop']['value']['main'] ?? '';
+            $rule     = 'position: absolute;';
+            $block['settings']['css']['desktop']['value']['main'] = $existing !== ''
+                ? rtrim( $existing, '; ' ) . '; ' . $rule
+                : $rule;
+        }
+        unset( $block );
+
+        return $blocks;
     }
 
     /**
@@ -146,6 +226,20 @@ abstract class BaseElementorConverter implements ConverterInterface {
 
         $inner        = $this->convertStructureChildren( $children );
         $row_elements = $this->ensureColumnChildren( $id, $inner );
+
+        // Propagate flex-column layout (gap, align-items, justify-content) to the
+        // single auto-generated wrapping column so that Elementor's flex-column
+        // intent (centered children, controlled spacing) is preserved in Divi.
+        if ( count( $row_elements ) === 1 && ( $row_elements[0]['name'] ?? '' ) === 'divi/column' ) {
+            $col_flex = $this->columnFlexSettingsFromContainer( $settings );
+            if ( ! empty( $col_flex ) ) {
+                $row_elements[0]['settings'] = $this->deepMergeSettings(
+                    $row_elements[0]['settings'] ?? [],
+                    $col_flex
+                );
+            }
+        }
+
         $row_settings = $this->applyBoxedWidthToRow(
             $this->deepMergeSettings( $row_styles, $this->rowSettingsFromColumns( $row_elements ) ),
             $settings
@@ -905,7 +999,7 @@ abstract class BaseElementorConverter implements ConverterInterface {
             // Column order reversal on tablet — no Divi 5 block attr equivalent.
             'reverse_order_tablet',
             // CSS absolute positioning and offset — no block attr equivalent.
-            '_position',
+            '_position', 'position',
             '_offset_x', '_offset_x_end', '_offset_x_tablet',
             '_offset_y', '_offset_y_end',
             '_offset_orientation_v', '_offset_orientation_h',
@@ -1003,10 +1097,7 @@ abstract class BaseElementorConverter implements ConverterInterface {
             'lazyload',
             // Mobile position mode selector — no block attr equivalent.
             'position_mobile',
-            // Image widget inner-element border / shadow — sub-element decorations not yet mapped.
-            'image_border_border', 'image_border_width', 'image_border_color',
-            'image_border_radius_tablet', 'image_border_radius_mobile',
-            'image_box_shadow_box_shadow_type', 'image_box_shadow_box_shadow',
+            // Image widget spacing (margin above/below image) — no Divi 5 block attr equivalent.
             'image_spacing_custom', 'image_spacing_custom_tablet', 'image_spacing_custom_mobile',
             // Icon widget sizing and alignment controls not mapped by IconConverter.
             'icon_align', 'icon_indent', 'icon_spacing',

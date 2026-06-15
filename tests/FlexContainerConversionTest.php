@@ -650,4 +650,277 @@ final class FlexContainerConversionTest extends TestCase {
         $display = $row['settings']['module']['decoration']['layout']['desktop']['value']['display'] ?? null;
         $this->assertSame( 'grid', $display, 'Row layout mode must be grid' );
     }
+
+    // -------------------------------------------------------------------------
+    // Test L1 — Flex-column layout on top-level container (section path)
+    // -------------------------------------------------------------------------
+
+    /**
+     * A top-level flex-column container with widget children must propagate its
+     * flex layout (gap, align-items, justify-content) to the single auto-generated
+     * wrapping divi/column so images and other modules are properly spaced and
+     * aligned instead of stretching to full column width with no gaps.
+     */
+    public function test_top_level_flex_column_gap_lands_on_wrapping_column(): void {
+        $result = $this->convert( [
+            $this->container( 'hero', [
+                $this->widget( 'img1', 'image' ),
+                $this->widget( 'img2', 'image' ),
+                $this->widget( 'img3', 'image' ),
+            ], [
+                'flex_gap'        => [ 'column' => '', 'row' => '20', 'unit' => 'px' ],
+                'flex_align_items' => 'center',
+            ] ),
+        ] );
+
+        $section = $result[0];
+        $row     = $section['elements'][0];
+        $col     = $row['elements'][0];
+
+        $this->assertSame( 'divi/column', $col['name'], 'Single wrapping column expected' );
+        $layout = $col['settings']['module']['decoration']['layout']['desktop']['value'] ?? [];
+
+        $this->assertSame( '20px', $layout['rowGap'] ?? null,
+            'flex_gap.row must appear as rowGap on the wrapping column' );
+        $this->assertSame( 'center', $layout['alignItems'] ?? null,
+            'flex_align_items must appear as alignItems on the wrapping column' );
+    }
+
+    public function test_top_level_flex_column_justify_lands_on_wrapping_column(): void {
+        $result = $this->convert( [
+            $this->container( 'hero', [
+                $this->widget( 'w1', 'heading' ),
+                $this->widget( 'w2', 'text-editor' ),
+            ], [
+                'flex_justify_content' => 'space-between',
+            ] ),
+        ] );
+
+        $col    = $result[0]['elements'][0]['elements'][0];
+        $layout = $col['settings']['module']['decoration']['layout']['desktop']['value'] ?? [];
+
+        $this->assertSame( 'space-between', $layout['justifyContent'] ?? null,
+            'flex_justify_content must appear as justifyContent on the wrapping column' );
+    }
+
+    // -------------------------------------------------------------------------
+    // Test L2 — Flex-column layout preserved for nested inner container
+    // -------------------------------------------------------------------------
+
+    /**
+     * When an inner flex-column container (child of a hero section) wraps
+     * widget children, its gap/alignment must appear on the wrapping column that
+     * convertInnerAsRow() generates — not get silently dropped.
+     */
+    public function test_inner_flex_column_gap_lands_on_wrapping_column(): void {
+        $result = $this->convert( [
+            $this->container( 'outer', [
+                $this->container( 'images-panel', [
+                    $this->widget( 'img1', 'image' ),
+                    $this->widget( 'img2', 'image' ),
+                    $this->widget( 'img3', 'image' ),
+                ], [
+                    'flex_gap'         => [ 'column' => '', 'row' => '30', 'unit' => 'px' ],
+                    'flex_align_items' => 'center',
+                ] ),
+            ] ),
+        ] );
+
+        // outer (flex-column with single container child) → section with images-panel
+        // lifted directly as a divi/row child (via allNamedAs shortcut in ContainerConverter).
+        // images-panel → divi/row whose single column carries the flex settings.
+        $section    = $result[0];
+        $inner_row  = $section['elements'][0];   // images-panel → divi/row
+        $images_col = $inner_row['elements'][0]; // wrapping column with flex settings
+
+        $this->assertSame( 'divi/column', $images_col['name'] );
+        $layout = $images_col['settings']['module']['decoration']['layout']['desktop']['value'] ?? [];
+
+        $this->assertSame( '30px', $layout['rowGap'] ?? null,
+            'Nested inner container: flex_gap.row must land on the wrapping column' );
+        $this->assertSame( 'center', $layout['alignItems'] ?? null,
+            'Nested inner container: flex_align_items must land on the wrapping column' );
+    }
+
+    // -------------------------------------------------------------------------
+    // Test L3 — Image auto-width prevents stretch
+    // -------------------------------------------------------------------------
+
+    /**
+     * Images without an explicit Elementor width must emit width:auto in their
+     * CSS so that they render at natural/container-constrained size rather than
+     * expanding to fill the full Divi column (which Divi defaults to 100% wide).
+     */
+    public function test_image_without_explicit_width_gets_width_auto_css(): void {
+        $result = $this->convert( [
+            $this->container( 'c', [ $this->widget( 'img', 'image' ) ] ),
+        ] );
+
+        $img_settings = $result[0]['elements'][0]['elements'][0]['elements'][0]['settings'];
+        $css_main     = $img_settings['css']['desktop']['value']['main'] ?? '';
+
+        $this->assertStringContainsString( 'width: auto', $css_main,
+            'Image without explicit width must get width:auto to prevent Divi stretch' );
+        $this->assertStringContainsString( 'max-width: 100%', $css_main,
+            'max-width: 100% must be present as responsive safety cap' );
+    }
+
+    /**
+     * Images with an explicit pixel width must keep their explicit width, not get
+     * overridden by width:auto.
+     */
+    public function test_image_with_explicit_width_gets_that_width_not_auto(): void {
+        $result = $this->convert( [
+            $this->container( 'c', [
+                $this->widget( 'img', 'image', [ 'width' => [ 'size' => 250, 'unit' => 'px' ] ] ),
+            ] ),
+        ] );
+
+        $img_settings = $result[0]['elements'][0]['elements'][0]['elements'][0]['settings'];
+        $css_main     = $img_settings['css']['desktop']['value']['main'] ?? '';
+
+        $this->assertStringContainsString( 'width: 250px', $css_main,
+            'Explicit image width must be preserved' );
+        $this->assertStringNotContainsString( 'width: auto', $css_main,
+            'width:auto must not appear when an explicit width is set' );
+    }
+
+    // -------------------------------------------------------------------------
+    // Test L4 — Column background color
+    // -------------------------------------------------------------------------
+
+    /**
+     * A flex-row child container with a direct background_color must carry that
+     * color on the resulting divi/column's decoration.background path.
+     */
+    public function test_container_as_column_direct_background_color(): void {
+        $result = $this->convert( [
+            $this->container( 'parent', [
+                $this->container( 'left',  [ $this->widget( 'w1' ) ], [ 'background_color' => '#ff0000' ] ),
+                $this->container( 'right', [ $this->widget( 'w2' ) ], [ 'background_color' => '#0000ff' ] ),
+            ], [ 'flex_direction' => 'row' ] ),
+        ] );
+
+        $left  = $result[0]['elements'][0]['elements'][0];
+        $right = $result[0]['elements'][0]['elements'][1];
+
+        $left_color  = $left['settings']['module']['decoration']['background']['desktop']['value']['color'] ?? null;
+        $right_color = $right['settings']['module']['decoration']['background']['desktop']['value']['color'] ?? null;
+
+        $this->assertSame( '#ff0000', $left_color,  'Left column must carry its background color' );
+        $this->assertSame( '#0000ff', $right_color, 'Right column must carry its background color' );
+    }
+
+    /**
+     * A flex-row child container whose background color is set via an Elementor
+     * global color reference must resolve that color onto the divi/column.
+     */
+    public function test_container_as_column_global_background_color(): void {
+        $result = $this->convert( [
+            $this->container( 'parent', [
+                $this->container( 'col', [ $this->widget( 'w1' ) ], [
+                    '__globals__' => [ 'background_color' => 'globals/colors?id=primary' ],
+                ] ),
+            ], [ 'flex_direction' => 'row' ] ),
+        ] );
+
+        $col   = $result[0]['elements'][0]['elements'][0];
+        $color = $col['settings']['module']['decoration']['background']['desktop']['value']['color'] ?? null;
+
+        $this->assertSame( '#070707', $color, 'Global background color must resolve onto the column' );
+    }
+
+    // -------------------------------------------------------------------------
+    // Test — Absolute-positioned container is unwrapped, not converted to a row
+    // -------------------------------------------------------------------------
+
+    /**
+     * An Elementor container with `_position: absolute` should be unwrapped:
+     * its children should be converted to modules with `position: absolute` CSS,
+     * NOT wrapped in a `divi/row` (which has full width and disrupts layout).
+     */
+    public function test_absolute_container_unwrapped_with_position_css(): void {
+        $result = $this->convert( [
+            $this->container( 'card', [
+                $this->widget( 'heading', 'heading' ),
+                $this->container( 'icon-wrapper', [
+                    $this->widget( 'icon', 'icon' ),
+                ], [ '_position' => 'absolute' ] ),
+            ] ),
+        ] );
+
+        $section = $result[0];
+        $row     = $section['elements'][0];
+        $col     = $row['elements'][0];
+
+        // The column should contain heading + icon (no extra row from the abs container).
+        $names = array_column( $col['elements'], 'name' );
+        $this->assertNotContains( 'divi/row', $names,
+            'Absolute container must not produce a divi/row child' );
+        $this->assertContains( 'divi/icon', $names,
+            'Icon module from absolute container must be present in the column' );
+
+        // The icon module must carry position:absolute CSS.
+        $icon_block = null;
+        foreach ( $col['elements'] as $el ) {
+            if ( ( $el['name'] ?? '' ) === 'divi/icon' ) {
+                $icon_block = $el;
+                break;
+            }
+        }
+        $this->assertNotNull( $icon_block, 'Icon block must exist' );
+        $css = $icon_block['settings']['css']['desktop']['value']['main'] ?? '';
+        $this->assertStringContainsString( 'position: absolute', $css,
+            'Icon module must have position:absolute CSS from its container wrapper' );
+    }
+
+    /**
+     * Same as above but using `position` (no underscore) as the key, which is
+     * how Elementor containers sometimes store this setting. Also asserts that
+     * the container's own background color and border-radius are forwarded to the
+     * child module so styling is not lost when the wrapper is discarded.
+     */
+    public function test_absolute_container_forwards_styles_to_child(): void {
+        $result = $this->convert( [
+            $this->container( 'card', [
+                $this->widget( 'heading', 'heading' ),
+                $this->container( 'icon-wrapper', [
+                    $this->widget( 'icon', 'icon' ),
+                ], [
+                    'position'             => 'absolute',
+                    'background_background' => 'classic',
+                    'background_color'     => '#ffffff',
+                    'border_radius'        => [ 'top' => '50', 'right' => '50', 'bottom' => '50', 'left' => '50', 'unit' => '%' ],
+                    'padding'              => [ 'top' => '10', 'right' => '10', 'bottom' => '10', 'left' => '10', 'unit' => 'px' ],
+                ] ),
+            ] ),
+        ] );
+
+        $col = $result[0]['elements'][0]['elements'][0];
+
+        $names = array_column( $col['elements'], 'name' );
+        $this->assertNotContains( 'divi/row', $names,
+            'Absolute container (position key) must not produce a divi/row' );
+        $this->assertContains( 'divi/icon', $names );
+
+        $icon_block = null;
+        foreach ( $col['elements'] as $el ) {
+            if ( ( $el['name'] ?? '' ) === 'divi/icon' ) {
+                $icon_block = $el;
+                break;
+            }
+        }
+        $this->assertNotNull( $icon_block );
+
+        $css    = $icon_block['settings']['css']['desktop']['value']['main'] ?? '';
+        $color  = $icon_block['settings']['module']['decoration']['background']['desktop']['value']['color'] ?? null;
+        $radius = $icon_block['settings']['module']['decoration']['border']['desktop']['value']['radius']['topLeft'] ?? null;
+
+        $this->assertStringContainsString( 'position: absolute', $css,
+            'Icon must carry position:absolute CSS' );
+        $this->assertSame( '#ffffff', $color,
+            'White background from the absolute container must be forwarded to the icon' );
+        $this->assertSame( '50%', $radius,
+            'Border-radius from the absolute container must be forwarded to the icon' );
+    }
 }

@@ -32,7 +32,8 @@ class ElementskitHeadingConverter extends BaseElementorConverter {
         $style = ( new StyleMapper() )->map( 'heading', $settings );
         $attrs = $style['divi_attrs'];
 
-        $title_text = html_entity_decode( $title, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+        // Strip ElementsKit focused-word delimiters: "{{word}}" → "word".
+        $title_text = html_entity_decode( preg_replace( '/\{\{(.*?)\}\}/s', '$1', $title ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 
         $title_attrs = [
             'innerContent' => [
