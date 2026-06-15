@@ -92,14 +92,15 @@ final class DiviShortcodeSerializerTest extends TestCase {
         $serializer = new DiviBlockSerializer();
         $blocks = $serializer->serialize( $divi_data );
 
-        $text_attrs   = '{"content":{"innerContent":{"desktop":{"value":"<h2>Hello World</h2>"}}}}';
-        $button_attrs = '{"button":{"innerContent":{"desktop":{"value":{"text":"Click Here","linkUrl":"https://example.com"}}}}}';
-        $image_attrs  = '{"image":{"innerContent":{"desktop":{"value":{"src":"https://example.com/sample.jpg"}}}}}';
+        $bv           = '{"builderVersion":"5.0.0-public-alpha.18.2"}';
+        $text_attrs   = '{"builderVersion":"5.0.0-public-alpha.18.2","content":{"innerContent":{"desktop":{"value":"<h2>Hello World</h2>"}}}}';
+        $button_attrs = '{"builderVersion":"5.0.0-public-alpha.18.2","button":{"innerContent":{"desktop":{"value":{"text":"Click Here","linkUrl":"https://example.com"}}}}}';
+        $image_attrs  = '{"builderVersion":"5.0.0-public-alpha.18.2","image":{"innerContent":{"desktop":{"value":{"src":"https://example.com/sample.jpg"}}}}}';
 
         $expected = '<!-- wp:divi/placeholder -->'
-            . '<!-- wp:divi/section {} -->'
-            . '<!-- wp:divi/row {} -->'
-            . '<!-- wp:divi/column {} -->'
+            . "<!-- wp:divi/section {$bv} -->"
+            . "<!-- wp:divi/row {$bv} -->"
+            . "<!-- wp:divi/column {$bv} -->"
             . "<!-- wp:divi/text {$text_attrs} /-->"
             . "<!-- wp:divi/button {$button_attrs} /-->"
             . "<!-- wp:divi/image {$image_attrs} /-->"
@@ -116,7 +117,8 @@ final class DiviShortcodeSerializerTest extends TestCase {
         $payload = json_decode( file_get_contents( __DIR__ . '/../fixtures/elementor/accordion.json' ), true );
         $blocks  = ( new DiviBlockSerializer() )->serialize( $engine->convert( $payload ) );
 
-        $this->assertStringContainsString( '<!-- wp:divi/accordion {} -->', $blocks );
+        $this->assertStringContainsString( '<!-- wp:divi/accordion {', $blocks );
+        $this->assertStringContainsString( 'builderVersion', $blocks );
         $this->assertStringContainsString( '<!-- /wp:divi/accordion -->', $blocks );
         $this->assertStringContainsString( 'divi/accordion-item', $blocks );
         $this->assertStringContainsString( 'Panel One', $blocks );
@@ -128,7 +130,8 @@ final class DiviShortcodeSerializerTest extends TestCase {
         $payload = json_decode( file_get_contents( __DIR__ . '/../fixtures/elementor/tabs.json' ), true );
         $blocks  = ( new DiviBlockSerializer() )->serialize( $engine->convert( $payload ) );
 
-        $this->assertStringContainsString( '<!-- wp:divi/tabs {} -->', $blocks );
+        $this->assertStringContainsString( '<!-- wp:divi/tabs {', $blocks );
+        $this->assertStringContainsString( 'builderVersion', $blocks );
         $this->assertStringContainsString( '<!-- /wp:divi/tabs -->', $blocks );
         $this->assertStringContainsString( 'divi/tab', $blocks );
         $this->assertStringContainsString( 'First Tab', $blocks );

@@ -144,7 +144,7 @@ class DiviBlockSerializer {
      * Wrap children in an open/close block comment pair.
      */
     private function wrapBlock( string $block_name, array $attrs, string $inner ): string {
-        $json = $this->encodeAttrs( $attrs );
+        $json = $this->encodeAttrs( $this->withBuilderVersion( $attrs ) );
 
         return "<!-- wp:{$block_name} {$json} -->{$inner}<!-- /wp:{$block_name} -->";
     }
@@ -153,7 +153,7 @@ class DiviBlockSerializer {
      * Produce a self-closing block comment.
      */
     private function selfClosingBlock( string $block_name, array $attrs ): string {
-        $json = $this->encodeAttrs( $attrs );
+        $json = $this->encodeAttrs( $this->withBuilderVersion( $attrs ) );
 
         return "<!-- wp:{$block_name} {$json} /-->";
     }
@@ -164,5 +164,15 @@ class DiviBlockSerializer {
         }
 
         return wp_json_encode( $attrs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+    }
+
+    /**
+     * Injects builderVersion into block attrs so Divi's FlexboxMigration
+     * (hooked on the_content) skips our blocks and does not overwrite
+     * display:'grid' with display:'block'.
+     */
+    private function withBuilderVersion( array $attrs ): array {
+        $version = defined( 'ET_BUILDER_VERSION' ) ? ET_BUILDER_VERSION : '5.0.0-public-alpha.18.2';
+        return array_merge( [ 'builderVersion' => $version ], $attrs );
     }
 }

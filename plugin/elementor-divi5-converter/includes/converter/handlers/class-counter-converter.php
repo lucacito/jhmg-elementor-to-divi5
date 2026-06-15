@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\StyleMapper\StyleMapper;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -26,29 +27,21 @@ class CounterConverter extends BaseElementorConverter {
 
         $display_number = $prefix . $number . $suffix;
 
-        $block_settings = [
-            'number' => [
-                'innerContent' => [
-                    'desktop' => [ 'value' => $display_number ],
-                ],
-            ],
-        ];
+        $style        = ( new StyleMapper() )->map( 'counter', $settings );
+        $block_settings = $style['divi_attrs'];
+
+        $block_settings['number']['innerContent']['desktop']['value'] = $display_number;
 
         if ( $title !== '' ) {
-            $block_settings['title'] = [
-                'innerContent' => [
-                    'desktop' => [ 'value' => $title ],
-                ],
-            ];
+            $block_settings['title']['innerContent']['desktop']['value'] = $title;
         }
 
         $this->engine->logConverted( 'number-counter' );
-        $this->logUnmappedSettings( $id, $settings, [
+        $this->logUnmappedSettings( $id, $settings, array_merge( [
             'starting_number', 'ending_number', 'number',
             'prefix', 'suffix', 'title',
-            'duration', 'separator',
-            'separator_char',
-        ] );
+            'duration', 'separator', 'separator_char',
+        ], $style['handled_keys'] ) );
 
         return [
             'id'       => $id,

@@ -34,9 +34,38 @@ class SectionConverter extends BaseElementorConverter {
         // so it doesn't also render as a standalone image module.
         $this->liftBannerImageToBackground( $element, $settings );
 
-        $children     = $this->convertChildren( $element );
-        $style        = ( new StyleMapper() )->map( 'section', $settings );
-        $row_settings = $this->rowSettingsFromColumns( $children );
+        $children      = $this->convertChildren( $element );
+        $style         = ( new StyleMapper() )->map( 'section', $settings );
+        $section_attrs = $style['divi_attrs'];
+
+        // In Divi 5, min-height and content alignment belong on the row, not the section.
+        // Extract them from section attrs and move them into the row's settings.
+        [ $section_attrs, $row_sizing_layout ] = $this->extractRowSizingLayout( $section_attrs );
+
+        // Override divi_attrs with the trimmed version before any further use.
+        $style['divi_attrs'] = $section_attrs;
+
+        $row_settings = $this->deepMergeSettings(
+            $this->rowSettingsFromColumns( $children ),
+            $row_sizing_layout
+        );
+
+        // When content_width is an explicit pixel constraint (not just 'boxed'/'full'),
+        // apply it as the row's max-width so the content area is constrained while the
+        // section background still spans full-width.
+        $content_width = $settings['content_width'] ?? null;
+        if ( is_array( $content_width ) && ! empty( $content_width['size'] ) ) {
+            $cw_val = (string) $content_width['size'] . ( is_string( $content_width['unit'] ?? '' ) ? ( $content_width['unit'] ?? 'px' ) : 'px' );
+            $row_settings = $this->deepMergeSettings( $row_settings, [
+                'module' => [
+                    'decoration' => [
+                        'sizing' => [
+                            'desktop' => [ 'value' => [ 'maxWidth' => $cw_val ] ],
+                        ],
+                    ],
+                ],
+            ] );
+        }
 
         $this->engine->logConverted( 'section' );
         $this->logUnmappedSettings( $id, $settings, $style['handled_keys'] );
@@ -217,8 +246,11 @@ class SectionConverter extends BaseElementorConverter {
             ? ( is_string( $bg_image['url'] ?? '' ) ? ( $bg_image['url'] ?? '' ) : '' )
             : ( is_string( $bg_image ) ? $bg_image : '' );
 
-        // Only act when section is "classic" background but has no exported URL.
-        if ( $bg_type !== 'classic' || $bg_url !== '' ) {
+        // Only act when section is "classic" background but has no exported URL AND
+        // no solid background color — if a color is set the section is intentionally
+        // color-only and we must not inject a widget image on top of it.
+        $bg_color = $settings['background_color'] ?? '';
+        if ( $bg_type !== 'classic' || $bg_url !== '' || ( is_string( $bg_color ) && $bg_color !== '' ) ) {
             return;
         }
 
@@ -241,6 +273,13 @@ class SectionConverter extends BaseElementorConverter {
                     $settings['background_image']['url'] = $url;
                 } else {
                     $settings['background_image'] = [ 'url' => $url ];
+                }
+
+                // A banner image lifted from a widget should cover the section.
+                // Default Elementor background_size is 'auto' which shows the image at
+                // its natural dimensions; override to 'cover' so it fills the section.
+                if ( ( $settings['background_size'] ?? '' ) === 'auto' || ( $settings['background_size'] ?? '' ) === '' ) {
+                    $settings['background_size'] = 'cover';
                 }
 
                 // Remove the widget so it is not also emitted as an image module.

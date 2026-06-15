@@ -1,0 +1,152 @@
+=== JHMG Converter For Elementor to Divi ===
+Contributors: lucaslopvet
+Tags: exporter, elementor, divi, converter, migration
+Requires at least: 5.0
+Tested up to: 6.7
+Stable tag: 1.0
+Requires PHP: 7.0
+Requires Plugins: elementor
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+
+Convert/Export Elementor pages to Divi-compatible JSON format for seamless migration between page builders.
+
+== Description ==
+
+JHMG Converter For Elementor to Divi is a powerful tool that helps WordPress developers and site owners migrate their content from Elementor to Divi Builder without losing their designs. This plugin analyzes your Elementor pages and converts them to the Divi format, maintaining layout structure, content, and design elements wherever possible.
+
+### Features
+
+* Exports any Elementor page to a Divi-compatible JSON format
+* Preserves page layout structure (sections, columns, etc.)
+* Maps Elementor widgets to equivalent Divi modules
+* Converts basic styling attributes
+* Maintains content and media elements
+* Handles responsive designs
+* Works with complex and nested structures
+* Simple and user-friendly interface
+* Detailed conversion logs for debugging
+
+### Supported Elementor Widgets
+
+The plugin currently supports conversion of these Elementor widgets to their Divi equivalents:
+
+* Heading
+* Text Editor
+* Image
+* Video
+* Button
+* Spacer
+* Divider
+* Google Maps
+* Icon
+* Tabs
+* Accordion
+* Testimonial
+* HTML
+* Image Box
+* Icon Box
+* Counter
+* Progress
+* Social Icons
+* Image Carousel
+* Image Gallery
+* Icon List
+* Alert
+* Audio
+* Sidebar
+* Slides
+* Price Table
+* Contact Form
+* Toggle
+* Countdown
+* Posts
+* Call to Action
+* Star Rating
+
+### ElementsKit Support
+
+The plugin also includes special converters for ElementsKit widgets:
+
+* Accordion
+* Tab
+* Testimonial
+* Heading
+* Button
+* Icon Box
+* Image
+* Progress Bar
+* Pricing Table
+* FAQ
+* Team
+* Gallery
+* Countdown Timer
+* Google Map
+* Dual Button
+* Social Media
+* Video
+* Audio Player
+
+== Installation ==
+
+1. Upload the plugin files to the `/wp-content/plugins/jhmg-converter-for-elementor-to-divi` directory, or install the plugin through the WordPress plugins screen.
+2. Activate the plugin through the 'Plugins' screen in WordPress.
+3. Go to 'ED Exporter' in the admin menu to use the plugin.
+
+== Usage ==
+
+1. Navigate to the 'ED Exporter' page in your WordPress admin dashboard.
+2. Select the Elementor page you want to export from the dropdown.
+3. Click the 'Export to Divi JSON' button.
+4. Save the downloaded JSON file to your computer.
+5. Import the JSON file in Divi Builder or in the Divi Library:
+   * Edit a page with Divi Builder.
+   * Click the 'Import & Export' button (↔) in the Divi Builder interface.
+   * Choose 'Import' and upload your JSON file.
+
+== Frequently Asked Questions ==
+
+= Will this plugin convert everything perfectly? =
+
+While the plugin aims to convert as much as possible, there may be some elements that don't convert perfectly due to differences between Elementor and Divi. Complex layouts, custom CSS, and unique Elementor features might require some manual adjustments after importing into Divi.
+
+= What happens to custom CSS from Elementor? =
+
+Basic inline styles are converted where possible, but custom CSS classes and complex styling may need to be manually recreated in Divi.
+
+= Does the plugin delete or modify my Elementor pages? =
+
+No, the plugin only reads your Elementor data and creates a new export file. It doesn't modify your existing pages in any way.
+
+= Can I convert multiple pages at once? =
+
+Currently, the plugin supports exporting one page at a time. This allows for better control and troubleshooting during the migration process.
+
+== Screenshots ==
+
+1. Main export interface showing page selection and export options.
+2. Dashboard showing export statistics.
+3. Example of a converted page in Divi Builder.
+
+== Changelog ==
+
+= 1.0 =
+* Initial release
+
+== Upgrade Notice ==
+
+= 1.0 =
+Initial release of the JHMG Converter For Elementor to Divi plugin.
+
+== Limitations ==
+
+* Some advanced Elementor features might not have direct equivalents in Divi
+* Custom CSS may need manual adjustments
+* Third-party Elementor add-ons may not convert fully
+* Some animations and effects might need to be recreated in Divi
+* Nested structures might be flattened in some cases
+
+== Credits ==
+
+* Thanks to the Elementor and Divi teams for creating these amazing page builders
+* Icon made by Lucas Lopvet.

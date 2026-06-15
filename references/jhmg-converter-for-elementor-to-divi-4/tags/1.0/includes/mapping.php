@@ -1,0 +1,1126 @@
+<?php
+/**
+ * Elementor to Divi Exporter - Mapping Functions
+ *
+ * This file contains all the functions that map Elementor structures to Divi structures.
+ */
+
+// Exit if accessed directly
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+require_once JHMGCED_PLUGIN_PATH . 'includes/widget-converters.php';
+require_once JHMGCED_PLUGIN_PATH . 'includes/elementskit-converters.php';
+require_once JHMGCED_PLUGIN_PATH . 'includes/style-handler.php';
+
+/**
+ * Adds improved logging functionality for the Elementor to Divi Exporter
+ * Include this at the top of the mapping.php file
+ */
+
+/**
+ * Log message to debug log with plugin prefix
+ * 
+ * @param string $message The message to log
+ * @param mixed $data Optional data to include in the log
+ * @param string $level Log level: 'debug', 'info', 'warning', or 'error'
+ */
+function jhmgced_log_message($message, $data = null, $level = 'debug') {
+    if (!defined('WP_DEBUG') || !WP_DEBUG) {
+        return;
+    }
+    
+    $log_prefix = 'JHMGCED: ';
+    
+    // Format level
+    switch ($level) {
+        case 'error':
+            $log_prefix .= '[ERROR] ';
+            break;
+        case 'warning':
+            $log_prefix .= '[WARNING] ';
+            break;
+        case 'info':
+            $log_prefix .= '[INFO] ';
+            break;
+        default:
+            $log_prefix .= '[DEBUG] ';
+    }
+    
+    // Log the message
+    jhmgced_log($log_prefix . $message);
+    
+    // If data is provided, log it too
+    if ($data !== null) {
+        if (is_array($data) || is_object($data)) {
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
+            jhmgced_log($log_prefix . 'Data: ' . print_r($data, true));
+        } else {
+            jhmgced_log($log_prefix . 'Data: ' . $data);
+        }
+    }
+}
+
+/**
+ * Handle errors safely during export
+ * 
+ * @param string $message Error message
+ * @param mixed $data Additional data for debugging
+ * @param bool $is_fatal Whether this error should abort the export
+ */
+function jhmgced_handle_error($message, $data = null, $is_fatal = false) {
+    jhmgced_log_message($message, $data, 'error');
+    
+    if ($is_fatal && !defined('DOING_AJAX')) {
+        wp_die(esc_html($message), 'Elementor to Divi Export Error', array(
+            'response' => 500,
+            'back_link' => true,
+        ));
+    }
+}
+
+/**
+ * Try to improve the export conversion by analyzing structure
+ * 
+ * @param array $elementor_data The original Elementor data
+ * @return array The original or modified data
+ */
+function jhmgced_analyze_structure($elementor_data) {
+    if (!is_array($elementor_data) || empty($elementor_data)) {
+        return $elementor_data;
+    }
+    
+    jhmgced_log_message('Analyzing Elementor structure for improved conversion');
+    
+    // Count containers, sections, and widgets
+    $containers = 0;
+    $sections = 0;
+    $columns = 0;
+    $widgets = 0;
+    
+    foreach ($elementor_data as $element) {
+        if (!isset($element['elType'])) {
+            continue;
+        }
+        
+        switch ($element['elType']) {
+            case 'container':
+                $containers++;
+                break;
+            case 'section':
+                $sections++;
+                break;
+            case 'column':
+                $columns++;
+                break;
+            case 'widget':
+                $widgets++;
+                break;
+        }
+    }
+    
+    jhmgced_log_message("Structure analysis: {$containers} containers, {$sections} sections, {$columns} columns, {$widgets} widgets");
+    
+    // Apply structure-specific optimizations
+    if ($containers > 0 && $sections == 0) {
+        jhmgced_log_message('Structure is container-based (Elementor 3.0+)');
+        // Container-specific optimizations could be added here
+    } elseif ($sections > 0 && $containers == 0) {
+        jhmgced_log_message('Structure is section-based (Elementor 2.x)');
+        // Section-specific optimizations could be added here
+    } else {
+        jhmgced_log_message('Structure is mixed (containers and sections)');
+    }
+    
+    return $elementor_data;
+}
+
+/**
+ * Check and log potential issues with imported Elementor data
+ * 
+ * @param array $elementor_data The Elementor data
+ * @return bool True if the data looks valid, false otherwise
+ */
+function jhmgced_validate_elementor_data($elementor_data) {
+    if (!is_array($elementor_data)) {
+        jhmgced_handle_error('Elementor data is not an array', $elementor_data);
+        return false;
+    }
+    
+    if (empty($elementor_data)) {
+        jhmgced_log_message('Elementor data array is empty', null, 'warning');
+        return true; // Empty array is valid, just not useful
+    }
+    
+    // Check for invalid elements
+    foreach ($elementor_data as $index => $element) {
+        if (!isset($element['elType'])) {
+            jhmgced_log_message("Element at index {$index} is missing elType", $element, 'warning');
+        }
+        
+        if (isset($element['elType']) && $element['elType'] === 'widget' && !isset($element['widgetType'])) {
+            jhmgced_log_message("Widget at index {$index} is missing widgetType", $element, 'warning');
+        }
+    }
+    
+    return true;
+}
+
+/**
+ * Map Elementor data to Divi data with improved styling
+ * 
+ * @param array $elementor_data Elementor data
+ * @return array Divi formatted data
+ */
+function jhmgced_map_elementor_to_divi($elementor_data) {
+    // Enable more detailed debugging with our new helper
+    jhmgced_log_message("Starting Elementor to Divi conversion process");
+    
+    // Analyze structure for better conversion
+    $elementor_data = jhmgced_analyze_structure($elementor_data);
+    
+    // Define Divi builder version with correct format
+    $builder_version = '4.17.0'; // Use this format with underscores
+    
+    // Validate data
+    if (!jhmgced_validate_elementor_data($elementor_data)) {
+        jhmgced_log_message("Validation failed, but attempting conversion anyway", null, 'warning');
+    }
+    
+    // Sanity check and handle different data structures
+    if (empty($elementor_data)) {
+        // Handle empty data
+        jhmgced_log_message('Empty Elementor data received', null, 'warning');
+        $elementor_data = array();
+    } else if (isset($elementor_data['data']) && is_array($elementor_data['data'])) {
+        // Some Elementor exports might have data nested in a 'data' property
+        $elementor_data = $elementor_data['data'];
+    }
+    
+    // Create the correctly structured Divi JSON format
+    $divi_data = array(
+        'context' => 'et_builder',
+        'type' => 'module',
+        'data' => array(
+            'post_content' => '',
+            'post_title' => get_the_title(),
+            'post_type' => 'page'
+        ),
+        'version' => '4.17.0'
+    );
+    
+    // Process Elementor data and build Divi shortcodes
+    $shortcodes = '';
+    $contentGenerated = false;
+    
+    // Process each top-level element from Elementor
+    if (is_array($elementor_data) && !empty($elementor_data)) {
+        foreach ($elementor_data as $element) {
+            // Detailed logging of the element structure
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                jhmgced_log("Processing top-level element: " . json_encode(array_keys($element)));
+                if (isset($element['elType'])) {
+                    jhmgced_log("Element type: " . $element['elType']);
+                }
+                if (isset($element['id'])) {
+                    jhmgced_log("Element ID: " . $element['id']);
+                }
+            }
+            
+            // Check if this is a section
+            if (isset($element['elType']) && $element['elType'] === 'section') {
+                // Process the entire section and get the output
+                $sectionContent = jhmgced_process_section($element, $builder_version);
+                $shortcodes .= $sectionContent;
+                $contentGenerated = true;
+            } 
+            // Check if this is a container (newer Elementor)
+            elseif (isset($element['elType']) && $element['elType'] === 'container') {
+                // Process the entire container and get the output
+                $sectionContent = jhmgced_process_container($element, $builder_version, true);
+                $shortcodes .= $sectionContent;
+                $contentGenerated = true;
+            }
+            // Direct widgets at top level (possible in some templates)
+            elseif (isset($element['elType']) && $element['elType'] === 'widget') {
+                // Create a complete section with a row and column for each top-level widget
+                $sectionContent = "[et_pb_section fb_built=\"1\" _builder_version=\"{$builder_version}\"]\n";
+                $sectionContent .= "[et_pb_row _builder_version=\"{$builder_version}\"]\n";
+                $sectionContent .= "[et_pb_column type=\"4_4\" _builder_version=\"{$builder_version}\"]\n";
+                $sectionContent .= jhmgced_process_widget($element, $builder_version);
+                $sectionContent .= "[/et_pb_column]\n[/et_pb_row]\n";
+                $sectionContent .= "[/et_pb_section]\n";
+                
+                $shortcodes .= $sectionContent;
+                $contentGenerated = true;
+            }
+        }
+    }
+    
+    // If no valid content was found, create a default section
+    if (!$contentGenerated) {
+        jhmgced_log('Elementor to Divi: No content found, adding default content');
+        $shortcodes .= "[et_pb_section fb_built=\"1\" _builder_version=\"{$builder_version}\"]\n";
+        $shortcodes .= "[et_pb_row _builder_version=\"{$builder_version}\"]\n";
+        $shortcodes .= "[et_pb_column type=\"4_4\" _builder_version=\"{$builder_version}\"]\n";
+        $shortcodes .= "[et_pb_text _builder_version=\"{$builder_version}\"]\n";
+        $shortcodes .= "<h2>Elementor Content</h2>\n<p>The content from Elementor was imported but requires further editing in Divi.</p>\n";
+        $shortcodes .= "[/et_pb_text]\n";
+        $shortcodes .= "[/et_pb_column]\n";
+        $shortcodes .= "[/et_pb_row]\n";
+        $shortcodes .= "[/et_pb_section]\n";
+    }
+    
+    // Add the built shortcodes to the post_content
+    $divi_data['data']['post_content'] = $shortcodes;
+    
+    return $divi_data;
+}
+
+/**
+ * Process an Elementor section and convert to Divi row shortcode
+ * 
+ * @param array $section Elementor section data
+ * @param string $builder_version Divi builder version
+ * @return string Divi row shortcode
+ */
+function jhmgced_process_section($section, $builder_version) {
+    // Get section styling attributes
+    $section_settings = isset($section['settings']) ? $section['settings'] : array();
+    $section_attrs = jhmgced_get_section_attributes($section);
+    
+    // Process background styles separately - only for section
+    $section_bg_styles = '';
+    if (function_exists('jhmgced_process_background_colors')) {
+        $section_bg_styles = jhmgced_process_background_colors($section_settings);
+        jhmgced_log("Section background styles: {$section_bg_styles}", null, 'info');
+    }
+    
+    // Process general styles (excluding backgrounds) for rows
+    $row_styles = '';
+    if (function_exists('jhmgced_process_element_styles')) {
+        // We'll exclude backgrounds for rows
+        $row_styles = jhmgced_process_element_styles($section_settings, true);
+    }
+    
+    // Start section with background styles
+    $sectionContent = "[et_pb_section fb_built=\"1\" _builder_version=\"{$builder_version}\"{$section_bg_styles}]\n";
+    $contentGenerated = false;
+    
+    // Create row inside section
+    $sectionContent .= "[et_pb_row _builder_version=\"{$builder_version}\"{$section_attrs}{$row_styles}]\n";
+    
+    // Process columns within the section
+    if (!empty($section['elements']) && is_array($section['elements'])) {
+        // Count columns to determine width
+        $columnCount = 0;
+        foreach ($section['elements'] as $element) {
+            if (isset($element['elType']) && $element['elType'] === 'column') {
+                $columnCount++;
+            }
+        }
+        
+        // Set default column type based on count
+        $defaultColumnType = jhmgced_get_column_type($columnCount);
+        
+        foreach ($section['elements'] as $element) {
+            if (isset($element['elType'])) {
+                if ($element['elType'] === 'column') {
+                    // Process the column normally, but provide the default width
+                    $columnContent = jhmgced_process_column($element, $builder_version, $defaultColumnType);
+                    $sectionContent .= $columnContent;
+                    
+                    // Check if this column generated real content
+                    if (strpos($columnContent, 'Empty column') === false) {
+                        $contentGenerated = true;
+                    }
+                }
+            }
+        }
+    }
+    
+    // If no columns or only empty columns, add a default column with content
+    if (!$contentGenerated) {
+        $sectionContent .= "[et_pb_column type=\"4_4\" _builder_version=\"{$builder_version}\"]\n";
+        $sectionContent .= "[et_pb_text _builder_version=\"{$builder_version}\"]\n";
+        $sectionContent .= "<p>Section imported from Elementor</p>\n";
+        $sectionContent .= "[/et_pb_text]\n";
+        $sectionContent .= "[/et_pb_column]\n";
+    }
+    
+    // Close row and section
+    $sectionContent .= "[/et_pb_row]\n";
+    $sectionContent .= "[/et_pb_section]\n";
+    
+    return $sectionContent;
+}
+
+/**
+ * Process an Elementor container with tabs, accordions, or other complex widgets
+ * 
+ * @param array $container Elementor container data
+ * @param string $builder_version Divi builder version
+ * @param bool $is_top_level Whether this is a top-level container
+ * @return string Divi row shortcode
+ */
+function jhmgced_process_container($container, $builder_version, $is_top_level = false) {
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        jhmgced_log("Processing container with " . (isset($container['elements']) ? count($container['elements']) : 0) . " elements");
+        
+        // Debug container settings to see what's available
+        if (isset($container['settings'])) {
+            // Fix for mapping.php:
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                jhmgced_log("Processing container with " . count($container['elements']) . " elements");
+                
+                // Add this check before using $settings
+                if (isset($container['settings'])) {
+                    jhmgced_log("Container has background object with keys: " . json_encode(array_keys($container['settings'])));
+                } else {
+                    jhmgced_log("Container does not have settings defined");
+                }
+            }
+            
+            // Debug globals
+            if (isset($container['settings']['__globals__'])) {
+                jhmgced_log("Container has __globals__: " . json_encode($container['settings']['__globals__']));
+            }
+        }
+    }
+    
+    // Get container settings for background, etc.
+    $container_settings = isset($container['settings']) ? $container['settings'] : array();
+    
+    // Process background styles separately - only for section
+    $container_bg_styles = '';
+    if (function_exists('jhmgced_process_background_colors')) {
+        $container_bg_styles = jhmgced_process_background_colors($container_settings);
+        jhmgced_log("Container background styles: {$container_bg_styles}", null, 'info');
+    }
+    
+    // Process general styles (excluding backgrounds) for rows
+    $container_styles = '';
+    if (function_exists('jhmgced_process_element_styles')) {
+        // We'll exclude backgrounds for rows
+        $container_styles = jhmgced_process_element_styles($container_settings, true);
+    }
+    
+    // Add container attributes (like padding, margin, etc.)
+    $container_attrs = jhmgced_get_container_attributes($container_settings);
+    
+    // Start output - if top level, create section first
+    $output = '';
+    if ($is_top_level) {
+        $output = "[et_pb_section fb_built=\"1\" _builder_version=\"{$builder_version}\"{$container_bg_styles}]\n";
+    }
+    
+    // Add row
+    $output .= "[et_pb_row _builder_version=\"{$builder_version}\"{$container_attrs}{$container_styles}]\n";
+    
+    $contentGenerated = false;
+    
+    // Check for inner content
+    if (isset($container['elements']) && is_array($container['elements']) && !empty($container['elements'])) {
+        // Special case: Check if this container has a single nested-tabs or nested-accordion widget
+        // which should be rendered as multiple columns
+        if (count($container['elements']) == 1 && 
+            isset($container['elements'][0]['elType']) && 
+            $container['elements'][0]['elType'] === 'widget' &&
+            isset($container['elements'][0]['widgetType']) && 
+            (
+                $container['elements'][0]['widgetType'] === 'nested-tabs' || 
+                $container['elements'][0]['widgetType'] === 'tabs' ||
+                $container['elements'][0]['widgetType'] === 'nested-accordion' ||
+                $container['elements'][0]['widgetType'] === 'accordion'
+            )
+        ) {
+            // This is a container with just tabs or accordion - create multiple columns
+            $widget = $container['elements'][0];
+            $settings = isset($widget['settings']) ? $widget['settings'] : array();
+            
+            // Check if we have tabs/items defined
+            $items = [];
+            
+            // For tabs
+            if (isset($settings['tabs']) && is_array($settings['tabs'])) {
+                $items = $settings['tabs'];
+            } 
+            // For accordions or other items
+            elseif (isset($settings['items']) && is_array($settings['items'])) {
+                $items = $settings['items'];
+            }
+            
+            // If we found items, create a column for each (up to 3 columns)
+            if (!empty($items)) {
+                $maxColumns = min(count($items), 3); // Limit to 3 columns max
+                $columnType = jhmgced_get_column_type($maxColumns);
+                
+                // Process the first few items as columns
+                for ($i = 0; $i < $maxColumns; $i++) {
+                    $item = $items[$i];
+                    
+                    // Process column styles if available
+                    $column_styles = '';
+                    if (function_exists('jhmgced_process_element_styles')) {
+                        $column_styles = jhmgced_process_element_styles($settings, true);
+                    }
+                    
+                    $output .= "[et_pb_column type=\"{$columnType}\" _builder_version=\"{$builder_version}\"{$column_styles}]\n";
+                    
+                    // For tabs
+                    if (isset($item['tab_title']) && isset($item['tab_content'])) {
+                        $title = esc_html($item['tab_title']);
+                        $content = wp_kses_post($item['tab_content']);
+                        
+                        $output .= "[et_pb_text _builder_version=\"{$builder_version}\"]\n";
+                        $output .= "<h3>{$title}</h3>\n{$content}\n";
+                        $output .= "[/et_pb_text]\n";
+                    } 
+                    // For accordion items
+                    elseif (isset($item['title']) && isset($item['content'])) {
+                        $title = esc_html($item['title']);
+                        $content = wp_kses_post($item['content']);
+                        
+                        $output .= "[et_pb_text _builder_version=\"{$builder_version}\"]\n";
+                        $output .= "<h3>{$title}</h3>\n{$content}\n";
+                        $output .= "[/et_pb_text]\n";
+                    }
+                    
+                    $output .= "[/et_pb_column]\n";
+                }
+                
+                // Close current row and create a new one for the widget
+                $output .= "[/et_pb_row]\n";
+                $output .= "[et_pb_row _builder_version=\"{$builder_version}\"]\n";
+                $output .= "[et_pb_column type=\"4_4\" _builder_version=\"{$builder_version}\"]\n";
+                $output .= jhmgced_process_widget($widget, $builder_version);
+                $output .= "[/et_pb_column]\n";
+                
+                $contentGenerated = true;
+            } else {
+                // No tabs found, process normally
+                $output .= "[et_pb_column type=\"4_4\" _builder_version=\"{$builder_version}\"]\n";
+                $output .= jhmgced_process_widget($widget, $builder_version);
+                $output .= "[/et_pb_column]\n";
+                $contentGenerated = true;
+            }
+        } else {
+            // Standard container processing - analyze elements
+            $widgets = [];
+            $innerContainers = [];
+            
+            foreach ($container['elements'] as $element) {
+                if (isset($element['elType'])) {
+                    if ($element['elType'] === 'widget') {
+                        $widgets[] = $element;
+                    } elseif ($element['elType'] === 'container') {
+                        $innerContainers[] = $element;
+                    }
+                }
+            }
+            
+            $hasWidgets = !empty($widgets);
+            $hasContainers = !empty($innerContainers);
+            
+            // If we only have widgets, distribute them across columns
+            if ($hasWidgets && !$hasContainers) {
+                // For multiple widgets, create columns
+                if (count($widgets) > 1 && count($widgets) <= 4) {
+                    // Create balanced columns for up to 4 widgets
+                    $columnType = jhmgced_get_column_type(count($widgets));
+                    
+                    foreach ($widgets as $widget) {
+                        // Process widget styles
+                        $widget_styles = '';
+                        if (function_exists('jhmgced_process_element_styles') && isset($widget['settings'])) {
+                            $widget_styles = jhmgced_process_element_styles($widget['settings'], true);
+                        }
+                        
+                        $output .= "[et_pb_column type=\"{$columnType}\" _builder_version=\"{$builder_version}\"]\n";
+                        $output .= jhmgced_process_widget($widget, $builder_version);
+                        $output .= "[/et_pb_column]\n";
+                        $contentGenerated = true;
+                    }
+                } else {
+                    // Single widget or more than 4, use a single column
+                    $output .= "[et_pb_column type=\"4_4\" _builder_version=\"{$builder_version}\"]\n";
+                    
+                    foreach ($widgets as $widget) {
+                        $output .= jhmgced_process_widget($widget, $builder_version);
+                        $contentGenerated = true;
+                    }
+                    
+                    $output .= "[/et_pb_column]\n";
+                }
+            }
+            // If we only have inner containers, process each as columns
+            elseif (!$hasWidgets && $hasContainers) {
+                // Determine column type based on number of containers
+                $columnType = jhmgced_get_column_type(count($innerContainers));
+                
+                foreach ($innerContainers as $innerContainer) {
+                    // Process container styles
+                    $inner_styles = '';
+                    if (function_exists('jhmgced_process_element_styles') && isset($innerContainer['settings'])) {
+                        $inner_styles = jhmgced_process_element_styles($innerContainer['settings'], true);
+                    }
+                    
+                    $output .= "[et_pb_column type=\"{$columnType}\" _builder_version=\"{$builder_version}\"{$inner_styles}]\n";
+                    
+                    // Process all elements in this inner container
+                    if (isset($innerContainer['elements']) && is_array($innerContainer['elements'])) {
+                        foreach ($innerContainer['elements'] as $innerElement) {
+                            if (isset($innerElement['elType'])) {
+                                if ($innerElement['elType'] === 'widget') {
+                                    $output .= jhmgced_process_widget($innerElement, $builder_version);
+                                    $contentGenerated = true;
+                                } elseif ($innerElement['elType'] === 'container') {
+                                    // For deeply nested containers, create a text module with the content
+                                    $nestedContent = jhmgced_process_nested_container($innerElement, $builder_version);
+                                    $output .= $nestedContent;
+                                    $contentGenerated = true;
+                                }
+                            }
+                        }
+                    }
+                    
+                    $output .= "[/et_pb_column]\n";
+                }
+            }
+            // If we have both widgets and containers, create a more complex structure
+            elseif ($hasWidgets && $hasContainers) {
+                // If we have just one or two containers, create a two-column layout
+                if (count($innerContainers) <= 2) {
+                    // First column for all widgets
+                    $output .= "[et_pb_column type=\"1_2\" _builder_version=\"{$builder_version}\"]\n";
+                    
+                    foreach ($widgets as $widget) {
+                        $output .= jhmgced_process_widget($widget, $builder_version);
+                        $contentGenerated = true;
+                    }
+                    
+                    $output .= "[/et_pb_column]\n";
+                    
+                    // Second column for container content
+                    $output .= "[et_pb_column type=\"1_2\" _builder_version=\"{$builder_version}\"]\n";
+                    
+                    foreach ($innerContainers as $innerContainer) {
+                        // For each inner container, create a text module with its content
+                        $output .= jhmgced_process_nested_container($innerContainer, $builder_version);
+                        $contentGenerated = true;
+                    }
+                    
+                    $output .= "[/et_pb_column]\n";
+                }
+                // If we have more containers, create a more complex structure
+                else {
+                    // Close current row and start a new one for widgets
+                    $output .= "[/et_pb_row]\n";
+                    $output .= "[et_pb_row _builder_version=\"{$builder_version}\"]\n";
+                    $output .= "[et_pb_column type=\"4_4\" _builder_version=\"{$builder_version}\"]\n";
+                    
+                    foreach ($widgets as $widget) {
+                        $output .= jhmgced_process_widget($widget, $builder_version);
+                        $contentGenerated = true;
+                    }
+                    
+                    $output .= "[/et_pb_column]\n";
+                    $output .= "[/et_pb_row]\n";
+                    
+                    // Start another new row for containers
+                    $output .= "[et_pb_row _builder_version=\"{$builder_version}\"]\n";
+                    
+                    // Determine column type for containers
+                    $columnType = jhmgced_get_column_type(count($innerContainers));
+                    
+                    foreach ($innerContainers as $innerContainer) {
+                        // Process container styles
+                        $inner_styles = '';
+                        if (function_exists('jhmgced_process_element_styles') && isset($innerContainer['settings'])) {
+                            $inner_styles = jhmgced_process_element_styles($innerContainer['settings'], true);
+                        }
+                        
+                        $output .= "[et_pb_column type=\"{$columnType}\" _builder_version=\"{$builder_version}\"{$inner_styles}]\n";
+                        
+                        // Process inner container
+                        if (isset($innerContainer['elements']) && is_array($innerContainer['elements'])) {
+                            foreach ($innerContainer['elements'] as $innerElement) {
+                                if (isset($innerElement['elType'])) {
+                                    if ($innerElement['elType'] === 'widget') {
+                                        $output .= jhmgced_process_widget($innerElement, $builder_version);
+                                        $contentGenerated = true;
+                                    } elseif ($innerElement['elType'] === 'container') {
+                                        // For deeply nested containers, create a text module with the content
+                                        $nestedContent = jhmgced_process_nested_container($innerElement, $builder_version);
+                                        $output .= $nestedContent;
+                                        $contentGenerated = true;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        $output .= "[/et_pb_column]\n";
+                    }
+                }
+            }
+        }
+        
+        // Add default content if nothing was generated
+        if (!$contentGenerated) {
+            // Add a default column if no columns were added
+            if (strpos($output, '[et_pb_column') === false) {
+                $output .= "[et_pb_column type=\"4_4\" _builder_version=\"{$builder_version}\"]\n";
+                $output .= "[et_pb_text _builder_version=\"{$builder_version}\"]\n";
+                $output .= "<p>Empty container from Elementor</p>\n";
+                $output .= "[/et_pb_text]\n";
+                $output .= "[/et_pb_column]\n";
+            }
+        }
+    } else {
+        // Empty container
+        $output .= "[et_pb_column type=\"4_4\" _builder_version=\"{$builder_version}\"]\n";
+        $output .= "[et_pb_text _builder_version=\"{$builder_version}\"]\n";
+        $output .= "<p>Empty container from Elementor</p>\n";
+        $output .= "[/et_pb_text]\n";
+        $output .= "[/et_pb_column]\n";
+    }
+    
+    // Close row
+    $output .= "[/et_pb_row]\n";
+    
+    // If top level, close section
+    if ($is_top_level) {
+        $output .= "[/et_pb_section]\n";
+    }
+    
+    return $output;
+}
+
+/**
+ * Process a nested container and its contents
+ * 
+ * @param array $container Nested container data
+ * @param string $builder_version Divi builder version
+ * @return string Divi module shortcodes
+ */
+function jhmgced_process_nested_container($container, $builder_version) {
+    $output = '';
+    
+    // Process container styles
+    $container_styles = '';
+    if (function_exists('jhmgced_process_element_styles') && isset($container['settings'])) {
+        $container_styles = jhmgced_process_element_styles($container['settings']);
+    }
+    
+    // Check if the container has elements
+    if (isset($container['elements']) && is_array($container['elements']) && !empty($container['elements'])) {
+        // Process each element in the container
+        foreach ($container['elements'] as $element) {
+            if (isset($element['elType'])) {
+                if ($element['elType'] === 'widget') {
+                    // Process widget styles
+                    $widget_styles = '';
+                    if (function_exists('jhmgced_process_element_styles') && isset($element['settings'])) {
+                        $widget_styles = jhmgced_process_element_styles($element['settings']);
+                    }
+                    
+                    $output .= jhmgced_process_widget($element, $builder_version);
+                } elseif ($element['elType'] === 'container') {
+                    // For deeply nested containers, we'll flatten the hierarchy
+                    if (isset($element['elements']) && is_array($element['elements'])) {
+                        foreach ($element['elements'] as $innerElement) {
+                            if (isset($innerElement['elType']) && $innerElement['elType'] === 'widget') {
+                                $output .= jhmgced_process_widget($innerElement, $builder_version);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // If no content was generated, add a placeholder
+    if (empty($output)) {
+        $output .= "[et_pb_text _builder_version=\"{$builder_version}\"{$container_styles}]\n";
+        $output .= "<p>Nested container content</p>\n";
+        $output .= "[/et_pb_text]\n";
+    }
+    
+    return $output;
+}
+
+/**
+ * Process an inner section from Elementor
+ * 
+ * @param array $innerSection Inner section data
+ * @param string $builder_version Divi builder version
+ * @return string Divi module shortcodes
+ */
+function jhmgced_process_inner_section($innerSection, $builder_version) {
+    $output = '';
+    
+    // Process section styles
+    $section_styles = '';
+    if (function_exists('jhmgced_process_element_styles') && isset($innerSection['settings'])) {
+        $section_styles = jhmgced_process_element_styles($innerSection['settings']);
+    }
+    
+    // Process columns in the inner section
+    if (isset($innerSection['elements']) && is_array($innerSection['elements'])) {
+        // Instead of nested rows (which Divi doesn't support well),
+        // just process the widgets from all columns sequentially
+        foreach ($innerSection['elements'] as $column) {
+            if (isset($column['elType']) && $column['elType'] === 'column' && 
+                isset($column['elements']) && is_array($column['elements'])) {
+                
+                // Process column styles
+                $column_styles = '';
+                if (function_exists('jhmgced_process_element_styles') && isset($column['settings'])) {
+                    $column_styles = jhmgced_process_element_styles($column['settings']);
+                }
+                
+                foreach ($column['elements'] as $element) {
+                    if (isset($element['elType'])) {
+                        if ($element['elType'] === 'widget') {
+                            $output .= jhmgced_process_widget($element, $builder_version);
+                        } elseif ($element['elType'] === 'container') {
+                            // Process nested container
+                            $output .= jhmgced_process_nested_container($element, $builder_version);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // If no content was generated, add a placeholder
+    if (empty($output)) {
+        $output .= "[et_pb_text _builder_version=\"{$builder_version}\"{$section_styles}]\n";
+        $output .= "<p>Inner section content (flattened)</p>\n";
+        $output .= "[/et_pb_text]\n";
+    }
+    
+    return $output;
+}
+
+/**
+ * Process an Elementor column as a Divi column
+ * 
+ * @param array $column Elementor column data
+ * @param string $builder_version Divi builder version
+ * @param string $defaultColumnType Default column type based on section layout
+ * @return string Divi column shortcode
+ */
+function jhmgced_process_column($column, $builder_version, $defaultColumnType = '1_2') {
+    // Determine column width
+    $column_width = $defaultColumnType; // Use the default width from the section
+    
+    if (isset($column['settings']['_inline_size'])) {
+        $width_percentage = floatval($column['settings']['_inline_size']);
+        
+        // Map percentage to Divi fraction
+        if ($width_percentage <= 16.67) {
+            $column_width = '1_6';
+        } elseif ($width_percentage <= 20) {
+            $column_width = '1_5';
+        } elseif ($width_percentage <= 25) {
+            $column_width = '1_4';
+        } elseif ($width_percentage <= 33.33) {
+            $column_width = '1_3';
+        } elseif ($width_percentage <= 40) {
+            $column_width = '2_5';
+        } elseif ($width_percentage <= 50) {
+            $column_width = '1_2';
+        } elseif ($width_percentage <= 60) {
+            $column_width = '3_5';
+        } elseif ($width_percentage <= 66.67) {
+            $column_width = '2_3';
+        } elseif ($width_percentage <= 75) {
+            $column_width = '3_4';
+        } elseif ($width_percentage <= 80) {
+            $column_width = '4_5';
+        } elseif ($width_percentage <= 83.33) {
+            $column_width = '5_6';
+        } else {
+            $column_width = '4_4';
+        }
+    }
+    
+    // Get column styles
+    $column_styles = '';
+    if (function_exists('jhmgced_process_element_styles') && isset($column['settings'])) {
+        $column_styles = jhmgced_process_element_styles($column['settings']);
+    }
+    
+    // Add other column attributes (like padding)
+    $column_attrs = '';
+    if (isset($column['settings']['padding'])) {
+        // Handle different padding formats
+        if (is_array($column['settings']['padding']) && isset($column['settings']['padding']['top'])) {
+            $padding_top = isset($column['settings']['padding']['top']) ? $column['settings']['padding']['top'] : '';
+            $padding_right = isset($column['settings']['padding']['right']) ? $column['settings']['padding']['right'] : '';
+            $padding_bottom = isset($column['settings']['padding']['bottom']) ? $column['settings']['padding']['bottom'] : '';
+            $padding_left = isset($column['settings']['padding']['left']) ? $column['settings']['padding']['left'] : '';
+            
+            if (!empty($padding_top)) {
+                $column_attrs .= " padding_top=\"" . esc_attr($padding_top) . "\"";
+            }
+            if (!empty($padding_right)) {
+                $column_attrs .= " padding_right=\"" . esc_attr($padding_right) . "\"";
+            }
+            if (!empty($padding_bottom)) {
+                $column_attrs .= " padding_bottom=\"" . esc_attr($padding_bottom) . "\"";
+            }
+            if (!empty($padding_left)) {
+                $column_attrs .= " padding_left=\"" . esc_attr($padding_left) . "\"";
+            }
+        }
+    }
+    
+    $column_shortcode = "[et_pb_column type=\"{$column_width}\" _builder_version=\"{$builder_version}\"{$column_attrs}{$column_styles}]\n";
+    $contentGenerated = false;
+    
+    // Process widgets within the column
+    if (!empty($column['elements']) && is_array($column['elements'])) {
+        foreach ($column['elements'] as $element) {
+            if (isset($element['elType'])) {
+                if ($element['elType'] === 'widget') {
+                    $column_shortcode .= jhmgced_process_widget($element, $builder_version);
+                    $contentGenerated = true;
+                } elseif ($element['elType'] === 'section' && isset($element['isInner']) && $element['isInner'] === true) {
+                    // This is an inner section - create appropriate structure
+                    $column_shortcode .= jhmgced_process_inner_section($element, $builder_version);
+                    $contentGenerated = true;
+                } elseif ($element['elType'] === 'container') {
+                    // Handle nested container in column
+                    $column_shortcode .= jhmgced_process_nested_container($element, $builder_version);
+                    $contentGenerated = true;
+                }
+            }
+        }
+    }
+    
+    // Add default content if no widgets were in this column
+    if (!$contentGenerated) {
+        $column_shortcode .= "[et_pb_text _builder_version=\"{$builder_version}\"]\n";
+        
+        // Create a debug message showing the original column data structure
+        $debug_info = '';
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            $debug_info = '<p><small>Column had no elements in Elementor.</small></p>';
+        }
+        
+        $column_shortcode .= "<p>Column imported from Elementor</p>{$debug_info}\n";
+        $column_shortcode .= "[/et_pb_text]\n";
+    }
+    
+    $column_shortcode .= "[/et_pb_column]\n";
+    return $column_shortcode;
+}
+
+/**
+ * Get the appropriate column type based on count
+ * 
+ * @param int $count Number of columns
+ * @return string Divi column type
+ */
+function jhmgced_get_column_type($count) {
+    switch ($count) {
+        case 1:
+            return '4_4';
+        case 2:
+            return '1_2';
+        case 3:
+            return '1_3';
+        case 4:
+            return '1_4';
+        case 5:
+            return '1_5';
+        case 6:
+            return '1_6';
+        default:
+            return '4_4';
+    }
+}
+
+/**
+ * Get section attributes for Divi shortcode
+ * 
+ * @param array $section Elementor section data
+ * @return string Attributes string for Divi shortcode
+ */
+function jhmgced_get_section_attributes($section) {
+    $attrs = '';
+    $settings = isset($section['settings']) ? $section['settings'] : array();
+    
+    // This function can be minimal since the style handler handles background colors
+    
+    return $attrs;
+}
+
+/**
+ * Get container attributes for Divi shortcode
+ * 
+ * @param array $settings Container settings
+ * @return string Attributes string for Divi shortcode
+ */
+function jhmgced_get_container_attributes($settings) {
+    $attrs = '';
+    
+    // Width
+    if (isset($settings['content_width']) && isset($settings['content_width']['size'])) {
+        $width = $settings['content_width']['size'];
+        $attrs .= " width=\"" . esc_attr($width) . "\"";
+    }
+    
+    return $attrs;
+}
+
+/**
+ * Process an Elementor widget and convert to a Divi module
+ * 
+ * @param array $widget Elementor widget data
+ * @param string $builder_version Divi builder version
+ * @return string Divi module shortcode
+ */
+function jhmgced_process_widget($widget, $builder_version) {
+    if (!isset($widget['widgetType'])) {
+        return "[et_pb_text _builder_version=\"{$builder_version}\"]\n<p>Unknown widget type</p>\n[/et_pb_text]\n";
+    }
+    
+    $widget_type = $widget['widgetType'];
+    $settings = isset($widget['settings']) ? $widget['settings'] : array();
+    
+    // Log widget types we're processing for debugging
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        jhmgced_log_message("Processing widget type: {$widget_type}");
+    }
+    
+    // Process style attributes if style handler is available
+    $style_attrs = '';
+    if (function_exists('jhmgced_process_element_styles')) {
+        $style_attrs = jhmgced_process_element_styles($settings);
+    }
+    
+    // First check if this is an ElementsKit widget
+    if (strpos($widget_type, 'elementskit-') === 0 && function_exists('jhmgced_process_elementskit_widget')) {
+        $elementskit_output = jhmgced_process_elementskit_widget($widget, $builder_version, $style_attrs);
+        if (!empty($elementskit_output)) {
+            return $elementskit_output;
+        }
+    }
+    
+    // Map Elementor widget types to Divi module types
+    switch ($widget_type) {
+        case 'heading':
+            return jhmgced_create_heading_module($settings, $builder_version, $style_attrs);
+        
+        case 'text-editor':
+            return jhmgced_create_text_module($settings, $builder_version, $style_attrs);
+        
+        case 'image':
+            return jhmgced_create_image_module($settings, $builder_version, $style_attrs);
+        
+        case 'video':
+            return jhmgced_create_video_module($settings, $builder_version, $style_attrs);
+        
+        case 'button':
+            return jhmgced_create_button_module($settings, $builder_version, $style_attrs);
+        
+        case 'spacer':
+            return jhmgced_create_spacer_module($settings, $builder_version, $style_attrs);
+        
+        case 'divider':
+            return jhmgced_create_divider_module($settings, $builder_version, $style_attrs);
+        
+        case 'google_maps':
+            return jhmgced_create_map_module($settings, $builder_version, $style_attrs);
+        
+        case 'icon':
+            return jhmgced_create_icon_module($settings, $builder_version, $style_attrs);
+        
+        case 'tabs':
+        case 'nested-tabs': 
+            return jhmgced_create_tabs_module($settings, $builder_version, $style_attrs);
+        
+        case 'accordion':
+        case 'nested-accordion':
+            return jhmgced_create_accordion_module($settings, $builder_version, $style_attrs);
+        
+        case 'testimonial':
+            return jhmgced_create_testimonial_module($settings, $builder_version, $style_attrs);
+            
+        case 'html':
+            return jhmgced_create_html_module($settings, $builder_version, $style_attrs);
+            
+        case 'image-box':
+            return jhmgced_create_blurb_module($settings, $builder_version, $style_attrs);
+            
+        case 'icon-box':
+            return jhmgced_create_blurb_module($settings, $builder_version, $style_attrs, true);
+            
+        case 'counter':
+            return jhmgced_create_number_counter_module($settings, $builder_version, $style_attrs);
+            
+        case 'progress':
+            return jhmgced_create_bar_counters_module($settings, $builder_version, $style_attrs);
+            
+        case 'social-icons':
+            return jhmgced_create_social_media_follow_module($settings, $builder_version, $style_attrs);
+            
+        case 'image-carousel':
+            return jhmgced_create_gallery_module($settings, $builder_version, $style_attrs, 'image-carousel');
+            
+        case 'image-gallery':
+            return jhmgced_create_gallery_module($settings, $builder_version, $style_attrs, 'image-gallery');
+            
+        case 'icon-list':
+            return jhmgced_create_icon_list_module($settings, $builder_version, $style_attrs);
+            
+        case 'alert':
+            return jhmgced_create_alert_module($settings, $builder_version, $style_attrs);
+            
+        case 'audio':
+            return jhmgced_create_audio_module($settings, $builder_version, $style_attrs);
+            
+        case 'sidebar':
+            return jhmgced_create_sidebar_module($settings, $builder_version, $style_attrs);
+            
+        case 'slides':
+        case 'slideshow':
+            return jhmgced_create_slides_module($settings, $builder_version, $style_attrs);
+            
+        case 'price-table':
+        case 'price-list':
+            return jhmgced_create_pricing_table_module($settings, $builder_version, $style_attrs);
+            
+        case 'form':
+        case 'contact-form':
+            return jhmgced_create_contact_form_module($settings, $builder_version, $style_attrs);
+            
+        case 'toggle':
+            return jhmgced_create_toggle_module($settings, $builder_version, $style_attrs);
+            
+        case 'countdown':
+            return jhmgced_create_countdown_module($settings, $builder_version, $style_attrs);
+            
+        case 'posts':
+        case 'posts-grid':
+        case 'post-carousel':
+            return jhmgced_create_posts_module($settings, $builder_version, $style_attrs);
+            
+        case 'call-to-action':
+        case 'cta':
+            return jhmgced_create_cta_module($settings, $builder_version, $style_attrs);
+            
+        case 'star-rating':
+            return jhmgced_create_star_rating_module($settings, $builder_version, $style_attrs);
+            
+        // Add more widget mappings as needed
+            
+        default:
+            // Default to a text module with info about unmapped widget
+            return "[et_pb_text _builder_version=\"{$builder_version}\"{$style_attrs}]\n<p>Imported Elementor widget: " . esc_html($widget_type) . "</p>\n[/et_pb_text]\n";
+    }
+}

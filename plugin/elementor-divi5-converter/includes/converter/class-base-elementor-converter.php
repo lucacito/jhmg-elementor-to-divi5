@@ -105,12 +105,17 @@ abstract class BaseElementorConverter implements ConverterInterface {
         $settings = $element['settings'] ?? [];
         $children = $element['elements'] ?? [];
 
+        // Apply the container's own styles (background, padding, min-height) to the row.
+        $style      = ( new StyleMapper() )->map( 'row', $settings );
+        $row_styles = $style['divi_attrs'];
+
         if ( $this->isGridContainer( $settings ) ) {
-            $columns = $this->convertGridChildren( $children );
+            $columns      = $this->convertGridChildren( $children );
+            $row_settings = $this->deepMergeSettings( $row_styles, $this->rowGridSettingsFromContainer( $settings ) );
             return [
                 'id'       => $id,
                 'name'     => 'divi/row',
-                'settings' => $this->rowGridSettingsFromContainer( $settings ),
+                'settings' => $row_settings,
                 'elements' => $columns,
             ];
         }
@@ -118,8 +123,11 @@ abstract class BaseElementorConverter implements ConverterInterface {
         if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
             $columns      = $this->convertFlexRowChildren( $children );
             $row_settings = $this->deepMergeSettings(
-                $this->rowSettingsFromColumns( $columns ),
-                $this->rowFlexSettingsFromContainer( $settings )
+                $row_styles,
+                $this->deepMergeSettings(
+                    $this->rowSettingsFromColumns( $columns ),
+                    $this->rowFlexSettingsFromContainer( $settings )
+                )
             );
 
             return [
@@ -132,11 +140,12 @@ abstract class BaseElementorConverter implements ConverterInterface {
 
         $inner        = $this->convertStructureChildren( $children );
         $row_elements = $this->ensureColumnChildren( $id, $inner );
+        $row_settings = $this->deepMergeSettings( $row_styles, $this->rowSettingsFromColumns( $row_elements ) );
 
         return [
             'id'       => $id,
             'name'     => 'divi/row',
-            'settings' => $this->rowSettingsFromColumns( $row_elements ),
+            'settings' => $row_settings,
             'elements' => $row_elements,
         ];
     }
@@ -151,8 +160,12 @@ abstract class BaseElementorConverter implements ConverterInterface {
 
     /**
      * Returns true when the Elementor element is a flex container whose main
-     * axis is horizontal (row or row-reverse). This is the default for all
-     * containers when no explicit direction is set.
+     * axis is horizontal (row or row-reverse).
+     *
+     * Elementor's Flexbox Container CSS sets `--flex-direction: column` as the
+     * default, so containers with no explicit direction are column containers.
+     * We therefore only treat the container as a row when `flex_direction` is
+     * explicitly set to "row" or "row-reverse".
      *
      * Grid containers are excluded — they use a different layout model.
      */
@@ -161,7 +174,7 @@ abstract class BaseElementorConverter implements ConverterInterface {
             return false;
         }
         $dir = $settings['flex_direction'] ?? '';
-        return ! in_array( $dir, [ 'column', 'column-reverse' ], true );
+        return in_array( $dir, [ 'row', 'row-reverse' ], true );
     }
 
     /**
@@ -234,7 +247,12 @@ abstract class BaseElementorConverter implements ConverterInterface {
         $settings = $element['settings'] ?? [];
         $children = $element['elements'] ?? [];
 
-        $col_settings = $this->extractFlexItemColumnSettings( $settings );
+        // Apply the container's own styles (background, padding, min-height, border, etc.)
+        $style        = ( new StyleMapper() )->map( 'column', $settings );
+        $col_settings = $this->deepMergeSettings(
+            $this->extractFlexItemColumnSettings( $settings ),
+            $style['divi_attrs']
+        );
 
         // Nested grid container: wrap grid items in a grid-mode row inside the column.
         if ( $this->isGridContainer( $settings ) ) {
@@ -280,6 +298,8 @@ abstract class BaseElementorConverter implements ConverterInterface {
         }
 
         // Plain column: convert children normally (stacked vertically).
+        // Apply column-direction flex settings (justify-content, align-items).
+        $col_settings       = $this->deepMergeSettings( $col_settings, $this->columnFlexSettingsFromContainer( $settings ) );
         $converted_children = $this->convertStructureChildren( $children );
 
         return [
@@ -319,64 +339,125 @@ abstract class BaseElementorConverter implements ConverterInterface {
 
     /**
      * Builds Divi row flex layout settings from an Elementor container's flex
-     * settings. The resulting array can be merged into a divi/row's settings at
-     * `module.decoration.layout.desktop.value`.
+     * settings across all three breakpoints.
      *
-     * Only responsive desktop settings are mapped; Elementor tablet/mobile flex
-     * direction overrides are intentionally deferred.
+     * Elementor uses `_tablet` / `_mobile` suffixes for responsive overrides.
+     * Each breakpoint's value is only written when at least one flex property
+     * differs from the desktop value (or is explicitly set for that breakpoint).
      */
     protected function rowFlexSettingsFromContainer( array $settings ): array {
-        $layout = [];
+        $bp_suffix = [
+            'desktop' => '',
+            'tablet'  => '_tablet',
+            'phone'   => '_mobile',
+        ];
 
-        $dir = $settings['flex_direction'] ?? '';
-        // Only write when direction is non-default (Divi rows default to row).
-        if ( is_string( $dir ) && $dir !== '' && $dir !== 'row' ) {
-            $layout['flexDirection'] = $dir;
-        }
+        $responsive = [];
 
-        $justify = $settings['flex_justify_content'] ?? '';
-        if ( is_string( $justify ) && $justify !== '' ) {
-            $layout['justifyContent'] = $justify;
-        }
+        foreach ( $bp_suffix as $divi_bp => $suffix ) {
+            $layout = [];
 
-        $align_items = $settings['flex_align_items'] ?? '';
-        if ( is_string( $align_items ) && $align_items !== '' ) {
-            $layout['alignItems'] = $align_items;
-        }
-
-        $wrap = $settings['flex_wrap'] ?? '';
-        if ( is_string( $wrap ) && $wrap !== '' ) {
-            $layout['flexWrap'] = $wrap;
-        }
-
-        $align_content = $settings['flex_align_content'] ?? '';
-        if ( is_string( $align_content ) && $align_content !== '' ) {
-            $layout['alignContent'] = $align_content;
-        }
-
-        $gap = $settings['flex_gap'] ?? null;
-        if ( is_array( $gap ) ) {
-            $unit    = is_string( $gap['unit'] ?? '' ) ? ( $gap['unit'] ?? 'px' ) : 'px';
-            $col_gap = $gap['column'] ?? '';
-            $row_gap = $gap['row'] ?? '';
-            if ( $col_gap !== '' && $col_gap !== null ) {
-                $layout['columnGap'] = (string) $col_gap . $unit;
+            $dir = $settings[ 'flex_direction' . $suffix ] ?? '';
+            // Desktop: skip 'row' (Divi default). Tablet/mobile: always write when set so
+            // overrides like flex_direction_tablet='column' actually take effect.
+            if ( is_string( $dir ) && $dir !== '' && ( $suffix !== '' || $dir !== 'row' ) ) {
+                $layout['flexDirection'] = $dir;
             }
-            if ( $row_gap !== '' && $row_gap !== null ) {
-                $layout['rowGap'] = (string) $row_gap . $unit;
+
+            $justify = $settings[ 'flex_justify_content' . $suffix ] ?? '';
+            if ( is_string( $justify ) && $justify !== '' ) {
+                $layout['justifyContent'] = $justify;
+            }
+
+            $align_items = $settings[ 'flex_align_items' . $suffix ] ?? '';
+            if ( is_string( $align_items ) && $align_items !== '' ) {
+                $layout['alignItems'] = $align_items;
+            }
+
+            $wrap = $settings[ 'flex_wrap' . $suffix ] ?? '';
+            if ( is_string( $wrap ) && $wrap !== '' ) {
+                $layout['flexWrap'] = $wrap;
+            }
+
+            $align_content = $settings[ 'flex_align_content' . $suffix ] ?? '';
+            if ( is_string( $align_content ) && $align_content !== '' ) {
+                $layout['alignContent'] = $align_content;
+            }
+
+            $gap = $settings[ 'flex_gap' . $suffix ] ?? null;
+            if ( is_array( $gap ) ) {
+                $unit    = is_string( $gap['unit'] ?? '' ) ? ( $gap['unit'] ?? 'px' ) : 'px';
+                $col_gap = $gap['column'] ?? '';
+                $row_gap = $gap['row'] ?? '';
+                if ( $col_gap !== '' && $col_gap !== null ) {
+                    $layout['columnGap'] = (string) $col_gap . $unit;
+                }
+                if ( $row_gap !== '' && $row_gap !== null ) {
+                    $layout['rowGap'] = (string) $row_gap . $unit;
+                }
+            }
+
+            if ( ! empty( $layout ) ) {
+                $responsive[ $divi_bp ] = [ 'value' => $layout ];
             }
         }
 
-        if ( empty( $layout ) ) {
+        if ( empty( $responsive ) ) {
             return [];
         }
 
         return [
             'module' => [
                 'decoration' => [
-                    'layout' => [
-                        'desktop' => [ 'value' => $layout ],
-                    ],
+                    'layout' => $responsive,
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Builds Divi column layout settings from an Elementor column-direction
+     * container's flex settings across all three breakpoints.
+     *
+     * Used when the container becomes a divi/column rather than a divi/row.
+     * Maps justify-content and align-items per breakpoint so that responsive
+     * alignment overrides (e.g. tablet centering on a card) are preserved.
+     */
+    protected function columnFlexSettingsFromContainer( array $settings ): array {
+        $bp_suffix = [
+            'desktop' => '',
+            'tablet'  => '_tablet',
+            'phone'   => '_mobile',
+        ];
+
+        $responsive = [];
+
+        foreach ( $bp_suffix as $divi_bp => $suffix ) {
+            $layout = [];
+
+            $justify = $settings[ 'flex_justify_content' . $suffix ] ?? '';
+            if ( is_string( $justify ) && $justify !== '' ) {
+                $layout['justifyContent'] = $justify;
+            }
+
+            $align_items = $settings[ 'flex_align_items' . $suffix ] ?? '';
+            if ( is_string( $align_items ) && $align_items !== '' ) {
+                $layout['alignItems'] = $align_items;
+            }
+
+            if ( ! empty( $layout ) ) {
+                $responsive[ $divi_bp ] = [ 'value' => $layout ];
+            }
+        }
+
+        if ( empty( $responsive ) ) {
+            return [];
+        }
+
+        return [
+            'module' => [
+                'decoration' => [
+                    'layout' => $responsive,
                 ],
             ],
         ];
@@ -538,6 +619,10 @@ abstract class BaseElementorConverter implements ConverterInterface {
         $settings = $element['settings'] ?? [];
         $children = $element['elements'] ?? [];
 
+        // Apply the container's own styles to the grid-item column.
+        $style        = ( new StyleMapper() )->map( 'column', $settings );
+        $col_settings = $style['divi_attrs'];
+
         // Nested grid container → row-with-grid inside this column.
         if ( $this->isGridContainer( $settings ) ) {
             $sub_columns     = $this->convertGridChildren( $children );
@@ -546,7 +631,7 @@ abstract class BaseElementorConverter implements ConverterInterface {
             return [
                 'id'       => $id,
                 'name'     => 'divi/column',
-                'settings' => [],
+                'settings' => $col_settings,
                 'elements' => [
                     [
                         'id'       => $id . '-row',
@@ -569,7 +654,7 @@ abstract class BaseElementorConverter implements ConverterInterface {
             return [
                 'id'       => $id,
                 'name'     => 'divi/column',
-                'settings' => [],
+                'settings' => $col_settings,
                 'elements' => [
                     [
                         'id'       => $id . '-row',
@@ -582,14 +667,46 @@ abstract class BaseElementorConverter implements ConverterInterface {
         }
 
         // Plain container grid item: children stacked in the column.
+        // Apply any column-direction flex settings (justify-content, align-items)
+        // so that, e.g., flex-end pushes children to the bottom of a fixed-height card.
+        $col_settings       = $this->deepMergeSettings( $col_settings, $this->columnFlexSettingsFromContainer( $settings ) );
         $converted_children = $this->convertStructureChildren( $children );
 
         return [
             'id'       => $id,
             'name'     => 'divi/column',
-            'settings' => [],
+            'settings' => $col_settings,
             'elements' => $converted_children,
         ];
+    }
+
+    /**
+     * Extracts `module.decoration.sizing` and `module.decoration.layout` from
+     * section attrs and returns them separately so they can be placed on the row.
+     *
+     * In Divi 5 sections carry background and padding; min-height and flex
+     * alignment live on the row (see the Divi 5 block format).
+     *
+     * @return array{0: array, 1: array}  [stripped section attrs, row sizing/layout]
+     */
+    protected function extractRowSizingLayout( array $section_attrs ): array {
+        $row_extra = [];
+
+        foreach ( [ 'sizing', 'layout' ] as $key ) {
+            if ( isset( $section_attrs['module']['decoration'][ $key ] ) ) {
+                $row_extra['module']['decoration'][ $key ] = $section_attrs['module']['decoration'][ $key ];
+                unset( $section_attrs['module']['decoration'][ $key ] );
+            }
+        }
+
+        if ( isset( $section_attrs['module']['decoration'] ) && empty( $section_attrs['module']['decoration'] ) ) {
+            unset( $section_attrs['module']['decoration'] );
+        }
+        if ( isset( $section_attrs['module'] ) && empty( $section_attrs['module'] ) ) {
+            unset( $section_attrs['module'] );
+        }
+
+        return [ $section_attrs, $row_extra ];
     }
 
     /**
@@ -605,6 +722,20 @@ abstract class BaseElementorConverter implements ConverterInterface {
             }
         }
         return $a;
+    }
+
+    /**
+     * Returns true when every element in $items has the given block name.
+     * Used to detect when converted children are already rows/columns so that
+     * an extra wrapping layer can be avoided.
+     */
+    protected function allNamedAs( array $items, string $name ): bool {
+        foreach ( $items as $item ) {
+            if ( ! is_array( $item ) || ( $item['name'] ?? '' ) !== $name ) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -788,6 +919,69 @@ abstract class BaseElementorConverter implements ConverterInterface {
             '_laptop', '_tablet_extra', '_widescreen', '_mobile_extra', '_mobile_intermediate',
         ];
 
+        // Key prefixes that are globally unimplementable in Divi 5, regardless of
+        // widget type. These mirror the suppressUnimplementable() list in StyleMapper
+        // and catch widget converters that do not route through StyleMapper.
+        static $always_ignore_prefixes = [
+            'motion_fx_',        // Motion Effects — no Divi 5 block-attr equivalent.
+            'sticky_',           // Sticky behaviour — handled separately; raw keys ignored.
+            '_background_',      // Advanced-tab background overrides (underscore prefix).
+            '_mask_',            // Advanced-tab CSS mask.
+            '_element_',         // Advanced-tab element-width / visibility overrides.
+            '_flex_size',        // Advanced-tab flex-size override.
+            '_transform_',       // Advanced-tab CSS transform.
+            '_offset_',          // Advanced-tab position offset.
+            '_box_shadow_',      // Advanced-tab box-shadow (vs. widget-level box_shadow_*).
+            '_border_radius',    // Advanced-tab border-radius override.
+            'ekit_testimonial_', // ElementsKit Testimonial — complex third-party widget; not fully mappable.
+            'ekit_video_',       // ElementsKit Video — complex third-party widget; not fully mappable.
+            'arrows_',           // Slider/carousel arrow styling — no Divi 5 block-attr equivalent.
+            'dots_',             // Slider/carousel dots styling — no Divi 5 block-attr equivalent.
+            'icon_typography_',  // Icon font styling — no icon-text font path in divi/icon.
+        ];
+
+        // Additional exact keys that are globally suppressible but not yet in $always_ignore.
+        static $always_ignore_exact = [
+            // Height selector (the pixel value is handled by mapMinHeight; the mode selector is not).
+            'height', 'height_tablet', 'height_mobile',
+            // Heading level — already handled as 'tag'/'header_size' in HeadingConverter.
+            'title_tag',
+            // Slider/layout flow direction.
+            'direction',
+            // Image lazy-load mode — browser behaviour, no block attr.
+            'lazyload',
+            // Mobile position mode selector — no block attr equivalent.
+            'position_mobile',
+            // Image widget inner-element border / shadow — sub-element decorations not yet mapped.
+            'image_border_border', 'image_border_width', 'image_border_color',
+            'image_border_radius_tablet', 'image_border_radius_mobile',
+            'image_box_shadow_box_shadow_type', 'image_box_shadow_box_shadow',
+            'image_spacing_custom', 'image_spacing_custom_tablet', 'image_spacing_custom_mobile',
+            // Icon widget sizing and alignment controls not mapped by IconConverter.
+            'icon_align', 'icon_indent', 'icon_spacing',
+            'icon_size', 'icon_size_tablet', 'icon_size_mobile',
+            'icon_space_mobile', 'icon_space_tablet',
+            'icon_self_vertical_align_tablet', 'icon_vertical_offset_tablet',
+            'size_tablet', 'size_mobile',
+            // Icon widget style controls mapped to view/secondary_color but not block attrs.
+            'view', 'shape', 'secondary_color',
+            // Blurb / icon-box layout modes.
+            'number_position',
+            // Button icon alignment — not yet mapped.
+            'button_icon_align',
+            // Icon value that appears in icon-box / blurb / feature-list widgets.
+            'selected_icon',
+            // Primary color that appears in multiple icon-type widgets.
+            'primary_color',
+            // Title/description spacing controls on blurb and icon-box — not mapped.
+            'title_spacing', 'title_spacing_tablet', 'title_spacing_mobile',
+            // Typography controls on sub-elements (title_typography_*, description_typography_*).
+            'title_typography_letter_spacing',
+            'description_typography_font_family', 'description_typography_letter_spacing',
+            // Video poster image fallback.
+            'self_poster_image',
+        ];
+
         foreach ( $settings as $key => $value ) {
             if ( in_array( $key, $mapped_keys, true ) ) {
                 continue;
@@ -798,11 +992,19 @@ abstract class BaseElementorConverter implements ConverterInterface {
             if ( in_array( $key, $always_ignore, true ) ) {
                 continue;
             }
+            if ( in_array( $key, $always_ignore_exact, true ) ) {
+                continue;
+            }
             if ( $value === '' || $value === [] || $value === null ) {
                 continue;
             }
             foreach ( $extra_bp_suffixes as $suffix ) {
                 if ( str_ends_with( $key, $suffix ) ) {
+                    continue 2;
+                }
+            }
+            foreach ( $always_ignore_prefixes as $prefix ) {
+                if ( str_starts_with( $key, $prefix ) ) {
                     continue 2;
                 }
             }

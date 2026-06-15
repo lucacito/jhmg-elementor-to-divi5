@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+require_once __DIR__ . '/class-globals-resolver.php';
+
 /**
  * Maps Elementor styling settings to Divi 5 block attribute paths.
  *
@@ -30,13 +32,23 @@ class StyleMapper {
         100 => '4_4',
         80  => '4_5',
         75  => '3_4',
+        70  => '3_4',   // approximate — closer to 3/4 than 2/3
         67  => '2_3',
         66  => '2_3',
+        65  => '2_3',
+        63  => '2_3',
         60  => '3_5',
+        55  => '1_2',   // between 1/2 and 3/5; round to 1/2
+        52  => '1_2',
         50  => '1_2',
+        48  => '1_2',
+        45  => '2_5',
         40  => '2_5',
+        38  => '2_5',
+        35  => '1_3',
         34  => '1_3',
         33  => '1_3',
+        30  => '1_3',
         25  => '1_4',
         20  => '1_5',
     ];
@@ -45,16 +57,35 @@ class StyleMapper {
      * Maps Elementor widget_type to the Divi 5 attribute path prefix for that
      * element's font decoration (the dotted path up to but not including
      * `.{breakpoint}.value`).
-     *
-     * - Heading / blurb title use the simple `{element}.decoration.font.font` structure.
-     * - Text-editor body copy uses Divi's `bodyFont` sub-group.
-     * - Button uses its own `button.decoration.font.font` element.
      */
     private const WIDGET_FONT_PATH = [
-        'heading'     => 'title.decoration.font.font',
-        'text-editor' => 'content.decoration.bodyFont.body.font',
-        'button'      => 'button.decoration.font.font',
-        'blurb'       => 'title.decoration.font.font',
+        'heading'        => 'title.decoration.font.font',
+        'text-editor'    => 'content.decoration.bodyFont.body.font',
+        'button'         => 'button.decoration.font.font',
+        'blurb'          => 'title.decoration.font.font',
+        'counter'        => 'number.decoration.font.font',
+        'cta'            => 'title.decoration.font.font',
+        'alert'          => 'title.decoration.font.font',
+    ];
+
+    /**
+     * Maps Elementor widget_type to the Elementor key prefix used for its
+     * typography group controls.
+     *
+     * Most widgets use the standard `typography_` prefix.  Widgets whose
+     * controls are scoped to a specific element (e.g. button, blurb title)
+     * use a different prefix that must be listed here.
+     *
+     * The `mapTypography()` method consults this map to resolve the prefix
+     * before constructing key names like `{prefix}font_size`, `{prefix}font_family`, etc.
+     */
+    private const WIDGET_TYPOGRAPHY_PREFIX = [
+        // Note: 'button' (standalone widget) uses the standard 'typography_' prefix —
+        // it is intentionally absent from this map so the default fallback applies.
+        'blurb'   => 'title_typography_',
+        'counter' => 'number_typography_',
+        'cta'     => 'title_typography_',
+        'alert'   => 'title_typography_',
     ];
 
     /**
@@ -66,14 +97,20 @@ class StyleMapper {
         'text-editor' => 'text_color',
         'button'      => 'button_text_color',
         'blurb'       => 'title_color',
+        'counter'     => 'number_color',
+        'cta'         => 'title_color',
+        'alert'       => 'title_color',
     ];
 
     /**
      * Elementor `typography_*` keys that are acknowledged but deliberately not
-     * mapped (preset selector names that have no per-block Divi 5 equivalent).
+     * mapped (preset selector names and properties that have no per-block Divi 5 equivalent).
      */
     private const TYPOGRAPHY_SKIP_KEYS = [
         'typography_typography',
+        'typography_word_spacing',
+        'typography_word_spacing_tablet',
+        'typography_word_spacing_mobile',
     ];
 
     /**
@@ -93,8 +130,9 @@ class StyleMapper {
         $divi_attrs   = [];
         $handled_keys = [];
 
+        $this->suppressUnimplementable( $settings, $handled_keys );
         $this->mapSpacing( $widget_type, $settings, $divi_attrs, $handled_keys );
-        $this->mapBackgroundColor( $settings, $divi_attrs, $handled_keys );
+        $this->mapBackgroundColor( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapBackgroundImage( $settings, $divi_attrs, $handled_keys );
         $this->mapBackgroundGradient( $settings, $divi_attrs, $handled_keys );
         $this->mapBackgroundOverlay( $settings, $divi_attrs, $handled_keys );
@@ -106,8 +144,9 @@ class StyleMapper {
         $this->mapTextShadow( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapOpacity( $settings, $divi_attrs, $handled_keys );
 
-        if ( in_array( $widget_type, [ 'section', 'column' ], true ) ) {
+        if ( in_array( $widget_type, [ 'section', 'column', 'container', 'row' ], true ) ) {
             $this->mapMinHeight( $settings, $divi_attrs, $handled_keys );
+            $this->mapContentPosition( $widget_type, $settings, $divi_attrs, $handled_keys );
         }
 
         if ( $widget_type === 'column' ) {
@@ -115,7 +154,8 @@ class StyleMapper {
             $this->markColumnKeys( $settings, $handled_keys );
         }
 
-        if ( $widget_type === 'section' ) {
+        // Containers and their derivatives use the same structural keys as sections.
+        if ( in_array( $widget_type, [ 'section', 'container', 'row' ], true ) ) {
             $this->markSectionKeys( $settings, $handled_keys );
         }
 
@@ -126,7 +166,10 @@ class StyleMapper {
         if ( $widget_type === 'button' ) {
             $this->mapButtonPadding( $settings, $divi_attrs, $handled_keys );
             $this->mapButtonBackground( $settings, $divi_attrs, $handled_keys );
+            $this->mapButtonBorder( $settings, $divi_attrs, $handled_keys );
         }
+
+        $this->mapCustomCssClass( $settings, $divi_attrs, $handled_keys );
 
         return [
             'divi_attrs'   => $divi_attrs,
@@ -205,7 +248,7 @@ class StyleMapper {
         self::transformPath( $attrs, 'module.advanced.type.desktop.value', $fraction );
     }
 
-    private function mapBackgroundColor( array $settings, array &$attrs, array &$handled ): void {
+    private function mapBackgroundColor( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
         $handled[] = 'background_color';
 
         // When background type is gradient, background_color is the first gradient stop —
@@ -236,23 +279,51 @@ class StyleMapper {
      * in the unmapped log if a widget does export them.
      */
     private function mapTypography( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
-        // Always mark skip keys as handled regardless of widget type.
+        // Some widgets scope their typography controls under a widget-specific prefix
+        // (e.g. `button_typography_*`, `title_typography_*`). Consult the prefix map;
+        // fall back to the standard `typography_` prefix for all other widgets.
+        $pfx = self::WIDGET_TYPOGRAPHY_PREFIX[ $widget_type ] ?? 'typography_';
+
+        // Always mark the standard typography skip keys as handled.
         foreach ( self::TYPOGRAPHY_SKIP_KEYS as $skip ) {
             $handled[] = $skip;
+        }
+        // Also mark the widget-specific skip keys (same suffixes, different prefix).
+        foreach ( [ 'typography', 'word_spacing', 'word_spacing_tablet', 'word_spacing_mobile' ] as $sk ) {
+            $handled[] = $pfx . $sk;
+        }
+
+        // When a widget uses a non-standard prefix (e.g. button_typography_), Elementor
+        // still emits the standard typography_* keys in the settings payload. Mark them
+        // all as handled so they don't appear in the skipped-settings log.
+        if ( $pfx !== 'typography_' ) {
+            $std_props = [
+                'font_size', 'font_size_tablet', 'font_size_mobile',
+                'font_weight', 'font_weight_tablet', 'font_weight_mobile',
+                'font_family', 'font_family_tablet', 'font_family_mobile',
+                'font_style', 'font_style_tablet', 'font_style_mobile',
+                'text_transform', 'text_transform_tablet', 'text_transform_mobile',
+                'text_decoration', 'text_decoration_tablet', 'text_decoration_mobile',
+                'line_height', 'line_height_tablet', 'line_height_mobile',
+                'letter_spacing', 'letter_spacing_tablet', 'letter_spacing_mobile',
+            ];
+            foreach ( $std_props as $sp ) {
+                $handled[] = 'typography_' . $sp;
+            }
         }
 
         $font_path = self::WIDGET_FONT_PATH[ $widget_type ] ?? null;
 
         // Responsive size-like props (font-size, line-height, letter-spacing).
         $size_props = [
-            'typography_font_size'      => 'size',
-            'typography_line_height'    => 'lineHeight',
-            'typography_letter_spacing' => 'letterSpacing',
+            'font_size'      => 'size',
+            'line_height'    => 'lineHeight',
+            'letter_spacing' => 'letterSpacing',
         ];
 
-        foreach ( $size_props as $base_key => $divi_prop ) {
+        foreach ( $size_props as $base_name => $divi_prop ) {
             foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
-                $key       = $base_key . $suffix;
+                $key       = $pfx . $base_name . $suffix;
                 $handled[] = $key;
 
                 if ( $font_path === null ) {
@@ -269,7 +340,7 @@ class StyleMapper {
 
         // Font weight — responsive; Elementor rarely exports tablet/mobile but we mark all as handled.
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
-            $key       = 'typography_font_weight' . $suffix;
+            $key       = $pfx . 'font_weight' . $suffix;
             $handled[] = $key;
 
             if ( $font_path !== null ) {
@@ -282,7 +353,7 @@ class StyleMapper {
 
         // Font family — mark all breakpoints handled; map when present.
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
-            $key       = 'typography_font_family' . $suffix;
+            $key       = $pfx . 'font_family' . $suffix;
             $handled[] = $key;
 
             if ( $font_path !== null ) {
@@ -296,9 +367,9 @@ class StyleMapper {
         // Style flags array: italic, text-transform, text-decoration — per breakpoint.
         // Divi 5 stores these as an array of flag strings on font.{bp}.value.style.
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
-            $style_key      = 'typography_font_style' . $suffix;
-            $transform_key  = 'typography_text_transform' . $suffix;
-            $decoration_key = 'typography_text_decoration' . $suffix;
+            $style_key      = $pfx . 'font_style' . $suffix;
+            $transform_key  = $pfx . 'text_transform' . $suffix;
+            $decoration_key = $pfx . 'text_decoration' . $suffix;
 
             $handled[] = $style_key;
             $handled[] = $transform_key;
@@ -330,6 +401,71 @@ class StyleMapper {
                 self::transformPath( $attrs, "{$font_path}.{$breakpoint}.value.style", $flags );
             }
         }
+
+        // Global typography fallback: when __globals__ references a preset and no individual
+        // font properties were set explicitly, apply the preset values.
+        if ( $font_path !== null ) {
+            $ref = $settings['__globals__'][ $pfx . 'typography' ] ?? '';
+            if ( is_string( $ref ) && $ref !== '' ) {
+                $id = GlobalsResolver::typographyIdFromRef( $ref );
+                if ( $id !== null ) {
+                    $preset = GlobalsResolver::resolveTypography( $id );
+                    if ( $preset !== null ) {
+                        $this->applyGlobalTypography( $font_path, $preset, $attrs );
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Applies a global typography preset to the font path, but only for properties
+     * that are not already set by explicit per-widget typography_* controls.
+     * This ensures explicit overrides always take precedence.
+     *
+     * @param string $font_path  Divi 5 dot-path up to (not including) `.{bp}.value.*`.
+     * @param array  $preset     From GlobalsResolver::resolveTypography().
+     * @param array  $attrs      The attrs array being built (passed by reference).
+     */
+    private function applyGlobalTypography( string $font_path, array $preset, array &$attrs ): void {
+        $scalar_props = [ 'family', 'size', 'weight', 'letterSpacing', 'lineHeight' ];
+
+        foreach ( $scalar_props as $prop ) {
+            if ( ! isset( $preset[ $prop ] ) ) {
+                continue;
+            }
+
+            $existing_path = explode( '.', "{$font_path}.desktop.value.{$prop}" );
+            $existing      = $attrs;
+            foreach ( $existing_path as $segment ) {
+                if ( ! is_array( $existing ) || ! isset( $existing[ $segment ] ) ) {
+                    $existing = null;
+                    break;
+                }
+                $existing = $existing[ $segment ];
+            }
+
+            // Only write when no explicit value already exists.
+            if ( $existing === null ) {
+                self::transformPath( $attrs, "{$font_path}.desktop.value.{$prop}", (string) $preset[ $prop ] );
+            }
+        }
+
+        // Style flags (e.g. 'capitalize') — only add when no flags already set.
+        if ( ! empty( $preset['style'] ) ) {
+            $existing_path = explode( '.', "{$font_path}.desktop.value.style" );
+            $existing      = $attrs;
+            foreach ( $existing_path as $segment ) {
+                if ( ! is_array( $existing ) || ! isset( $existing[ $segment ] ) ) {
+                    $existing = null;
+                    break;
+                }
+                $existing = $existing[ $segment ];
+            }
+            if ( $existing === null ) {
+                self::transformPath( $attrs, "{$font_path}.desktop.value.style", $preset['style'] );
+            }
+        }
     }
 
     /**
@@ -349,8 +485,8 @@ class StyleMapper {
 
         $handled[] = $color_key;
 
-        $color = $settings[ $color_key ] ?? '';
-        if ( ! is_string( $color ) || $color === '' ) {
+        $color = $this->resolveColorSetting( $settings, $color_key );
+        if ( $color === '' ) {
             return;
         }
 
@@ -362,6 +498,30 @@ class StyleMapper {
         } else {
             self::transformPath( $attrs, "{$font_path}.desktop.value.color", $color );
         }
+    }
+
+    /**
+     * Resolves a color setting by first checking the direct key in $settings,
+     * then falling back to the `__globals__` reference for that key and resolving
+     * it through GlobalsResolver.
+     */
+    private function resolveColorSetting( array $settings, string $key ): string {
+        $direct = $settings[ $key ] ?? '';
+        if ( is_string( $direct ) && $direct !== '' ) {
+            return $direct;
+        }
+
+        $ref = $settings['__globals__'][ $key ] ?? '';
+        if ( ! is_string( $ref ) || $ref === '' ) {
+            return '';
+        }
+
+        $id = GlobalsResolver::colorIdFromRef( $ref );
+        if ( $id === null ) {
+            return '';
+        }
+
+        return GlobalsResolver::resolveColor( $id ) ?? '';
     }
 
     /**
@@ -433,6 +593,27 @@ class StyleMapper {
         ] as $k ) {
             $handled[] = $k;
         }
+        // Slideshow-specific keys — always mark handled; first gallery image used as fallback below.
+        foreach ( [
+            'background_slideshow_gallery', 'background_slideshow_loop',
+            'background_slideshow_slide_duration', 'background_slideshow_slide_transition',
+            'background_slideshow_transition_speed',
+        ] as $k ) {
+            $handled[] = $k;
+        }
+
+        // Slideshow background: use the first gallery image as a static fallback.
+        if ( ( $settings['background_background'] ?? '' ) === 'slideshow' ) {
+            $gallery = $settings['background_slideshow_gallery'] ?? [];
+            if ( is_array( $gallery ) && ! empty( $gallery ) ) {
+                $first     = reset( $gallery );
+                $slide_url = is_array( $first ) ? ( $first['url'] ?? '' ) : '';
+                if ( is_string( $slide_url ) && $slide_url !== '' ) {
+                    self::transformPath( $attrs, 'module.decoration.background.desktop.value.image.url', $slide_url );
+                }
+            }
+            return;
+        }
 
         $image = $settings['background_image'] ?? null;
         $url   = '';
@@ -457,6 +638,18 @@ class StyleMapper {
                 str_replace( ' ', '|', $pos )
             );
         }
+
+        // Size: map cover/contain and any other explicit value.
+        $size = $settings['background_size'] ?? '';
+        if ( is_string( $size ) && $size !== '' && $size !== 'initial' && $size !== 'auto' ) {
+            self::transformPath( $attrs, 'module.decoration.background.desktop.value.image.size', $size );
+        }
+
+        // Repeat.
+        $repeat = $settings['background_repeat'] ?? '';
+        if ( is_string( $repeat ) && $repeat !== '' ) {
+            self::transformPath( $attrs, 'module.decoration.background.desktop.value.image.repeat', $repeat );
+        }
     }
 
     /**
@@ -474,6 +667,10 @@ class StyleMapper {
         foreach ( [
             'background_overlay_background',
             'background_overlay_color',
+            'background_overlay_color_b',
+            'background_overlay_color_stop',
+            'background_overlay_color_b_stop',
+            'background_overlay_gradient_angle',
             'background_overlay_opacity',
             'background_overlay_image',
             'background_overlay_position',
@@ -495,17 +692,7 @@ class StyleMapper {
         }
 
         $overlay_color = $settings['background_overlay_color'] ?? '';
-        if ( ! is_string( $overlay_color ) || $overlay_color === '' ) {
-            return;
-        }
-
-        $opacity_raw = $settings['background_overlay_opacity'] ?? null;
-        $opacity     = 1.0;
-        if ( is_array( $opacity_raw ) && isset( $opacity_raw['size'] ) ) {
-            $opacity = (float) $opacity_raw['size'];
-        } elseif ( is_numeric( $opacity_raw ) ) {
-            $opacity = (float) $opacity_raw;
-        }
+        $has_color     = is_string( $overlay_color ) && $overlay_color !== '';
 
         // Pattern A: image lives in the overlay_image field.
         $overlay_image     = $settings['background_overlay_image'] ?? null;
@@ -521,26 +708,79 @@ class StyleMapper {
             $bg_image_url = (string) $bg_image['url'];
         }
 
-        $rgba = $this->hexToRgba( $overlay_color, $opacity );
+        // Nothing actionable — no color, no overlay image, no background image.
+        if ( ! $has_color && $overlay_image_url === '' && $bg_image_url === '' ) {
+            return;
+        }
 
         if ( $overlay_image_url !== '' ) {
-            // Pattern A: write the overlay image as the background image.
-            self::transformPath( $attrs, 'module.decoration.background.desktop.value.image.url', $overlay_image_url );
+            // Pattern A: write the overlay image as the background image, but only
+            // when there is no main background image and no solid background color.
+            // When a color already exists the overlay is a decorative pattern on top
+            // of the color — mixing it into the Divi background image slot breaks CSS
+            // generation for the color (Divi emits no CSS at all when both are set).
+            $existing_bg_color = is_string( $settings['background_color'] ?? '' )
+                ? ( $settings['background_color'] ?? '' )
+                : '';
+            if ( $bg_image_url === '' && $existing_bg_color === '' ) {
+                self::transformPath( $attrs, 'module.decoration.background.desktop.value.image.url', $overlay_image_url );
+            }
+        }
+
+        if ( ! $has_color ) {
+            // No color to build a gradient with — image already written above.
+            return;
+        }
+
+        $opacity_raw = $settings['background_overlay_opacity'] ?? null;
+        $opacity     = 1.0;
+        if ( is_array( $opacity_raw ) && isset( $opacity_raw['size'] ) ) {
+            $opacity = (float) $opacity_raw['size'];
+        } elseif ( is_numeric( $opacity_raw ) ) {
+            $opacity = (float) $opacity_raw;
+        }
+
+        // Second gradient stop color and positions.
+        $color_b     = $settings['background_overlay_color_b'] ?? '';
+        $has_color_b = is_string( $color_b ) && $color_b !== '';
+
+        $stop_a_raw = $settings['background_overlay_color_stop'] ?? null;
+        $stop_b_raw = $settings['background_overlay_color_b_stop'] ?? null;
+        $pos_a      = ( is_array( $stop_a_raw ) && isset( $stop_a_raw['size'] ) )
+            ? ( (int) $stop_a_raw['size'] . '%' )
+            : '0%';
+        $pos_b      = ( is_array( $stop_b_raw ) && isset( $stop_b_raw['size'] ) )
+            ? ( (int) $stop_b_raw['size'] . '%' )
+            : '100%';
+
+        // For 8-digit hex colors the alpha is embedded; use it directly and apply
+        // the overall overlay opacity only to plain 6-digit hex stop colors.
+        $rgba_a = $this->hexToRgba( $overlay_color, $opacity );
+        $rgba_b = $has_color_b ? $this->hexToRgba( $color_b, $opacity ) : $rgba_a;
+
+        // Gradient direction from Elementor angle control (default 180deg = top→bottom).
+        $angle_raw = $settings['background_overlay_gradient_angle'] ?? null;
+        $direction = '180deg';
+        if ( is_array( $angle_raw ) && isset( $angle_raw['size'] ) && $angle_raw['size'] !== '' ) {
+            $direction = (string) (int) $angle_raw['size'] . ( $angle_raw['unit'] ?? 'deg' );
+        } elseif ( is_string( $angle_raw ) && $angle_raw !== '' ) {
+            $direction = $angle_raw;
         }
 
         if ( $overlay_image_url !== '' || $bg_image_url !== '' ) {
-            // Gradient overlay on top of background image.
-            $stops = [
-                [ 'color' => $rgba, 'position' => '0%' ],
-                [ 'color' => $rgba, 'position' => '100%' ],
-            ];
-            self::transformPath( $attrs, 'module.decoration.background.desktop.value.gradient.enabled', 'on' );
-            self::transformPath( $attrs, 'module.decoration.background.desktop.value.gradient.overlaysImage', 'on' );
-            self::transformPath( $attrs, 'module.decoration.background.desktop.value.gradient.type', 'linear' );
-            self::transformPath( $attrs, 'module.decoration.background.desktop.value.gradient.stops', $stops );
+            // Gradient overlay on top of background image — emit as ::before CSS.
+            // Divi 5's native gradient.overlaysImage block attr renders malformed CSS;
+            // custom ::before CSS matches what the Divi builder produces for this pattern.
+            if ( $has_color_b ) {
+                $css_stops = "{$rgba_a} {$pos_a}, {$rgba_b} {$pos_b}";
+            } else {
+                $css_stops = "{$rgba_a} 0%, {$rgba_a} 100%";
+            }
+            $before_css = "background-image: linear-gradient({$direction}, {$css_stops}); content: \"\"; position: absolute; top: 0; left: 0; right: 0; bottom: 0;";
+            self::transformPath( $attrs, 'css.desktop.value.before', $before_css );
         } else {
             // No image — apply rgba color as semi-transparent background.
-            self::transformPath( $attrs, 'module.decoration.background.desktop.value.color', $rgba );
+            self::transformPath( $attrs, 'module.decoration.background.desktop.value.color', $rgba_a );
         }
     }
 
@@ -549,10 +789,98 @@ class StyleMapper {
         if ( strlen( $hex ) === 3 ) {
             $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
         }
+        // 8-digit hex: last two chars encode the alpha channel (00–FF).
+        // Use the embedded alpha directly; override the external $opacity param.
+        if ( strlen( $hex ) === 8 ) {
+            $opacity = round( hexdec( substr( $hex, 6, 2 ) ) / 255, 4 );
+            $hex     = substr( $hex, 0, 6 );
+        }
         $r = hexdec( substr( $hex, 0, 2 ) );
         $g = hexdec( substr( $hex, 2, 2 ) );
         $b = hexdec( substr( $hex, 4, 2 ) );
         return 'rgba(' . $r . ', ' . $g . ', ' . $b . ', ' . (string) round( $opacity, 4 ) . ')';
+    }
+
+    /**
+     * Globally suppresses Elementor settings that have no Divi 5 equivalent
+     * regardless of widget type. Called first in map() so per-property mappers
+     * do not need to re-list them.
+     *
+     * Covered categories:
+     * - Advanced-tab background / mask / transform / element-width keys (underscore prefix)
+     * - Motion FX (parallax, mouse-track, tilt, blur, etc.) — Divi 5 has no equivalent
+     * - Sticky behaviour — handled separately via Divi section settings; raw keys ignored
+     * - Hover-state backgrounds — Divi 5 uses a separate design system; not mappable here
+     * - Video fallback images — only used when background_background = 'video', not mapped
+     */
+    private function suppressUnimplementable( array $settings, array &$handled ): void {
+        // Key prefixes whose entire family can be silently ignored.
+        $prefix_suppressions = [
+            'motion_fx_',              // Motion Effects (parallax, scroll, tilt, mouse-track, etc.)
+            'sticky_',                 // Sticky scroll behaviour
+            '_background_',            // Advanced-tab background overrides (not the element's own bg)
+            '_mask_',                  // Advanced-tab CSS mask
+            '_element_',               // Advanced-tab element-width / visibility overrides
+            '_flex_',                  // Advanced-tab flex-size override
+            '_transform_',             // Advanced-tab CSS transform
+            '_offset_',                // Advanced-tab position offset
+            '_box_shadow_',            // Advanced-tab box-shadow (distinct from widget-level box_shadow_*)
+            '_z_index',                // Advanced-tab z-index
+            '_border_radius',          // Advanced-tab border-radius (handled in mapBorder for own key)
+            'button_background_hover_',// Hover-state button background — no static Divi mapping
+        ];
+
+        // Exact keys that are hover-state, video-fallback, or responsive sub-controls
+        // with no Divi 5 equivalent.
+        $exact_suppressions = [
+            // Hover-state backgrounds — Divi uses separate hover design tokens.
+            'background_video_fallback',
+            'background_hover_image',
+            'background_hover_video_fallback',
+            // Overlay hover state.
+            'background_overlay_video_fallback',
+            'background_overlay_hover_image',
+            'background_overlay_hover_video_fallback',
+            'background_overlay_position_tablet',
+            'background_overlay_position_mobile',
+            // Responsive gradient stop positions (desktop gradient is mapped; tablet/mobile are not).
+            'background_color_stop_tablet',
+            'background_color_stop_mobile',
+            'background_color_b_stop_tablet',
+            'background_color_b_stop_mobile',
+            'background_gradient_angle_tablet',
+            'background_gradient_angle_mobile',
+            'background_gradient_position_tablet',
+            'background_gradient_position_mobile',
+            'background_color_b_stop',
+            // Granular background X/Y position offsets (superseded by background_position string).
+            'background_xpos',
+            'background_xpos_tablet',
+            'background_xpos_mobile',
+            'background_ypos',
+            'background_ypos_tablet',
+            'background_ypos_mobile',
+            'background_bg_width',
+            'background_bg_width_tablet',
+            'background_bg_width_mobile',
+            // Misc widget utility settings with no Divi mapping.
+            'z_index',
+            'hide_desktop',
+            'lazyload',
+        ];
+
+        foreach ( array_keys( $settings ) as $key ) {
+            foreach ( $prefix_suppressions as $prefix ) {
+                if ( str_starts_with( $key, $prefix ) ) {
+                    $handled[] = $key;
+                    break;
+                }
+            }
+        }
+
+        foreach ( $exact_suppressions as $key ) {
+            $handled[] = $key;
+        }
     }
 
     /**
@@ -570,8 +898,6 @@ class StyleMapper {
             'height', 'height_tablet', 'height_mobile',
             // Inner section height — no direct Divi 5 equivalent.
             'height_inner', 'custom_height_inner', 'custom_height_inner_tablet',
-            // Vertical alignment of section content — no direct Divi 5 section attr.
-            'content_position',
         ];
         foreach ( $ignore as $key ) {
             $handled[] = $key;
@@ -593,19 +919,74 @@ class StyleMapper {
         foreach ( [
             // Elementor widget-wrap gutter — Divi manages this via row settings.
             'space_between_widgets',
-            // Vertical alignment of column content — no Divi 5 column attr.
-            'content_position', 'content_position_tablet',
             // HTML tag override for the column wrapper.
             'html_tag',
             // Column height mode selector — actual pixel value mapped by mapMinHeight().
             'height', 'height_tablet', 'height_mobile',
             // Column-level default colour overrides (heading, body, link).
             'heading_color', 'color_text', 'color_link',
-            // Granular background position offsets beyond the main position string.
-            'background_ypos', 'background_xpos', 'background_bg_width',
+            // Flex layout — mapped via columnFlexSettingsFromContainer() in converters.
+            'flex_direction', 'flex_justify_content', 'flex_align_items',
+            'flex_wrap', 'flex_align_content', 'flex_gap',
         ] as $key ) {
             $handled[] = $key;
         }
+    }
+
+    /**
+     * Maps Elementor `content_position` (vertical alignment of content within a
+     * section or column) to the Divi 5 layout alignment property.
+     *
+     * Sections (and container/row types): writes `alignItems` on the desktop
+     * layout since old-style sections only expose a single non-responsive value.
+     *
+     * Columns: writes `justifyContent` across all three breakpoints.  In Divi 5
+     * columns use flex-direction:column, so justifyContent controls the vertical
+     * position of child modules.
+     *
+     * Elementor values → CSS flex values:
+     *   'top'    → 'flex-start'
+     *   'middle' → 'center'
+     *   'bottom' → 'flex-end'
+     *   others   → passed through (e.g. 'space-evenly', 'stretch')
+     */
+    private function mapContentPosition( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
+        if ( $widget_type === 'column' ) {
+            foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+                $key       = 'content_position' . $suffix;
+                $handled[] = $key;
+
+                $pos = $settings[ $key ] ?? '';
+                if ( is_string( $pos ) && $pos !== '' ) {
+                    self::transformPath(
+                        $attrs,
+                        "module.decoration.layout.{$breakpoint}.value.justifyContent",
+                        $this->normalizeFlexAlignment( $pos )
+                    );
+                }
+            }
+            return;
+        }
+
+        // section / container / row — desktop-only (responsive variants rarely set).
+        $handled[] = 'content_position';
+        $pos = $settings['content_position'] ?? '';
+        if ( is_string( $pos ) && $pos !== '' ) {
+            self::transformPath(
+                $attrs,
+                'module.decoration.layout.desktop.value.alignItems',
+                $this->normalizeFlexAlignment( $pos )
+            );
+        }
+    }
+
+    private function normalizeFlexAlignment( string $pos ): string {
+        return match ( $pos ) {
+            'top'    => 'flex-start',
+            'middle' => 'center',
+            'bottom' => 'flex-end',
+            default  => $pos,
+        };
     }
 
     /**
@@ -957,11 +1338,17 @@ class StyleMapper {
         ];
 
         foreach ( $suffixes as $suffix => $breakpoint ) {
-            $key       = 'custom_height' . $suffix;
-            $handled[] = $key;
+            // Elementor section key.
+            $key1      = 'custom_height' . $suffix;
+            $handled[] = $key1;
+            $val1      = $this->parseSizeValue( $settings[ $key1 ] ?? null );
 
-            $raw   = $settings[ $key ] ?? null;
-            $value = $this->parseSizeValue( $raw );
+            // Elementor container key (distinct from section).
+            $key2      = 'min_height' . $suffix;
+            $handled[] = $key2;
+            $val2      = $this->parseSizeValue( $settings[ $key2 ] ?? null );
+
+            $value = $val1 !== '' ? $val1 : $val2;
             if ( $value !== '' ) {
                 self::transformPath( $attrs, "module.decoration.sizing.{$breakpoint}.value.minHeight", $value );
             }
@@ -985,6 +1372,67 @@ class StyleMapper {
 
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
             self::transformPath( $attrs, "button.decoration.button.{$breakpoint}.value.background.color", $color );
+        }
+    }
+
+    /**
+     * Maps Elementor button border controls to the Divi 5 button decoration path.
+     *
+     * Elementor groups button border under `button_border_border`, `button_border_width`,
+     * `button_border_color`, and `button_border_radius`.  In Divi 5 these live at
+     * `button.decoration.button.{bp}.value.border.*` rather than the standard
+     * `module.decoration.border` path used by non-button elements.
+     */
+    private function mapButtonBorder( array $settings, array &$attrs, array &$handled ): void {
+        $btn_border_keys = [
+            'button_border_border', 'button_border_width', 'button_border_color', 'button_border_radius',
+        ];
+        foreach ( $btn_border_keys as $base ) {
+            foreach ( self::BREAKPOINT_MAP as $suffix => $_ ) {
+                $handled[] = $base . $suffix;
+            }
+        }
+
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $base_path = "button.decoration.button.{$breakpoint}.value.border";
+
+            // Border style.
+            $style = $settings[ 'button_border_border' . $suffix ] ?? '';
+            if ( is_string( $style ) && $style !== '' ) {
+                self::transformPath( $attrs, "{$base_path}.styles.all.style", $style );
+            }
+
+            // Border color.
+            $color = $settings[ 'button_border_color' . $suffix ] ?? '';
+            if ( is_string( $color ) && $color !== '' ) {
+                self::transformPath( $attrs, "{$base_path}.styles.all.color", $color );
+            }
+
+            // Border width.
+            $width_raw = $settings[ 'button_border_width' . $suffix ] ?? null;
+            if ( is_array( $width_raw ) ) {
+                $this->applyBorderWidth( $width_raw, $attrs, "{$base_path}.styles" );
+            } elseif ( is_string( $width_raw ) && $width_raw !== '' ) {
+                self::transformPath( $attrs, "{$base_path}.styles.all.width", $width_raw );
+            }
+
+            // Border radius: prefer button_border_radius (composite-widget prefix);
+            // fall back to the standard border_radius control (standalone button widget).
+            $radius_raw = $settings[ 'button_border_radius' . $suffix ]
+                ?? ( $suffix === '' ? ( $settings['border_radius'] ?? null ) : null );
+            if ( is_array( $radius_raw ) ) {
+                $radius_obj = $this->normalizeRadius( $radius_raw );
+                if ( ! empty( $radius_obj ) ) {
+                    self::transformPath( $attrs, "{$base_path}.radius", $radius_obj );
+                }
+            } elseif ( is_string( $radius_raw ) && $radius_raw !== '' ) {
+                self::transformPath( $attrs, "{$base_path}.radius", [
+                    'topLeft'     => $radius_raw,
+                    'topRight'    => $radius_raw,
+                    'bottomRight' => $radius_raw,
+                    'bottomLeft'  => $radius_raw,
+                ] );
+            }
         }
     }
 
@@ -1026,7 +1474,10 @@ class StyleMapper {
     private function parseSizeValue( mixed $raw ): string {
         if ( is_array( $raw ) ) {
             // Elementor 3.x responsive shape: {sizes: {desktop: {size, unit}, ...}}.
-            if ( isset( $raw['sizes'] ) && is_array( $raw['sizes'] ) ) {
+            // Only enter this branch when sizes is a non-empty keyed array; Elementor
+            // always serialises `sizes: []` alongside the flat `size` key, so an empty
+            // array must fall through to the `size` key below.
+            if ( isset( $raw['sizes'] ) && is_array( $raw['sizes'] ) && ! empty( $raw['sizes'] ) ) {
                 foreach ( [ 'desktop', 'tablet', 'mobile' ] as $bp ) {
                     $entry = $raw['sizes'][ $bp ] ?? null;
                     if ( is_array( $entry ) && isset( $entry['size'] ) && $entry['size'] !== '' && $entry['size'] !== null ) {
@@ -1117,6 +1568,26 @@ class StyleMapper {
             fn( string $v ) => $v !== '' ? ( is_numeric( $v ) ? $v . $unit : $v ) : '0px',
             $corners
         );
+    }
+
+    /**
+     * Maps Elementor CSS class names (`css_classes` / `_css_classes`) to the
+     * Divi 5 custom CSS class attribute.
+     *
+     * Both keys are also listed in logUnmappedSettings()'s $always_ignore so they
+     * are never reported as skipped when not handled; this method ensures they are
+     * actively written to the Divi attrs when present.
+     */
+    private function mapCustomCssClass( array $settings, array &$attrs, array &$handled ): void {
+        $handled[] = 'css_classes';
+        $handled[] = '_css_classes';
+
+        $classes = trim( (string) ( $settings['css_classes'] ?? $settings['_css_classes'] ?? '' ) );
+        if ( $classes === '' ) {
+            return;
+        }
+
+        self::transformPath( $attrs, 'module.advanced.customCssClassNames.desktop.value', $classes );
     }
 
     // -------------------------------------------------------------------------

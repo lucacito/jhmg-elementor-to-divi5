@@ -43,7 +43,7 @@ class HeadingConverter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'heading' );
         $this->logUnmappedSettings( $id, $settings, array_merge(
-            [ 'title', 'tag', 'header_size' ],
+            [ 'title', 'tag', 'header_size', 'title_tag', 'size' ],
             $style['handled_keys']
         ) );
 

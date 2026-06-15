@@ -1,0 +1,199 @@
+<?php
+// Exit if accessed directly
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// Hook the export function to admin_post action
+add_action('admin_post_jhmgced_export_page', 'jhmgced_handle_export_page');
+
+/**
+ * Before JSON encoding, fix any builder version issues
+ * 
+ * @param string $content The content to fix
+ * @return string Fixed content
+ */
+function jhmgced_fix_builder_version($content) {
+    // Replace any incorrect format with the correct one
+    $content = str_replace('*builder*version=', '_builder_version=', $content);
+    return $content;
+}
+
+/**
+ * Handle the export process
+ */
+function jhmgced_handle_export_page() {
+    // Verify user capabilities
+    if (!current_user_can('manage_options')) {
+        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'jhmg-converter-for-elementor-to-divi'));
+    }
+    
+    // Verify nonce
+    if (!isset($_POST['jhmgced_export_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['jhmgced_export_nonce'])), 'jhmgced_export_action')) {
+        wp_die(esc_html__('Security check failed. Please try again.', 'jhmg-converter-for-elementor-to-divi'));
+    }
+    
+    // Verify page ID
+    if (!isset($_POST['jhmgced_page_id']) || empty($_POST['jhmgced_page_id'])) {
+        wp_die(esc_html__('No page was selected.', 'jhmg-converter-for-elementor-to-divi'));
+    }
+    
+    $page_id = absint($_POST['jhmgced_page_id']);
+    
+    // Enable error logging for debugging
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        jhmgced_log("Starting Elementor to Divi export for page ID: {$page_id}");
+    }
+    
+    // Set the global post to ensure get_the_title() works correctly
+    global $post;
+    $original_post = $post;
+    $post = get_post($page_id);
+    setup_postdata($post);
+    
+    // Get Elementor data
+    $elementor_data = get_post_meta($page_id, '_elementor_data', true);
+    
+    if (empty($elementor_data)) {
+        wp_reset_postdata();
+        wp_die(esc_html__('No Elementor data found for this page.', 'jhmg-converter-for-elementor-to-divi'));
+    }
+    
+    // Decode the JSON string to an array
+    $elementor_data_decoded = json_decode($elementor_data, true);
+    
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            jhmgced_log("JSON decode error: " . json_last_error_msg());
+            jhmgced_log("Raw Elementor data: " . substr($elementor_data, 0, 100) . "...");
+        }
+        
+        wp_reset_postdata();
+        wp_die(sprintf(
+            // translators: %s is the error message returned by json_last_error_msg()
+            esc_html__('Failed to decode Elementor data: %s', 'jhmg-converter-for-elementor-to-divi'),
+            esc_html(json_last_error_msg())
+        ));
+    }
+    
+    // Log the decoded data structure
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        jhmgced_log("Successfully decoded Elementor data for page ID: {$page_id}");
+        jhmgced_log("Decoded data structure: " . (is_array($elementor_data_decoded) ? count($elementor_data_decoded) . " top-level elements" : "Not an array"));
+    }
+    
+    // Map Elementor data to Divi format
+    if (!function_exists('jhmgced_map_elementor_to_divi')) {
+        wp_reset_postdata();
+        wp_die(esc_html__('Required mapping function does not exist.', 'jhmg-converter-for-elementor-to-divi'));
+    }
+    
+    $divi_data = jhmgced_map_elementor_to_divi($elementor_data_decoded);
+    
+    // Reset post data
+    wp_reset_postdata();
+    $post = $original_post;
+    
+    // Log the Divi data structure
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        jhmgced_log("Generated Divi data structure");
+        
+        // Check if post_content is populated
+        if (isset($divi_data['data']['post_content'])) {
+            $content_length = strlen($divi_data['data']['post_content']);
+            jhmgced_log("post_content length: {$content_length} bytes");
+            
+            // Log a sample of the content
+            $sample = substr($divi_data['data']['post_content'], 0, 200);
+            jhmgced_log("Content sample: {$sample}...");
+        } else {
+            jhmgced_log("post_content is empty or not set!");
+        }
+    }
+    
+    // Fix builder version format issues
+    $divi_data['data']['post_content'] = jhmgced_fix_builder_version($divi_data['data']['post_content']);
+
+    // Convert to JSON
+    $json_content = wp_json_encode($divi_data, JSON_PRETTY_PRINT);
+    
+    if ($json_content === false) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            jhmgced_log("JSON encoding error: " . json_last_error_msg());
+        }
+        
+        wp_die(sprintf(
+            // translators: %s is the error message returned by json_last_error_msg()
+            esc_html__('Failed to encode JSON: %s', 'jhmg-converter-for-elementor-to-divi'),
+            esc_html(json_last_error_msg())
+        ));
+    }
+    
+    // Get page title for filename
+    $page = get_post($page_id);
+    $sanitized_title = sanitize_title($page->post_title);
+    $filename = 'divi-export-' . $sanitized_title . '-' . $page_id . '.json';
+    
+    // Save detailed log if option is selected
+    if (isset($_POST['jhmgced_detailed_log']) && $_POST['jhmgced_detailed_log'] == '1') {
+        // Use uploads directory instead of plugin directory
+        $upload_dir = wp_upload_dir();
+        $log_dir = $upload_dir['basedir'] . '/jhmgced-files';
+        
+        // Create directory if it doesn't exist
+        if (!file_exists($log_dir)) {
+            wp_mkdir_p($log_dir);
+        }
+        
+        $log_file = $log_dir . '/export-log-' . $page_id . '-' . time() . '.txt';
+        $log_content = "Elementor to Divi Export Log\n";
+        $log_content .= "Page: " . $page->post_title . " (ID: " . $page_id . ")\n";
+        $log_content .= "Date: " . current_time('mysql') . "\n\n";
+        $log_content .= "Conversion Summary:\n";
+        $log_content .= "- " . count($elementor_data_decoded) . " top-level Elementor elements processed\n";
+        $log_content .= "- JSON output size: " . strlen($json_content) . " bytes\n";
+        
+        // Save log file
+        file_put_contents($log_file, $log_content);
+        jhmgced_log("Detailed log saved to: " . $log_file);
+    }
+    
+    // Track successful export
+    do_action('jhmgced_after_export', $page_id, true);
+    
+    echo '<script type="text/javascript">
+// Remove loading indicator immediately and completely
+if (window.parent && window.parent.jQuery) {
+    window.parent.jQuery(".jhmgced-loading").remove();
+} else if (window.jQuery) {
+    jQuery(".jhmgced-loading").remove();
+} else {
+    // Fallback for when jQuery isn't available
+    var loadingElements = document.getElementsByClassName("jhmgced-loading");
+    while(loadingElements.length > 0) {
+        loadingElements[0].parentNode.removeChild(loadingElements[0]);
+    }
+}
+</script>';
+    
+    // Force download using PHP output
+    nocache_headers();
+    header('Content-Type: application/json; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Content-Length: ' . strlen($json_content));
+    
+    // Disable output buffering
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+    
+    // Log success
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        jhmgced_log("Successfully exported Divi JSON for page ID: {$page_id}");
+    }
+    
+    // Output JSON content
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON data is already sanitized by wp_json_encode()
+    echo $json_content;
+    exit;
+}

@@ -317,12 +317,8 @@ final class GridContainerConversionTest extends TestCase {
             ],
         ] );
 
-        // outer → section → row → column (wrapping the inner grid row).
-        $outer_row = $result[0]['elements'][0];
-        $col       = $outer_row['elements'][0];
-        $this->assertSame( 'divi/column', $col['name'], 'Inner grid wrapped in a column' );
-
-        $inner_row = $col['elements'][0];
+        // outer → section → grid-row directly (no extra column wrapper needed).
+        $inner_row = $result[0]['elements'][0];
         $this->assertSame( 'divi/row', $inner_row['name'], 'Inner grid is a divi/row' );
 
         $display = $inner_row['settings']['module']['decoration']['layout']['desktop']['value']['display'] ?? null;

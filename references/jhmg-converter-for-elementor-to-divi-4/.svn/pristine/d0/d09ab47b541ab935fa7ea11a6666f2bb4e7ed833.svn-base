@@ -1,0 +1,1238 @@
+<?php
+/**
+ * Elementor to Divi Exporter - Widget Converter Functions
+ *
+ * This file contains all the functions that convert Elementor widgets to Divi modules.
+ */
+
+// Exit if accessed directly
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * Create a Divi heading module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_heading_module($settings, $builder_version, $style_attrs = '') {
+    $title = isset($settings['title']) ? $settings['title'] : 'Heading';
+    $tag = isset($settings['header_size']) ? $settings['header_size'] : 'h2';
+    
+    return "[et_pb_text _builder_version=\"{$builder_version}\"{$style_attrs}]\n<{$tag}>" . esc_html($title) . "</{$tag}>\n[/et_pb_text]\n";
+}
+
+/**
+ * Create a Divi text module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_text_module($settings, $builder_version, $style_attrs = '') {
+    $content = isset($settings['editor']) ? $settings['editor'] : 'Text content';
+    
+    return "[et_pb_text _builder_version=\"{$builder_version}\"{$style_attrs}]\n" . wp_kses_post($content) . "\n[/et_pb_text]\n";
+}
+
+/**
+ * Create a Divi image module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_image_module($settings, $builder_version, $style_attrs = '') {
+    $image_url = '';
+    $alt_text = '';
+    $title_text = '';
+    
+    // Handle different image data formats from Elementor
+    if (isset($settings['image']) && isset($settings['image']['url'])) {
+        $image_url = esc_url($settings['image']['url']);
+        if (isset($settings['image']['alt'])) {
+            $alt_text = esc_attr($settings['image']['alt']);
+        }
+        if (isset($settings['image']['title'])) {
+            $title_text = esc_attr($settings['image']['title']);
+        }
+    } elseif (isset($settings['url'])) {
+        $image_url = esc_url($settings['url']);
+    }
+    
+    // Use Divi's default placeholder image if no image URL is found
+    if (empty($image_url)) {
+        $image_url = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTA4MCIgaGVpZ2h0PSI1NDAiIHZpZXdCb3g9IjAgMCAxMDgwIDU0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZmlsbD0iI0VCRUJFQiIgZD0iTTAgMGgxMDgwdjU0MEgweiIvPgogICAgICAgIDxwYXRoIGQ9Ik00NDUuNjQ5IDU0MGgtOTguOTk1TDE0NC42NDkgMzM3Ljk5NSAwIDQ4Mi42NDR2LTk4Ljk5NWwxMTYuMzY1LTExNi4zNjVjMTUuNjItMTUuNjIgNDAuOTQ3LTE1LjYyIDU2LjU2OCAwTDQ0NS42NSA1NDB6IiBmaWxsLW9wYWNpdHk9Ii4xIiBmaWxsPSIjMDAwIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz4KICAgICAgICA8Y2lyY2xlIGZpbGwtb3BhY2l0eT0iLjA1IiBmaWxsPSIjMDAwIiBjeD0iMzMxIiBjeT0iMTQ4IiByPSI3MCIvPgogICAgICAgIDxwYXRoIGQ9Ik0xMDgwIDM3OXYxMTMuMTM3TDcyOC4xNjIgMTQwLjMgMzI4LjQ2MiA1NDBIMjE1LjMyNEw2OTkuODc4IDU1LjQ0NmMxNS42Mi0xNS42MiA0MC45NDgtMTUuNjIgNTYuNTY4IDBMMTA4MCAzNzl6IiBmaWxsLW9wYWNpdHk9Ii4yIiBmaWxsPSIjMDAwIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz4KICAgIDwvZz4KPC9zdmc+Cg==';
+    }
+    
+    $alt_attr = !empty($alt_text) ? " alt=\"{$alt_text}\"" : " alt=\"\"";
+    $title_attr = !empty($title_text) ? " title=\"{$title_text}\"" : " title=\"\"";
+    
+    return "[et_pb_image _builder_version=\"{$builder_version}\" src=\"{$image_url}\"{$alt_attr}{$title_attr}{$style_attrs}][/et_pb_image]\n";
+}
+
+/**
+ * Create a Divi video module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_video_module($settings, $builder_version, $style_attrs = '') {
+    $video_url = '';
+    
+    if (isset($settings['youtube_url'])) {
+        $video_url = esc_url($settings['youtube_url']);
+    } elseif (isset($settings['video_url'])) {
+        $video_url = esc_url($settings['video_url']);
+    } elseif (isset($settings['url'])) {
+        $video_url = esc_url($settings['url']);
+    } elseif (isset($settings['hosted_url']) && isset($settings['hosted_url']['url'])) {
+        $video_url = esc_url($settings['hosted_url']['url']);
+    }
+    
+    if (empty($video_url)) {
+        return "[et_pb_text _builder_version=\"{$builder_version}\"{$style_attrs}]\n<p>No video URL found</p>\n[/et_pb_text]\n";
+    }
+    
+    return "[et_pb_video _builder_version=\"{$builder_version}\" url=\"{$video_url}\"{$style_attrs}][/et_pb_video]\n";
+}
+
+/**
+ * Create a Divi button module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_button_module($settings, $builder_version, $style_attrs = '') {
+    $button_text = isset($settings['text']) ? esc_html($settings['text']) : 'Click here';
+    $button_url = '#';
+    
+    if (isset($settings['link']) && isset($settings['link']['url'])) {
+        $button_url = esc_url($settings['link']['url']);
+    } elseif (isset($settings['url'])) {
+        $button_url = esc_url($settings['url']);
+    }
+    
+    return "[et_pb_button button_text=\"{$button_text}\" button_url=\"{$button_url}\" _builder_version=\"{$builder_version}\"{$style_attrs}][/et_pb_button]\n";
+}
+
+/**
+ * Create a Divi spacer module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_spacer_module($settings, $builder_version, $style_attrs = '') {
+    $height = 50; // Default height
+    
+    if (isset($settings['height']['size'])) {
+        $height = intval($settings['height']['size']);
+    } elseif (isset($settings['height']) && is_numeric($settings['height'])) {
+        $height = intval($settings['height']);
+    }
+    
+    return "[et_pb_divider _builder_version=\"{$builder_version}\" height=\"{$height}px\"{$style_attrs}][/et_pb_divider]\n";
+}
+
+/**
+ * Create a Divi divider module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_divider_module($settings, $builder_version, $style_attrs = '') {
+    return "[et_pb_divider _builder_version=\"{$builder_version}\"{$style_attrs}][/et_pb_divider]\n";
+}
+
+/**
+ * Create a Divi map module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_map_module($settings, $builder_version, $style_attrs = '') {
+    $address = isset($settings['address']) ? esc_attr($settings['address']) : '';
+    
+    return "[et_pb_map address=\"{$address}\" _builder_version=\"{$builder_version}\"{$style_attrs}][/et_pb_map]\n";
+}
+
+/**
+ * Create a Divi icon module (or blurb with icon)
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_icon_module($settings, $builder_version, $style_attrs = '') {
+    // Map Elementor icon to Divi icon - this is a simple mapping, you might need to expand it
+    $icon = '%%1%%'; // Default Divi icon
+    
+    if (isset($settings['selected_icon']) && isset($settings['selected_icon']['value'])) {
+        // This is a very basic mapping and would need to be expanded for actual icon mapping
+        if (strpos($settings['selected_icon']['value'], 'facebook') !== false) {
+            $icon = '%%3%%';
+        } elseif (strpos($settings['selected_icon']['value'], 'twitter') !== false) {
+            $icon = '%%4%%';
+        }
+    }
+    
+    // Create a blurb with an icon
+    $blurb = "[et_pb_blurb _builder_version=\"{$builder_version}\" use_icon=\"on\" font_icon=\"{$icon}\" icon_color=\"#2ea3f2\" icon_placement=\"top\" use_circle=\"off\" text_orientation=\"center\"{$style_attrs}][/et_pb_blurb]\n";
+    
+    return $blurb;
+}
+
+/**
+ * Create a Divi tabs module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_tabs_module($settings, $builder_version, $style_attrs = '') {
+    $tabs_shortcode = "[et_pb_tabs _builder_version=\"{$builder_version}\"{$style_attrs}]\n";
+    
+    if (isset($settings['tabs']) && is_array($settings['tabs'])) {
+        foreach ($settings['tabs'] as $tab) {
+            $tab_title = isset($tab['tab_title']) ? esc_html($tab['tab_title']) : 'Tab Title';
+            $tab_content = isset($tab['tab_content']) ? wp_kses_post($tab['tab_content']) : 'Tab Content';
+            
+            $tabs_shortcode .= "[et_pb_tab title=\"{$tab_title}\" _builder_version=\"{$builder_version}\"]{$tab_content}[/et_pb_tab]\n";
+        }
+    } else {
+        // Default tab if none provided
+        $tabs_shortcode .= "[et_pb_tab title=\"Tab 1\" _builder_version=\"{$builder_version}\"]Tab 1 Content[/et_pb_tab]\n";
+    }
+    
+    $tabs_shortcode .= "[/et_pb_tabs]\n";
+    return $tabs_shortcode;
+}
+
+/**
+ * Create a Divi accordion module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_accordion_module($settings, $builder_version, $style_attrs = '') {
+    $accordion_shortcode = "[et_pb_accordion _builder_version=\"{$builder_version}\"{$style_attrs}]\n";
+    
+    if (isset($settings['tabs']) && is_array($settings['tabs'])) {
+        // Handle 'tabs' format from some Elementor widgets
+        foreach ($settings['tabs'] as $item) {
+            $item_title = isset($item['tab_title']) ? esc_html($item['tab_title']) : 'Accordion Title';
+            $item_content = isset($item['tab_content']) ? wp_kses_post($item['tab_content']) : 'Accordion Content';
+            
+            $accordion_shortcode .= "[et_pb_accordion_item title=\"{$item_title}\" _builder_version=\"{$builder_version}\"]{$item_content}[/et_pb_accordion_item]\n";
+        }
+    } elseif (isset($settings['items']) && is_array($settings['items'])) {
+        // Handle 'items' format from some Elementor widgets
+        foreach ($settings['items'] as $item) {
+            $item_title = isset($item['title']) ? esc_html($item['title']) : 
+                         (isset($item['item_title']) ? esc_html($item['item_title']) : 'Accordion Title');
+            
+            $item_content = isset($item['content']) ? wp_kses_post($item['content']) : 
+                          (isset($item['item_content']) ? wp_kses_post($item['item_content']) : 'Accordion Content');
+            
+            $accordion_shortcode .= "[et_pb_accordion_item title=\"{$item_title}\" _builder_version=\"{$builder_version}\"]{$item_content}[/et_pb_accordion_item]\n";
+        }
+    } else {
+        // Default accordion item if none provided
+        $accordion_shortcode .= "[et_pb_accordion_item title=\"Accordion 1\" _builder_version=\"{$builder_version}\"]Accordion 1 Content[/et_pb_accordion_item]\n";
+    }
+    
+    $accordion_shortcode .= "[/et_pb_accordion]\n";
+    return $accordion_shortcode;
+}
+
+/**
+ * Create a Divi testimonial module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_testimonial_module($settings, $builder_version, $style_attrs = '') {
+    $content = isset($settings['content']) ? wp_kses_post($settings['content']) : 
+              (isset($settings['testimonial_content']) ? wp_kses_post($settings['testimonial_content']) : 'Review Text');
+    
+    $author = isset($settings['name']) ? esc_html($settings['name']) : 
+             (isset($settings['testimonial_name']) ? esc_html($settings['testimonial_name']) : 'Testimonial #1');
+    
+    $job = isset($settings['job']) ? esc_html($settings['job']) : 
+         (isset($settings['testimonial_job']) ? esc_html($settings['testimonial_job']) : 'Designation');
+    
+    $attrs = " author=\"{$author}\" job_title=\"{$job}\"";
+    
+    return "[et_pb_testimonial _builder_version=\"{$builder_version}\"{$attrs}{$style_attrs}]{$content}[/et_pb_testimonial]\n";
+}
+
+/**
+ * Create a Divi code module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_code_module($settings, $builder_version, $style_attrs = '') {
+    $html_content = isset($settings['html']) ? $settings['html'] : '';
+    
+    return "[et_pb_code _builder_version=\"{$builder_version}\"{$style_attrs}]{$html_content}[/et_pb_code]\n";
+}
+
+/**
+ * Create a Divi blurb module (used for image-box and icon-box widgets)
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @param bool $use_icon Whether to use an icon instead of an image
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_blurb_module($settings, $builder_version, $style_attrs = '', $use_icon = false) {
+    $title = isset($settings['title_text']) ? esc_html($settings['title_text']) : '';
+    $content = isset($settings['description_text']) ? wp_kses_post($settings['description_text']) : '';
+    
+    $attrs = " _builder_version=\"{$builder_version}\"";
+    
+    if ($title) {
+        $attrs .= " title=\"{$title}\"";
+    }
+    
+    if ($use_icon) {
+        // Use icon
+        $icon = '%%1%%'; // Default Divi icon
+        
+        if (isset($settings['selected_icon']) && isset($settings['selected_icon']['value'])) {
+            // Basic icon mapping
+            if (strpos($settings['selected_icon']['value'], 'facebook') !== false) {
+                $icon = '%%3%%';
+            } elseif (strpos($settings['selected_icon']['value'], 'twitter') !== false) {
+                $icon = '%%4%%';
+            }
+        }
+        
+        $attrs .= " use_icon=\"on\" font_icon=\"{$icon}\" icon_color=\"#2ea3f2\" icon_placement=\"top\"";
+    } else {
+        // Use image
+        $image_url = '';
+        
+        if (isset($settings['image']) && isset($settings['image']['url'])) {
+            $image_url = esc_url($settings['image']['url']);
+        }
+        
+        if (!empty($image_url)) {
+            $attrs .= " image=\"{$image_url}\" use_icon=\"off\"";
+        }
+    }
+    
+    return "[et_pb_blurb{$attrs}{$style_attrs}]{$content}[/et_pb_blurb]\n";
+}
+
+/**
+ * Create a Divi number counter module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_number_counter_module($settings, $builder_version, $style_attrs = '') {
+    $number = isset($settings['number']) ? esc_html($settings['number']) : '0';
+    $title = isset($settings['title']) ? esc_html($settings['title']) : '';
+    
+    $attrs = " _builder_version=\"{$builder_version}\" number=\"{$number}\"";
+    
+    if ($title) {
+        $attrs .= " title=\"{$title}\"";
+    }
+    
+    return "[et_pb_number_counter{$attrs}{$style_attrs}][/et_pb_number_counter]\n";
+}
+
+/**
+ * Create a Divi bar counters module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_bar_counters_module($settings, $builder_version, $style_attrs = '') {
+    $bar_counters = "[et_pb_bar_counters _builder_version=\"{$builder_version}\"{$style_attrs}]\n";
+    
+    // Single item
+    if (isset($settings['percentage'])) {
+        $percent = (int) $settings['percentage'];
+        $title = isset($settings['title']) ? esc_html($settings['title']) : 'Skill';
+        
+        $bar_counters .= "[et_pb_counter percent=\"{$percent}\" _builder_version=\"{$builder_version}\"]{$title}[/et_pb_counter]\n";
+    } 
+    // Multiple items
+    elseif (isset($settings['items']) && is_array($settings['items'])) {
+        foreach ($settings['items'] as $item) {
+            $percent = isset($item['percentage']) ? (int) $item['percentage'] : 50;
+            $title = isset($item['title']) ? esc_html($item['title']) : 'Skill';
+            
+            $bar_counters .= "[et_pb_counter percent=\"{$percent}\" _builder_version=\"{$builder_version}\"]{$title}[/et_pb_counter]\n";
+        }
+    } 
+    // Default item
+    else {
+        $bar_counters .= "[et_pb_counter percent=\"50\" _builder_version=\"{$builder_version}\"]Skill[/et_pb_counter]\n";
+    }
+    
+    $bar_counters .= "[/et_pb_bar_counters]\n";
+    return $bar_counters;
+}
+
+/**
+ * Create a Divi social media follow module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_social_media_follow_module($settings, $builder_version, $style_attrs = '') {
+    $social_follow = "[et_pb_social_media_follow _builder_version=\"{$builder_version}\"{$style_attrs}]\n";
+    
+    if (isset($settings['social_icon_list']) && is_array($settings['social_icon_list'])) {
+        foreach ($settings['social_icon_list'] as $social_icon) {
+            $network = 'facebook';
+            $url = '#';
+            
+            // Try to determine network from class or value
+            if (isset($social_icon['social_icon']) && isset($social_icon['social_icon']['value'])) {
+                $icon_value = $social_icon['social_icon']['value'];
+                
+                if (strpos($icon_value, 'facebook') !== false) {
+                    $network = 'facebook';
+                } elseif (strpos($icon_value, 'twitter') !== false) {
+                    $network = 'twitter';
+                } elseif (strpos($icon_value, 'instagram') !== false) {
+                    $network = 'instagram';
+                } elseif (strpos($icon_value, 'linkedin') !== false) {
+                    $network = 'linkedin';
+                } elseif (strpos($icon_value, 'youtube') !== false) {
+                    $network = 'youtube';
+                }
+            }
+            
+            // Get URL if available
+            if (isset($social_icon['link']) && isset($social_icon['link']['url'])) {
+                $url = esc_url($social_icon['link']['url']);
+            }
+            
+            $social_follow .= "[et_pb_social_media_follow_network social_network=\"{$network}\" url=\"{$url}\" _builder_version=\"{$builder_version}\"] {$network} [/et_pb_social_media_follow_network]\n";
+        }
+    } else {
+        // Default social icon
+        $social_follow .= "[et_pb_social_media_follow_network social_network=\"facebook\" url=\"#\" _builder_version=\"{$builder_version}\"] facebook [/et_pb_social_media_follow_network]\n";
+    }
+    
+    $social_follow .= "[/et_pb_social_media_follow]\n";
+    return $social_follow;
+}
+
+/**
+ * Create a Divi gallery module from Elementor image-carousel or image-gallery
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @param string $widget_type Original widget type (image-carousel or image-gallery)
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_gallery_module($settings, $builder_version, $style_attrs = '', $widget_type = 'image-gallery') {
+    $gallery_attrs = " _builder_version=\"{$builder_version}\"";
+    $images = [];
+    
+    // For image gallery
+    if ($widget_type === 'image-gallery' && isset($settings['gallery']) && is_array($settings['gallery'])) {
+        $images = $settings['gallery'];
+    } 
+    // For image carousel
+    elseif ($widget_type === 'image-carousel' && isset($settings['carousel']) && is_array($settings['carousel'])) {
+        $images = $settings['carousel'];
+    }
+    // Alternative structure sometimes used
+    elseif (isset($settings['images']) && is_array($settings['images'])) {
+        $images = $settings['images'];
+    }
+
+    // Handle different gallery layouts
+    $gallery_layout = 'grid';
+    
+    if ($widget_type === 'image-carousel') {
+        $gallery_layout = 'slider';
+        $gallery_attrs .= " slider_effect=\"slide\"";
+    } else {
+        // Check for gallery layout settings
+        if (isset($settings['gallery_type']) && $settings['gallery_type'] === 'masonry') {
+            $gallery_layout = 'masonry';
+        } else if (isset($settings['gallery_type']) && $settings['gallery_type'] === 'grid') {
+            $gallery_layout = 'grid';
+        }
+    }
+    
+    $gallery_attrs .= " gallery_layout=\"{$gallery_layout}\"";
+    
+    // Setup columns
+    $columns = 3; // Default columns
+    if (isset($settings['columns'])) {
+        $columns = intval($settings['columns']);
+        if ($columns < 1 || $columns > 6) {
+            $columns = 3; // Limit to valid Divi values
+        }
+    }
+    
+    $gallery_attrs .= " gallery_columns=\"{$columns}\"";
+    
+    // Process image IDs
+    $image_ids = [];
+    foreach ($images as $image) {
+        if (isset($image['id'])) {
+            $image_ids[] = $image['id'];
+        }
+    }
+    
+    // If we found image IDs, add them to gallery
+    if (!empty($image_ids)) {
+        $gallery_attrs .= " gallery_ids=\"" . implode(',', $image_ids) . "\"";
+        return "[et_pb_gallery{$gallery_attrs}{$style_attrs}][/et_pb_gallery]\n";
+    } 
+    // If no images IDs but we have URLs
+    elseif (!empty($images)) {
+        // For Elementor data that only includes URLs but not IDs,
+        // create a text module with images instead
+        $content = "";
+        
+        if ($widget_type === 'image-carousel') {
+            // Create slider-like layout with divs
+            $content .= "<div class=\"imported-gallery\">\n";
+            foreach ($images as $image) {
+                if (isset($image['url'])) {
+                    $url = esc_url($image['url']);
+                    $alt = isset($image['alt']) ? esc_attr($image['alt']) : '';
+                    // phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage
+                    $content .= "  <div><img src=\"{$url}\" alt=\"{$alt}\" /></div>\n";
+                }
+            }
+            $content .= "</div>\n";
+            
+            // Add note about importing image carousel
+            $content .= "<p><em>This image carousel was imported from Elementor. You may need to adjust the gallery settings in Divi.</em></p>\n";
+        } else {
+            // Create grid-like layout with divs
+            $content .= "<div class=\"imported-gallery-grid\">\n";
+            foreach ($images as $image) {
+                if (isset($image['url'])) {
+                    $url = esc_url($image['url']);
+                    $alt = isset($image['alt']) ? esc_attr($image['alt']) : '';
+                    // phpcs:ignore PluginCheck.CodeAnalysis.ImageFunctions.NonEnqueuedImage
+                    $content .= "  <div class=\"gallery-item\"><img src=\"" . esc_url($url) . "\" alt=\"" . esc_attr($alt) . "\" /></div>\n";
+                }
+            }
+            $content .= "</div>\n";
+            
+            // Add note about importing image gallery
+            $content .= "<p><em>This image gallery was imported from Elementor. You may need to adjust the gallery settings in Divi.</em></p>\n";
+        }
+        
+        return "[et_pb_text _builder_version=\"{$builder_version}\"{$style_attrs}]\n{$content}[/et_pb_text]\n";
+    } 
+    // Default empty gallery
+    else {
+        return "[et_pb_gallery{$gallery_attrs}{$style_attrs}][/et_pb_gallery]\n";
+    }
+}
+
+/**
+ * Create a Divi module for Elementor icon list
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_icon_list_module($settings, $builder_version, $style_attrs = '') {
+    $content = "<ul class=\"ede-icon-list\">\n";
+    
+    // Process icon list items
+    if (isset($settings['icon_list']) && is_array($settings['icon_list'])) {
+        foreach ($settings['icon_list'] as $item) {
+            $text = isset($item['text']) ? esc_html($item['text']) : '';
+            $link = '';
+            
+            // Handle link if available
+            if (isset($item['link']) && isset($item['link']['url'])) {
+                $url = esc_url($item['link']['url']);
+                $target = isset($item['link']['is_external']) && $item['link']['is_external'] ? ' target="_blank"' : '';
+                $text = "<a href=\"{$url}\"{$target}>{$text}</a>";
+            }
+            
+            $content .= "  <li>{$text}</li>\n";
+        }
+    }
+    
+    $content .= "</ul>";
+        
+    return "[et_pb_text _builder_version=\"{$builder_version}\"{$style_attrs}]\n{$content}[/et_pb_text]\n";
+}
+
+/**
+ * Create a Divi module for Elementor alert
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_alert_module($settings, $builder_version, $style_attrs = '') {
+    $title = isset($settings['alert_title']) ? esc_html($settings['alert_title']) : '';
+    $description = isset($settings['alert_description']) ? wp_kses_post($settings['alert_description']) : '';
+    $type = isset($settings['alert_type']) ? $settings['alert_type'] : 'info';
+    
+    // Map Elementor alert types to CSS classes
+    $alert_class = 'ede-alert-info';
+    $alert_color = '#2ea3f2'; // Blue default
+    
+    switch ($type) {
+        case 'success':
+            $alert_class = 'ede-alert-success';
+            $alert_color = '#47a847'; // Green
+            break;
+        case 'danger':
+        case 'error':
+            $alert_class = 'ede-alert-danger';
+            $alert_color = '#d9534f'; // Red
+            break;
+        case 'warning':
+            $alert_class = 'ede-alert-warning';
+            $alert_color = '#f0ad4e'; // Orange
+            break;
+        case 'info':
+        default:
+            $alert_class = 'ede-alert-info';
+            $alert_color = '#2ea3f2'; // Blue
+            break;
+    }
+    
+    // Create alert HTML
+    $content = "<div class=\"{$alert_class}\">\n";
+    
+    if (!empty($title)) {
+        $content .= "  <h4>{$title}</h4>\n";
+    }
+    
+    $content .= "  <div>{$description}</div>\n";
+    $content .= "</div>\n";
+    
+      
+    return "[et_pb_text _builder_version=\"{$builder_version}\"{$style_attrs}]\n{$content}[/et_pb_text]\n";
+}
+
+/**
+ * Create a Divi audio module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_audio_module($settings, $builder_version, $style_attrs = '') {
+    $audio_url = '';
+    $title = isset($settings['audio_title']) ? esc_html($settings['audio_title']) : '';
+    $artist = isset($settings['audio_artist']) ? esc_html($settings['audio_artist']) : '';
+    $album = isset($settings['audio_album']) ? esc_html($settings['audio_album']) : '';
+    $image = '';
+    
+    // Get audio URL from various possible settings
+    if (isset($settings['audio_source']) && $settings['audio_source'] === 'hosted_url' && isset($settings['hosted_url']) && isset($settings['hosted_url']['url'])) {
+        $audio_url = esc_url($settings['hosted_url']['url']);
+    } elseif (isset($settings['audio_source']) && $settings['audio_source'] === 'external_url' && isset($settings['external_url'])) {
+        $audio_url = esc_url($settings['external_url']);
+    } elseif (isset($settings['audio_url'])) {
+        $audio_url = esc_url($settings['audio_url']);
+    } elseif (isset($settings['src'])) {
+        $audio_url = esc_url($settings['src']);
+    }
+    
+    // Get image if available
+    if (isset($settings['image']) && isset($settings['image']['url'])) {
+        $image = esc_url($settings['image']['url']);
+    }
+    
+    $audio_attrs = " _builder_version=\"{$builder_version}\" audio=\"{$audio_url}\"";
+    
+    if (!empty($title)) {
+        $audio_attrs .= " title=\"{$title}\"";
+    }
+    
+    if (!empty($artist)) {
+        $audio_attrs .= " artist_name=\"{$artist}\"";
+    }
+    
+    if (!empty($album)) {
+        $audio_attrs .= " album_name=\"{$album}\"";
+    }
+    
+    if (!empty($image)) {
+        $audio_attrs .= " image_url=\"{$image}\"";
+    }
+    
+    // Add style attributes
+    $audio_attrs .= $style_attrs;
+    
+    // If no audio URL found, create a text module with a note
+    if (empty($audio_url)) {
+        return "[et_pb_text _builder_version=\"{$builder_version}\"{$style_attrs}]\n<p>Audio module imported from Elementor - please add an audio file.</p>\n[/et_pb_text]\n";
+    }
+    
+    return "[et_pb_audio{$audio_attrs}][/et_pb_audio]\n";
+}
+
+/**
+ * Create a Divi sidebar module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_sidebar_module($settings, $builder_version, $style_attrs = '') {
+    $sidebar = 'default-sidebar';
+    
+    // Check if a specific sidebar is selected
+    if (isset($settings['sidebar']) && !empty($settings['sidebar'])) {
+        $sidebar = esc_attr($settings['sidebar']);
+    }
+    
+    $sidebar_attrs = " _builder_version=\"{$builder_version}\" area=\"{$sidebar}\"";
+    
+    // Orientation
+    if (isset($settings['orientation']) && $settings['orientation'] === 'horizontal') {
+        $sidebar_attrs .= " orientation=\"horizontal\"";
+    }
+    
+    // Add style attributes
+    $sidebar_attrs .= $style_attrs;
+    
+    return "[et_pb_sidebar{$sidebar_attrs}][/et_pb_sidebar]\n";
+}
+
+/**
+ * Create a Divi module for Elementor custom HTML (Code)
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_html_module($settings, $builder_version, $style_attrs = '') {
+    $html_content = isset($settings['html']) ? $settings['html'] : '';
+    
+    if (empty($html_content)) {
+        return "[et_pb_code _builder_version=\"{$builder_version}\"{$style_attrs}]<!-- Empty HTML widget -->[/et_pb_code]\n";
+    }
+    
+    return "[et_pb_code _builder_version=\"{$builder_version}\"{$style_attrs}]{$html_content}[/et_pb_code]\n";
+}
+
+/**
+ * Create a Divi slider module from an Elementor slides widget
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_slides_module($settings, $builder_version, $style_attrs = '') {
+    $slider_shortcode = "[et_pb_slider _builder_version=\"{$builder_version}\"";
+    
+    // Check for auto-play
+    if (isset($settings['autoplay']) && $settings['autoplay'] === 'yes') {
+        $slider_shortcode .= " auto=\"on\"";
+        
+        // Add autoplay speed if available
+        if (isset($settings['autoplay_speed'])) {
+            $speed = intval($settings['autoplay_speed']);
+            $slider_shortcode .= " auto_speed=\"{$speed}\"";
+        }
+    }
+    
+    // Add show arrows
+    if (isset($settings['show_arrows']) && $settings['show_arrows'] === 'yes') {
+        $slider_shortcode .= " show_arrows=\"on\"";
+    } else {
+        $slider_shortcode .= " show_arrows=\"off\"";
+    }
+    
+    // Add show pagination/dots
+    if (isset($settings['show_dots']) && $settings['show_dots'] === 'yes') {
+        $slider_shortcode .= " show_pagination=\"on\"";
+    } else {
+        $slider_shortcode .= " show_pagination=\"off\"";
+    }
+    
+    // Add style attributes
+    $slider_shortcode .= $style_attrs;
+    
+    // Close attribute list
+    $slider_shortcode .= "]\n";
+    
+    // Process slides
+    if (isset($settings['slides']) && is_array($settings['slides'])) {
+        foreach ($settings['slides'] as $slide) {
+            $slide_attrs = " _builder_version=\"{$builder_version}\"";
+            
+            // Get heading
+            $heading = '';
+            if (isset($slide['heading'])) {
+                $heading = esc_html($slide['heading']);
+                $slide_attrs .= " heading=\"{$heading}\"";
+            }
+            
+            // Get description
+            $description = '';
+            if (isset($slide['description'])) {
+                $description = wp_kses_post($slide['description']);
+            }
+            
+            // Get background image
+            if (isset($slide['background_image']) && isset($slide['background_image']['url'])) {
+                $bg_image = esc_url($slide['background_image']['url']);
+                $slide_attrs .= " image=\"{$bg_image}\"";
+            } elseif (isset($slide['image']) && isset($slide['image']['url'])) {
+                $bg_image = esc_url($slide['image']['url']);
+                $slide_attrs .= " image=\"{$bg_image}\"";
+            }
+            
+            // Get button
+            $button_text = '';
+            $button_url = '';
+            
+            if (isset($slide['button_text']) && !empty($slide['button_text'])) {
+                $button_text = esc_html($slide['button_text']);
+            }
+            
+            if (isset($slide['button_link']) && isset($slide['button_link']['url']) && !empty($slide['button_link']['url'])) {
+                $button_url = esc_url($slide['button_link']['url']);
+            }
+            
+            // Add button attributes if both text and URL exist
+            if (!empty($button_text) && !empty($button_url)) {
+                $slide_attrs .= " button_text=\"{$button_text}\" button_url=\"{$button_url}\"";
+            }
+            
+            // Add alignment
+            if (isset($slide['content_alignment'])) {
+                $alignment = 'center'; // Default
+                
+                switch ($slide['content_alignment']) {
+                    case 'left':
+                        $alignment = 'left';
+                        break;
+                    case 'right':
+                        $alignment = 'right';
+                        break;
+                    default:
+                        $alignment = 'center';
+                }
+                
+                $slide_attrs .= " text_orientation=\"{$alignment}\"";
+            }
+            
+            // Create slide
+            $slider_shortcode .= "[et_pb_slide{$slide_attrs}]{$description}[/et_pb_slide]\n";
+        }
+    } else {
+        // Default slide if none provided
+        $slider_shortcode .= "[et_pb_slide heading=\"Slide\" _builder_version=\"{$builder_version}\"]Add your content here[/et_pb_slide]\n";
+    }
+    
+    $slider_shortcode .= "[/et_pb_slider]\n";
+    return $slider_shortcode;
+}
+
+/**
+ * Create a Divi pricing table module from an Elementor price-table widget
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_pricing_table_module($settings, $builder_version, $style_attrs = '') {
+    $pricing_shortcode = "[et_pb_pricing_tables _builder_version=\"{$builder_version}\"";
+    
+    // Add featured border color if available
+    if (isset($settings['featured_color'])) {
+        $color = esc_attr($settings['featured_color']);
+        $pricing_shortcode .= " featured_table_border_color=\"{$color}\"";
+    }
+    
+    // Add style attributes
+    $pricing_shortcode .= $style_attrs;
+    
+    // Close attributes
+    $pricing_shortcode .= "]\n";
+    
+    // Get pricing data
+    $title = isset($settings['heading']) ? esc_html($settings['heading']) : 'Basic';
+    $subtitle = isset($settings['sub_heading']) ? esc_html($settings['sub_heading']) : '';
+    $currency = isset($settings['currency_symbol']) ? esc_html($settings['currency_symbol']) : '';
+    $price = isset($settings['price']) ? esc_html($settings['price']) : '0';
+    $period = isset($settings['period']) ? esc_html($settings['period']) : '/mo';
+    $featured = isset($settings['featured']) && $settings['featured'] === 'yes' ? ' featured="on"' : '';
+    
+    // Get button data
+    $button_text = isset($settings['button_text']) ? esc_html($settings['button_text']) : 'Sign Up';
+    $button_url = '#';
+    
+    if (isset($settings['button_link']) && isset($settings['button_link']['url'])) {
+        $button_url = esc_url($settings['button_link']['url']);
+    }
+    
+    // Create pricing table item
+    $pricing_shortcode .= "[et_pb_pricing_table title=\"{$title}\" subtitle=\"{$subtitle}\" currency=\"{$currency}\" sum=\"{$price}\" per=\"{$period}\" button_url=\"{$button_url}\" button_text=\"{$button_text}\"_builder_version=\"{$builder_version}\"{$featured}]\n";
+    
+    // Add features
+    if (isset($settings['features_list']) && is_array($settings['features_list'])) {
+        foreach ($settings['features_list'] as $item) {
+            $feature_text = isset($item['item_text']) ? esc_html($item['item_text']) : 
+                           (isset($item['text']) ? esc_html($item['text']) : '');
+            
+            if (!empty($feature_text)) {
+                $pricing_shortcode .= $feature_text . "\n";
+            }
+        }
+    } else {
+        // Add some default features
+        $pricing_shortcode .= "Feature 1\nFeature 2\nFeature 3\n";
+    }
+    
+    $pricing_shortcode .= "[/et_pb_pricing_table]\n";
+    $pricing_shortcode .= "[/et_pb_pricing_tables]\n";
+    return $pricing_shortcode;
+}
+
+/**
+ * Create a Divi contact form module from an Elementor form widget
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_contact_form_module($settings, $builder_version, $style_attrs = '') {
+    $form_shortcode = "[et_pb_contact_form captcha=\"on\" _builder_version=\"{$builder_version}\"";
+    
+    // Add title if available
+    if (isset($settings['form_name'])) {
+        $title = esc_html($settings['form_name']);
+        $form_shortcode .= " title=\"{$title}\"";
+    }
+    
+    // Add email if available
+    if (isset($settings['email_to'])) {
+        $email = esc_attr($settings['email_to']);
+        $form_shortcode .= " email=\"{$email}\"";
+    }
+    
+    // Add submit button text
+    if (isset($settings['button_text'])) {
+        $submit_text = esc_html($settings['button_text']);
+        $form_shortcode .= " custom_button=\"on\" button_text=\"{$submit_text}\"";
+    }
+    
+    // Add style attributes
+    $form_shortcode .= $style_attrs;
+    
+    // Close attributes
+    $form_shortcode .= "]\n";
+    
+    // Process form fields if available
+    if (isset($settings['form_fields']) && is_array($settings['form_fields'])) {
+        foreach ($settings['form_fields'] as $field) {
+            if (isset($field['field_type']) && isset($field['field_label'])) {
+                $type = esc_attr($field['field_type']);
+                $label = esc_html($field['field_label']);
+                $required = isset($field['required']) && $field['required'] === 'yes' ? ' required_mark="on"' : '';
+                
+                // Map field types
+                switch ($type) {
+                    case 'text':
+                    case 'email':
+                    case 'textarea':
+                        // These types map directly
+                        break;
+                    default:
+                        // Default to text for other types
+                        $type = 'text';
+                }
+                
+                // Create field
+                $form_shortcode .= "[et_pb_contact_field field_id=\"" . sanitize_title($label) . "\" field_title=\"{$label}\" field_type=\"{$type}\"_builder_version=\"{$builder_version}\"{$required}][/et_pb_contact_field]\n";
+            }
+        }
+    } else {
+        // Add default fields
+        $form_shortcode .= "[et_pb_contact_field field_id=\"name\" field_title=\"Name\" _builder_version=\"{$builder_version}\" required_mark=\"on\"][/et_pb_contact_field]\n";
+        $form_shortcode .= "[et_pb_contact_field field_id=\"email\" field_title=\"Email Address\" field_type=\"email\" _builder_version=\"{$builder_version}\" required_mark=\"on\"][/et_pb_contact_field]\n";
+        $form_shortcode .= "[et_pb_contact_field field_id=\"message\" field_title=\"Message\" field_type=\"textarea\" _builder_version=\"{$builder_version}\" required_mark=\"on\"][/et_pb_contact_field]\n";
+    }
+    
+    $form_shortcode .= "[/et_pb_contact_form]\n";
+    return $form_shortcode;
+}
+
+/**
+ * Create a Divi toggle module from an Elementor toggle widget
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_toggle_module($settings, $builder_version, $style_attrs = '') {
+    $toggle_shortcode = "";
+    
+    // Process toggle items
+    if (isset($settings['tabs']) && is_array($settings['tabs'])) {
+        foreach ($settings['tabs'] as $tab) {
+            $title = isset($tab['tab_title']) ? esc_html($tab['tab_title']) : 'Toggle Title';
+            $content = isset($tab['tab_content']) ? wp_kses_post($tab['tab_content']) : 'Toggle Content';
+            $open = isset($tab['tab_default']) && $tab['tab_default'] === 'yes' ? ' open="on"' : '';
+            
+            $toggle_shortcode .= "[et_pb_toggle title=\"{$title}\"{$open} _builder_version=\"{$builder_version}\"{$style_attrs}]\n{$content}\n[/et_pb_toggle]\n";
+        }
+    } else {
+        // Default toggle item if none provided
+        $toggle_shortcode .= "[et_pb_toggle title=\"Toggle Title\" _builder_version=\"{$builder_version}\"{$style_attrs}]Toggle content goes here[/et_pb_toggle]\n";
+    }
+    
+    return $toggle_shortcode;
+}
+
+/**
+ * Create a Divi countdown timer module
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_countdown_module($settings, $builder_version, $style_attrs = '') {
+    $date = '';
+    
+    // Get date in the format Divi expects
+    if (isset($settings['due_date'])) {
+        $date = esc_attr($settings['due_date']);
+    }
+    
+    // If no date provided, set a default date 7 days from now
+    if (empty($date)) {
+        $date = gmdate('Y-m-d H:i', strtotime('+7 days'));
+    }
+    
+    $title = isset($settings['title']) ? esc_html($settings['title']) : '';
+    
+    $countdown_attrs = " _builder_version=\"{$builder_version}\" date=\"{$date}\"";
+    
+    if (!empty($title)) {
+        $countdown_attrs .= " title=\"{$title}\"";
+    }
+    
+    // Add style attributes
+    $countdown_attrs .= $style_attrs;
+    
+    return "[et_pb_countdown_timer{$countdown_attrs}][/et_pb_countdown_timer]\n";
+}
+
+/**
+ * Create a Divi post slider module from an Elementor posts widget
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_posts_module($settings, $builder_version, $style_attrs = '') {
+    $posts_attrs = " _builder_version=\"{$builder_version}\"";
+    
+    // Set posts number
+    $posts_number = 10; // Default
+    if (isset($settings['posts_per_page'])) {
+        $posts_number = intval($settings['posts_per_page']);
+        $posts_attrs .= " posts_number=\"{$posts_number}\"";
+    }
+    
+    // Set post type
+    $post_type = 'post'; // Default
+    if (isset($settings['post_type'])) {
+        $post_type = esc_attr($settings['post_type']);
+        $posts_attrs .= " custom_posttypes=\"{$post_type}\"";
+    }
+    
+    // Set include categories if available
+    if (isset($settings['category_ids']) && is_array($settings['category_ids'])) {
+        $categories = implode(',', array_map('intval', $settings['category_ids']));
+        if (!empty($categories)) {
+            $posts_attrs .= " include_categories=\"{$categories}\"";
+        }
+    }
+    
+    // Set ordering
+    if (isset($settings['orderby'])) {
+        $orderby = 'date'; // Default
+        switch ($settings['orderby']) {
+            case 'date':
+                $orderby = 'date';
+                break;
+            case 'title':
+                $orderby = 'title';
+                break;
+            case 'rand':
+                $orderby = 'rand';
+                break;
+            case 'comment_count':
+                $orderby = 'comment_count';
+                break;
+        }
+        $posts_attrs .= " orderby=\"{$orderby}\"";
+    }
+    
+    // Set order
+    if (isset($settings['order'])) {
+        $order = esc_attr(strtoupper($settings['order']));
+        if ($order === 'ASC' || $order === 'DESC') {
+            $posts_attrs .= " order=\"{$order}\"";
+        }
+    }
+    
+    // Add style attributes
+    $posts_attrs .= $style_attrs;
+    
+    // Determine which module to use: blog, slider, or grid
+    $module_type = 'blog';
+    
+    if (isset($settings['skin']) && ($settings['skin'] === 'carousel' || $settings['skin'] === 'slideshow')) {
+        // Use post slider for carousel or slideshow skins
+        return "[et_pb_post_slider{$posts_attrs}][/et_pb_post_slider]\n";
+    } else {
+        // Use blog module for other layouts
+        return "[et_pb_blog{$posts_attrs} fullwidth=\"off\"][/et_pb_blog]\n";
+    }
+}
+
+/**
+ * Create a Divi module from Elementor call-to-action widget
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_cta_module($settings, $builder_version, $style_attrs = '') {
+    $title = isset($settings['title']) ? esc_html($settings['title']) : '';
+    $description = isset($settings['description']) ? wp_kses_post($settings['description']) : '';
+    $button_text = isset($settings['button_text']) ? esc_html($settings['button_text']) : 'Click Here';
+    $button_url = '#';
+    
+    if (isset($settings['button_link']) && isset($settings['button_link']['url'])) {
+        $button_url = esc_url($settings['button_link']['url']);
+    }
+    
+    $cta_attrs = " _builder_version=\"{$builder_version}\" button_url=\"{$button_url}\" button_text=\"{$button_text}\"";
+    
+    if (!empty($title)) {
+        $cta_attrs .= " title=\"{$title}\"";
+    }
+    
+    // Set background color if available
+    if (isset($settings['background_color'])) {
+        $bg_color = esc_attr($settings['background_color']);
+        $cta_attrs .= " background_color=\"{$bg_color}\"";
+    }
+    
+    // Set text color if available
+    if (isset($settings['title_color'])) {
+        $text_color = esc_attr($settings['title_color']);
+        $cta_attrs .= " text_color=\"{$text_color}\"";
+    }
+    
+    // Add style attributes
+    $cta_attrs .= $style_attrs;
+    
+    return "[et_pb_cta{$cta_attrs}]{$description}[/et_pb_cta]\n";
+}
+
+/**
+ * Create a Divi module for Elementor star-rating widget
+ * 
+ * @param array $settings Elementor widget settings
+ * @param string $builder_version Divi builder version
+ * @param string $style_attrs Additional style attributes
+ * @return string Divi module shortcode
+ */
+function jhmgced_create_star_rating_module($settings, $builder_version, $style_attrs = '') {
+    $rating = isset($settings['rating']) ? floatval($settings['rating']) : 5;
+    $scale = isset($settings['max']) ? intval($settings['max']) : 5;
+    $title = isset($settings['title']) ? esc_html($settings['title']) : '';
+    
+    // Create HTML for star rating
+    $html = '';
+    
+    if (!empty($title)) {
+        $html .= "<h4>{$title}</h4>\n";
+    }
+    
+    $html .= "<div class=\"ede-star-rating\">\n";
+    
+    // Generate stars
+    $filled_stars = floor($rating);
+    $half_star = ($rating - $filled_stars) >= 0.5;
+    $empty_stars = $scale - $filled_stars - ($half_star ? 1 : 0);
+    
+    // Add filled stars
+    for ($i = 0; $i < $filled_stars; $i++) {
+        $html .= "<span class=\"star filled\">★</span>";
+    }
+    
+    // Add half star if needed
+    if ($half_star) {
+        $html .= "<span class=\"star half\">★</span>";
+    }
+    
+    // Add empty stars
+    for ($i = 0; $i < $empty_stars; $i++) {
+        $html .= "<span class=\"star empty\">☆</span>";
+    }
+    
+    $html .= "</div>\n";
+        
+    return "[et_pb_text _builder_version=\"{$builder_version}\"{$style_attrs}]\n{$html}[/et_pb_text]\n";
+}

@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\StyleMapper\StyleMapper;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -33,27 +34,28 @@ class CtaConverter extends BaseElementorConverter {
             $url = $link_raw;
         }
 
-        $block_settings = [];
+        $style          = ( new StyleMapper() )->map( 'cta', $settings );
+        $block_settings = $style['divi_attrs'];
 
         if ( $title !== '' ) {
-            $block_settings['title'] = [ 'innerContent' => [ 'desktop' => [ 'value' => $title ] ] ];
+            $block_settings['title']['innerContent']['desktop']['value'] = $title;
         }
 
         if ( $description !== '' ) {
-            $block_settings['content'] = [ 'innerContent' => [ 'desktop' => [ 'value' => $description ] ] ];
+            $block_settings['content']['innerContent']['desktop']['value'] = $description;
         }
 
         if ( $btn_text !== '' || $url !== '' ) {
             $btn_value = array_filter( [ 'text' => $btn_text, 'linkUrl' => $url ] );
-            $block_settings['button'] = [ 'innerContent' => [ 'desktop' => [ 'value' => $btn_value ] ] ];
+            $block_settings['button']['innerContent']['desktop']['value'] = $btn_value;
         }
 
         $this->engine->logConverted( 'cta' );
-        $this->logUnmappedSettings( $id, $settings, [
+        $this->logUnmappedSettings( $id, $settings, array_merge( [
             'title', 'description',
             'button', 'button_text', 'link', 'button_url',
             'layout', 'content_align', 'ribbon',
-        ] );
+        ], $style['handled_keys'] ) );
 
         return [
             'id'       => $id,

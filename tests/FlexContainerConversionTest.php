@@ -85,10 +85,11 @@ final class FlexContainerConversionTest extends TestCase {
     }
 
     /**
-     * Same as above but without an explicit flex_direction (defaults to row).
-     * All Elementor containers default to flex-row.
+     * Elementor's .e-con.e-flex CSS sets --flex-direction: column as the default,
+     * so containers with no explicit direction stack children vertically.
+     * The outer section gets a single-column row wrapping the two inner containers.
      */
-    public function test_default_flex_direction_produces_two_columns(): void {
+    public function test_default_flex_direction_produces_column_stack(): void {
         $result = $this->convert( [
             $this->container( 'parent', [
                 $this->container( 'col-a', [ $this->widget( 'w1' ) ] ),
@@ -97,9 +98,10 @@ final class FlexContainerConversionTest extends TestCase {
         ] );
 
         $row = $result[0]['elements'][0];
-        $this->assertCount( 2, $row['elements'], 'Default container is flex-row: two columns' );
+        // Default (missing) direction = column: children are stacked, not side-by-side.
+        // ensureColumnChildren wraps both inner rows in a single wrapper column.
+        $this->assertCount( 1, $row['elements'], 'Column-direction container: single wrapper column' );
         $this->assertSame( 'divi/column', $row['elements'][0]['name'] );
-        $this->assertSame( 'divi/column', $row['elements'][1]['name'] );
     }
 
     // -------------------------------------------------------------------------
@@ -114,7 +116,7 @@ final class FlexContainerConversionTest extends TestCase {
                     $this->widget( 'h1', 'heading' ),
                     $this->widget( 'txt', 'text-editor' ),
                 ] ),
-            ] ),
+            ], [ 'flex_direction' => 'row' ] ),
         ] );
 
         $row   = $result[0]['elements'][0];
@@ -206,6 +208,7 @@ final class FlexContainerConversionTest extends TestCase {
                 $this->container( 'col-a', [ $this->widget( 'w1' ) ] ),
                 $this->container( 'col-b', [ $this->widget( 'w2' ) ] ),
             ], [
+                'flex_direction'   => 'row',
                 'flex_align_items' => 'center',
             ] ),
         ] );
@@ -221,7 +224,8 @@ final class FlexContainerConversionTest extends TestCase {
                 $this->container( 'col-a', [ $this->widget( 'w1' ) ] ),
                 $this->container( 'col-b', [ $this->widget( 'w2' ) ] ),
             ], [
-                'flex_gap' => [ 'row' => '15', 'column' => '30', 'unit' => 'px' ],
+                'flex_direction' => 'row',
+                'flex_gap'       => [ 'row' => '15', 'column' => '30', 'unit' => 'px' ],
             ] ),
         ] );
 
@@ -237,7 +241,7 @@ final class FlexContainerConversionTest extends TestCase {
             $this->container( 'parent', [
                 $this->container( 'col-a', [ $this->widget( 'w1' ) ] ),
                 $this->container( 'col-b', [ $this->widget( 'w2' ) ] ),
-            ], [ 'flex_wrap' => 'wrap' ] ),
+            ], [ 'flex_direction' => 'row', 'flex_wrap' => 'wrap' ] ),
         ] );
 
         $row  = $result[0]['elements'][0];
@@ -285,7 +289,7 @@ final class FlexContainerConversionTest extends TestCase {
             $this->container( 'parent', [
                 $this->container( 'col-a', [ $this->widget( 'w1' ) ], [ '_inline_size' => [ 'size' => 50, 'unit' => '%' ] ] ),
                 $this->container( 'col-b', [ $this->widget( 'w2' ) ], [ '_inline_size' => [ 'size' => 50, 'unit' => '%' ] ] ),
-            ] ),
+            ], [ 'flex_direction' => 'row' ] ),
         ] );
 
         $row   = $result[0]['elements'][0];
@@ -305,7 +309,7 @@ final class FlexContainerConversionTest extends TestCase {
                 $this->container( 'c1', [ $this->widget( 'w1' ) ], [ '_inline_size' => [ 'size' => 33, 'unit' => '%' ] ] ),
                 $this->container( 'c2', [ $this->widget( 'w2' ) ], [ '_inline_size' => [ 'size' => 34, 'unit' => '%' ] ] ),
                 $this->container( 'c3', [ $this->widget( 'w3' ) ], [ '_inline_size' => [ 'size' => 33, 'unit' => '%' ] ] ),
-            ] ),
+            ], [ 'flex_direction' => 'row' ] ),
         ] );
 
         $row = $result[0]['elements'][0];
@@ -319,7 +323,7 @@ final class FlexContainerConversionTest extends TestCase {
             $this->container( 'parent', [
                 $this->container( 'c1', [ $this->widget( 'w1' ) ], [ '_inline_size' => [ 'size' => 50, 'unit' => '%' ] ] ),
                 $this->container( 'c2', [ $this->widget( 'w2' ) ], [ '_inline_size' => [ 'size' => 50, 'unit' => '%' ] ] ),
-            ] ),
+            ], [ 'flex_direction' => 'row' ] ),
         ] );
 
         $row       = $result[0]['elements'][0];
@@ -336,7 +340,7 @@ final class FlexContainerConversionTest extends TestCase {
             $this->container( 'parent', [
                 $this->container( 'col-a', [ $this->widget( 'w1' ) ] ),
                 $this->container( 'col-b', [ $this->widget( 'w2' ) ] ),
-            ] ),
+            ], [ 'flex_direction' => 'row' ] ),
         ] );
 
         $row = $result[0]['elements'][0];
@@ -389,7 +393,7 @@ final class FlexContainerConversionTest extends TestCase {
             $this->container( 'parent', [
                 $this->widget( 'direct-widget', 'heading' ),
                 $this->container( 'sub', [ $this->widget( 'inner', 'image' ) ] ),
-            ] ),
+            ], [ 'flex_direction' => 'row' ] ),
         ] );
 
         $row = $result[0]['elements'][0];
@@ -412,7 +416,7 @@ final class FlexContainerConversionTest extends TestCase {
                 $this->container( 'c1', [ $this->widget( 'w1' ) ] ),
                 $this->container( 'c2', [ $this->widget( 'w2' ) ] ),
                 $this->container( 'c3', [ $this->widget( 'w3' ) ] ),
-            ] ),
+            ], [ 'flex_direction' => 'row' ] ),
         ] );
 
         $row = $result[0]['elements'][0];
