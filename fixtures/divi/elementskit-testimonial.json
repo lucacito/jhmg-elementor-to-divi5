@@ -1,0 +1,164 @@
+{
+  "divi": {
+    "elements": [
+      {
+        "id": "section-testimonial",
+        "name": "divi/section",
+        "settings": [],
+        "elements": [
+          {
+            "id": "section-testimonial-row",
+            "name": "divi/row",
+            "settings": [],
+            "elements": [
+              {
+                "id": "col-testimonial",
+                "name": "divi/column",
+                "settings": [],
+                "elements": [
+                  {
+                    "id": "ekit-testimonial-1",
+                    "name": "divi/group-carousel",
+                    "settings": {
+                      "module": {
+                        "advanced": {
+                          "slidesToShow": {
+                            "desktop": { "value": "3" },
+                            "phone": { "value": "1" }
+                          },
+                          "slidesToScroll": {
+                            "desktop": { "value": "1" }
+                          },
+                          "auto": {
+                            "desktop": { "value": "off" }
+                          },
+                          "pauseOnHover": {
+                            "desktop": { "value": "on" }
+                          }
+                        }
+                      },
+                      "arrows": {
+                        "advanced": {
+                          "showArrows": {
+                            "desktop": { "value": "on" }
+                          }
+                        }
+                      },
+                      "dotNav": {
+                        "advanced": {
+                          "showDots": {
+                            "desktop": { "value": "on" }
+                          }
+                        }
+                      }
+                    },
+                    "elements": [
+                      {
+                        "id": "ekit-testimonial-1-group-0",
+                        "name": "divi/group",
+                        "settings": [],
+                        "elements": [
+                          {
+                            "id": "ekit-testimonial-1-0",
+                            "name": "divi/testimonial",
+                            "settings": {
+                              "content": {
+                                "innerContent": {
+                                  "desktop": { "value": "Outstanding service and fast response!" }
+                                }
+                              },
+                              "author": {
+                                "innerContent": {
+                                  "desktop": { "value": "Jane Smith" }
+                                }
+                              },
+                              "jobTitle": {
+                                "innerContent": {
+                                  "desktop": { "value": "CEO" }
+                                }
+                              },
+                              "portrait": {
+                                "innerContent": {
+                                  "desktop": { "value": { "src": "https://example.com/jane.jpg" } }
+                                }
+                              }
+                            },
+                            "elements": []
+                          }
+                        ]
+                      },
+                      {
+                        "id": "ekit-testimonial-1-group-1",
+                        "name": "divi/group",
+                        "settings": [],
+                        "elements": [
+                          {
+                            "id": "ekit-testimonial-1-1",
+                            "name": "divi/testimonial",
+                            "settings": {
+                              "content": {
+                                "innerContent": {
+                                  "desktop": { "value": "Very professional and reliable." }
+                                }
+                              },
+                              "author": {
+                                "innerContent": {
+                                  "desktop": { "value": "John Doe" }
+                                }
+                              },
+                              "jobTitle": {
+                                "innerContent": {
+                                  "desktop": { "value": "Manager" }
+                                }
+                              },
+                              "portrait": {
+                                "innerContent": {
+                                  "desktop": { "value": { "src": "https://example.com/john.jpg" } }
+                                }
+                              }
+                            },
+                            "elements": []
+                          }
+                        ]
+                      },
+                      {
+                        "id": "ekit-testimonial-1-group-2",
+                        "name": "divi/group",
+                        "settings": [],
+                        "elements": [
+                          {
+                            "id": "ekit-testimonial-1-2",
+                            "name": "divi/testimonial",
+                            "settings": {
+                              "content": {
+                                "innerContent": {
+                                  "desktop": { "value": "Would highly recommend to everyone." }
+                                }
+                              },
+                              "author": {
+                                "innerContent": {
+                                  "desktop": { "value": "Alice Brown" }
+                                }
+                              },
+                              "jobTitle": {
+                                "innerContent": {
+                                  "desktop": { "value": "Customer" }
+                                }
+                              }
+                            },
+                            "elements": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "unsupported": []
+}

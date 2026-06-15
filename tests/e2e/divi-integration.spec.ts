@@ -153,7 +153,7 @@ test.describe.serial('Divi 5 runtime validation', () => {
       const diviButtonLocator = page.locator(
         'button:has-text("Divi Builder"), a:has-text("Divi Builder"), [class*="divi-builder-button"]'
       );
-      await diviButtonLocator.first().waitFor({ timeout: 15000 });
+      await diviButtonLocator.first().waitFor({ state: 'attached', timeout: 15000 });
       expect(await diviButtonLocator.count()).toBeGreaterThan(0);
       const diviButton = diviButtonLocator.first();
 

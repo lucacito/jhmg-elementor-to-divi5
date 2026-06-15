@@ -151,7 +151,6 @@ class ConverterRegistry {
         $this->registerWidget( 'e-image', '\\ElementorDivi5Converter\\Converter\\Handlers\\ImageConverter' );
         $this->registerWidget( 'e-button', '\\ElementorDivi5Converter\\Converter\\Handlers\\ButtonConverter' );
         $this->registerWidget( 'e-divider', '\\ElementorDivi5Converter\\Converter\\Handlers\\DividerConverter' );
-        $this->registerWidget( 'e-video', '\\ElementorDivi5Converter\\Converter\\Handlers\\VideoConverter' );
         $this->registerWidget( 'e-spacer', '\\ElementorDivi5Converter\\Converter\\Handlers\\SpacerConverter' );
         $this->registerWidget( 'e-icon', '\\ElementorDivi5Converter\\Converter\\Handlers\\IconConverter' );
         $this->registerWidget( 'e-image-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\ImageBoxConverter' );
@@ -159,6 +158,28 @@ class ConverterRegistry {
         $this->registerWidget( 'e-accordion', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
         $this->registerWidget( 'e-toggle', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
         $this->registerWidget( 'e-tabs', '\\ElementorDivi5Converter\\Converter\\Handlers\\TabsConverter' );
+
+        // ── Native Elementor free widgets ────────────────────────────────────
+        $this->registerWidget( 'shortcode',      '\\ElementorDivi5Converter\\Converter\\Handlers\\ShortcodeConverter' );
+        $this->registerWidget( 'testimonial',    '\\ElementorDivi5Converter\\Converter\\Handlers\\TestimonialConverter' );
+        $this->registerWidget( 'countdown',      '\\ElementorDivi5Converter\\Converter\\Handlers\\CountdownConverter' );
+        $this->registerWidget( 'sidebar',        '\\ElementorDivi5Converter\\Converter\\Handlers\\SidebarConverter' );
+        $this->registerWidget( 'audio',          '\\ElementorDivi5Converter\\Converter\\Handlers\\AudioConverter' );
+        $this->registerWidget( 'google-maps',    '\\ElementorDivi5Converter\\Converter\\Handlers\\GoogleMapsConverter' );
+        $this->registerWidget( 'search',         '\\ElementorDivi5Converter\\Converter\\Handlers\\SearchConverter' );
+
+        // ── Native Elementor Pro widgets ─────────────────────────────────────
+        $this->registerWidget( 'flip-box',           '\\ElementorDivi5Converter\\Converter\\Handlers\\FlipBoxConverter' );
+        $this->registerWidget( 'price-list',         '\\ElementorDivi5Converter\\Converter\\Handlers\\PriceListConverter' );
+        $this->registerWidget( 'price-table',        '\\ElementorDivi5Converter\\Converter\\Handlers\\PriceTableConverter' );
+        $this->registerWidget( 'animated-headline',  '\\ElementorDivi5Converter\\Converter\\Handlers\\AnimatedHeadlineConverter' );
+        $this->registerWidget( 'lottie',             '\\ElementorDivi5Converter\\Converter\\Handlers\\LottieConverter' );
+        $this->registerWidget( 'posts',              '\\ElementorDivi5Converter\\Converter\\Handlers\\PostsConverter' );
+        $this->registerWidget( 'portfolio',          '\\ElementorDivi5Converter\\Converter\\Handlers\\PostsConverter' );
+        $this->registerWidget( 'form',               '\\ElementorDivi5Converter\\Converter\\Handlers\\FormConverter' );
+        $this->registerWidget( 'text-path',          '\\ElementorDivi5Converter\\Converter\\Handlers\\TextPathConverter' );
+        $this->registerWidget( 'table-of-contents',  '\\ElementorDivi5Converter\\Converter\\Handlers\\TableOfContentsConverter' );
+        $this->registerWidget( 'hotspot',            '\\ElementorDivi5Converter\\Converter\\Handlers\\HotspotConverter' );
 
         // ── Native Elementor header widgets ──────────────────────────────────
         // nav-menu is the native Elementor Nav Menu widget (stores menu ID in 'menu').
@@ -210,24 +231,72 @@ class ConverterRegistry {
         $this->registerWidget( 'eael-weform',         $this->formShortcode( 'weforms', 'eael_weforms_form_id' ) );
         $this->registerWidget( 'eael-caldera-form',   $this->formShortcode( 'caldera_form', 'eael_caldera_form_id' ) );
 
-        // ── EAEL — Tier 3/4 (no equivalent, generic placeholder) ────────────
+        // ── EAEL — Tier 3 (upgraded: meaningful Divi equivalent exists) ─────
+        $this->registerWidget( 'eael-fancy-text',         '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelFancyTextConverter' );
+        $this->registerWidget( 'eael-content-ticker',     '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelContentTickerConverter' );
+        $this->registerWidget( 'eael-data-table',         '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelDataTableConverter' );
+        $this->registerWidget( 'eael-advanced-data-table','\\ElementorDivi5Converter\\Converter\\Handlers\\EaelDataTableConverter' );
+        $this->registerWidget( 'eael-tooltip',            '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelTooltipConverter' );
+        $this->registerWidget( 'eael-image-accordion',    '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelImageAccordionConverter' );
+        $this->registerWidget( 'eael-simple-menu',        '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelSimpleMenuConverter' );
+        $this->registerWidget( 'eael-login-register',     '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelLoginRegisterConverter' );
+        $this->registerWidget( 'eael-event-calendar',     '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelEventCalendarConverter' );
+        $this->registerWidget( 'eael-embedpress',         '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelEmbedpressConverter' );
+        $this->registerWidget( 'eael-interactive-circle', '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelInteractiveCircleConverter' );
+        $this->registerWidget( 'eael-post-timeline',      '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelPostTimelineConverter' );
+
+        // ── EAEL — WooCommerce (shortcode-based) ─────────────────────────────
+        $this->registerWidget( 'eael-woo-cart',             $this->fallbackCode( '[woocommerce_cart]' ) );
+        $this->registerWidget( 'eael-woo-checkout',         $this->fallbackCode( '[woocommerce_checkout]' ) );
+        $this->registerWidget( 'eael-woo-product-list',     $this->fallbackCode( '[products limit="12" columns="3"]' ) );
+        $this->registerWidget( 'eael-woo-product-carousel', $this->fallbackCode( '[products limit="12" columns="4"]' ) );
+        $this->registerWidget( 'eael-woo-product-compare',  $this->fallbackCode( '[yith_woocommerce_compare]' ) );
+        $this->registerWidget( 'eael-woo-add-to-cart',      $this->wooProductShortcode( 'add_to_cart', 'eael_product_id' ) );
+        $this->registerWidget( 'eael-woo-product-gallery',  $this->wooProductShortcode( 'product_page', 'eael_product_id' ) );
+        $this->registerWidget( 'eael-woo-product-images',   $this->wooProductShortcode( 'product_page', 'eael_product_id' ) );
+        $this->registerWidget( 'eael-woo-product-price',    $this->wooProductShortcode( 'product_page', 'eael_product_id' ) );
+        $this->registerWidget( 'eael-woo-product-rating',   $this->wooProductShortcode( 'product_page', 'eael_product_id' ) );
+
+        // ── EAEL — Tier 4 (no Divi equivalent, generic placeholder) ─────────
         foreach ( [
-            'eael-nft-gallery', 'eael-career-page', 'eael-interactive-circle',
-            'eael-svg-draw', 'eael-betterdocs-category-box', 'eael-betterdocs-category-grid',
-            'eael-betterdocs-search-form', 'eael-better-payment', 'eael-typeform',
-            'eael-formstack', 'eael-event-calendar', 'eael-business-reviews',
-            'eael-image-accordion', 'eael-login-register', 'eael-facebook-feed',
-            'eael-twitter-feed', 'eael-embedpress', 'eael-fancy-text',
-            'eael-content-ticker', 'eael-data-table', 'eael-advanced-data-table',
-            'eael-tooltip', 'eael-post-timeline', 'eael-simple-menu',
-            'eael-woo-add-to-cart', 'eael-woo-cart', 'eael-woo-checkout',
-            'eael-woo-product-carousel', 'eael-woo-product-compare',
-            'eael-woo-product-gallery', 'eael-woo-product-images',
-            'eael-woo-product-list', 'eael-woo-product-price',
-            'eael-woo-product-rating',
+            'eael-nft-gallery', 'eael-career-page', 'eael-svg-draw',
+            'eael-betterdocs-category-box', 'eael-betterdocs-category-grid',
+            'eael-betterdocs-search-form', 'eael-better-payment',
+            'eael-typeform', 'eael-formstack',
+            'eael-business-reviews', 'eael-facebook-feed', 'eael-twitter-feed',
         ] as $slug ) {
             $this->registerWidget( $slug, $this->genericFallback( $slug ) );
         }
+    }
+
+    private function wooProductShortcode( string $tag, string $id_key ): \Closure {
+        return function( $engine ) use ( $tag, $id_key ) {
+            return new class( $engine, $tag, $id_key ) extends \ElementorDivi5Converter\Converter\BaseElementorConverter {
+                private string $tag;
+                private string $id_key;
+                public function __construct( $engine, string $tag, string $id_key ) {
+                    parent::__construct( $engine );
+                    $this->tag    = $tag;
+                    $this->id_key = $id_key;
+                }
+                public function convert( array $element ): array {
+                    $id         = $element['id'] ?? uniqid( 'divi_code_' );
+                    $product_id = (int) ( $element['settings'][ $this->id_key ] ?? 0 );
+                    $shortcode  = $product_id > 0
+                        ? '[' . $this->tag . ' id="' . $product_id . '"]'
+                        : '[' . $this->tag . ']';
+                    $this->engine->logConverted( 'code' );
+                    return [
+                        'id'       => $id,
+                        'name'     => 'divi/code',
+                        'settings' => [
+                            'content' => [ 'innerContent' => [ 'desktop' => [ 'value' => $shortcode ] ] ],
+                        ],
+                        'elements' => [],
+                    ];
+                }
+            };
+        };
     }
 
     private function formShortcode( string $tag, string $id_key ): \Closure {

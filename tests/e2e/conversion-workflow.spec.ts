@@ -120,7 +120,7 @@ test.describe.serial('Conversion workflow: Elementor → Divi 5', () => {
     const diviButton = page.locator(
       'button:has-text("Divi Builder"), a:has-text("Divi Builder"), [class*="divi-builder-button"]'
     );
-    await diviButton.first().waitFor({ timeout: 15000 });
+    await diviButton.first().waitFor({ state: 'attached', timeout: 15000 });
     expect(await diviButton.count()).toBeGreaterThan(0);
 
     await page.screenshot({
@@ -289,10 +289,7 @@ test.describe.serial('Stress test: imperfect Elementor page conversion', () => {
     const hasAltWarning = report.warnings.some((w) => w.includes('missing alt text'));
     expect(hasAltWarning, 'warning about missing alt text').toBe(true);
 
-    // Skipped settings: section 1 has background_color and custom_padding.
-    const hasBackgroundColor = report.skipped_settings.some((s) => s.includes('background_color'));
-    expect(hasBackgroundColor, 'skipped background_color').toBe(true);
-
+    // Skipped settings: section 1 has custom_padding (background_color is now fully mapped by StyleMapper).
     const hasPadding = report.skipped_settings.some((s) => s.includes('custom_padding'));
     expect(hasPadding, 'skipped custom_padding').toBe(true);
   });

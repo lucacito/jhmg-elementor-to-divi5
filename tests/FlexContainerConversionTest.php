@@ -267,7 +267,9 @@ final class FlexContainerConversionTest extends TestCase {
      * Default flex-direction = 'row' must NOT be written to avoid overriding
      * Divi's own default. Divi rows are already row-direction.
      */
-    public function test_default_row_direction_is_not_written(): void {
+    public function test_row_direction_is_always_written(): void {
+        // flexDirection:'row' must always be written explicitly. Divi's divi/column and
+        // divi/group blocks default to 'column', so omitting 'row' causes incorrect layout.
         $result = $this->convert( [
             $this->container( 'parent', [
                 $this->container( 'col-a', [ $this->widget( 'w1' ) ] ),
@@ -277,7 +279,7 @@ final class FlexContainerConversionTest extends TestCase {
 
         $row = $result[0]['elements'][0];
         $dir = $row['settings']['module']['decoration']['layout']['desktop']['value']['flexDirection'] ?? null;
-        $this->assertNull( $dir, 'row direction must not be written (already the Divi default)' );
+        $this->assertSame( 'row', $dir, 'row direction must be written explicitly because column/group blocks default to column' );
     }
 
     // -------------------------------------------------------------------------
@@ -747,27 +749,23 @@ final class FlexContainerConversionTest extends TestCase {
     // -------------------------------------------------------------------------
 
     /**
-     * Images without an explicit Elementor width must emit width:auto in their
-     * CSS so that they render at natural/container-constrained size rather than
-     * expanding to fill the full Divi column (which Divi defaults to 100% wide).
+     * Images without an explicit Elementor width emit no sizing width — Divi
+     * renders the image at its natural/container-constrained size.
      */
-    public function test_image_without_explicit_width_gets_width_auto_css(): void {
+    public function test_image_without_explicit_width_emits_no_sizing_width(): void {
         $result = $this->convert( [
             $this->container( 'c', [ $this->widget( 'img', 'image' ) ] ),
         ] );
 
         $img_settings = $result[0]['elements'][0]['elements'][0]['elements'][0]['settings'];
-        $css_main     = $img_settings['css']['desktop']['value']['main'] ?? '';
+        $sizing       = $img_settings['module']['advanced']['sizing'] ?? null;
 
-        $this->assertStringContainsString( 'width: auto', $css_main,
-            'Image without explicit width must get width:auto to prevent Divi stretch' );
-        $this->assertStringContainsString( 'max-width: 100%', $css_main,
-            'max-width: 100% must be present as responsive safety cap' );
+        $this->assertNull( $sizing,
+            'Image without explicit width must not emit sizing so Divi uses natural size' );
     }
 
     /**
-     * Images with an explicit pixel width must keep their explicit width, not get
-     * overridden by width:auto.
+     * Images with an explicit pixel width must use module.advanced.sizing, not CSS.
      */
     public function test_image_with_explicit_width_gets_that_width_not_auto(): void {
         $result = $this->convert( [
@@ -777,12 +775,15 @@ final class FlexContainerConversionTest extends TestCase {
         ] );
 
         $img_settings = $result[0]['elements'][0]['elements'][0]['elements'][0]['settings'];
-        $css_main     = $img_settings['css']['desktop']['value']['main'] ?? '';
+        $sizing       = $img_settings['module']['advanced']['sizing']['desktop']['value'] ?? [];
 
-        $this->assertStringContainsString( 'width: 250px', $css_main,
-            'Explicit image width must be preserved' );
-        $this->assertStringNotContainsString( 'width: auto', $css_main,
-            'width:auto must not appear when an explicit width is set' );
+        $this->assertSame( '250px', $sizing['width'] ?? null,
+            'Explicit image width must go to module.advanced.sizing' );
+        $this->assertStringNotContainsString(
+            'width',
+            $img_settings['css']['desktop']['value']['main'] ?? '',
+            'Width must not appear in CSS when using native sizing'
+        );
     }
 
     // -------------------------------------------------------------------------

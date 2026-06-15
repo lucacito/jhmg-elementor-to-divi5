@@ -1,0 +1,63 @@
+[
+  {
+    "id": "section-testimonial",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "col-testimonial",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "ekit-testimonial-1",
+            "elType": "widget",
+            "widgetType": "elementskit-testimonial",
+            "settings": {
+              "ekit_testimonial_style": "style5",
+              "ekit_testimonial_slidetoshow": "3",
+              "ekit_testimonial_slidetoshow_mobile": "1",
+              "ekit_testimonial_loop": "yes",
+              "ekit_testimonial_data": [
+                {
+                  "client_name": "Jane Smith",
+                  "_id": "item-1",
+                  "designation": "CEO",
+                  "review": "Outstanding service and fast response!",
+                  "client_photo": {
+                    "id": 101,
+                    "url": "https://example.com/jane.jpg",
+                    "alt": "Jane Smith"
+                  }
+                },
+                {
+                  "client_name": "John Doe",
+                  "_id": "item-2",
+                  "designation": "Manager",
+                  "review": "Very professional and reliable.",
+                  "client_photo": {
+                    "id": 102,
+                    "url": "https://example.com/john.jpg",
+                    "alt": "John Doe"
+                  }
+                },
+                {
+                  "client_name": "Alice Brown",
+                  "_id": "item-3",
+                  "designation": "Customer",
+                  "review": "Would highly recommend to everyone.",
+                  "client_photo": {
+                    "url": "",
+                    "id": "",
+                    "alt": ""
+                  }
+                }
+              ]
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

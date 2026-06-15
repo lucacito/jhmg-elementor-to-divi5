@@ -172,7 +172,7 @@ class StyleMapper {
         $this->mapTypography( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapTextColor( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapAlignment( $widget_type, $settings, $divi_attrs, $handled_keys );
-        $this->mapBorder( $settings, $divi_attrs, $handled_keys );
+        $this->mapBorder( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapBoxShadow( $settings, $divi_attrs, $handled_keys );
         $this->mapTextShadow( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapOpacity( $settings, $divi_attrs, $handled_keys );
@@ -309,6 +309,28 @@ class StyleMapper {
         // When background type is gradient, background_color is the first gradient stop —
         // it should not ALSO be written as a solid color (mapBackgroundGradient handles it).
         if ( ( $settings['background_background'] ?? '' ) === 'gradient' ) {
+            return;
+        }
+
+        if ( $widget_type === 'button' ) {
+            // In the button widget, background_color is the button-face fill colour, not the
+            // module wrapper background.  Also mark background_color_b as handled here since
+            // it is the gradient second-stop and has no Divi button equivalent.
+            $handled[] = 'background_color_b';
+
+            $color = $this->resolveColorSetting( $settings, 'background_color' );
+            // Fallback: some Elementor exports set background_color_b (gradient second-stop)
+            // to the accent colour without an explicit background_color when the button uses
+            // the theme accent as its default fill.
+            if ( $color === '' ) {
+                $color = $this->resolveColorSetting( $settings, 'background_color_b' );
+            }
+            if ( $color === '' ) {
+                return;
+            }
+            foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+                self::transformPath( $attrs, "button.decoration.background.{$breakpoint}.value.color", $color );
+            }
             return;
         }
 
@@ -560,10 +582,7 @@ class StyleMapper {
 
     /**
      * Maps the widget-specific text/font color control to the Divi 5 font color path.
-     *
-     * Button font color goes to `button.decoration.button.{breakpoint}.value.font.color`
-     * (the button-specific decoration sub-group), not the generic font.font path.
-     * All other widgets use `{font_path}.desktop.value.color` as before.
+     * All widgets (including button) use `{font_path}.desktop.value.color`.
      */
     private function mapTextColor( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
         $color_key = self::WIDGET_COLOR_KEY[ $widget_type ] ?? null;
@@ -580,12 +599,7 @@ class StyleMapper {
             return;
         }
 
-        if ( $widget_type === 'button' ) {
-            // Button font color lives inside the button's own decoration sub-group.
-            foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
-                self::transformPath( $attrs, "button.decoration.button.{$breakpoint}.value.font.color", $color );
-            }
-        } else {
+        {
             self::transformPath( $attrs, "{$font_path}.desktop.value.color", $color );
         }
     }
@@ -1250,9 +1264,8 @@ class StyleMapper {
     }
 
     /**
-     * Maps the Elementor image widget `height` control to a CSS `height` rule on
-     * the module's main selector. Divi 5 has no native block attribute for image
-     * height, so raw CSS is the only available slot.
+     * Maps the Elementor image widget `height` control to the native Divi 5
+     * `module.advanced.sizing.{breakpoint}.value.height` block attribute.
      *
      * `height_tablet` and `height_mobile` are handled for responsive overrides.
      * Only positive numeric values are emitted; empty / zero / "auto" are skipped.
@@ -1277,12 +1290,7 @@ class StyleMapper {
                 continue;
             }
 
-            $existing = $attrs['css'][ $breakpoint ]['value']['main'] ?? '';
-            $rule     = "height: {$height_str};";
-            $merged   = ( is_string( $existing ) && $existing !== '' )
-                ? rtrim( $existing, '; ' ) . '; ' . $rule
-                : $rule;
-            self::transformPath( $attrs, "css.{$breakpoint}.value.main", $merged );
+            self::transformPath( $attrs, "module.advanced.sizing.{$breakpoint}.value.height", $height_str );
         }
     }
 
@@ -1323,7 +1331,7 @@ class StyleMapper {
      *   border_color         → Divi styles.all.color
      *   border_radius        → Divi radius              ({topLeft, topRight, bottomRight, bottomLeft})
      */
-    private function mapBorder( array $settings, array &$attrs, array &$handled ): void {
+    private function mapBorder( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
         foreach ( self::BORDER_KEYS as $base ) {
             foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
                 $handled[] = $base . $suffix;
@@ -1335,6 +1343,12 @@ class StyleMapper {
         foreach ( self::BREAKPOINT_MAP as $suffix => $_ ) {
             $handled[] = 'border_style' . $suffix;
             $handled[] = '_border_style' . $suffix;
+        }
+
+        // For button widgets the border_* keys target the button face (.elementor-button),
+        // not the module wrapper.  mapButtonBorder() handles them via unprefixed fallbacks.
+        if ( $widget_type === 'button' ) {
+            return;
         }
 
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
@@ -1623,10 +1637,11 @@ class StyleMapper {
 
     /**
      * Maps the Elementor button background colour (`button_background_color`) to
-     * `button.decoration.button.{breakpoint}.value.background.color` in Divi 5.
+     * `button.decoration.background.{breakpoint}.value.color` in Divi 5.
      *
-     * This is the actual button-face background — distinct from
-     * `module.decoration.background.*.value.color` which is the module wrapper.
+     * Used for composite widgets (e.g. CTA) that store the button background under
+     * `button_background_color`.  The standalone button widget uses `background_color`
+     * which is routed here via mapBackgroundColor().
      */
     private function mapButtonBackground( array $settings, array &$attrs, array &$handled ): void {
         $handled[] = 'button_background_color';
@@ -1637,17 +1652,16 @@ class StyleMapper {
         }
 
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
-            self::transformPath( $attrs, "button.decoration.button.{$breakpoint}.value.background.color", $color );
+            self::transformPath( $attrs, "button.decoration.background.{$breakpoint}.value.color", $color );
         }
     }
 
     /**
-     * Maps Elementor button border controls to the Divi 5 button decoration path.
+     * Maps Elementor button border controls to `button.decoration.border.{bp}.value.*`
+     * in Divi 5.
      *
-     * Elementor groups button border under `button_border_border`, `button_border_width`,
-     * `button_border_color`, and `button_border_radius`.  In Divi 5 these live at
-     * `button.decoration.button.{bp}.value.border.*` rather than the standard
-     * `module.decoration.border` path used by non-button elements.
+     * Handles both composite-widget prefix (`button_border_*`) and the standalone
+     * button widget's unprefixed controls (`border_*`).
      */
     private function mapButtonBorder( array $settings, array &$attrs, array &$handled ): void {
         $btn_border_keys = [
@@ -1660,32 +1674,32 @@ class StyleMapper {
         }
 
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
-            $base_path = "button.decoration.button.{$breakpoint}.value.border";
+            $base_path = "button.decoration.border.{$breakpoint}.value";
 
-            // Border style.
-            $style = $settings[ 'button_border_border' . $suffix ] ?? '';
+            // Border style: prefer button_border_border (composite-widget prefix);
+            // fall back to border_border (standalone button widget).
+            $style = $settings[ 'button_border_border' . $suffix ] ?? $settings[ 'border_border' . $suffix ] ?? '';
             if ( is_string( $style ) && $style !== '' ) {
                 self::transformPath( $attrs, "{$base_path}.styles.all.style", $style );
             }
 
-            // Border color.
-            $color = $settings[ 'button_border_color' . $suffix ] ?? '';
+            // Border color: prefer button_border_color; fall back to border_color.
+            $color = $settings[ 'button_border_color' . $suffix ] ?? $settings[ 'border_color' . $suffix ] ?? '';
             if ( is_string( $color ) && $color !== '' ) {
                 self::transformPath( $attrs, "{$base_path}.styles.all.color", $color );
             }
 
-            // Border width.
-            $width_raw = $settings[ 'button_border_width' . $suffix ] ?? null;
+            // Border width: prefer button_border_width; fall back to border_width.
+            $width_raw = $settings[ 'button_border_width' . $suffix ] ?? $settings[ 'border_width' . $suffix ] ?? null;
             if ( is_array( $width_raw ) ) {
                 $this->applyBorderWidth( $width_raw, $attrs, "{$base_path}.styles" );
             } elseif ( is_string( $width_raw ) && $width_raw !== '' ) {
                 self::transformPath( $attrs, "{$base_path}.styles.all.width", $width_raw );
             }
 
-            // Border radius: prefer button_border_radius (composite-widget prefix);
-            // fall back to the standard border_radius control (standalone button widget).
-            $radius_raw = $settings[ 'button_border_radius' . $suffix ]
-                ?? ( $suffix === '' ? ( $settings['border_radius'] ?? null ) : null );
+            // Border radius: prefer button_border_radius; fall back to border_radius
+            // (standalone button widget uses the unprefixed responsive control).
+            $radius_raw = $settings[ 'button_border_radius' . $suffix ] ?? $settings[ 'border_radius' . $suffix ] ?? null;
             if ( is_array( $radius_raw ) ) {
                 $radius_obj = $this->normalizeRadius( $radius_raw );
                 if ( ! empty( $radius_obj ) ) {
@@ -1927,45 +1941,51 @@ class StyleMapper {
     }
 
     /**
-     * Maps the Elementor image widget `width` control to `width` in custom CSS
-     * on the module's main selector.  Divi's image module has no native block-attr
-     * slot for arbitrary image widths, so this falls back to `css.desktop.value.main`.
+     * Maps the Elementor image widget `width` control to the native Divi 5
+     * `module.advanced.sizing.desktop.value.width` block attribute.
+     *
+     * When `_element_width = 'initial'`, the `_element_custom_width` value
+     * constrains the image module width and takes priority over the image
+     * content width setting. Responsive custom widths (_tablet/_mobile) are
+     * also handled. Only explicit non-zero values are emitted.
      */
     private function mapImageWidth( array $settings, array &$attrs, array &$handled ): void {
         $handled[] = 'width';
 
         $raw = $settings['width'] ?? null;
 
-        // Detect an explicitly-set non-zero width (size > 0, not empty/null).
-        $has_explicit = false;
-        $width_str    = '';
+        $width_str = '';
         if ( is_array( $raw ) && isset( $raw['size'] ) ) {
             $size = $raw['size'];
             if ( $size !== '' && $size !== null && (float) $size > 0 ) {
-                $has_explicit = true;
-                $width_str    = $this->parseSizeValue( $raw );
+                $width_str = $this->parseSizeValue( $raw );
             }
         } elseif ( is_string( $raw ) && $raw !== '' && $raw !== '0' && $raw !== 'auto' ) {
-            $has_explicit = true;
-            $width_str    = $raw;
+            $width_str = $raw;
         }
 
-        $existing = $attrs['css']['desktop']['value']['main'] ?? '';
-
-        if ( $has_explicit && $width_str !== '' ) {
-            // Explicit pixel/percent width — apply it with max-width safety cap.
-            $rule = "width: {$width_str}; max-width: 100%";
-        } else {
-            // No explicit width — use auto so the image renders at its natural/
-            // container-constrained size instead of Divi defaulting to 100% wide.
-            // This matches Elementor's behavior where images respect their container.
-            $rule = 'width: auto; max-width: 100%';
+        // _element_custom_width constrains the whole image module width. For images
+        // this is mapped to sizing (not CSS max-width) so the <img> element itself
+        // is constrained. Takes priority over the image content width.
+        $el_width = is_string( $settings['_element_width'] ?? '' ) ? ( $settings['_element_width'] ?? '' ) : '';
+        if ( $el_width === 'initial' ) {
+            $cw_str = $this->parseSizeValue( $settings['_element_custom_width'] ?? null );
+            if ( $cw_str !== '' ) {
+                $width_str = $cw_str;
+            }
         }
 
-        $merged = ( is_string( $existing ) && $existing !== '' )
-            ? rtrim( $existing, '; ' ) . '; ' . $rule . ';'
-            : $rule . ';';
-        self::transformPath( $attrs, 'css.desktop.value.main', $merged );
+        if ( $width_str !== '' ) {
+            self::transformPath( $attrs, 'module.advanced.sizing.desktop.value.width', $width_str );
+        }
+
+        // Responsive element-width overrides.
+        foreach ( [ 'tablet' => '_tablet', 'phone' => '_mobile' ] as $bp => $suffix ) {
+            $cw = $this->parseSizeValue( $settings[ '_element_custom_width' . $suffix ] ?? null );
+            if ( $cw !== '' ) {
+                self::transformPath( $attrs, "module.advanced.sizing.{$bp}.value.width", $cw );
+            }
+        }
     }
 
     /**
@@ -2026,11 +2046,16 @@ class StyleMapper {
         // --- max-width / custom element width --------------------------------
         // _element_* keys are prefix-suppressed in suppressUnimplementable(); no need to add to handled.
         $handled[] = 'custom_width';
-        $el_width  = is_string( $settings['_element_width'] ?? '' ) ? ( $settings['_element_width'] ?? '' ) : '';
-        if ( $el_width === 'initial' ) {
-            $cw_str = $this->parseSizeValue( $settings['_element_custom_width'] ?? null );
-            if ( $cw_str !== '' ) {
-                $rules[] = "max-width: {$cw_str}";
+
+        // For images, _element_custom_width is mapped to module.advanced.sizing
+        // by mapImageWidth(), so we skip the CSS max-width approach here.
+        if ( $widget_type !== 'image' ) {
+            $el_width = is_string( $settings['_element_width'] ?? '' ) ? ( $settings['_element_width'] ?? '' ) : '';
+            if ( $el_width === 'initial' ) {
+                $cw_str = $this->parseSizeValue( $settings['_element_custom_width'] ?? null );
+                if ( $cw_str !== '' ) {
+                    $rules[] = "max-width: {$cw_str}";
+                }
             }
         }
         $custom_width_str = $this->parseSizeValue( $settings['custom_width'] ?? null );

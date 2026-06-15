@@ -97,8 +97,8 @@ final class ReferencePageConversionTest extends TestCase {
 
     public function test_hero_button_has_background_color(): void {
         $btn = $this->findFirst( self::$result['divi']['elements'][0], 'divi/button' );
-        $color = $btn['settings']['module']['decoration']['background']['desktop']['value']['color'] ?? '';
-        $this->assertNotEmpty( $color, 'Hero button background color should be mapped to module background' );
+        $color = $btn['settings']['button']['decoration']['background']['desktop']['value']['color'] ?? '';
+        $this->assertNotEmpty( $color, 'Hero button background color should be mapped to button decoration' );
     }
 
     public function test_hero_button_has_text_padding(): void {

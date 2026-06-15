@@ -42,6 +42,7 @@ final class ConverterFixtureTest extends TestCase {
             [ 'nested-container' ],
             [ 'real-elementor' ],
             [ 'column-overlay' ],
+            [ 'elementskit-testimonial' ],
         ];
     }
 

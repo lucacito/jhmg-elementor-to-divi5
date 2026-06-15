@@ -206,14 +206,10 @@ final class StyleMapperTest extends TestCase {
 
     public function test_maps_button_text_color(): void {
         $result = $this->mapper->map( 'button', [ 'button_text_color' => '#ffffff' ] );
-        // Button font color lives in the button-specific decoration sub-group, one per breakpoint.
-        $color_desktop = $result['divi_attrs']['button']['decoration']['button']['desktop']['value']['font']['color'];
-        $color_tablet  = $result['divi_attrs']['button']['decoration']['button']['tablet']['value']['font']['color'];
-        $color_phone   = $result['divi_attrs']['button']['decoration']['button']['phone']['value']['font']['color'];
+        // Button font color lives at button.decoration.font.font.*.value.color (standard font path).
+        $color_desktop = $result['divi_attrs']['button']['decoration']['font']['font']['desktop']['value']['color'];
 
         $this->assertSame( '#ffffff', $color_desktop );
-        $this->assertSame( '#ffffff', $color_tablet );
-        $this->assertSame( '#ffffff', $color_phone );
     }
 
     // -------------------------------------------------------------------------
@@ -623,8 +619,8 @@ final class StyleMapperTest extends TestCase {
 
     public function test_maps_button_background_color_per_breakpoint(): void {
         $result = $this->mapper->map( 'button', [ 'button_background_color' => '#1a73e8' ] );
-        $desktop = $result['divi_attrs']['button']['decoration']['button']['desktop']['value']['background']['color'] ?? null;
-        $tablet  = $result['divi_attrs']['button']['decoration']['button']['tablet']['value']['background']['color'] ?? null;
+        $desktop = $result['divi_attrs']['button']['decoration']['background']['desktop']['value']['color'] ?? null;
+        $tablet  = $result['divi_attrs']['button']['decoration']['background']['tablet']['value']['color'] ?? null;
         $this->assertSame( '#1a73e8', $desktop );
         $this->assertSame( '#1a73e8', $tablet );
     }
@@ -836,12 +832,12 @@ final class StyleMapperTest extends TestCase {
 
     // ── M2: mapImageWidth ─────────────────────────────────────────────────────
 
-    public function test_maps_image_width_to_css_main(): void {
-        $result = $this->mapper->map( 'image', [
+    public function test_maps_image_width_to_sizing(): void {
+        $result  = $this->mapper->map( 'image', [
             'width' => [ 'size' => 300, 'unit' => 'px' ],
         ] );
-        $this->assertStringContainsString( 'width: 300px', $result['css_main'] );
-        $this->assertStringContainsString( 'max-width: 100%', $result['css_main'] );
+        $sizing  = $result['divi_attrs']['module']['advanced']['sizing']['desktop']['value'] ?? [];
+        $this->assertSame( '300px', $sizing['width'] ?? null );
         $this->assertContains( 'width', $result['handled_keys'] );
     }
 
@@ -850,32 +846,34 @@ final class StyleMapperTest extends TestCase {
         $result = $this->mapper->map( 'heading', [
             'width' => [ 'size' => 300, 'unit' => 'px' ],
         ] );
-        $this->assertStringNotContainsString( 'width: 300px', $result['css_main'] );
+        $sizing = $result['divi_attrs']['module']['advanced']['sizing'] ?? null;
+        $this->assertNull( $sizing );
     }
 
-    public function test_image_without_explicit_width_gets_auto_css(): void {
-        // No 'width' key → must emit width:auto so images don't expand to 100% of the Divi column.
+    public function test_image_without_explicit_width_emits_no_sizing(): void {
+        // No 'width' key → no sizing width emitted; Divi renders at natural/container size.
         $result = $this->mapper->map( 'image', [] );
-        $this->assertStringContainsString( 'width: auto',    $result['css_main'] );
-        $this->assertStringContainsString( 'max-width: 100%', $result['css_main'] );
+        $sizing = $result['divi_attrs']['module']['advanced']['sizing'] ?? null;
+        $this->assertNull( $sizing, 'No sizing should be emitted when image has no explicit width or height' );
     }
 
-    public function test_image_with_empty_size_gets_auto_css(): void {
+    public function test_image_with_empty_size_emits_no_sizing(): void {
         // size: '' is Elementor's default empty slider state; must be treated as no explicit width.
         $result = $this->mapper->map( 'image', [
             'width' => [ 'size' => '', 'unit' => '%' ],
         ] );
-        $this->assertStringContainsString( 'width: auto', $result['css_main'] );
-        $this->assertStringNotContainsString( 'width: 0', $result['css_main'] );
+        $sizing = $result['divi_attrs']['module']['advanced']['sizing']['desktop']['value']['width'] ?? null;
+        $this->assertNull( $sizing, 'Empty size must not emit a sizing width' );
     }
 
     public function test_image_with_explicit_width_uses_explicit_not_auto(): void {
-        // An explicit size must override the auto fallback.
+        // An explicit size must be in sizing, not CSS.
         $result = $this->mapper->map( 'image', [
             'width' => [ 'size' => 250, 'unit' => 'px' ],
         ] );
-        $this->assertStringContainsString( 'width: 250px', $result['css_main'] );
-        $this->assertStringNotContainsString( 'width: auto', $result['css_main'] );
+        $sizing = $result['divi_attrs']['module']['advanced']['sizing']['desktop']['value'] ?? [];
+        $this->assertSame( '250px', $sizing['width'] ?? null );
+        $this->assertStringNotContainsString( 'width', $result['css_main'] );
     }
 
     // ── M2: image alignment ───────────────────────────────────────────────────
@@ -1202,15 +1200,15 @@ final class StyleMapperTest extends TestCase {
         $this->assertSame( 'outer', $shadow['position']  ?? null );
     }
 
-    public function test_image_height_mapped_to_css(): void {
+    public function test_image_height_mapped_to_sizing(): void {
         $settings = [
             'height' => [ 'size' => 55, 'unit' => 'px' ],
         ];
 
         $result = $this->mapper->map( 'image', $settings );
-        $css    = $result['divi_attrs']['css']['desktop']['value']['main'] ?? '';
+        $sizing = $result['divi_attrs']['module']['advanced']['sizing']['desktop']['value'] ?? [];
 
-        $this->assertStringContainsString( 'height: 55px', $css );
+        $this->assertSame( '55px', $sizing['height'] ?? null );
     }
 
     public function test_image_full_hero_styles(): void {
@@ -1232,13 +1230,14 @@ final class StyleMapperTest extends TestCase {
         $attrs  = $result['divi_attrs'];
         $border = $attrs['module']['decoration']['border']['desktop']['value'] ?? [];
         $shadow = $attrs['module']['decoration']['boxShadow']['desktop']['value'] ?? [];
-        $css    = $attrs['css']['desktop']['value']['main'] ?? '';
+        $sizing = $attrs['module']['advanced']['sizing']['desktop']['value'] ?? [];
 
         $this->assertSame( 'solid',                       $border['styles']['all']['style'] ?? null );
         $this->assertSame( '2px',                         $border['styles']['all']['width'] ?? null );
         $this->assertSame( 'var(--e-global-color-308e809)', $border['styles']['all']['color'] ?? null );
         $this->assertSame( '50%',                         $border['radius']['topLeft'] ?? null );
         $this->assertSame( 'rgba(0, 0, 0, 0.15)',         $shadow['color'] ?? null );
-        $this->assertStringContainsString( 'height: 55px', $css );
+        $this->assertSame( '55px', $sizing['height'] ?? null );
+        $this->assertSame( '100%', $sizing['width']  ?? null );
     }
 }

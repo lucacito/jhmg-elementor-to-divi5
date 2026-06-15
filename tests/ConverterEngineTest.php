@@ -179,8 +179,8 @@ final class ConverterEngineTest extends TestCase {
         $btn1 = $result['divi']['elements'][0];
         $btn2 = $result['divi']['elements'][1];
 
-        $btn1_bg = $btn1['settings']['button']['decoration']['button']['desktop']['value']['background']['color'] ?? null;
-        $btn2_bg = $btn2['settings']['button']['decoration']['button']['desktop']['value']['background']['color'] ?? null;
+        $btn1_bg = $btn1['settings']['button']['decoration']['background']['desktop']['value']['color'] ?? null;
+        $btn2_bg = $btn2['settings']['button']['decoration']['background']['desktop']['value']['color'] ?? null;
 
         $this->assertSame( '#EAB300', $btn1_bg, 'Button 1 background should match global color' );
         $this->assertSame( '#14305A', $btn2_bg, 'Button 2 background should match global color' );

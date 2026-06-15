@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\StyleMapper\GlobalsResolver;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -37,28 +38,25 @@ class ElementsKitDualButtonConverter extends BaseElementorConverter {
                 $url = $link_raw;
             }
 
-            $bg_color   = is_string( $settings[ "ekit_double_button_{$ekit_key}_background_color" ] ?? null )
-                ? $settings[ "ekit_double_button_{$ekit_key}_background_color" ]
-                : '';
-            $text_color = is_string( $settings[ "ekit_double_button_{$ekit_key}_color" ] ?? null )
-                ? $settings[ "ekit_double_button_{$ekit_key}_color" ]
-                : '';
+            $bg_key   = "ekit_double_button_{$ekit_key}_background_color";
+            $text_key = "ekit_double_button_{$ekit_key}_color";
+            $globals  = is_array( $settings['__globals__'] ?? null ) ? $settings['__globals__'] : [];
+
+            $bg_color   = $this->resolveColor( $settings, $globals, $bg_key );
+            $text_color = $this->resolveColor( $settings, $globals, $text_key );
 
             $button_decoration = [];
-            if ( $bg_color !== '' || $text_color !== '' ) {
-                $bp_value = array_filter( [
-                    'background' => $bg_color   !== '' ? [ 'color' => $bg_color ]   : null,
-                    'font'       => $text_color !== '' ? [ 'color' => $text_color ] : null,
-                ] );
-                if ( ! empty( $bp_value ) ) {
-                    $button_decoration = [
-                        'button' => [
-                            'desktop' => [ 'value' => $bp_value ],
-                            'tablet'  => [ 'value' => $bp_value ],
-                            'mobile'  => [ 'value' => $bp_value ],
-                        ],
-                    ];
-                }
+            if ( $bg_color !== '' ) {
+                $button_decoration['background'] = [
+                    'desktop' => [ 'value' => [ 'color' => $bg_color ] ],
+                    'tablet'  => [ 'value' => [ 'color' => $bg_color ] ],
+                    'phone'   => [ 'value' => [ 'color' => $bg_color ] ],
+                ];
+            }
+            if ( $text_color !== '' ) {
+                $button_decoration['font']['font'] = [
+                    'desktop' => [ 'value' => [ 'color' => $text_color ] ],
+                ];
             }
 
             $button_settings = [
@@ -101,5 +99,24 @@ class ElementsKitDualButtonConverter extends BaseElementorConverter {
         ] );
 
         return $blocks;
+    }
+
+    private function resolveColor( array $settings, array $globals, string $key ): string {
+        $direct = $settings[ $key ] ?? '';
+        if ( is_string( $direct ) && $direct !== '' ) {
+            return $direct;
+        }
+
+        $ref = $globals[ $key ] ?? '';
+        if ( ! is_string( $ref ) || $ref === '' ) {
+            return '';
+        }
+
+        $id = GlobalsResolver::colorIdFromRef( $ref );
+        if ( $id === null ) {
+            return '';
+        }
+
+        return GlobalsResolver::resolveColor( $id ) ?? '';
     }
 }

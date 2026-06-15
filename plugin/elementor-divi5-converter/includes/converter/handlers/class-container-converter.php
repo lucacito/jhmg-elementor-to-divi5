@@ -68,6 +68,30 @@ class ContainerConverter extends BaseElementorConverter {
 
         // Flex-row container with container children → multi-column flex row.
         if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
+            $this->engine->logConverted( 'section' );
+            $this->logUnmappedSettings( $id, $settings, $style_keys );
+
+            // When child containers don't all have clean Divi fractions use the
+            // group-in-column approach. In this context, $row_sizing_layout holds
+            // the sizing/layout already extracted from $section_attrs.
+            if ( ! $this->allChildContainersHaveCleanFraction( $children ) ) {
+                [ $row_settings, $single_col ] = $this->buildGroupColumnLayout( $id . '-row', $row_sizing_layout, $settings, $children );
+                $row_settings = $this->applyBoxedWidthToRow( $row_settings, $settings );
+                return [
+                    'id'       => $id,
+                    'name'     => 'divi/section',
+                    'settings' => $section_attrs,
+                    'elements' => [
+                        [
+                            'id'       => $id . '-row',
+                            'name'     => 'divi/row',
+                            'settings' => $row_settings,
+                            'elements' => [ $single_col ],
+                        ],
+                    ],
+                ];
+            }
+
             $columns      = $this->convertFlexRowChildren( $children );
             $row_settings = $this->applyBoxedWidthToRow(
                 $this->deepMergeSettings(
@@ -79,9 +103,6 @@ class ContainerConverter extends BaseElementorConverter {
                 ),
                 $settings
             );
-
-            $this->engine->logConverted( 'section' );
-            $this->logUnmappedSettings( $id, $settings, $style_keys );
 
             return [
                 'id'       => $id,

@@ -12,7 +12,7 @@
           {
             "id": "vid001",
             "elType": "widget",
-            "widgetType": "e-video",
+            "widgetType": "video",
             "settings": {
               "video_type": "youtube",
               "youtube_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"

@@ -204,6 +204,21 @@ abstract class BaseElementorConverter implements ConverterInterface {
         }
 
         if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
+            // When child containers don't all have clean Divi fractions, Divi's
+            // columnStructure would be incomplete and render incorrectly. Use the
+            // group-in-column approach instead: a single 4_4 column with flex
+            // layout containing divi/group blocks for each sub-container.
+            if ( ! $this->allChildContainersHaveCleanFraction( $children ) ) {
+                [ $row_settings, $single_col ] = $this->buildGroupColumnLayout( $id, $row_styles, $settings, $children );
+                $row_settings = $this->applyBoxedWidthToRow( $row_settings, $settings );
+                return [
+                    'id'       => $id,
+                    'name'     => 'divi/row',
+                    'settings' => $row_settings,
+                    'elements' => [ $single_col ],
+                ];
+            }
+
             $columns      = $this->convertFlexRowChildren( $children );
             $row_settings = $this->applyBoxedWidthToRow(
                 $this->deepMergeSettings(
@@ -251,6 +266,248 @@ abstract class BaseElementorConverter implements ConverterInterface {
             'settings' => $row_settings,
             'elements' => $row_elements,
         ];
+    }
+
+    /**
+     * Returns false when any container child has an explicit width that cannot
+     * be expressed as a standard Divi column fraction, signalling that the
+     * group-in-column approach should be used instead of a multi-column row.
+     *
+     * Containers with NO explicit width (auto-sized flex items) are considered
+     * clean — Divi handles them as equal-width flex children by default.
+     * Containers with a percentage width that maps to a known fraction are also
+     * clean. Only containers with a non-% unit (custom, px, em, …) or a %
+     * value that falls outside COLUMN_SIZE_MAP trigger the group fallback.
+     */
+    protected function allChildContainersHaveCleanFraction( array $elements ): bool {
+        foreach ( $elements as $el ) {
+            if ( ( $el['elType'] ?? '' ) !== 'container' ) {
+                continue;
+            }
+            $settings = $el['settings'] ?? [];
+
+            // _inline_size takes priority (mirrors extractFlexItemColumnSettings).
+            $inline = $settings['_inline_size'] ?? null;
+            if ( is_array( $inline ) && isset( $inline['size'] ) && $inline['size'] !== '' && $inline['size'] !== null ) {
+                $fraction = StyleMapper::columnSizeToFraction( (int) round( (float) $inline['size'] ) );
+                if ( $fraction === null ) {
+                    return false;
+                }
+                continue;
+            }
+
+            $width = $settings['width'] ?? null;
+            if ( ! is_array( $width ) || ! isset( $width['size'] ) || $width['size'] === '' || $width['size'] === null ) {
+                // No explicit width → auto-sized flex item → OK for multi-column.
+                continue;
+            }
+
+            if ( ( $width['unit'] ?? '' ) !== '%' ) {
+                // Explicit non-% width (custom, px, em, …) → cannot be a fraction.
+                return false;
+            }
+
+            $fraction = StyleMapper::columnSizeToFraction( (int) round( (float) $width['size'] ) );
+            if ( $fraction === null ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Converts an Elementor container to a divi/group block.
+     *
+     * Used when sub-containers cannot be expressed as Divi columns (arbitrary
+     * widths) and must instead live as flex children inside a parent column.
+     *
+     * Handles:
+     * - Container decoration (background, padding, border) via StyleMapper.
+     * - Percentage width → inline CSS `width: N%`.
+     * - `_flex_align_self` → inline CSS `align-self: value`.
+     * - Flex layout when the container is a flex-row with widget-only children.
+     * - Nested flex-row containers with sub-containers are recursed as groups.
+     */
+    protected function convertContainerAsGroup( array $element ): array {
+        $id       = $element['id'] ?? uniqid( 'divi_group_' );
+        $settings = $element['settings'] ?? [];
+        $children = $element['elements'] ?? [];
+
+        $style       = ( new StyleMapper() )->map( 'column', $settings );
+        $group_attrs = $style['divi_attrs'];
+
+        // Percentage width and align-self cannot be expressed as block attrs —
+        // emit them as freeForm CSS on the group selector.
+        $css_rules = [];
+
+        $width = $settings['width'] ?? null;
+        if ( is_array( $width ) && isset( $width['size'] ) && $width['size'] !== '' && ( $width['unit'] ?? '' ) === '%' ) {
+            $css_rules[] = 'width:' . $width['size'] . '%;';
+        }
+
+        $align_self = $settings['_flex_align_self'] ?? '';
+        if ( is_string( $align_self ) && $align_self !== '' ) {
+            $css_rules[] = 'align-self: ' . $align_self . ';';
+        }
+
+        if ( ! empty( $css_rules ) ) {
+            $group_attrs = $this->deepMergeSettings( $group_attrs, [
+                'css' => [ 'desktop' => [ 'value' => [ 'freeForm' => 'selector { ' . implode( ' ', $css_rules ) . ' }' ] ] ],
+            ] );
+        }
+
+        // Flex-row with only widget children: apply flex layout to the group
+        // so its module children flow horizontally.
+        if ( $this->isFlexRowContainer( $settings ) && ! $this->hasContainerChildren( $children ) ) {
+            $flex = $this->rowFlexSettingsFromContainer( $settings );
+            if ( ! empty( $flex ) ) {
+                $group_attrs = $this->deepMergeSettings( $group_attrs, $flex );
+            }
+        }
+
+        // Nested flex-row with container children: recurse with groups and
+        // apply the flex layout to this group's own decoration.
+        if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
+            $flex = $this->rowFlexSettingsFromContainer( $settings );
+            if ( ! empty( $flex ) ) {
+                $group_attrs = $this->deepMergeSettings( $group_attrs, $flex );
+            }
+            $elements = [];
+            foreach ( $children as $child ) {
+                if ( ! is_array( $child ) ) {
+                    continue;
+                }
+                if ( ( $child['elType'] ?? '' ) === 'container' ) {
+                    $elements[] = $this->convertContainerAsGroup( $child );
+                } else {
+                    $converted = $this->engine->convertElement( $child );
+                    if ( empty( $converted ) ) {
+                        continue;
+                    }
+                    if ( isset( $converted['name'] ) ) {
+                        $elements[] = $converted;
+                    } else {
+                        foreach ( $converted as $block ) {
+                            if ( ! empty( $block ) ) {
+                                $elements[] = $block;
+                            }
+                        }
+                    }
+                }
+            }
+            return [
+                'id'       => $id,
+                'name'     => 'divi/group',
+                'settings' => $group_attrs,
+                'elements' => $elements,
+            ];
+        }
+
+        return [
+            'id'       => $id,
+            'name'     => 'divi/group',
+            'settings' => $group_attrs,
+            'elements' => $this->convertStructureChildren( $children ),
+        ];
+    }
+
+    /**
+     * Builds a single-column (4_4) + groups layout from a flex-row container
+     * whose child containers do not all have standard Divi column fractions.
+     *
+     * The parent container's `alignItems` (desktop) is placed on the row so
+     * columns centre vertically within a min-height row. All other flex
+     * settings (direction, justifyContent, gap, responsive breakpoints) are
+     * placed on the wrapping column, which becomes the true flex container
+     * for the group children.
+     *
+     * @return array{0: array, 1: array} [row_settings, divi/column element]
+     */
+    protected function buildGroupColumnLayout( string $id, array $row_styles, array $container_settings, array $children ): array {
+        $all_flex        = $this->rowFlexSettingsFromContainer( $container_settings );
+        $all_flex_layout = $all_flex['module']['decoration']['layout'] ?? [];
+
+        $row_layout = [];
+        $col_layout = [];
+
+        foreach ( $all_flex_layout as $bp => $bp_data ) {
+            $value     = $bp_data['value'] ?? [];
+            $row_value = [];
+            $col_value = [];
+
+            foreach ( $value as $k => $v ) {
+                // Desktop alignItems: centres the column vertically inside
+                // the hero row's min-height. Everything else (direction,
+                // justifyContent, gap, responsive alignItems) goes on the column.
+                if ( $k === 'alignItems' && $bp === 'desktop' ) {
+                    $row_value[ $k ] = $v;
+                } else {
+                    $col_value[ $k ] = $v;
+                }
+            }
+
+            if ( ! empty( $row_value ) ) {
+                $row_layout[ $bp ] = [ 'value' => $row_value ];
+            }
+            if ( ! empty( $col_value ) ) {
+                $col_layout[ $bp ] = [ 'value' => $col_value ];
+            }
+        }
+
+        // Row: StyleMapper output + columnStructure 4_4 + alignItems-only layout.
+        $row_settings = $row_styles;
+        $row_settings['module']['advanced']['columnStructure'] = [ 'desktop' => [ 'value' => '4_4' ] ];
+        if ( ! empty( $row_layout ) ) {
+            $row_settings = $this->deepMergeSettings( $row_settings, [
+                'module' => [ 'decoration' => [ 'layout' => $row_layout ] ],
+            ] );
+        } elseif ( isset( $row_settings['module']['decoration']['layout'] ) ) {
+            unset( $row_settings['module']['decoration']['layout'] );
+        }
+
+        // Column: type 4_4 + remaining flex settings.
+        $col_settings = [
+            'module' => [ 'advanced' => [ 'type' => [ 'desktop' => [ 'value' => '4_4' ] ] ] ],
+        ];
+        if ( ! empty( $col_layout ) ) {
+            $col_settings = $this->deepMergeSettings( $col_settings, [
+                'module' => [ 'decoration' => [ 'layout' => $col_layout ] ],
+            ] );
+        }
+
+        // Convert child containers as groups, widget children normally.
+        $elements = [];
+        foreach ( $children as $child ) {
+            if ( ! is_array( $child ) ) {
+                continue;
+            }
+            if ( ( $child['elType'] ?? '' ) === 'container' ) {
+                $elements[] = $this->convertContainerAsGroup( $child );
+            } else {
+                $converted = $this->engine->convertElement( $child );
+                if ( empty( $converted ) ) {
+                    continue;
+                }
+                if ( isset( $converted['name'] ) ) {
+                    $elements[] = $converted;
+                } else {
+                    foreach ( $converted as $block ) {
+                        if ( ! empty( $block ) ) {
+                            $elements[] = $block;
+                        }
+                    }
+                }
+            }
+        }
+
+        $column = [
+            'id'       => $id . '-col',
+            'name'     => 'divi/column',
+            'settings' => $col_settings,
+            'elements' => $elements,
+        ];
+
+        return [ $row_settings, $column ];
     }
 
     /**
@@ -377,8 +634,46 @@ abstract class BaseElementorConverter implements ConverterInterface {
             ];
         }
 
-        // Nested flex-row: wrap the sub-columns in a divi/row inside this column.
+        // Nested flex-row: wrap the sub-columns in a divi/row inside this column,
+        // or use groups when the children don't have clean Divi fractions.
         if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
+            if ( ! $this->allChildContainersHaveCleanFraction( $children ) ) {
+                // Apply the flex layout to this column and put groups inside it.
+                $flex = $this->rowFlexSettingsFromContainer( $settings );
+                if ( ! empty( $flex ) ) {
+                    $col_settings = $this->deepMergeSettings( $col_settings, $flex );
+                }
+                $groups = [];
+                foreach ( $children as $child ) {
+                    if ( ! is_array( $child ) ) {
+                        continue;
+                    }
+                    if ( ( $child['elType'] ?? '' ) === 'container' ) {
+                        $groups[] = $this->convertContainerAsGroup( $child );
+                    } else {
+                        $converted = $this->engine->convertElement( $child );
+                        if ( empty( $converted ) ) {
+                            continue;
+                        }
+                        if ( isset( $converted['name'] ) ) {
+                            $groups[] = $converted;
+                        } else {
+                            foreach ( $converted as $block ) {
+                                if ( ! empty( $block ) ) {
+                                    $groups[] = $block;
+                                }
+                            }
+                        }
+                    }
+                }
+                return [
+                    'id'       => $id,
+                    'name'     => 'divi/column',
+                    'settings' => $col_settings,
+                    'elements' => $groups,
+                ];
+            }
+
             $sub_columns      = $this->convertFlexRowChildren( $children );
             $nested_settings  = $this->deepMergeSettings(
                 $this->rowSettingsFromColumns( $sub_columns ),
@@ -461,9 +756,7 @@ abstract class BaseElementorConverter implements ConverterInterface {
             $layout = [];
 
             $dir = $settings[ 'flex_direction' . $suffix ] ?? '';
-            // Desktop: skip 'row' (Divi default). Tablet/mobile: always write when set so
-            // overrides like flex_direction_tablet='column' actually take effect.
-            if ( is_string( $dir ) && $dir !== '' && ( $suffix !== '' || $dir !== 'row' ) ) {
+            if ( is_string( $dir ) && $dir !== '' ) {
                 $layout['flexDirection'] = $dir;
             }
 

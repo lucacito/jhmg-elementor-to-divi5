@@ -1,0 +1,1505 @@
+{
+    "manifest_version": "1.0.23",
+    "title": "Agrow - Organic Farm Agriculture Elementor Template Kit",
+    "page_builder": "elementor",
+    "kit_version": "1.0.0",
+    "templates": [
+        {
+            "name": "Global Kit Styles",
+            "screenshot": "screenshots\/global-kit-styles.jpg",
+            "source": "templates\/global.json",
+            "preview_url": "https:\/\/askit.dextheme.net",
+            "type": "section",
+            "category": "page",
+            "metadata": {
+                "template_type": "global-styles",
+                "include_in_zip": "1",
+                "elementor_pro_required": null,
+                "additional_template_information": [
+                    "These are the global theme styles configured through the Elementor Theme Styles area."
+                ]
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Agrow Footer",
+            "screenshot": "screenshots\/agrow-footer.jpg",
+            "source": "templates\/agrow-footer.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/agrow-footer\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-footer",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Agrow Header",
+            "screenshot": "screenshots\/agrow-header.jpg",
+            "source": "templates\/agrow-header.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/agrow-header\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-header",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Agrow Subscribe MetForm",
+            "screenshot": "screenshots\/agrow-subscribe-metform.jpg",
+            "source": "templates\/agrow-subscribe-metform.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/agrow-subscribe-metform\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-contact",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Agrow Contact MetForm",
+            "screenshot": "screenshots\/agrow-contact-metform.jpg",
+            "source": "templates\/agrow-contact-metform.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/agrow-contact-metform\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-contact",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Contact",
+            "screenshot": "screenshots\/contact.jpg",
+            "source": "templates\/contact.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/contact\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-contact",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "404 Page",
+            "screenshot": "screenshots\/404-page.jpg",
+            "source": "templates\/404-page.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/404-page\/",
+            "type": "page",
+            "category": "page",
+            "metadata": {
+                "template_type": "single-404",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Blog",
+            "screenshot": "screenshots\/blog.jpg",
+            "source": "templates\/blog.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/blog\/",
+            "type": "page",
+            "category": "page",
+            "metadata": {
+                "template_type": "archive-blog",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "FAQs",
+            "screenshot": "screenshots\/faqs.jpg",
+            "source": "templates\/faqs.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/faqs\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-faq",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Testimonials",
+            "screenshot": "screenshots\/testimonials.jpg",
+            "source": "templates\/testimonials.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/testimonials\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-testimonial",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Pricing Plan",
+            "screenshot": "screenshots\/pricing-plan.jpg",
+            "source": "templates\/pricing-plan.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/pricing-plan\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-pricing",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Our Team",
+            "screenshot": "screenshots\/our-team.jpg",
+            "source": "templates\/our-team.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/our-team\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-team",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Single Project",
+            "screenshot": "screenshots\/single-project.jpg",
+            "source": "templates\/single-project.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/single-project\/",
+            "type": "page",
+            "category": "page",
+            "metadata": {
+                "template_type": "single-page",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Projects",
+            "screenshot": "screenshots\/projects.jpg",
+            "source": "templates\/projects.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/projects\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-portfolio",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Services",
+            "screenshot": "screenshots\/services.jpg",
+            "source": "templates\/services.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/services\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-services",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "About Us",
+            "screenshot": "screenshots\/about-us.jpg",
+            "source": "templates\/about-us.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/about-us\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-about",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        },
+        {
+            "name": "Home",
+            "screenshot": "screenshots\/home.jpg",
+            "source": "templates\/home.json",
+            "preview_url": "https:\/\/askit.dextheme.net\/agrow\/template-kit\/home\/",
+            "type": "section",
+            "category": "section",
+            "metadata": {
+                "template_type": "section-hero",
+                "include_in_zip": "1",
+                "elementor_pro_required": null
+            },
+            "elementor_pro_required": false
+        }
+    ],
+    "required_plugins": [
+        {
+            "name": "ElementsKit Lite",
+            "version": "3.9.2",
+            "file": "elementskit-lite\/elementskit-lite.php",
+            "author": "Wpmet"
+        },
+        {
+            "name": "MetForm",
+            "version": "4.1.3",
+            "file": "metform\/metform.php",
+            "author": "Wpmet"
+        },
+        {
+            "name": "Elementor",
+            "version": "4.0.3",
+            "file": "elementor\/elementor.php",
+            "author": "Elementor.com"
+        }
+    ],
+    "images": [
+        {
+            "filename": "senior-man-working-on-organic-vegetable.webp",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/senior-man-working-on-organic-vegetable-800x533.webp",
+            "templates": [
+                {
+                    "source": "templates\/agrow-footer.json",
+                    "name": "Agrow Footer"
+                },
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 219968,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "tractor-3.webp",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/tractor-3-800x687.webp",
+            "templates": [
+                {
+                    "source": "templates\/agrow-footer.json",
+                    "name": "Agrow Footer"
+                }
+            ],
+            "filesize": 223896,
+            "dimensions": [
+                1274,
+                1094
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "logo-agrow-2.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/logo-agrow-2.png",
+            "templates": [
+                {
+                    "source": "templates\/agrow-footer.json",
+                    "name": "Agrow Footer"
+                },
+                {
+                    "source": "templates\/agrow-header.json",
+                    "name": "Agrow Header"
+                }
+            ],
+            "filesize": 9319,
+            "dimensions": [
+                254,
+                94
+            ],
+            "image_source": "self_created",
+            "image_urls": ""
+        },
+        {
+            "filename": "logo-agrow-1.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/logo-agrow-1.png",
+            "templates": [
+                {
+                    "source": "templates\/agrow-header.json",
+                    "name": "Agrow Header"
+                }
+            ],
+            "filesize": 10471,
+            "dimensions": [
+                294,
+                94
+            ],
+            "image_source": "self_created",
+            "image_urls": ""
+        },
+        {
+            "filename": "farmers-people-working-while-picking-up-lettuce.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/farmers-people-working-while-picking-up-lettuce-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/contact.json",
+                    "name": "Contact"
+                },
+                {
+                    "source": "templates\/pricing-plan.json",
+                    "name": "Pricing Plan"
+                },
+                {
+                    "source": "templates\/single-project.json",
+                    "name": "Single Project"
+                },
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 220102,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "agro-silos-granary-elevator-on-agro-processing.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/agro-silos-granary-elevator-on-agro-processing-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/blog.json",
+                    "name": "Blog"
+                }
+            ],
+            "filesize": 212433,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "partner-5.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/partner-5.png",
+            "templates": [
+                {
+                    "source": "templates\/blog.json",
+                    "name": "Blog"
+                },
+                {
+                    "source": "templates\/faqs.json",
+                    "name": "FAQs"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 4564,
+            "dimensions": [
+                300,
+                100
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "partner-4.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/partner-4.png",
+            "templates": [
+                {
+                    "source": "templates\/blog.json",
+                    "name": "Blog"
+                },
+                {
+                    "source": "templates\/faqs.json",
+                    "name": "FAQs"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 4657,
+            "dimensions": [
+                300,
+                100
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "partner-3.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/partner-3.png",
+            "templates": [
+                {
+                    "source": "templates\/blog.json",
+                    "name": "Blog"
+                },
+                {
+                    "source": "templates\/faqs.json",
+                    "name": "FAQs"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 14977,
+            "dimensions": [
+                300,
+                100
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "partner-2.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/partner-2.png",
+            "templates": [
+                {
+                    "source": "templates\/blog.json",
+                    "name": "Blog"
+                },
+                {
+                    "source": "templates\/faqs.json",
+                    "name": "FAQs"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 15111,
+            "dimensions": [
+                300,
+                100
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "partner-1.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/partner-1.png",
+            "templates": [
+                {
+                    "source": "templates\/blog.json",
+                    "name": "Blog"
+                },
+                {
+                    "source": "templates\/faqs.json",
+                    "name": "FAQs"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 9462,
+            "dimensions": [
+                300,
+                100
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "young-green-wheat-seedlings-in-the-hands.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/young-green-wheat-seedlings-in-the-hands-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/faqs.json",
+                    "name": "FAQs"
+                }
+            ],
+            "filesize": 207050,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "investing-in-a-tree-planting-business.webp",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/investing-in-a-tree-planting-business.webp",
+            "templates": [
+                {
+                    "source": "templates\/faqs.json",
+                    "name": "FAQs"
+                },
+                {
+                    "source": "templates\/pricing-plan.json",
+                    "name": "Pricing Plan"
+                },
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                }
+            ],
+            "filesize": 186302,
+            "dimensions": [
+                650,
+                730
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "branch-orange-tree.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/branch-orange-tree-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/testimonials.json",
+                    "name": "Testimonials"
+                },
+                {
+                    "source": "templates\/pricing-plan.json",
+                    "name": "Pricing Plan"
+                },
+                {
+                    "source": "templates\/single-project.json",
+                    "name": "Single Project"
+                },
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 224925,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "maps-2.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/maps-2-800x533.png",
+            "templates": [
+                {
+                    "source": "templates\/testimonials.json",
+                    "name": "Testimonials"
+                },
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/single-project.json",
+                    "name": "Single Project"
+                },
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 99292,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "portrait-of-senior-farmer.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/portrait-of-senior-farmer.jpg",
+            "templates": [
+                {
+                    "source": "templates\/testimonials.json",
+                    "name": "Testimonials"
+                },
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/single-project.json",
+                    "name": "Single Project"
+                },
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 151390,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "female-farmer-in-a-field.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/female-farmer-in-a-field.jpg",
+            "templates": [
+                {
+                    "source": "templates\/testimonials.json",
+                    "name": "Testimonials"
+                },
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/single-project.json",
+                    "name": "Single Project"
+                },
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 104993,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "portrait-of-a-young-farmer.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/portrait-of-a-young-farmer.jpg",
+            "templates": [
+                {
+                    "source": "templates\/testimonials.json",
+                    "name": "Testimonials"
+                },
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/single-project.json",
+                    "name": "Single Project"
+                },
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 130931,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "woman-harvesting-fresh.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/woman-harvesting-fresh.jpg",
+            "templates": [
+                {
+                    "source": "templates\/testimonials.json",
+                    "name": "Testimonials"
+                },
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/single-project.json",
+                    "name": "Single Project"
+                },
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 122695,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "close-up-of-a-farmer-s-strong-hands.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/close-up-of-a-farmer-s-strong-hands-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/pricing-plan.json",
+                    "name": "Pricing Plan"
+                }
+            ],
+            "filesize": 231158,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "old-tractor-with-a-homemade.webp",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/old-tractor-with-a-homemade-800x533.webp",
+            "templates": [
+                {
+                    "source": "templates\/pricing-plan.json",
+                    "name": "Pricing Plan"
+                },
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/single-project.json",
+                    "name": "Single Project"
+                },
+                {
+                    "source": "templates\/services.json",
+                    "name": "Services"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 229564,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "focus-on-gloved-hand-of-agronomist.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/focus-on-gloved-hand-of-agronomist-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/pricing-plan.json",
+                    "name": "Pricing Plan"
+                },
+                {
+                    "source": "templates\/single-project.json",
+                    "name": "Single Project"
+                },
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 204213,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "potrait-of-farmer-standing-in-wheat.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/potrait-of-farmer-standing-in-wheat-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                }
+            ],
+            "filesize": 202429,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "portrait-of-senior-farmer-1.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/portrait-of-senior-farmer-1.jpg",
+            "templates": [
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                }
+            ],
+            "filesize": 197515,
+            "dimensions": [
+                650,
+                700
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "i-farm-for-the-love-of-it-portrait-of-a-mature.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/i-farm-for-the-love-of-it-portrait-of-a-mature.jpg",
+            "templates": [
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                }
+            ],
+            "filesize": 130504,
+            "dimensions": [
+                650,
+                700
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "yong-handsome-agronomist-in-the-corn-field.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/yong-handsome-agronomist-in-the-corn-field.jpg",
+            "templates": [
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                }
+            ],
+            "filesize": 206394,
+            "dimensions": [
+                650,
+                700
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "young-agronomist-smiling-with-crossed-arms.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/young-agronomist-smiling-with-crossed-arms.jpg",
+            "templates": [
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                }
+            ],
+            "filesize": 166906,
+            "dimensions": [
+                650,
+                700
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "i-love-being-on-the-farm.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/i-love-being-on-the-farm.jpg",
+            "templates": [
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                }
+            ],
+            "filesize": 164323,
+            "dimensions": [
+                650,
+                700
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "smiling-african-american-woman.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/smiling-african-american-woman.jpg",
+            "templates": [
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                }
+            ],
+            "filesize": 170307,
+            "dimensions": [
+                650,
+                700
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "senior-farmer-holding-a-basket-of-fresh-vegetables.webp",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/senior-farmer-holding-a-basket-of-fresh-vegetables.webp",
+            "templates": [
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/services.json",
+                    "name": "Services"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 182414,
+            "dimensions": [
+                650,
+                730
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-13.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-13.png",
+            "templates": [
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/services.json",
+                    "name": "Services"
+                },
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 24836,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-5.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-5.png",
+            "templates": [
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/services.json",
+                    "name": "Services"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 28893,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-11.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-11.png",
+            "templates": [
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/services.json",
+                    "name": "Services"
+                },
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 17781,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-4.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-4.png",
+            "templates": [
+                {
+                    "source": "templates\/our-team.json",
+                    "name": "Our Team"
+                },
+                {
+                    "source": "templates\/services.json",
+                    "name": "Services"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 27199,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "celery-vegetable-in-the-hydroponic.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/celery-vegetable-in-the-hydroponic-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/single-project.json",
+                    "name": "Single Project"
+                }
+            ],
+            "filesize": 137973,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "need-a-hand.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/need-a-hand-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                }
+            ],
+            "filesize": 224627,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "beautiful-morning-view-indonesia-panorama.webp",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/beautiful-morning-view-indonesia-panorama-800x533.webp",
+            "templates": [
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                }
+            ],
+            "filesize": 226966,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "two-female-gardeners-picking-vegetables.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/two-female-gardeners-picking-vegetables-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                }
+            ],
+            "filesize": 178712,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "gardener-taking-care-of-herbs.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/gardener-taking-care-of-herbs-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/projects.json",
+                    "name": "Projects"
+                }
+            ],
+            "filesize": 234584,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "interval-abstract-background-1.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/interval-abstract-background-1-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/services.json",
+                    "name": "Services"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 74722,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-10.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-10.png",
+            "templates": [
+                {
+                    "source": "templates\/services.json",
+                    "name": "Services"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 41726,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-9.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-9.png",
+            "templates": [
+                {
+                    "source": "templates\/services.json",
+                    "name": "Services"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 27828,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-8.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-8.png",
+            "templates": [
+                {
+                    "source": "templates\/services.json",
+                    "name": "Services"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 28873,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-7.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-7.png",
+            "templates": [
+                {
+                    "source": "templates\/services.json",
+                    "name": "Services"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 23433,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-6.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-6.png",
+            "templates": [
+                {
+                    "source": "templates\/services.json",
+                    "name": "Services"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 30853,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "senior-farmer-standing-in-corn-field.webp",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/senior-farmer-standing-in-corn-field-800x533.webp",
+            "templates": [
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 224724,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-1a.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-1a.png",
+            "templates": [
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 32833,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-2a.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-2a.png",
+            "templates": [
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 46340,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-3a.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-3a.png",
+            "templates": [
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 35137,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "icon-12.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/icon-12.png",
+            "templates": [
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 36552,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "edamame-beans-isolated.png",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/edamame-beans-isolated.png",
+            "templates": [
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 148832,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "wheat-on-white-background.webp",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/wheat-on-white-background.webp",
+            "templates": [
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 201922,
+            "dimensions": [
+                600,
+                600
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "portrait-of-two-farmers-in-a-field.jpg",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/portrait-of-two-farmers-in-a-field-800x533.jpg",
+            "templates": [
+                {
+                    "source": "templates\/about-us.json",
+                    "name": "About Us"
+                },
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 225194,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        },
+        {
+            "filename": "a-tractor-plows-a-wheat-field.webp",
+            "thumbnail_url": "https:\/\/askit.dextheme.net\/agrow\/wp-content\/uploads\/sites\/53\/2026\/04\/a-tractor-plows-a-wheat-field-800x533.webp",
+            "templates": [
+                {
+                    "source": "templates\/home.json",
+                    "name": "Home"
+                }
+            ],
+            "filesize": 223772,
+            "dimensions": [
+                1920,
+                1280
+            ],
+            "image_source": "envato_elements",
+            "image_urls": "https:\/\/app.envato.com\/shared\/workspaces\/2d37058c-e5f4-4e96-8ce9-587e13752a13"
+        }
+    ]
+}

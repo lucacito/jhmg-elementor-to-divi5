@@ -18,22 +18,24 @@ class IconConverter extends BaseElementorConverter {
         $color      = $this->firstString( $settings, [ 'primary_color', 'icon_color' ] );
         $size       = $this->sizeString( $settings['size'] ?? null );
 
-        $icon_attrs = [];
-
-        if ( $icon_value !== '' ) {
-            $icon_attrs['innerContent'] = [ 'desktop' => [ 'value' => $icon_value ] ];
+        if ( $icon_value === '' ) {
+            $icon_value = 'fa-star';
+        }
+        if ( $size === '' ) {
+            $size = '30px';
         }
 
-        $advanced = [];
+        $icon_attrs = [
+            'innerContent' => [ 'desktop' => [ 'value' => $icon_value ] ],
+        ];
+
+        $advanced = [
+            'size' => [ 'desktop' => [ 'value' => $size ] ],
+        ];
         if ( $color !== '' ) {
             $advanced['color'] = [ 'desktop' => [ 'value' => $color ] ];
         }
-        if ( $size !== '' ) {
-            $advanced['size'] = [ 'desktop' => [ 'value' => $size ] ];
-        }
-        if ( ! empty( $advanced ) ) {
-            $icon_attrs['advanced'] = $advanced;
-        }
+        $icon_attrs['advanced'] = $advanced;
 
         $style_result = ( new StyleMapper() )->map( 'icon', $settings );
         $attrs        = array_merge(
@@ -51,10 +53,6 @@ class IconConverter extends BaseElementorConverter {
             ],
             $style_result['handled_keys']
         ) );
-
-        if ( $icon_value === '' ) {
-            $this->engine->logWarning( "Icon converter: no icon value found for element {$id}" );
-        }
 
         return [
             'id'       => $id,

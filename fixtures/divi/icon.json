@@ -25,11 +25,11 @@
                           "desktop": { "value": "fa-star" }
                         },
                         "advanced": {
-                          "color": {
-                            "desktop": { "value": "#ff6600" }
-                          },
                           "size": {
                             "desktop": { "value": "40px" }
+                          },
+                          "color": {
+                            "desktop": { "value": "#ff6600" }
                           }
                         }
                       }

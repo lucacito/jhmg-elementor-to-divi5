@@ -29,13 +29,6 @@
                             }
                           }
                         }
-                      },
-                      "css": {
-                        "desktop": {
-                          "value": {
-                            "main": "width: auto; max-width: 100%;"
-                          }
-                        }
                       }
                     },
                     "elements": []
