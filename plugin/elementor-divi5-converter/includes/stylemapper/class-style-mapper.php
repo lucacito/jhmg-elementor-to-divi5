@@ -69,6 +69,25 @@ class StyleMapper {
     ];
 
     /**
+     * Secondary font path for widgets with two text elements (e.g. blurb has
+     * both a title and a description). The secondary path maps the description
+     * / body text typography controls.
+     */
+    private const WIDGET_SECONDARY_FONT_PATH = [
+        'blurb' => 'content.decoration.bodyFont.body.font',
+    ];
+
+    /** Elementor control-group prefix for secondary typography (description). */
+    private const WIDGET_SECONDARY_TYPOGRAPHY_PREFIX = [
+        'blurb' => 'description_typography_',
+    ];
+
+    /** Elementor settings key for the secondary text/font color. */
+    private const WIDGET_SECONDARY_COLOR_KEY = [
+        'blurb' => 'description_color',
+    ];
+
+    /**
      * Maps Elementor widget_type to the Elementor key prefix used for its
      * typography group controls.
      *
@@ -104,13 +123,27 @@ class StyleMapper {
 
     /**
      * Elementor `typography_*` keys that are acknowledged but deliberately not
-     * mapped (preset selector names and properties that have no per-block Divi 5 equivalent).
+     * mapped (preset selector names that have no per-block Divi 5 equivalent).
+     * Word-spacing is intentionally absent — it is handled by mapWordSpacing().
      */
     private const TYPOGRAPHY_SKIP_KEYS = [
         'typography_typography',
-        'typography_word_spacing',
-        'typography_word_spacing_tablet',
-        'typography_word_spacing_mobile',
+    ];
+
+    /**
+     * All responsive typography property suffixes used when a widget has a
+     * non-standard typography prefix and the standard `typography_*` variants
+     * still need to be marked handled.
+     */
+    private const STANDARD_TYPOGRAPHY_PROPS = [
+        'font_size', 'font_size_tablet', 'font_size_mobile',
+        'font_weight', 'font_weight_tablet', 'font_weight_mobile',
+        'font_family', 'font_family_tablet', 'font_family_mobile',
+        'font_style', 'font_style_tablet', 'font_style_mobile',
+        'text_transform', 'text_transform_tablet', 'text_transform_mobile',
+        'text_decoration', 'text_decoration_tablet', 'text_decoration_mobile',
+        'line_height', 'line_height_tablet', 'line_height_mobile',
+        'letter_spacing', 'letter_spacing_tablet', 'letter_spacing_mobile',
     ];
 
     /**
@@ -170,10 +203,28 @@ class StyleMapper {
         }
 
         $this->mapCustomCssClass( $settings, $divi_attrs, $handled_keys );
+        $this->mapZIndex( $settings, $divi_attrs, $handled_keys );
+        $this->mapOverflow( $widget_type, $settings, $divi_attrs, $handled_keys );
+        $this->mapFilters( $settings, $divi_attrs, $handled_keys );
+        $this->mapBlendMode( $settings, $divi_attrs, $handled_keys );
+        $this->mapSecondaryTypography( $widget_type, $settings, $divi_attrs, $handled_keys );
+        $this->mapSecondaryTextColor( $widget_type, $settings, $divi_attrs, $handled_keys );
+
+        if ( $widget_type === 'image' ) {
+            $this->mapImageWidth( $settings, $divi_attrs, $handled_keys );
+        }
+
+        $this->mapWordSpacing( $widget_type, $settings, $divi_attrs, $handled_keys );
+        $this->mapCssMain( $widget_type, $settings, $divi_attrs, $handled_keys );
+
+        // css_main reflects the full css.desktop.value.main content, which may include
+        // contributions from mapBlendMode(), mapImageWidth(), and mapCssMain().
+        $css_main = $divi_attrs['css']['desktop']['value']['main'] ?? '';
 
         return [
             'divi_attrs'   => $divi_attrs,
             'handled_keys' => $handled_keys,
+            'css_main'     => $css_main,
         ];
     }
 
@@ -273,48 +324,82 @@ class StyleMapper {
      *   typography_font_size          → desktop
      *   typography_font_size_tablet   → tablet
      *   typography_font_size_mobile   → phone
-     *
-     * Font weight is desktop-only (Elementor doesn't make weight responsive by
-     * default) but we mark all suffixed variants as handled so they don't appear
-     * in the unmapped log if a widget does export them.
      */
     private function mapTypography( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
-        // Some widgets scope their typography controls under a widget-specific prefix
-        // (e.g. `button_typography_*`, `title_typography_*`). Consult the prefix map;
-        // fall back to the standard `typography_` prefix for all other widgets.
         $pfx = self::WIDGET_TYPOGRAPHY_PREFIX[ $widget_type ] ?? 'typography_';
 
         // Always mark the standard typography skip keys as handled.
         foreach ( self::TYPOGRAPHY_SKIP_KEYS as $skip ) {
             $handled[] = $skip;
         }
-        // Also mark the widget-specific skip keys (same suffixes, different prefix).
-        foreach ( [ 'typography', 'word_spacing', 'word_spacing_tablet', 'word_spacing_mobile' ] as $sk ) {
-            $handled[] = $pfx . $sk;
-        }
+        // Mark the widget-specific preset selector name as handled.
+        $handled[] = $pfx . 'typography';
+        // word_spacing variants are owned by mapWordSpacing() — not listed here.
 
-        // When a widget uses a non-standard prefix (e.g. button_typography_), Elementor
-        // still emits the standard typography_* keys in the settings payload. Mark them
-        // all as handled so they don't appear in the skipped-settings log.
+        // When a widget uses a non-standard prefix, Elementor still emits the standard
+        // typography_* keys — mark them all handled so they don't appear in the log.
         if ( $pfx !== 'typography_' ) {
-            $std_props = [
-                'font_size', 'font_size_tablet', 'font_size_mobile',
-                'font_weight', 'font_weight_tablet', 'font_weight_mobile',
-                'font_family', 'font_family_tablet', 'font_family_mobile',
-                'font_style', 'font_style_tablet', 'font_style_mobile',
-                'text_transform', 'text_transform_tablet', 'text_transform_mobile',
-                'text_decoration', 'text_decoration_tablet', 'text_decoration_mobile',
-                'line_height', 'line_height_tablet', 'line_height_mobile',
-                'letter_spacing', 'letter_spacing_tablet', 'letter_spacing_mobile',
-            ];
-            foreach ( $std_props as $sp ) {
+            foreach ( self::STANDARD_TYPOGRAPHY_PROPS as $sp ) {
                 $handled[] = 'typography_' . $sp;
             }
         }
 
         $font_path = self::WIDGET_FONT_PATH[ $widget_type ] ?? null;
+        $this->applyFontGroup( $pfx, $font_path, $settings, $attrs, $handled );
 
-        // Responsive size-like props (font-size, line-height, letter-spacing).
+        // Global typography preset fallback.
+        if ( $font_path !== null ) {
+            $ref = $settings['__globals__'][ $pfx . 'typography' ] ?? '';
+            if ( is_string( $ref ) && $ref !== '' ) {
+                $id = GlobalsResolver::typographyIdFromRef( $ref );
+                if ( $id !== null ) {
+                    $preset = GlobalsResolver::resolveTypography( $id );
+                    if ( $preset !== null ) {
+                        $this->applyGlobalTypography( $font_path, $preset, $attrs );
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Maps the secondary typography controls (e.g. description text on blurb)
+     * to the widget's secondary font decoration path.
+     *
+     * Only fires for widget types listed in WIDGET_SECONDARY_FONT_PATH.
+     */
+    private function mapSecondaryTypography( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
+        $font_path = self::WIDGET_SECONDARY_FONT_PATH[ $widget_type ] ?? null;
+        if ( $font_path === null ) {
+            return;
+        }
+
+        $pfx = self::WIDGET_SECONDARY_TYPOGRAPHY_PREFIX[ $widget_type ];
+
+        // Mark the secondary preset selector name as handled.
+        // word_spacing variants for the secondary group are also marked handled here
+        // (not mapped — targeting just the description element via css_main is not reliable).
+        $handled[] = $pfx . 'typography';
+        foreach ( [ 'word_spacing', 'word_spacing_tablet', 'word_spacing_mobile' ] as $sk ) {
+            $handled[] = $pfx . $sk;
+        }
+
+        $this->applyFontGroup( $pfx, $font_path, $settings, $attrs, $handled );
+    }
+
+    /**
+     * Core font-group mapper used by both mapTypography and mapSecondaryTypography.
+     *
+     * Given a control prefix (e.g. `typography_` or `description_typography_`) and
+     * a Divi font path (e.g. `title.decoration.font.font`), reads all responsive
+     * size/weight/family/style properties from $settings and writes them to $attrs.
+     *
+     * @param string      $pfx       Elementor control-group prefix (trailing underscore included).
+     * @param string|null $font_path Divi 5 dot-path up to (not including) `.{bp}.value.*`.
+     *                               When null keys are still marked handled but nothing is written.
+     */
+    private function applyFontGroup( string $pfx, ?string $font_path, array $settings, array &$attrs, array &$handled ): void {
+        // Responsive size properties.
         $size_props = [
             'font_size'      => 'size',
             'line_height'    => 'lineHeight',
@@ -326,19 +411,16 @@ class StyleMapper {
                 $key       = $pfx . $base_name . $suffix;
                 $handled[] = $key;
 
-                if ( $font_path === null ) {
-                    continue;
-                }
-
-                $raw   = $settings[ $key ] ?? null;
-                $value = $this->parseSizeValue( $raw );
-                if ( $value !== '' ) {
-                    self::transformPath( $attrs, "{$font_path}.{$breakpoint}.value.{$divi_prop}", $value );
+                if ( $font_path !== null ) {
+                    $value = $this->parseSizeValue( $settings[ $key ] ?? null );
+                    if ( $value !== '' ) {
+                        self::transformPath( $attrs, "{$font_path}.{$breakpoint}.value.{$divi_prop}", $value );
+                    }
                 }
             }
         }
 
-        // Font weight — responsive; Elementor rarely exports tablet/mobile but we mark all as handled.
+        // Font weight.
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
             $key       = $pfx . 'font_weight' . $suffix;
             $handled[] = $key;
@@ -351,7 +433,7 @@ class StyleMapper {
             }
         }
 
-        // Font family — mark all breakpoints handled; map when present.
+        // Font family.
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
             $key       = $pfx . 'font_family' . $suffix;
             $handled[] = $key;
@@ -364,8 +446,7 @@ class StyleMapper {
             }
         }
 
-        // Style flags array: italic, text-transform, text-decoration — per breakpoint.
-        // Divi 5 stores these as an array of flag strings on font.{bp}.value.style.
+        // Style flags (italic, text-transform, text-decoration) — stored as a string array.
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
             $style_key      = $pfx . 'font_style' . $suffix;
             $transform_key  = $pfx . 'text_transform' . $suffix;
@@ -401,20 +482,25 @@ class StyleMapper {
                 self::transformPath( $attrs, "{$font_path}.{$breakpoint}.value.style", $flags );
             }
         }
+    }
 
-        // Global typography fallback: when __globals__ references a preset and no individual
-        // font properties were set explicitly, apply the preset values.
-        if ( $font_path !== null ) {
-            $ref = $settings['__globals__'][ $pfx . 'typography' ] ?? '';
-            if ( is_string( $ref ) && $ref !== '' ) {
-                $id = GlobalsResolver::typographyIdFromRef( $ref );
-                if ( $id !== null ) {
-                    $preset = GlobalsResolver::resolveTypography( $id );
-                    if ( $preset !== null ) {
-                        $this->applyGlobalTypography( $font_path, $preset, $attrs );
-                    }
-                }
-            }
+    /**
+     * Maps the secondary text/font color (e.g. `description_color` on blurb) to
+     * the widget's secondary font color path.
+     */
+    private function mapSecondaryTextColor( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
+        $color_key = self::WIDGET_SECONDARY_COLOR_KEY[ $widget_type ] ?? null;
+        $font_path = self::WIDGET_SECONDARY_FONT_PATH[ $widget_type ] ?? null;
+
+        if ( $color_key === null || $font_path === null ) {
+            return;
+        }
+
+        $handled[] = $color_key;
+
+        $color = $this->resolveColorSetting( $settings, $color_key );
+        if ( $color !== '' ) {
+            self::transformPath( $attrs, "{$font_path}.desktop.value.color", $color );
         }
     }
 
@@ -543,15 +629,16 @@ class StyleMapper {
             }
         }
 
-        // Primary value: prefer 'align', fall back to 'text_align'.
-        $align = $settings['align'] ?? $settings['text_align'] ?? '';
-        if ( ! is_string( $align ) || $align === '' ) {
-            return;
+        // Desktop base value — may be empty when only responsive overrides are set.
+        $desktop_align = is_string( $settings['align'] ?? '' ) ? ( $settings['align'] ?? '' ) : '';
+        if ( $desktop_align === '' ) {
+            $desktop_align = is_string( $settings['text_align'] ?? '' ) ? ( $settings['text_align'] ?? '' ) : '';
         }
 
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
             $bp_val = $settings[ 'align' . $suffix ] ?? $settings[ 'text_align' . $suffix ] ?? null;
-            $value  = is_string( $bp_val ) && $bp_val !== '' ? $bp_val : ( $suffix === '' ? $align : null );
+            // For desktop, fall back to the plain desktop value when no responsive override is set.
+            $value  = ( is_string( $bp_val ) && $bp_val !== '' ) ? $bp_val : ( $suffix === '' && $desktop_align !== '' ? $desktop_align : null );
             if ( $value === null ) {
                 continue;
             }
@@ -561,6 +648,12 @@ class StyleMapper {
             } elseif ( $widget_type === 'button' ) {
                 // Button alignment controls button position in its container, not text orientation.
                 self::transformPath( $attrs, "module.advanced.alignment.{$breakpoint}.value", $value );
+            } elseif ( $widget_type === 'image' ) {
+                // Image alignment controls the image's horizontal position in its column.
+                self::transformPath( $attrs, "module.advanced.align.{$breakpoint}.value", $value );
+            } elseif ( $widget_type === 'icon' ) {
+                // Icon alignment lives on the icon sub-attr, not the module text path.
+                self::transformPath( $attrs, "icon.advanced.align.{$breakpoint}.value", $value );
             } else {
                 $orientation = ( $value === 'justify' ) ? 'left' : $value;
                 self::transformPath( $attrs, "module.advanced.text.text.{$breakpoint}.value.orientation", $orientation );
@@ -825,7 +918,6 @@ class StyleMapper {
             '_transform_',             // Advanced-tab CSS transform
             '_offset_',                // Advanced-tab position offset
             '_box_shadow_',            // Advanced-tab box-shadow (distinct from widget-level box_shadow_*)
-            '_z_index',                // Advanced-tab z-index
             '_border_radius',          // Advanced-tab border-radius (handled in mapBorder for own key)
             'button_background_hover_',// Hover-state button background — no static Divi mapping
         ];
@@ -864,7 +956,6 @@ class StyleMapper {
             'background_bg_width_tablet',
             'background_bg_width_mobile',
             // Misc widget utility settings with no Divi mapping.
-            'z_index',
             'hide_desktop',
             'lazyload',
         ];
@@ -1434,6 +1525,272 @@ class StyleMapper {
                 ] );
             }
         }
+    }
+
+    /**
+     * Maps Elementor element z-index (`_z_index`) to
+     * `module.decoration.zIndex.{breakpoint}.value` (native Divi 5 attr).
+     *
+     * Marks both the Advanced-tab `_z_index*` variants and the plain `z_index`
+     * widget key as handled for all breakpoints.
+     */
+    private function mapZIndex( array $settings, array &$attrs, array &$handled ): void {
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $adv_key   = '_z_index' . $suffix;
+            $handled[] = $adv_key;
+
+            $raw = $settings[ $adv_key ] ?? null;
+            if ( ( is_string( $raw ) || is_numeric( $raw ) ) && (string) $raw !== '' ) {
+                self::transformPath( $attrs, "module.decoration.zIndex.{$breakpoint}.value", (string) $raw );
+            }
+        }
+
+        // Plain `z_index` key (some widget-level controls use this form).
+        $handled[] = 'z_index';
+        $plain = $settings['z_index'] ?? null;
+        if ( ( is_string( $plain ) || is_numeric( $plain ) ) && (string) $plain !== '' ) {
+            self::transformPath( $attrs, 'module.decoration.zIndex.desktop.value', (string) $plain );
+        }
+    }
+
+    /**
+     * Maps Elementor overflow to `module.decoration.overflow.desktop.value`
+     * (native Divi 5 attr, value format: `{x: 'hidden', y: 'hidden'}`).
+     *
+     * Also auto-applies `overflow: hidden` on container types that carry a
+     * border-radius, so child images are clipped by the rounded corners.
+     */
+    private function mapOverflow( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
+        foreach ( [ 'overflow', '_overflow', 'content_overflow' ] as $key ) {
+            $handled[] = $key;
+        }
+
+        // Prefer underscore Advanced-tab key; fall back to plain 'overflow'.
+        $explicit = '';
+        foreach ( [ '_overflow', 'overflow', 'content_overflow' ] as $key ) {
+            $v = $settings[ $key ] ?? '';
+            if ( is_string( $v ) && $v !== '' && $v !== 'default' ) {
+                $explicit = $v;
+                break;
+            }
+        }
+
+        // For container types: auto-clip children through border-radius.
+        $effective = $explicit;
+        if (
+            $effective === '' &&
+            in_array( $widget_type, [ 'section', 'column', 'container', 'row' ], true ) &&
+            $this->hasBorderRadius( $settings )
+        ) {
+            $effective = 'hidden';
+        }
+
+        if ( $effective !== '' ) {
+            self::transformPath( $attrs, 'module.decoration.overflow.desktop.value', [ 'x' => $effective, 'y' => $effective ] );
+        }
+    }
+
+    /**
+     * Maps Elementor CSS filter controls (`css_filters_*`) to the native Divi 5
+     * `module.decoration.filters.{breakpoint}.value` attr.
+     *
+     * Divi accepts an object with keys: brightness, contrast, saturate, hueRotate,
+     * blur, invert, sepia, opacity.  Values that equal their CSS defaults are
+     * omitted to avoid generating unnecessary filter CSS.
+     */
+    private function mapFilters( array $settings, array &$attrs, array &$handled ): void {
+        // Map of Elementor key → [divi_key, default_size].
+        $filter_map = [
+            'css_filters_brightness' => [ 'brightness', 100 ],
+            'css_filters_contrast'   => [ 'contrast',   100 ],
+            'css_filters_saturate'   => [ 'saturate',   100 ],
+            'css_filters_hue'        => [ 'hueRotate',    0 ],
+            'css_filters_blur'       => [ 'blur',          0 ],
+            'css_filters_invert'     => [ 'invert',        0 ],
+            'css_filters_sepia'      => [ 'sepia',         0 ],
+            'css_filters_opacity'    => [ 'opacity',     100 ],
+        ];
+
+        // Mode selector — no value to map.
+        $handled[] = 'css_filters_css_filter';
+
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $filter_values = [];
+
+            foreach ( $filter_map as $el_key => [ $divi_key, $default ] ) {
+                $full_key  = $el_key . $suffix;
+                $handled[] = $full_key;
+
+                $raw = $settings[ $full_key ] ?? null;
+                if ( ! is_array( $raw ) || ! isset( $raw['size'] ) ) {
+                    continue;
+                }
+
+                $size = (float) $raw['size'];
+                if ( $size == $default ) {
+                    continue; // At default — no CSS effect; skip.
+                }
+
+                $unit              = is_string( $raw['unit'] ?? '' ) ? ( $raw['unit'] ?? '' ) : '';
+                $filter_values[ $divi_key ] = (string) $raw['size'] . $unit;
+            }
+
+            if ( ! empty( $filter_values ) ) {
+                self::transformPath( $attrs, "module.decoration.filters.{$breakpoint}.value", $filter_values );
+            }
+        }
+    }
+
+    /**
+     * Maps Elementor `blend_mode` to `mix-blend-mode` via `css.desktop.value.main`.
+     * Divi 5 has no native block attr for blend mode; custom CSS is the only option.
+     */
+    private function mapBlendMode( array $settings, array &$attrs, array &$handled ): void {
+        $handled[] = 'blend_mode';
+        $mode      = is_string( $settings['blend_mode'] ?? '' ) ? ( $settings['blend_mode'] ?? '' ) : '';
+        if ( $mode === '' || $mode === 'normal' ) {
+            return;
+        }
+
+        $existing = $attrs['css']['desktop']['value']['main'] ?? '';
+        $rule     = "mix-blend-mode: {$mode}";
+        $merged   = ( is_string( $existing ) && $existing !== '' )
+            ? rtrim( $existing, '; ' ) . '; ' . $rule . ';'
+            : $rule . ';';
+        self::transformPath( $attrs, 'css.desktop.value.main', $merged );
+    }
+
+    /**
+     * Maps the Elementor image widget `width` control to `width` in custom CSS
+     * on the module's main selector.  Divi's image module has no native block-attr
+     * slot for arbitrary image widths, so this falls back to `css.desktop.value.main`.
+     */
+    private function mapImageWidth( array $settings, array &$attrs, array &$handled ): void {
+        $handled[] = 'width';
+
+        $width_str = $this->parseSizeValue( $settings['width'] ?? null );
+        if ( $width_str === '' ) {
+            return;
+        }
+
+        $existing = $attrs['css']['desktop']['value']['main'] ?? '';
+        $rule     = "width: {$width_str}; max-width: 100%";
+        $merged   = ( is_string( $existing ) && $existing !== '' )
+            ? rtrim( $existing, '; ' ) . '; ' . $rule . ';'
+            : $rule . ';';
+        self::transformPath( $attrs, 'css.desktop.value.main', $merged );
+    }
+
+    /**
+     * Maps Elementor `typography_word_spacing` (and responsive _tablet/_mobile variants)
+     * to `word-spacing` in the module's custom CSS block (`css.*.value.main`).
+     *
+     * Divi 5 has no native block attribute for word-spacing, so the value is emitted
+     * as raw CSS. Responsive overrides go to `css.tablet.value.main` / `css.phone.value.main`
+     * so that Divi renders them inside the correct media queries.
+     *
+     * For widgets with a non-standard typography prefix (e.g. blurb → `title_typography_`)
+     * the standard `typography_word_spacing*` keys are also marked handled (but not mapped)
+     * because Elementor emits both sets when a widget group control has a custom prefix.
+     */
+    private function mapWordSpacing( string $widget_type, array $settings, array &$attrs, array &$handled ): void {
+        $pfx = self::WIDGET_TYPOGRAPHY_PREFIX[ $widget_type ] ?? 'typography_';
+
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $key       = $pfx . 'word_spacing' . $suffix;
+            $handled[] = $key;
+
+            // When the widget uses a non-standard prefix, the standard typography_word_spacing*
+            // key is also emitted by Elementor — mark it handled without mapping.
+            if ( $pfx !== 'typography_' ) {
+                $handled[] = 'typography_word_spacing' . $suffix;
+            }
+
+            $value = $this->parseSizeValue( $settings[ $key ] ?? null );
+            if ( $value === '' ) {
+                continue;
+            }
+
+            $rule     = "word-spacing: {$value}";
+            $existing = $attrs['css'][ $breakpoint ]['value']['main'] ?? '';
+            $merged   = ( is_string( $existing ) && $existing !== '' )
+                ? rtrim( $existing, '; ' ) . '; ' . $rule . ';'
+                : $rule . ';';
+            self::transformPath( $attrs, "css.{$breakpoint}.value.main", $merged );
+        }
+    }
+
+    /**
+     * Collects CSS properties that have no native Divi 5 block attribute slot and
+     * emits them on `css.desktop.value.main` (the module's primary selector).
+     *
+     * Properties handled here:
+     *  - _element_custom_width → max-width (when _element_width = 'initial')
+     *  - custom_width          → max-width
+     *
+     * z-index, overflow, filters, and blend-mode each have their own dedicated
+     * mapper and are NOT handled here.
+     *
+     * Returns the CSS string written (empty string when nothing was emitted).
+     */
+    private function mapCssMain( string $widget_type, array $settings, array &$attrs, array &$handled ): string {
+        $rules = [];
+
+        // --- max-width / custom element width --------------------------------
+        // _element_* keys are prefix-suppressed in suppressUnimplementable(); no need to add to handled.
+        $handled[] = 'custom_width';
+        $el_width  = is_string( $settings['_element_width'] ?? '' ) ? ( $settings['_element_width'] ?? '' ) : '';
+        if ( $el_width === 'initial' ) {
+            $cw_str = $this->parseSizeValue( $settings['_element_custom_width'] ?? null );
+            if ( $cw_str !== '' ) {
+                $rules[] = "max-width: {$cw_str}";
+            }
+        }
+        $custom_width_str = $this->parseSizeValue( $settings['custom_width'] ?? null );
+        if ( $custom_width_str !== '' ) {
+            $rules[] = "max-width: {$custom_width_str}";
+        }
+
+        if ( empty( $rules ) ) {
+            return '';
+        }
+
+        $css = implode( '; ', $rules ) . ';';
+
+        // Merge with any CSS already written to this path (e.g. from mapBlendMode).
+        $existing = $attrs['css']['desktop']['value']['main'] ?? '';
+        $merged   = ( is_string( $existing ) && $existing !== '' )
+            ? rtrim( $existing, '; ' ) . '; ' . $css
+            : $css;
+
+        self::transformPath( $attrs, 'css.desktop.value.main', $merged );
+
+        return $css;
+    }
+
+    /**
+     * Returns true when any breakpoint of the element has a non-zero border-radius.
+     * Checks both the standard widget key (`border_radius`) and the Advanced-tab
+     * variant (`_border_radius`) used by some Elementor containers.
+     */
+    private function hasBorderRadius( array $settings ): bool {
+        foreach ( self::BREAKPOINT_MAP as $suffix => $_ ) {
+            foreach ( [ 'border_radius', '_border_radius' ] as $base ) {
+                $raw = $settings[ $base . $suffix ] ?? null;
+                if ( is_array( $raw ) ) {
+                    $non_zero = array_filter(
+                        [ $raw['top'] ?? '', $raw['right'] ?? '', $raw['bottom'] ?? '', $raw['left'] ?? '' ],
+                        static fn( $v ) => is_numeric( $v ) ? ( (float) $v > 0 ) : ( $v !== '' && $v !== '0' && $v !== '0px' )
+                    );
+                    if ( ! empty( $non_zero ) ) {
+                        return true;
+                    }
+                } elseif ( is_string( $raw ) && $raw !== '' && $raw !== '0' && $raw !== '0px' ) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // -------------------------------------------------------------------------

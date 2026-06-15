@@ -40,9 +40,12 @@ class ContainerConverter extends BaseElementorConverter {
         // CSS Grid container → section with a grid-mode row.
         if ( $this->isGridContainer( $settings ) ) {
             $columns      = $this->convertGridChildren( $children );
-            $row_settings = $this->deepMergeSettings(
-                $this->rowGridSettingsFromContainer( $settings ),
-                $row_sizing_layout
+            $row_settings = $this->applyBoxedWidthToRow(
+                $this->deepMergeSettings(
+                    $this->rowGridSettingsFromContainer( $settings ),
+                    $row_sizing_layout
+                ),
+                $settings
             );
 
             $this->engine->logConverted( 'section' );
@@ -66,12 +69,15 @@ class ContainerConverter extends BaseElementorConverter {
         // Flex-row container with container children → multi-column flex row.
         if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
             $columns      = $this->convertFlexRowChildren( $children );
-            $row_settings = $this->deepMergeSettings(
+            $row_settings = $this->applyBoxedWidthToRow(
                 $this->deepMergeSettings(
-                    $this->rowSettingsFromColumns( $columns ),
-                    $this->rowFlexSettingsFromContainer( $settings )
+                    $this->deepMergeSettings(
+                        $this->rowSettingsFromColumns( $columns ),
+                        $this->rowFlexSettingsFromContainer( $settings )
+                    ),
+                    $row_sizing_layout
                 ),
-                $row_sizing_layout
+                $settings
             );
 
             $this->engine->logConverted( 'section' );
@@ -133,9 +139,12 @@ class ContainerConverter extends BaseElementorConverter {
         }
 
         $row_elements = $this->ensureColumnChildren( $id, $converted );
-        $row_settings = $this->deepMergeSettings(
-            $this->rowSettingsFromColumns( $row_elements ),
-            $row_sizing_layout
+        $row_settings = $this->applyBoxedWidthToRow(
+            $this->deepMergeSettings(
+                $this->rowSettingsFromColumns( $row_elements ),
+                $row_sizing_layout
+            ),
+            $settings
         );
 
         return [

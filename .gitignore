@@ -1,0 +1,5 @@
+node_modules/
+vendor/
+visual-diffs/*/
+!visual-diffs/.gitkeep
+.DS_Store

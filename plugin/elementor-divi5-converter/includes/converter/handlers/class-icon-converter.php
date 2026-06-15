@@ -45,7 +45,7 @@ class IconConverter extends BaseElementorConverter {
         $this->logUnmappedSettings( $id, $settings, array_merge(
             [
                 'selected_icon', 'icon', 'primary_color', 'icon_color', 'size',
-                'align', 'view', 'shape', 'link', 'border_width', 'border_radius',
+                'view', 'shape', 'link', 'border_width', 'border_radius',
                 'hover_primary_color', 'hover_secondary_color', 'icon_padding',
                 'rotate', 'font_awesome_5_icon',
             ],

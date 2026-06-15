@@ -495,6 +495,134 @@ final class FlexContainerConversionTest extends TestCase {
     }
 
     // -------------------------------------------------------------------------
+    // Test M3 — Flex gap for column-direction containers
+    // -------------------------------------------------------------------------
+
+    /**
+     * A flex-column container's flex_gap.row controls the vertical gap between
+     * stacked children. The value must appear as rowGap in the column's layout.
+     */
+    /**
+     * A column-direction container that becomes a divi/column (inside a flex-row
+     * parent) must carry rowGap from its flex_gap.row setting.
+     * Mirrors test_flex_gap_row_on_container_as_column_populates_row_gap but uses
+     * responsive tablet override to confirm all breakpoints are processed.
+     */
+    public function test_flex_gap_row_responsive_tablet_on_column(): void {
+        $result = $this->convert( [
+            $this->container( 'outer', [
+                $this->container( 'left',  [ $this->widget( 'img', 'image' ) ] ),
+                $this->container( 'right', [
+                    $this->widget( 'h1', 'heading' ),
+                    $this->widget( 'txt', 'text-editor' ),
+                ], [
+                    'flex_gap'        => [ 'column' => '', 'row' => '20', 'unit' => 'px' ],
+                    'flex_gap_tablet' => [ 'column' => '', 'row' => '10', 'unit' => 'px' ],
+                ] ),
+            ], [ 'flex_direction' => 'row' ] ),
+        ] );
+
+        $right = $result[0]['elements'][0]['elements'][1];
+        $this->assertSame( 'divi/column', $right['name'] );
+
+        $desktop = $right['settings']['module']['decoration']['layout']['desktop']['value']['rowGap'] ?? null;
+        $tablet  = $right['settings']['module']['decoration']['layout']['tablet']['value']['rowGap'] ?? null;
+        $this->assertSame( '20px', $desktop, 'desktop rowGap' );
+        $this->assertSame( '10px', $tablet,  'tablet rowGap' );
+    }
+
+    public function test_flex_gap_row_on_container_as_column_populates_row_gap(): void {
+        // Flex-row parent → two columns, right column is a column-direction container with gap.
+        $result = $this->convert( [
+            $this->container( 'outer', [
+                $this->container( 'left',  [ $this->widget( 'img', 'image' ) ] ),
+                $this->container( 'right', [
+                    $this->widget( 'h1', 'heading' ),
+                    $this->widget( 'txt', 'text-editor' ),
+                ], [
+                    'flex_gap' => [ 'column' => '', 'row' => '16', 'unit' => 'px' ],
+                ] ),
+            ], [ 'flex_direction' => 'row' ] ),
+        ] );
+
+        $row   = $result[0]['elements'][0];
+        $right = $row['elements'][1];
+        $this->assertSame( 'divi/column', $right['name'] );
+
+        // rowGap must appear in the column's layout decoration.
+        $row_gap = $right['settings']['module']['decoration']['layout']['desktop']['value']['rowGap'] ?? null;
+        $this->assertSame( '16px', $row_gap, 'flex_gap.row must map to rowGap on the divi/column layout' );
+    }
+
+    // -------------------------------------------------------------------------
+    // Test M3 — Boxed content width
+    // -------------------------------------------------------------------------
+
+    /**
+     * A container with content_width = 'boxed' and boxed_width = 1140px must emit
+     * max-width: 1140px on the inner divi/row, not on the divi/section.
+     */
+    public function test_boxed_width_appears_on_row_not_section(): void {
+        $result = $this->convert( [
+            $this->container( 'hero', [
+                $this->widget( 'h1', 'heading' ),
+            ], [
+                'content_width' => 'boxed',
+                'boxed_width'   => [ 'size' => 1140, 'unit' => 'px' ],
+            ] ),
+        ] );
+
+        $section = $result[0];
+        $row     = $section['elements'][0];
+
+        $this->assertSame( 'divi/section', $section['name'] );
+        $this->assertSame( 'divi/row',     $row['name'] );
+
+        // max-width must be on the row, not the section.
+        $row_css     = $row['settings']['css']['desktop']['value']['main'] ?? '';
+        $section_css = $section['settings']['css']['desktop']['value']['main'] ?? '';
+
+        $this->assertStringContainsString( 'max-width: 1140px', $row_css,
+            'boxed_width must emit max-width CSS on the row' );
+        $this->assertStringNotContainsString( 'max-width: 1140px', $section_css,
+            'max-width must NOT appear on the section' );
+    }
+
+    public function test_boxed_width_not_emitted_when_content_width_is_full(): void {
+        $result = $this->convert( [
+            $this->container( 'hero', [
+                $this->widget( 'h1', 'heading' ),
+            ], [
+                'content_width' => 'full',
+                'boxed_width'   => [ 'size' => 1140, 'unit' => 'px' ],
+            ] ),
+        ] );
+
+        $row     = $result[0]['elements'][0];
+        $row_css = $row['settings']['css']['desktop']['value']['main'] ?? '';
+
+        $this->assertStringNotContainsString( 'max-width', $row_css,
+            'boxed_width must be ignored when content_width is not boxed' );
+    }
+
+    public function test_boxed_width_on_flex_row_section_applies_to_row(): void {
+        $result = $this->convert( [
+            $this->container( 'outer', [
+                $this->container( 'left',  [ $this->widget( 'img', 'image' ) ] ),
+                $this->container( 'right', [ $this->widget( 'h1', 'heading' ) ] ),
+            ], [
+                'flex_direction' => 'row',
+                'content_width'  => 'boxed',
+                'boxed_width'    => [ 'size' => 960, 'unit' => 'px' ],
+            ] ),
+        ] );
+
+        $row     = $result[0]['elements'][0];
+        $row_css = $row['settings']['css']['desktop']['value']['main'] ?? '';
+        $this->assertStringContainsString( 'max-width: 960px', $row_css );
+    }
+
+    // -------------------------------------------------------------------------
     // Test 10 — Grid container uses the grid path, not the flex-row path
     // -------------------------------------------------------------------------
 

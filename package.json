@@ -2,12 +2,15 @@
   "name": "jhmg-elementor-to-divi5",
   "private": true,
   "devDependencies": {
-    "@playwright/test": "^1.44.0"
+    "@playwright/test": "^1.44.0",
+    "pixelmatch": "^5.3.0",
+    "pngjs": "^7.0.0"
   },
   "scripts": {
     "test": "vendor/bin/phpunit && npx playwright test",
     "test:all": "npm run test:php && npm run test:browser",
     "test:php": "vendor/bin/phpunit",
-    "test:browser": "npx playwright test"
+    "test:browser": "npx playwright test",
+    "visual-diff": "node scripts/visual-diff.js"
   }
 }

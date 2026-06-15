@@ -607,6 +607,136 @@ final class StyleMapperTest extends TestCase {
         $this->assertSame( '#1a73e8', $tablet );
     }
 
+    // -------------------------------------------------------------------------
+    // css_main — overflow, z-index, max-width, border-radius clipping
+    // -------------------------------------------------------------------------
+
+    public function test_css_main_key_present_in_result(): void {
+        $result = $this->mapper->map( 'heading', [] );
+        $this->assertArrayHasKey( 'css_main', $result );
+        $this->assertSame( '', $result['css_main'] );
+    }
+
+    public function test_maps_overflow_hidden_to_native_attr(): void {
+        $result   = $this->mapper->map( 'heading', [ '_overflow' => 'hidden' ] );
+        $overflow = $result['divi_attrs']['module']['decoration']['overflow']['desktop']['value'] ?? null;
+        $this->assertSame( [ 'x' => 'hidden', 'y' => 'hidden' ], $overflow );
+        $this->assertContains( '_overflow', $result['handled_keys'] );
+        // overflow no longer goes into css_main
+        $this->assertStringNotContainsString( 'overflow', $result['css_main'] );
+    }
+
+    public function test_maps_overflow_visible_to_native_attr(): void {
+        $result   = $this->mapper->map( 'section', [ '_overflow' => 'visible' ] );
+        $overflow = $result['divi_attrs']['module']['decoration']['overflow']['desktop']['value'] ?? null;
+        $this->assertSame( [ 'x' => 'visible', 'y' => 'visible' ], $overflow );
+    }
+
+    public function test_overflow_default_value_is_not_emitted(): void {
+        $result = $this->mapper->map( 'section', [ '_overflow' => 'default' ] );
+        $this->assertArrayNotHasKey( 'overflow', $result['divi_attrs']['module']['decoration'] ?? [] );
+    }
+
+    public function test_maps_z_index_to_native_attr(): void {
+        $result  = $this->mapper->map( 'heading', [ '_z_index' => '10' ] );
+        $z_index = $result['divi_attrs']['module']['decoration']['zIndex']['desktop']['value'] ?? null;
+        $this->assertSame( '10', $z_index );
+        $this->assertContains( '_z_index', $result['handled_keys'] );
+        $this->assertContains( 'z_index', $result['handled_keys'] );
+        // z-index no longer goes into css_main
+        $this->assertStringNotContainsString( 'z-index', $result['css_main'] );
+    }
+
+    public function test_maps_z_index_negative_value_to_native_attr(): void {
+        $result  = $this->mapper->map( 'section', [ '_z_index' => '-1' ] );
+        $z_index = $result['divi_attrs']['module']['decoration']['zIndex']['desktop']['value'] ?? null;
+        $this->assertSame( '-1', $z_index );
+    }
+
+    public function test_z_index_empty_string_does_not_emit(): void {
+        $result = $this->mapper->map( 'heading', [ '_z_index' => '' ] );
+        $this->assertArrayNotHasKey( 'zIndex', $result['divi_attrs']['module']['decoration'] ?? [] );
+    }
+
+    public function test_maps_element_custom_width_to_max_width_css(): void {
+        $result = $this->mapper->map( 'heading', [
+            '_element_width'        => 'initial',
+            '_element_custom_width' => [ 'size' => 400, 'unit' => 'px' ],
+        ] );
+        $this->assertStringContainsString( 'max-width: 400px', $result['css_main'] );
+    }
+
+    public function test_element_custom_width_ignored_when_element_width_not_initial(): void {
+        $result = $this->mapper->map( 'heading', [
+            '_element_width'        => 'auto',
+            '_element_custom_width' => [ 'size' => 400, 'unit' => 'px' ],
+        ] );
+        $this->assertStringNotContainsString( 'max-width', $result['css_main'] );
+    }
+
+    public function test_maps_custom_width_key_to_max_width_css(): void {
+        $result = $this->mapper->map( 'section', [
+            'custom_width' => [ 'size' => 960, 'unit' => 'px' ],
+        ] );
+        $this->assertStringContainsString( 'max-width: 960px', $result['css_main'] );
+        $this->assertContains( 'custom_width', $result['handled_keys'] );
+    }
+
+    public function test_container_with_border_radius_gets_overflow_hidden(): void {
+        $result   = $this->mapper->map( 'section', [
+            'border_radius' => [ 'top' => '12', 'right' => '12', 'bottom' => '12', 'left' => '12', 'unit' => 'px' ],
+        ] );
+        $overflow = $result['divi_attrs']['module']['decoration']['overflow']['desktop']['value'] ?? null;
+        $this->assertSame( [ 'x' => 'hidden', 'y' => 'hidden' ], $overflow );
+    }
+
+    public function test_column_with_border_radius_gets_overflow_hidden(): void {
+        $result   = $this->mapper->map( 'column', [
+            'border_radius' => [ 'top' => '8', 'right' => '8', 'bottom' => '8', 'left' => '8', 'unit' => 'px' ],
+        ] );
+        $overflow = $result['divi_attrs']['module']['decoration']['overflow']['desktop']['value'] ?? null;
+        $this->assertSame( [ 'x' => 'hidden', 'y' => 'hidden' ], $overflow );
+    }
+
+    public function test_non_container_with_border_radius_does_not_get_overflow_hidden(): void {
+        $result = $this->mapper->map( 'heading', [
+            'border_radius' => [ 'top' => '8', 'right' => '8', 'bottom' => '8', 'left' => '8', 'unit' => 'px' ],
+        ] );
+        $this->assertArrayNotHasKey( 'overflow', $result['divi_attrs']['module']['decoration'] ?? [] );
+        $this->assertStringNotContainsString( 'overflow', $result['css_main'] );
+    }
+
+    public function test_explicit_overflow_takes_precedence_over_border_radius_auto_clip(): void {
+        // Explicit 'visible' must win over the auto-hidden that border-radius triggers.
+        $result   = $this->mapper->map( 'section', [
+            '_overflow'     => 'visible',
+            'border_radius' => [ 'top' => '12', 'right' => '12', 'bottom' => '12', 'left' => '12', 'unit' => 'px' ],
+        ] );
+        $overflow = $result['divi_attrs']['module']['decoration']['overflow']['desktop']['value'] ?? null;
+        $this->assertSame( [ 'x' => 'visible', 'y' => 'visible' ], $overflow );
+    }
+
+    public function test_zero_border_radius_does_not_trigger_overflow_hidden(): void {
+        $result = $this->mapper->map( 'section', [
+            'border_radius' => [ 'top' => '0', 'right' => '0', 'bottom' => '0', 'left' => '0', 'unit' => 'px' ],
+        ] );
+        $this->assertArrayNotHasKey( 'overflow', $result['divi_attrs']['module']['decoration'] ?? [] );
+    }
+
+    public function test_z_index_and_overflow_go_to_native_attrs(): void {
+        // Both z-index and overflow must land in their native Divi attr slots, not css_main.
+        $result  = $this->mapper->map( 'section', [
+            '_z_index'  => '5',
+            '_overflow' => 'hidden',
+        ] );
+        $z_index  = $result['divi_attrs']['module']['decoration']['zIndex']['desktop']['value'] ?? null;
+        $overflow = $result['divi_attrs']['module']['decoration']['overflow']['desktop']['value'] ?? null;
+        $this->assertSame( '5', $z_index );
+        $this->assertSame( [ 'x' => 'hidden', 'y' => 'hidden' ], $overflow );
+        $this->assertStringNotContainsString( 'z-index', $result['css_main'] );
+        $this->assertStringNotContainsString( 'overflow', $result['css_main'] );
+    }
+
     public function test_heading_converter_uses_style_mapper_for_background_color(): void {
         $engine = new ElementorDivi5Converter\Converter\ConverterEngine();
         $result = $engine->convert( [
@@ -627,5 +757,333 @@ final class StyleMapperTest extends TestCase {
         $this->assertSame( 'divi/heading', $element['name'] );
         $this->assertSame( 'Styled Heading', $element['settings']['title']['innerContent']['desktop']['value'] );
         $this->assertSame( '#26476c', $element['settings']['module']['decoration']['background']['desktop']['value']['color'] );
+    }
+
+    // ── M2: mapFilters ────────────────────────────────────────────────────────
+
+    public function test_maps_css_filter_brightness_to_native_attr(): void {
+        $result  = $this->mapper->map( 'heading', [
+            'css_filters_brightness' => [ 'size' => 150, 'unit' => '%' ],
+        ] );
+        $filters = $result['divi_attrs']['module']['decoration']['filters']['desktop']['value'] ?? null;
+        $this->assertIsArray( $filters );
+        $this->assertSame( '150%', $filters['brightness'] );
+        $this->assertContains( 'css_filters_brightness', $result['handled_keys'] );
+    }
+
+    public function test_css_filter_at_default_value_is_not_emitted(): void {
+        // brightness default is 100 — must not emit.
+        $result  = $this->mapper->map( 'heading', [
+            'css_filters_brightness' => [ 'size' => 100, 'unit' => '%' ],
+        ] );
+        $filters = $result['divi_attrs']['module']['decoration']['filters']['desktop']['value'] ?? null;
+        $this->assertNull( $filters );
+    }
+
+    public function test_maps_multiple_filters_at_once(): void {
+        $result  = $this->mapper->map( 'section', [
+            'css_filters_contrast' => [ 'size' => 80, 'unit' => '%' ],
+            'css_filters_blur'     => [ 'size' => 2,  'unit' => 'px' ],
+        ] );
+        $filters = $result['divi_attrs']['module']['decoration']['filters']['desktop']['value'] ?? null;
+        $this->assertIsArray( $filters );
+        $this->assertSame( '80%', $filters['contrast'] );
+        $this->assertSame( '2px', $filters['blur'] );
+    }
+
+    public function test_maps_css_filter_hue_rotation(): void {
+        $result  = $this->mapper->map( 'image', [
+            'css_filters_hue' => [ 'size' => 45, 'unit' => 'deg' ],
+        ] );
+        $filters = $result['divi_attrs']['module']['decoration']['filters']['desktop']['value'] ?? null;
+        $this->assertSame( '45deg', $filters['hueRotate'] );
+    }
+
+    // ── M2: mapBlendMode ─────────────────────────────────────────────────────
+
+    public function test_maps_blend_mode_to_css_main(): void {
+        $result = $this->mapper->map( 'image', [ 'blend_mode' => 'multiply' ] );
+        $this->assertStringContainsString( 'mix-blend-mode: multiply', $result['css_main'] );
+        $this->assertContains( 'blend_mode', $result['handled_keys'] );
+    }
+
+    public function test_blend_mode_normal_is_not_emitted(): void {
+        $result = $this->mapper->map( 'image', [ 'blend_mode' => 'normal' ] );
+        $this->assertStringNotContainsString( 'mix-blend-mode', $result['css_main'] );
+    }
+
+    // ── M2: mapImageWidth ─────────────────────────────────────────────────────
+
+    public function test_maps_image_width_to_css_main(): void {
+        $result = $this->mapper->map( 'image', [
+            'width' => [ 'size' => 300, 'unit' => 'px' ],
+        ] );
+        $this->assertStringContainsString( 'width: 300px', $result['css_main'] );
+        $this->assertStringContainsString( 'max-width: 100%', $result['css_main'] );
+        $this->assertContains( 'width', $result['handled_keys'] );
+    }
+
+    public function test_image_width_not_applied_to_non_image_widget(): void {
+        // 'width' must only be treated as image width when widget_type === 'image'.
+        $result = $this->mapper->map( 'heading', [
+            'width' => [ 'size' => 300, 'unit' => 'px' ],
+        ] );
+        $this->assertStringNotContainsString( 'width: 300px', $result['css_main'] );
+    }
+
+    // ── M2: image alignment ───────────────────────────────────────────────────
+
+    public function test_maps_image_align_to_module_advanced_align(): void {
+        $result = $this->mapper->map( 'image', [ 'align' => 'center' ] );
+        $align  = $result['divi_attrs']['module']['advanced']['align']['desktop']['value'] ?? null;
+        $this->assertSame( 'center', $align );
+        $this->assertContains( 'align', $result['handled_keys'] );
+    }
+
+    public function test_maps_image_align_tablet_responsive(): void {
+        $result = $this->mapper->map( 'image', [ 'align_tablet' => 'right' ] );
+        $align  = $result['divi_attrs']['module']['advanced']['align']['tablet']['value'] ?? null;
+        $this->assertSame( 'right', $align );
+    }
+
+    // ── M2: icon alignment ────────────────────────────────────────────────────
+
+    public function test_maps_icon_align_to_icon_advanced_align(): void {
+        $result = $this->mapper->map( 'icon', [ 'align' => 'center' ] );
+        $align  = $result['divi_attrs']['icon']['advanced']['align']['desktop']['value'] ?? null;
+        $this->assertSame( 'center', $align );
+        $this->assertContains( 'align', $result['handled_keys'] );
+    }
+
+    public function test_maps_icon_align_mobile_responsive(): void {
+        $result = $this->mapper->map( 'icon', [ 'align_mobile' => 'left' ] );
+        $align  = $result['divi_attrs']['icon']['advanced']['align']['phone']['value'] ?? null;
+        $this->assertSame( 'left', $align );
+    }
+
+    // ── M2: secondary typography (blurb description) ──────────────────────────
+
+    public function test_maps_blurb_description_font_size(): void {
+        $result   = $this->mapper->map( 'blurb', [
+            'description_typography_font_size' => [ 'size' => 14, 'unit' => 'px' ],
+        ] );
+        $font_val = $result['divi_attrs']['content']['decoration']['bodyFont']['body']['font']['desktop']['value'] ?? null;
+        $this->assertIsArray( $font_val );
+        $this->assertSame( '14px', $font_val['size'] );
+        $this->assertContains( 'description_typography_font_size', $result['handled_keys'] );
+    }
+
+    public function test_maps_blurb_description_font_weight(): void {
+        $result   = $this->mapper->map( 'blurb', [
+            'description_typography_font_weight' => '700',
+        ] );
+        $font_val = $result['divi_attrs']['content']['decoration']['bodyFont']['body']['font']['desktop']['value'] ?? null;
+        $this->assertIsArray( $font_val );
+        $this->assertSame( '700', $font_val['weight'] );
+    }
+
+    // ── M2: secondary text color (blurb description_color) ───────────────────
+
+    public function test_maps_blurb_description_color(): void {
+        $result   = $this->mapper->map( 'blurb', [ 'description_color' => '#ff0000' ] );
+        $font_val = $result['divi_attrs']['content']['decoration']['bodyFont']['body']['font']['desktop']['value'] ?? null;
+        $this->assertIsArray( $font_val );
+        $this->assertSame( '#ff0000', $font_val['color'] );
+        $this->assertContains( 'description_color', $result['handled_keys'] );
+    }
+
+    // ── M4: description responsive + style flags ──────────────────────────────
+
+    public function test_maps_blurb_description_font_size_responsive(): void {
+        $result = $this->mapper->map( 'blurb', [
+            'description_typography_font_size'        => [ 'size' => 14, 'unit' => 'px' ],
+            'description_typography_font_size_tablet' => [ 'size' => 12, 'unit' => 'px' ],
+        ] );
+        $font = $result['divi_attrs']['content']['decoration']['bodyFont']['body']['font'];
+        $this->assertSame( '14px', $font['desktop']['value']['size'] );
+        $this->assertSame( '12px', $font['tablet']['value']['size'] );
+        $this->assertContains( 'description_typography_font_size_tablet', $result['handled_keys'] );
+    }
+
+    public function test_maps_blurb_description_style_flags(): void {
+        $result   = $this->mapper->map( 'blurb', [
+            'description_typography_font_style'     => 'italic',
+            'description_typography_text_transform' => 'uppercase',
+        ] );
+        $font_val = $result['divi_attrs']['content']['decoration']['bodyFont']['body']['font']['desktop']['value'] ?? null;
+        $this->assertContains( 'italic',    $font_val['style'] );
+        $this->assertContains( 'uppercase', $font_val['style'] );
+    }
+
+    public function test_maps_blurb_description_font_family_and_line_height(): void {
+        $result   = $this->mapper->map( 'blurb', [
+            'description_typography_font_family' => 'Lato',
+            'description_typography_line_height' => [ 'size' => 1.8, 'unit' => 'em' ],
+        ] );
+        $font_val = $result['divi_attrs']['content']['decoration']['bodyFont']['body']['font']['desktop']['value'] ?? null;
+        $this->assertSame( 'Lato',  $font_val['family'] );
+        $this->assertSame( '1.8em', $font_val['lineHeight'] );
+    }
+
+    // ── M4: responsive font sizes for non-heading widget types ────────────────
+
+    public function test_maps_blurb_title_font_size_responsive(): void {
+        $result = $this->mapper->map( 'blurb', [
+            'title_typography_font_size'        => [ 'size' => 24, 'unit' => 'px' ],
+            'title_typography_font_size_tablet' => [ 'size' => 18, 'unit' => 'px' ],
+            'title_typography_font_size_mobile' => [ 'size' => 14, 'unit' => 'px' ],
+        ] );
+        $font = $result['divi_attrs']['title']['decoration']['font']['font'];
+        $this->assertSame( '24px', $font['desktop']['value']['size'] );
+        $this->assertSame( '18px', $font['tablet']['value']['size'] );
+        $this->assertSame( '14px', $font['phone']['value']['size'] );
+        $this->assertContains( 'title_typography_font_size',        $result['handled_keys'] );
+        $this->assertContains( 'title_typography_font_size_tablet', $result['handled_keys'] );
+        $this->assertContains( 'title_typography_font_size_mobile', $result['handled_keys'] );
+    }
+
+    public function test_maps_counter_font_size_responsive(): void {
+        $result = $this->mapper->map( 'counter', [
+            'number_typography_font_size'        => [ 'size' => 48, 'unit' => 'px' ],
+            'number_typography_font_size_mobile' => [ 'size' => 28, 'unit' => 'px' ],
+        ] );
+        $font = $result['divi_attrs']['number']['decoration']['font']['font'];
+        $this->assertSame( '48px', $font['desktop']['value']['size'] );
+        $this->assertSame( '28px', $font['phone']['value']['size'] );
+    }
+
+    public function test_maps_button_font_size_responsive(): void {
+        $result = $this->mapper->map( 'button', [
+            'typography_font_size'        => [ 'size' => 16, 'unit' => 'px' ],
+            'typography_font_size_tablet' => [ 'size' => 14, 'unit' => 'px' ],
+        ] );
+        $font = $result['divi_attrs']['button']['decoration']['font']['font'];
+        $this->assertSame( '16px', $font['desktop']['value']['size'] );
+        $this->assertSame( '14px', $font['tablet']['value']['size'] );
+    }
+
+    // ── M4: word spacing → css_main ───────────────────────────────────────────
+
+    public function test_maps_word_spacing_to_css_main(): void {
+        $result = $this->mapper->map( 'heading', [
+            'typography_word_spacing' => [ 'size' => 3, 'unit' => 'px' ],
+        ] );
+        $this->assertStringContainsString( 'word-spacing: 3px', $result['css_main'] );
+        $this->assertContains( 'typography_word_spacing', $result['handled_keys'] );
+    }
+
+    public function test_maps_word_spacing_responsive_to_tablet_and_phone_breakpoints(): void {
+        $result = $this->mapper->map( 'heading', [
+            'typography_word_spacing_tablet' => [ 'size' => 2, 'unit' => 'px' ],
+            'typography_word_spacing_mobile' => [ 'size' => 1, 'unit' => 'px' ],
+        ] );
+        $tablet_css = $result['divi_attrs']['css']['tablet']['value']['main'] ?? '';
+        $phone_css  = $result['divi_attrs']['css']['phone']['value']['main'] ?? '';
+        $this->assertStringContainsString( 'word-spacing: 2px', $tablet_css );
+        $this->assertStringContainsString( 'word-spacing: 1px', $phone_css );
+        $this->assertContains( 'typography_word_spacing_tablet', $result['handled_keys'] );
+        $this->assertContains( 'typography_word_spacing_mobile', $result['handled_keys'] );
+    }
+
+    public function test_maps_blurb_title_word_spacing_to_css_main(): void {
+        // blurb uses title_typography_ prefix — its word-spacing key is title_typography_word_spacing.
+        // The standard typography_word_spacing must also be marked handled (Elementor emits both).
+        $result = $this->mapper->map( 'blurb', [
+            'title_typography_word_spacing' => [ 'size' => 2, 'unit' => 'em' ],
+        ] );
+        $this->assertStringContainsString( 'word-spacing: 2em', $result['css_main'] );
+        $this->assertContains( 'title_typography_word_spacing', $result['handled_keys'] );
+        $this->assertContains( 'typography_word_spacing', $result['handled_keys'] );
+    }
+
+    public function test_empty_word_spacing_does_not_emit_css(): void {
+        $result = $this->mapper->map( 'heading', [
+            'typography_word_spacing' => [ 'size' => '', 'unit' => 'px' ],
+        ] );
+        $this->assertStringNotContainsString( 'word-spacing', $result['css_main'] );
+    }
+
+    public function test_word_spacing_coexists_with_other_css_main_rules(): void {
+        $result = $this->mapper->map( 'image', [
+            'blend_mode'              => 'multiply',
+            'typography_word_spacing' => [ 'size' => 4, 'unit' => 'px' ],
+        ] );
+        // blend_mode already uses css_main — word-spacing must be appended, not overwrite it.
+        $this->assertStringContainsString( 'mix-blend-mode: multiply', $result['css_main'] );
+        $this->assertStringContainsString( 'word-spacing: 4px', $result['css_main'] );
+    }
+
+    // ── M4: heading links ─────────────────────────────────────────────────────
+
+    public function test_maps_heading_link_url_to_module_advanced_link(): void {
+        $engine = new ElementorDivi5Converter\Converter\ConverterEngine();
+        $result = $engine->convert( [
+            [
+                'id'         => 'h1',
+                'elType'     => 'widget',
+                'widgetType' => 'heading',
+                'settings'   => [
+                    'title' => 'Linked Heading',
+                    'link'  => [ 'url' => 'https://example.com', 'is_external' => '', 'nofollow' => '' ],
+                ],
+                'elements' => [],
+            ],
+        ] );
+        $link_val = $result['divi']['elements'][0]['settings']['module']['advanced']['link']['desktop']['value'] ?? null;
+        $this->assertSame( 'https://example.com', $link_val['url'] );
+        $this->assertArrayNotHasKey( 'target', $link_val );
+        $this->assertArrayNotHasKey( 'rel',    $link_val );
+    }
+
+    public function test_heading_link_external_sets_blank_target(): void {
+        $engine = new ElementorDivi5Converter\Converter\ConverterEngine();
+        $result = $engine->convert( [
+            [
+                'id'         => 'h2',
+                'elType'     => 'widget',
+                'widgetType' => 'heading',
+                'settings'   => [
+                    'title' => 'External Link',
+                    'link'  => [ 'url' => 'https://example.com', 'is_external' => 'on', 'nofollow' => 'on' ],
+                ],
+                'elements' => [],
+            ],
+        ] );
+        $link_val = $result['divi']['elements'][0]['settings']['module']['advanced']['link']['desktop']['value'] ?? null;
+        $this->assertSame( '_blank',     $link_val['target'] );
+        $this->assertContains( 'nofollow', $link_val['rel'] );
+    }
+
+    public function test_heading_with_empty_link_does_not_emit_link_attr(): void {
+        $engine = new ElementorDivi5Converter\Converter\ConverterEngine();
+        $result = $engine->convert( [
+            [
+                'id'         => 'h3',
+                'elType'     => 'widget',
+                'widgetType' => 'heading',
+                'settings'   => [
+                    'title' => 'No Link',
+                    'link'  => [ 'url' => '' ],
+                ],
+                'elements' => [],
+            ],
+        ] );
+        $module_advanced = $result['divi']['elements'][0]['settings']['module']['advanced'] ?? [];
+        $this->assertArrayNotHasKey( 'link', $module_advanced );
+    }
+
+    public function test_heading_with_no_link_key_does_not_emit_link_attr(): void {
+        $engine = new ElementorDivi5Converter\Converter\ConverterEngine();
+        $result = $engine->convert( [
+            [
+                'id'         => 'h4',
+                'elType'     => 'widget',
+                'widgetType' => 'heading',
+                'settings'   => [ 'title' => 'No Link Key' ],
+                'elements'   => [],
+            ],
+        ] );
+        $module_advanced = $result['divi']['elements'][0]['settings']['module']['advanced'] ?? [];
+        $this->assertArrayNotHasKey( 'link', $module_advanced );
     }
 }

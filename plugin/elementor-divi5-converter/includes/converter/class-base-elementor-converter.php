@@ -111,7 +111,10 @@ abstract class BaseElementorConverter implements ConverterInterface {
 
         if ( $this->isGridContainer( $settings ) ) {
             $columns      = $this->convertGridChildren( $children );
-            $row_settings = $this->deepMergeSettings( $row_styles, $this->rowGridSettingsFromContainer( $settings ) );
+            $row_settings = $this->applyBoxedWidthToRow(
+                $this->deepMergeSettings( $row_styles, $this->rowGridSettingsFromContainer( $settings ) ),
+                $settings
+            );
             return [
                 'id'       => $id,
                 'name'     => 'divi/row',
@@ -122,12 +125,15 @@ abstract class BaseElementorConverter implements ConverterInterface {
 
         if ( $this->isFlexRowContainer( $settings ) && $this->hasContainerChildren( $children ) ) {
             $columns      = $this->convertFlexRowChildren( $children );
-            $row_settings = $this->deepMergeSettings(
-                $row_styles,
+            $row_settings = $this->applyBoxedWidthToRow(
                 $this->deepMergeSettings(
-                    $this->rowSettingsFromColumns( $columns ),
-                    $this->rowFlexSettingsFromContainer( $settings )
-                )
+                    $row_styles,
+                    $this->deepMergeSettings(
+                        $this->rowSettingsFromColumns( $columns ),
+                        $this->rowFlexSettingsFromContainer( $settings )
+                    )
+                ),
+                $settings
             );
 
             return [
@@ -140,7 +146,10 @@ abstract class BaseElementorConverter implements ConverterInterface {
 
         $inner        = $this->convertStructureChildren( $children );
         $row_elements = $this->ensureColumnChildren( $id, $inner );
-        $row_settings = $this->deepMergeSettings( $row_styles, $this->rowSettingsFromColumns( $row_elements ) );
+        $row_settings = $this->applyBoxedWidthToRow(
+            $this->deepMergeSettings( $row_styles, $this->rowSettingsFromColumns( $row_elements ) ),
+            $settings
+        );
 
         return [
             'id'       => $id,
@@ -445,6 +454,17 @@ abstract class BaseElementorConverter implements ConverterInterface {
                 $layout['alignItems'] = $align_items;
             }
 
+            // flex_gap.row controls vertical spacing between stacked children in a
+            // column-direction container. Maps to rowGap in the column layout.
+            $gap = $settings[ 'flex_gap' . $suffix ] ?? null;
+            if ( is_array( $gap ) ) {
+                $unit    = is_string( $gap['unit'] ?? '' ) ? ( $gap['unit'] ?? 'px' ) : 'px';
+                $row_gap = $gap['row'] ?? '';
+                if ( $row_gap !== '' && $row_gap !== null ) {
+                    $layout['rowGap'] = (string) $row_gap . $unit;
+                }
+            }
+
             if ( ! empty( $layout ) ) {
                 $responsive[ $divi_bp ] = [ 'value' => $layout ];
             }
@@ -710,6 +730,44 @@ abstract class BaseElementorConverter implements ConverterInterface {
     }
 
     /**
+     * Merges a `max-width` CSS rule into a row's settings when the source
+     * Elementor container uses `content_width = 'boxed'` with a `boxed_width` value.
+     *
+     * Elementor's boxed mode constrains only the inner content area, so this CSS
+     * belongs on the divi/row (content layer), not the divi/section (background layer).
+     * Responsive tablet/mobile values are applied to the corresponding breakpoints when set.
+     */
+    protected function applyBoxedWidthToRow( array $row_settings, array $container_settings ): array {
+        if ( ( $container_settings['content_width'] ?? '' ) !== 'boxed' ) {
+            return $row_settings;
+        }
+
+        $bp_map = [
+            'desktop' => 'boxed_width',
+            'tablet'  => 'boxed_width_tablet',
+            'phone'   => 'boxed_width_mobile',
+        ];
+
+        foreach ( $bp_map as $divi_bp => $key ) {
+            $raw = $container_settings[ $key ] ?? null;
+            if ( ! is_array( $raw ) || ! isset( $raw['size'] ) || $raw['size'] === '' || $raw['size'] === null ) {
+                continue;
+            }
+            $unit  = is_string( $raw['unit'] ?? '' ) ? ( $raw['unit'] ?? 'px' ) : 'px';
+            $rule  = 'max-width: ' . (string) $raw['size'] . $unit . ';';
+
+            $existing = $row_settings['css'][ $divi_bp ]['value']['main'] ?? '';
+            $merged   = ( is_string( $existing ) && $existing !== '' )
+                ? rtrim( $existing, '; ' ) . '; ' . $rule
+                : $rule;
+
+            $row_settings['css'][ $divi_bp ]['value']['main'] = $merged;
+        }
+
+        return $row_settings;
+    }
+
+    /**
      * Recursively merges two settings arrays without losing sibling keys.
      * Unlike array_merge, nested arrays are merged rather than replaced.
      */
@@ -846,20 +904,13 @@ abstract class BaseElementorConverter implements ConverterInterface {
             'hide_tablet', 'hide_mobile',
             // Column order reversal on tablet — no Divi 5 block attr equivalent.
             'reverse_order_tablet',
-            // CSS overflow — no block attr equivalent.
-            'overflow',
-            // CSS z-index — no block attr equivalent.
-            '_z_index', '_z_index_tablet', '_z_index_mobile',
             // CSS absolute positioning and offset — no block attr equivalent.
             '_position',
             '_offset_x', '_offset_x_end', '_offset_x_tablet',
             '_offset_y', '_offset_y_end',
             '_offset_orientation_v', '_offset_orientation_h',
             // Image-specific controls without Divi 5 block-attr equivalents.
-            'object-fit', 'css_filters_css_filter',
-            'css_filters_brightness', 'css_filters_contrast',
-            'css_filters_saturate', 'css_filters_hue',
-            'image_custom_dimension',
+            'object-fit', 'image_custom_dimension',
             // Image link controls — not yet mapped.
             'link_to', 'open_lightbox',
             // Motion FX / transform effects — no block attr equivalent.

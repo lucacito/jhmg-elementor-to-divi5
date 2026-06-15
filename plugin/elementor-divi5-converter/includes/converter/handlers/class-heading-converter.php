@@ -41,9 +41,25 @@ class HeadingConverter extends BaseElementorConverter {
         $attrs          = $style['divi_attrs'];
         $attrs['title'] = $title_attrs;
 
+        // Map Elementor heading link → Divi 5 module.advanced.link.
+        $link     = is_array( $settings['link'] ?? null ) ? $settings['link'] : [];
+        $link_url = is_string( $link['url'] ?? '' ) ? trim( (string) ( $link['url'] ?? '' ) ) : '';
+        if ( $link_url !== '' ) {
+            $link_value  = [ 'url' => $link_url ];
+            $is_external = is_string( $link['is_external'] ?? '' ) ? ( $link['is_external'] ?? '' ) : '';
+            if ( $is_external === 'on' || $is_external === 'true' || $is_external === '1' ) {
+                $link_value['target'] = '_blank';
+            }
+            $nofollow = is_string( $link['nofollow'] ?? '' ) ? ( $link['nofollow'] ?? '' ) : '';
+            if ( $nofollow === 'on' || $nofollow === 'true' || $nofollow === '1' ) {
+                $link_value['rel'] = [ 'nofollow' ];
+            }
+            $attrs['module']['advanced']['link']['desktop']['value'] = $link_value;
+        }
+
         $this->engine->logConverted( 'heading' );
         $this->logUnmappedSettings( $id, $settings, array_merge(
-            [ 'title', 'tag', 'header_size', 'title_tag', 'size' ],
+            [ 'title', 'tag', 'header_size', 'title_tag', 'size', 'link' ],
             $style['handled_keys']
         ) );
 

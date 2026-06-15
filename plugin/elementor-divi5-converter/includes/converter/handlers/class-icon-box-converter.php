@@ -68,13 +68,9 @@ class IconBoxConverter extends BaseElementorConverter {
                 'title_text', 'description_text', 'selected_icon', 'icon',
                 'icon_size', 'icon_color', 'hover_animation', 'link_to', 'link',
                 'position', 'title_size', 'content_vertical_alignment',
-                'title_typography_typography', 'title_typography_font_family',
-                'title_typography_font_size', 'title_typography_font_weight',
-                'title_typography_line_height', 'title_color',
-                'description_typography_typography', 'description_typography_font_size',
-                'description_typography_font_weight', 'description_color',
-                'pa_condition_repeater', 'premium_tooltip_text', 'premium_tooltip_position',
-                'icon_space', 'title_bottom_space', 'description_typography_line_height',
+                // Elementor group-control type selectors — not CSS properties.
+                'title_typography_typography', 'description_typography_typography',
+                'pa_condition_repeater', 'icon_space', 'title_bottom_space',
             ],
             $style_result['handled_keys']
         ) );
