@@ -1,6 +1,6 @@
 === JHMG Converter For Elementor to Divi ===
 Contributors: lucaslopvet
-Tags: divi migration, elementor export, page builder converter, elementor to divi, website migration
+Tags: divi migration, elementor export, page builder converter, elementor to divi, essential addons
 Requires at least: 5.8
 Tested up to: 6.8
 Stable tag: 2.0.0
@@ -25,8 +25,20 @@ Version 2.0 is a full rewrite targeting Divi 5 and its native block format. Uplo
 * **Save Countless Hours**: Avoid manually rebuilding each page from scratch
 * **Smooth Migration Path**: Create a stress-free transition from Elementor to Divi 5
 * **Preserve Your Design Work**: Maintain layout structure, content placement, and design elements
-* **Header Template Support**: Elementor header templates can be imported as Divi Theme Builder global headers
+* **Theme Builder Headers & Footers**: Elementor header and footer templates are automatically converted and registered in the Divi Theme Builder — not just as regular pages
 * **Precision Mapping**: Accurate conversion of Elementor widgets to their Divi 5 equivalents
+
+### Theme Builder: Headers & Footers
+
+If your Elementor export includes a custom header or footer template, the plugin will automatically create them as **Divi Theme Builder** entries — not as regular pages. After importing, go to **Divi → Theme Builder** in the WordPress admin to find them already in place.
+
+From there you can:
+
+* Set display conditions (e.g. show on all pages, or specific post types)
+* Enable the header or footer to go live across your site
+* Edit the converted design directly in the Divi 5 visual builder
+
+This means your entire site structure — header, content pages, and footer — can come across in a single import. It is one of the most time-saving features of this plugin, so look for your templates in the Theme Builder after every Kit import.
 
 ### Complete Migration Solution
 
@@ -34,7 +46,8 @@ Version 2.0 is a full rewrite targeting Divi 5 and its native block format. Uplo
 2. Install and activate this plugin on your Divi 5 site
 3. Go to Tools → Elementor → Divi 5 in the WordPress admin
 4. Upload the JSON or ZIP file and click Import and Convert
-5. Pages are created as drafts — review and publish when ready
+5. Pages and Theme Builder templates are created — review and publish when ready
+6. For headers and footers: go to Divi → Theme Builder to set display conditions and activate them
 
 ### Supported Elementor Components
 
@@ -47,13 +60,25 @@ The plugin supports conversion of these essential Elementor elements:
 * **Interactive Elements**: Maps, icons, counters, progress bars, forms
 * **Dynamic Content**: Posts, social media feeds, sidebars
 
-### ElementsKit & EAEL Support
+### Elementor Addon Plugin Support
 
-For users of popular Elementor addon plugins, the converter includes specialized handlers for:
+The converter includes specialized handlers for the most popular Elementor addon plugins — not just the core widgets.
 
-* Essential Addons for Elementor (EAEL) widgets
-* ElementsKit widgets
-* Header Footer Elementor (HFE) widgets
+**Essential Addons for Elementor (EAEL)**
+
+One of the most widely used addon suites is fully covered, including: advanced accordion, advanced tabs, countdown timer, team member, testimonial, info box, flip box, pricing table, post grid, creative button, call-to-action box, filterable gallery, progress bar, fancy text, content ticker, data table, tooltip, image accordion, login/register, event calendar, post timeline, and more. Form widgets (Contact Form 7, WPForms, Gravity Forms, Ninja Forms, Fluent Forms) are converted to their shortcode equivalents. WooCommerce product widgets are also handled.
+
+**Header Footer Elementor (HFE)**
+
+HFE widgets used in header and footer templates are converted to their Divi equivalents: site logo, site title, site tagline, navigation menu, copyright, page title, search, breadcrumbs, counter, post info, info card, and basic posts.
+
+**ElementsKit**
+
+ElementsKit widgets are converted where a Divi equivalent exists: testimonial, heading, video, dual button, and accordion.
+
+**Premium Addons for Elementor**
+
+The Premium Addons blog listing widget is converted to the Divi Blog module, preserving post count, excerpt length, pagination, and read more settings.
 
 == Installation ==
 
@@ -95,6 +120,10 @@ Basic inline styles are converted. Custom CSS classes and complex styling may ne
 = Can I convert my entire site at once? =
 
 Yes. Export a full Elementor Kit ZIP and upload it — the plugin will process all pages in the ZIP in one batch.
+
+= Where do my converted header and footer templates end up? =
+
+They are created directly inside the Divi Theme Builder — not as regular pages. After importing, go to **Divi → Theme Builder** in your WordPress admin. You will see the converted header and footer templates there. Set display conditions (e.g. "All Pages") and save the Theme Builder to make them live across your site.
 
 = What if something doesn't convert properly? =
 

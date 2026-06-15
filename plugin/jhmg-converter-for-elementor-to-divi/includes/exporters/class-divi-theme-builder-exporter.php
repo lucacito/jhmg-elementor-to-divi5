@@ -64,6 +64,38 @@ class DiviThemeBuilderExporter {
         }
     }
 
+    /**
+     * Create an et_footer_layout post, save the converted Divi content to it,
+     * then wire it up as the global site footer in the Divi Theme Builder.
+     *
+     * @param  string $title      Footer title shown in Theme Builder admin.
+     * @param  array  $divi_data  Result from ConverterEngine::convert().
+     * @return array{post_id: int, template_id: int, theme_builder_id: int, success: bool, error: string}
+     */
+    public function saveFooter( string $title, array $divi_data ): array {
+        try {
+            $footer_post_id = $this->createFooterLayoutPost( $title );
+
+            if ( $footer_post_id === 0 ) {
+                return $this->errorResult( 'Could not create et_footer_layout post.' );
+            }
+
+            $this->exporter->save( $footer_post_id, $divi_data );
+
+            [ $template_id, $theme_builder_id ] = $this->wireGlobalFooter( $title, $footer_post_id );
+
+            return [
+                'post_id'          => $footer_post_id,
+                'template_id'      => $template_id,
+                'theme_builder_id' => $theme_builder_id,
+                'success'          => true,
+                'error'            => '',
+            ];
+        } catch ( \Throwable $e ) {
+            return $this->errorResult( $e->getMessage() );
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Internal helpers
     // -------------------------------------------------------------------------
@@ -176,6 +208,65 @@ class DiviThemeBuilderExporter {
         ] );
 
         return ( is_wp_error( $new_id ) || (int) $new_id === 0 ) ? 0 : (int) $new_id;
+    }
+
+    private function createFooterLayoutPost( string $title ): int {
+        $post_id = wp_insert_post( [
+            'post_type'    => 'et_footer_layout',
+            'post_title'   => $title ?: 'Imported Footer',
+            'post_status'  => 'publish',
+            'post_content' => '',
+        ] );
+
+        if ( is_wp_error( $post_id ) || (int) $post_id === 0 ) {
+            return 0;
+        }
+
+        $post_id = (int) $post_id;
+
+        if ( function_exists( 'wp_set_object_terms' ) ) {
+            wp_set_object_terms( $post_id, 'layout', 'layout_type', true );
+        }
+        update_post_meta( $post_id, '_et_pb_show_page_creation', 'on' );
+
+        return $post_id;
+    }
+
+    /**
+     * @return int[] [ $template_id, $theme_builder_id ]
+     */
+    private function wireGlobalFooter( string $title, int $footer_layout_id ): array {
+        $template_id = $this->createFooterTemplatePost( $title, $footer_layout_id );
+
+        $theme_builder_id = $this->getOrCreateThemeBuilderPost();
+
+        if ( $theme_builder_id > 0 && $template_id > 0 ) {
+            add_post_meta( $theme_builder_id, '_et_template', $template_id );
+        }
+
+        return [ $template_id, $theme_builder_id ];
+    }
+
+    private function createFooterTemplatePost( string $title, int $footer_layout_id ): int {
+        $template_id = wp_insert_post( [
+            'post_type'   => 'et_template',
+            'post_title'  => $title ?: 'Global Footer',
+            'post_status' => 'publish',
+        ] );
+
+        if ( is_wp_error( $template_id ) || (int) $template_id === 0 ) {
+            return 0;
+        }
+
+        $template_id = (int) $template_id;
+
+        update_post_meta( $template_id, '_et_default',               '1' );
+        update_post_meta( $template_id, '_et_enabled',               '1' );
+
+        update_post_meta( $template_id, '_et_footer_layout_id',      $footer_layout_id );
+        update_post_meta( $template_id, '_et_footer_layout_enabled', '1' );
+
+        return $template_id;
     }
 
     private function errorResult( string $error ): array {

@@ -144,6 +144,7 @@ class ConverterRegistry {
         $this->registerWidget( 'slides', '\\ElementorDivi5Converter\\Converter\\Handlers\\SliderConverter' );
         $this->registerWidget( 'star-rating', '\\ElementorDivi5Converter\\Converter\\Handlers\\StarRatingConverter' );
         $this->registerWidget( 'alert', '\\ElementorDivi5Converter\\Converter\\Handlers\\AlertConverter' );
+        $this->registerWidget( 'premium-addon-blog', '\\ElementorDivi5Converter\\Converter\\Handlers\\PremiumBlogConverter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );

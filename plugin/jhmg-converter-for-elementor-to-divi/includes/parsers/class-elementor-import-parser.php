@@ -178,6 +178,8 @@ class ElementorImportParser {
                 $template_type = $meta['template_type'] ?? '';
                 if ( $template_type === '' && $this->isHeaderTemplateType( $raw_post_type ) ) {
                     $template_type = 'header';
+                } elseif ( $template_type === '' && $this->isFooterTemplateType( $raw_post_type ) ) {
+                    $template_type = 'footer';
                 }
                 $items[] = $this->makeItem(
                     $entry['post_title'] ?? $meta['title'] ?? (string) $key,
@@ -281,6 +283,8 @@ class ElementorImportParser {
         $raw_type = $meta['post_type'] ?? '';
         if ( $this->isHeaderTemplateType( $raw_type ) ) {
             $meta['template_type'] = 'header';
+        } elseif ( $this->isFooterTemplateType( $raw_type ) ) {
+            $meta['template_type'] = 'footer';
         }
 
         // Format 2: Elementor template export — {version, title, type, content: [...]}.
@@ -322,6 +326,16 @@ class ElementorImportParser {
             'header',
             'et_header_layout',
             'hfe-template',   // HFE plugin template post type
+        ], true );
+    }
+
+    /**
+     * Elementor Theme Builder footers export with type='footer' (or legacy variants).
+     */
+    private function isFooterTemplateType( string $type ): bool {
+        return in_array( strtolower( $type ), [
+            'footer',
+            'et_footer_layout',
         ], true );
     }
 

@@ -100,6 +100,7 @@ class AdminPage {
         }
 
         $convert_headers = isset( $_POST['edc_convert_headers'] ) && $_POST['edc_convert_headers'] === '1';
+        $convert_footers = isset( $_POST['edc_convert_footers'] ) && $_POST['edc_convert_footers'] === '1';
 
         $parser = new ElementorImportParser();
 
@@ -118,6 +119,7 @@ class AdminPage {
             'post_type'       => $post_type,
             'post_status'     => $post_status,
             'convert_headers' => $convert_headers,
+            'convert_footers' => $convert_footers,
         ] );
 
         $import_id = $this->generate_import_id();
@@ -251,6 +253,16 @@ class AdminPage {
                     </label>
                     <p class="description">
                         <?php esc_html_e( 'When checked, Elementor header templates are imported as Divi Theme Builder global headers. Uncheck to import them as regular draft pages instead.', 'jhmg-converter-for-elementor-to-divi' ); ?>
+                    </p>
+                </div>
+
+                <div class="edc-import-field edc-import-field--checkbox">
+                    <label>
+                        <input type="checkbox" name="edc_convert_footers" value="1">
+                        <strong><?php esc_html_e( 'Convert footer templates as Divi Theme Builder footers', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
+                    </label>
+                    <p class="description">
+                        <?php esc_html_e( 'When checked, Elementor footer templates are imported as Divi Theme Builder global footers. Uncheck to import them as regular draft pages instead.', 'jhmg-converter-for-elementor-to-divi' ); ?>
                     </p>
                 </div>
 

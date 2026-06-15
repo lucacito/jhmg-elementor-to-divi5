@@ -4,7 +4,7 @@
   },
   "autoload": {
     "psr-4": {
-      "ElementorDivi5Converter\\": "plugin/elementor-divi5-converter/includes/"
+      "ElementorDivi5Converter\\": "plugin/jhmg-converter-for-elementor-to-divi/includes/"
     }
   },
   "autoload-dev": {

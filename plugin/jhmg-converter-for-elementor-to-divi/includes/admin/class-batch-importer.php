@@ -91,6 +91,7 @@ class BatchImporter {
         $default_post_type   = $options['post_type']      ?? 'page';
         $default_post_status = $options['post_status']    ?? 'draft';
         $convert_headers     = $options['convert_headers'] ?? true;
+        $convert_footers     = $options['convert_footers'] ?? true;
 
         $results = [];
 
@@ -99,6 +100,11 @@ class BatchImporter {
 
             if ( $template_type === 'header' && $convert_headers ) {
                 $results[] = $this->importHeaderTemplate( $item, $default_post_status );
+                continue;
+            }
+
+            if ( $template_type === 'footer' && $convert_footers ) {
+                $results[] = $this->importFooterTemplate( $item, $default_post_status );
                 continue;
             }
 
@@ -173,6 +179,35 @@ class BatchImporter {
                 'template_id'      => $tb_result['template_id'],
                 'theme_builder_id' => $tb_result['theme_builder_id'],
                 'template_type'    => 'header',
+                'success'          => $tb_result['success'],
+                'error'            => $tb_result['error'],
+                'report'           => $converted['report']      ?? [],
+                'unsupported'      => $converted['unsupported'] ?? [],
+            ];
+        } catch ( \Throwable $e ) {
+            return $this->failResult( $title, $e->getMessage() );
+        }
+    }
+
+    /**
+     * Import an Elementor footer template into the Divi Theme Builder.
+     */
+    private function importFooterTemplate( array $item, string $post_status ): array {
+        $title    = (string) ( $item['title']    ?? 'Imported Footer' );
+        $elements = $item['elements'] ?? [];
+
+        try {
+            $converted = $this->engine->convert( $elements );
+            $tb_result = $this->themeBuilderExporter->saveFooter( $title, $converted );
+
+            update_post_meta( $tb_result['post_id'], '_edc_import_source', 'file_upload' );
+
+            return [
+                'title'            => $title,
+                'post_id'          => $tb_result['post_id'],
+                'template_id'      => $tb_result['template_id'],
+                'theme_builder_id' => $tb_result['theme_builder_id'],
+                'template_type'    => 'footer',
                 'success'          => $tb_result['success'],
                 'error'            => $tb_result['error'],
                 'report'           => $converted['report']      ?? [],

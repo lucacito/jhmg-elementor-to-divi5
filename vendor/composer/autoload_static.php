@@ -38,7 +38,7 @@ class ComposerStaticInitfbee484fbcb98ba45566f17e8eb69e9b
         ),
         'ElementorDivi5Converter\\' =>
         array (
-            0 => __DIR__ . '/../..' . '/plugin/elementor-divi5-converter/includes',
+            0 => __DIR__ . '/../..' . '/plugin/jhmg-converter-for-elementor-to-divi/includes',
         ),
         'DeepCopy\\' =>
         array (

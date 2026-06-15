@@ -291,6 +291,6 @@ if ( ! class_exists( 'ET_Core_Portability' ) ) {
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-if ( file_exists( __DIR__ . '/../plugin/elementor-divi5-converter/elementor-divi5-converter.php' ) ) {
-    require_once __DIR__ . '/../plugin/elementor-divi5-converter/elementor-divi5-converter.php';
+if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php' ) ) {
+    require_once __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php';
 }

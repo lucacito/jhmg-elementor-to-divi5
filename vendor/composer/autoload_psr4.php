@@ -8,6 +8,6 @@ $baseDir = dirname($vendorDir);
 return array(
     'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),
     'ElementorDivi5Converter\\Tests\\' => array($baseDir . '/tests'),
-    'ElementorDivi5Converter\\' => array($baseDir . '/plugin/elementor-divi5-converter/includes'),
+    'ElementorDivi5Converter\\' => array($baseDir . '/plugin/jhmg-converter-for-elementor-to-divi/includes'),
     'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
 );
