@@ -150,7 +150,7 @@ class ConverterEngine {
                 continue;
             }
 
-            $query_string = (string) parse_url( $global_ref, PHP_URL_QUERY );
+            $query_string = (string) wp_parse_url( $global_ref, PHP_URL_QUERY );
             parse_str( $query_string, $params );
             $color_id = $params['id'] ?? '';
 

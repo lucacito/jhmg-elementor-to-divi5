@@ -30,7 +30,7 @@ class ElementorImportParser {
      */
     public function parse( string $file_path, string $file_name = '' ): array {
         if ( ! is_readable( $file_path ) ) {
-            throw new \RuntimeException( "Import file is not readable: {$file_path}" );
+            throw new \RuntimeException( 'Import file is not readable.' );
         }
 
         if ( $this->isZipFile( $file_path, $file_name ) ) {
@@ -46,13 +46,7 @@ class ElementorImportParser {
 
     private function isZipFile( string $file_path, string $file_name ): bool {
         // Check magic bytes (PK signature) first — reliable regardless of extension.
-        $handle = fopen( $file_path, 'rb' );
-        if ( $handle === false ) {
-            return false;
-        }
-        $magic  = fread( $handle, 2 );
-        fclose( $handle );
-
+        $magic = file_get_contents( $file_path, false, null, 0, 2 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
         if ( $magic === 'PK' ) {
             return true;
         }
@@ -73,7 +67,7 @@ class ElementorImportParser {
 
         $decoded = json_decode( $raw, true );
         if ( json_last_error() !== JSON_ERROR_NONE ) {
-            throw new \RuntimeException( 'Import file is not valid JSON: ' . json_last_error_msg() );
+            throw new \RuntimeException( 'Import file is not valid JSON: ' . esc_html( json_last_error_msg() ) );
         }
 
         $title    = $this->titleFromFileName( $file_name );
@@ -109,7 +103,7 @@ class ElementorImportParser {
         $opened = $zip->open( $file_path );
 
         if ( $opened !== true ) {
-            throw new \RuntimeException( "Could not open ZIP file (error code: {$opened})." );
+            throw new \RuntimeException( 'Could not open ZIP file (error code: ' . (int) $opened . ').' );
         }
 
         $items = [];

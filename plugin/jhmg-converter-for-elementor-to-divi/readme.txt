@@ -1,14 +1,14 @@
 === JHMG Converter For Elementor to Divi 5 ===
 Contributors: lucaslopvet
 Tags: divi migration, elementor export, page builder converter, elementor to divi, divi 5
-Requires at least: 5.8
-Tested up to: 6.8
+Requires at least: 5.9
+Tested up to: 7.0
 Stable tag: 2.0.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Migrate Elementor pages and templates to Divi 5. Free for single page imports. Upgrade to Premium for full kit imports, global headers, and global footers.
+Migrate Elementor pages and templates to Divi 5. Free for single-page imports; Premium adds kit imports, global headers, and footers.
 
 == Description ==
 

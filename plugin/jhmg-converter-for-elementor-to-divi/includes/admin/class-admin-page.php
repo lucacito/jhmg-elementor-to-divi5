@@ -60,7 +60,7 @@ class AdminPage {
             wp_die( esc_html__( 'You do not have permission to access this page.', 'jhmg-converter-for-elementor-to-divi' ) );
         }
 
-        $action = sanitize_key( $_GET['action'] ?? '' );
+        $action = sanitize_key( $_GET['action'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
         if ( $action === 'batch_result' ) {
             $this->render_batch_result();
@@ -74,7 +74,7 @@ class AdminPage {
     // ------------------------------------------------------------------
 
     public function handle_post(): void {
-        $action = sanitize_key( $_POST['action'] ?? '' );
+        $action = sanitize_key( $_POST['action'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- each handler verifies its own nonce
         if ( $action === 'edc_import' ) {
             $this->handle_import();
         }
@@ -88,7 +88,7 @@ class AdminPage {
             $this->handle_convert_kit_pages();
         }
 
-        $edc_action = sanitize_key( $_GET['edc_action'] ?? '' );
+        $edc_action = sanitize_key( $_GET['edc_action'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- each handler verifies its own nonce
         if ( $edc_action === 'publish' ) {
             $this->handle_publish();
         }
@@ -108,9 +108,11 @@ class AdminPage {
 
         check_admin_referer( self::IMPORT_NONCE_ACTION, self::IMPORT_NONCE_NAME );
 
-        $upload = $_FILES['edc_import_file'] ?? null;
+        $upload = isset( $_FILES['edc_import_file'] ) && is_array( $_FILES['edc_import_file'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            ? $_FILES['edc_import_file'] // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            : null;
 
-        if ( ! $upload || ! is_array( $upload ) ) {
+        if ( ! $upload ) {
             wp_die( esc_html__( 'No file was uploaded.', 'jhmg-converter-for-elementor-to-divi' ) );
         }
 
@@ -179,8 +181,8 @@ class AdminPage {
             wp_die( esc_html__( 'Insufficient permissions.', 'jhmg-converter-for-elementor-to-divi' ) );
         }
 
-        $post_id   = (int) ( $_GET['post_id'] ?? 0 );
-        $import_id = sanitize_key( $_GET['import_id'] ?? '' );
+        $post_id   = absint( wp_unslash( $_GET['post_id'] ?? 0 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- nonce checked below
+        $import_id = sanitize_key( $_GET['import_id'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
         check_admin_referer( 'edc_publish_' . $post_id );
 
@@ -234,7 +236,8 @@ class AdminPage {
             UPLOAD_ERR_EXTENSION  => __( 'Upload stopped by server extension.', 'jhmg-converter-for-elementor-to-divi' ),
         ];
 
-        return $messages[ $code ] ?? sprintf( __( 'Unknown upload error (code %d).', 'jhmg-converter-for-elementor-to-divi' ), $code );
+        /* translators: %d is the numeric upload error code */
+        return $messages[ $code ] ?? sprintf( __( 'Unknown upload error (code %d).', 'jhmg-converter-for-elementor-to-divi' ), (int) $code );
     }
 
     // ------------------------------------------------------------------
@@ -253,7 +256,7 @@ class AdminPage {
             return;
         }
 
-        $tab = sanitize_key( $_GET['tab'] ?? 'convert' );
+        $tab = sanitize_key( $_GET['tab'] ?? 'convert' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         if ( ! in_array( $tab, [ 'convert', 'global-kit' ], true ) ) {
             $tab = 'convert';
         }
@@ -628,7 +631,7 @@ class AdminPage {
     // ------------------------------------------------------------------
 
     private function render_batch_result(): void {
-        $import_id = sanitize_key( $_GET['import_id'] ?? '' );
+        $import_id = sanitize_key( $_GET['import_id'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
         if ( $import_id === '' ) {
             wp_die( esc_html__( 'No import ID provided.', 'jhmg-converter-for-elementor-to-divi' ) );
@@ -655,16 +658,25 @@ class AdminPage {
 
             <div class="edc-batch-summary">
                 <span class="edc-summary-stat edc-summary-stat--total">
-                    <?php printf( esc_html__( '%d page(s) processed', 'jhmg-converter-for-elementor-to-divi' ), $total ); ?>
+                    <?php
+                    /* translators: %d is the number of pages processed */
+                    printf( esc_html__( '%d page(s) processed', 'jhmg-converter-for-elementor-to-divi' ), absint( $total ) );
+                    ?>
                 </span>
                 <?php if ( $succeeded > 0 ) : ?>
                 <span class="edc-summary-stat edc-summary-stat--ok">
-                    <?php printf( esc_html__( '%d converted', 'jhmg-converter-for-elementor-to-divi' ), $succeeded ); ?>
+                    <?php
+                    /* translators: %d is the number of successfully converted pages */
+                    printf( esc_html__( '%d converted', 'jhmg-converter-for-elementor-to-divi' ), absint( $succeeded ) );
+                    ?>
                 </span>
                 <?php endif; ?>
                 <?php if ( $failed > 0 ) : ?>
                 <span class="edc-summary-stat edc-summary-stat--fail">
-                    <?php printf( esc_html__( '%d failed', 'jhmg-converter-for-elementor-to-divi' ), $failed ); ?>
+                    <?php
+                    /* translators: %d is the number of pages that failed to convert */
+                    printf( esc_html__( '%d failed', 'jhmg-converter-for-elementor-to-divi' ), absint( $failed ) );
+                    ?>
                 </span>
                 <?php endif; ?>
             </div>
@@ -876,9 +888,11 @@ class AdminPage {
         }
         check_admin_referer( self::KIT_NONCE_ACTION, self::KIT_NONCE_NAME );
 
-        $upload = $_FILES['edc_kit_file'] ?? null;
+        $upload = isset( $_FILES['edc_kit_file'] ) && is_array( $_FILES['edc_kit_file'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            ? $_FILES['edc_kit_file'] // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            : null;
 
-        if ( ! $upload || ! is_array( $upload ) || $upload['error'] !== UPLOAD_ERR_OK ) {
+        if ( ! $upload || $upload['error'] !== UPLOAD_ERR_OK ) {
             $error = ( $upload && is_array( $upload ) )
                 ? $this->upload_error_message( $upload['error'] )
                 : __( 'No file was uploaded.', 'jhmg-converter-for-elementor-to-divi' );
@@ -940,9 +954,31 @@ class AdminPage {
         $kit_dir    = $upload_dir['basedir'] . '/edc-kits/';
         wp_mkdir_p( $kit_dir );
         $this->protect_kit_directory( $kit_dir );
-        $kit_path = $kit_dir . 'kit.zip';
 
-        if ( ! move_uploaded_file( $upload['tmp_name'], $kit_path ) ) {
+        if ( ! function_exists( 'wp_handle_upload' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+        }
+
+        $kit_dir_path        = $kit_dir;
+        $kit_dir_filter      = static function ( $dirs ) use ( $kit_dir_path ) {
+            $dirs['path']   = untrailingslashit( $kit_dir_path );
+            $dirs['url']    = '';
+            $dirs['subdir'] = '';
+            return $dirs;
+        };
+        add_filter( 'upload_dir', $kit_dir_filter );
+        $upload['name'] = 'kit.zip';
+        $moved = wp_handle_upload(
+            $upload,
+            [
+                'test_form'                => false,
+                'mimes'                    => [ 'zip' => 'application/zip' ],
+                'unique_filename_callback' => static function () { return 'kit.zip'; },
+            ]
+        );
+        remove_filter( 'upload_dir', $kit_dir_filter );
+
+        if ( ! empty( $moved['error'] ) || empty( $moved['file'] ) ) {
             set_transient( 'edc_kit_upload_error_' . get_current_user_id(), __( 'Failed to save the uploaded file. Check directory permissions.', 'jhmg-converter-for-elementor-to-divi' ), 60 );
             wp_safe_redirect( add_query_arg(
                 [ 'page' => self::MENU_SLUG, 'tab' => 'global-kit', 'edc_notice' => 'kit_error' ],
@@ -950,6 +986,8 @@ class AdminPage {
             ) );
             exit;
         }
+
+        $kit_path = $moved['file'];
 
         $parser = new KitGlobalsParser();
         try {
@@ -1006,9 +1044,10 @@ class AdminPage {
             wp_die( esc_html__( 'Kit ZIP file is not available. Please re-upload the kit.', 'jhmg-converter-for-elementor-to-divi' ) );
         }
 
-        $valid_entries = array_column( $stored_pages, 'zip_entry' );
-        $selected      = array_filter(
-            (array) ( $_POST['edc_kit_pages'] ?? [] ),
+        $valid_entries   = array_column( $stored_pages, 'zip_entry' );
+        $raw_kit_pages   = isset( $_POST['edc_kit_pages'] ) ? wp_unslash( (array) $_POST['edc_kit_pages'] ) : []; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $selected        = array_filter(
+            array_map( 'sanitize_text_field', $raw_kit_pages ),
             fn( $e ) => in_array( $e, $valid_entries, true )
         );
 
@@ -1106,14 +1145,14 @@ class AdminPage {
     // ------------------------------------------------------------------
 
     private function render_notice(): void {
-        $notice = sanitize_key( $_GET['edc_notice'] ?? '' );
+        $notice = sanitize_key( $_GET['edc_notice'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display parameter
         if ( ! $notice ) {
             return;
         }
         switch ( $notice ) {
             case 'kit_loaded':
-                $name  = sanitize_text_field( $_GET['kit_name'] ?? '' );
-                $count = (int) ( $_GET['color_count'] ?? 0 );
+                $name  = sanitize_text_field( wp_unslash( $_GET['kit_name'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+                $count = absint( wp_unslash( $_GET['color_count'] ?? 0 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
                 printf(
                     '<div class="notice notice-success is-dismissible"><p>%s</p></div>',
                     esc_html( sprintf(
@@ -1200,7 +1239,9 @@ class AdminPage {
                         <span class="edc-kit-name"><?php echo esc_html( $kit_name ); ?></span>
                     </h2>
                     <?php if ( $date ) : ?>
-                        <p class="edc-kit-date"><?php printf( esc_html__( 'Loaded on %s', 'jhmg-converter-for-elementor-to-divi' ), esc_html( $date ) ); ?></p>
+                        <p class="edc-kit-date"><?php
+                        /* translators: %s is the date the kit was loaded */
+                        printf( esc_html__( 'Loaded on %s', 'jhmg-converter-for-elementor-to-divi' ), esc_html( $date ) ); ?></p>
                     <?php endif; ?>
                 </div>
                 <a href="<?php echo esc_url( $clear_url ); ?>" class="button edc-btn-remove-kit"
@@ -1211,7 +1252,9 @@ class AdminPage {
 
             <?php if ( ! empty( $colors ) ) : ?>
             <div class="edc-kit-section">
-                <h3><?php printf( esc_html__( 'Colors (%d)', 'jhmg-converter-for-elementor-to-divi' ), count( $colors ) ); ?></h3>
+                <h3><?php
+                /* translators: %d is the number of colors in the kit */
+                printf( esc_html__( 'Colors (%d)', 'jhmg-converter-for-elementor-to-divi' ), absint( count( $colors ) ) ); ?></h3>
                 <div class="edc-swatches">
                     <?php foreach ( $colors as $id => $hex ) : ?>
                     <div class="edc-swatch">
@@ -1226,7 +1269,9 @@ class AdminPage {
 
             <?php if ( ! empty( $typo ) ) : ?>
             <div class="edc-kit-section">
-                <h3><?php printf( esc_html__( 'Typography (%d)', 'jhmg-converter-for-elementor-to-divi' ), count( $typo ) ); ?></h3>
+                <h3><?php
+                /* translators: %d is the number of typography styles in the kit */
+                printf( esc_html__( 'Typography (%d)', 'jhmg-converter-for-elementor-to-divi' ), absint( count( $typo ) ) ); ?></h3>
                 <ul class="edc-typo-list">
                     <?php foreach ( $typo as $id => $props ) : ?>
                     <li class="edc-typo-item">
@@ -1254,7 +1299,9 @@ class AdminPage {
             $kit_pages = $kit['pages'] ?? [];
             if ( ! empty( $kit_pages ) ) : ?>
             <div class="edc-kit-section">
-                <h3><?php printf( esc_html__( 'Pages in Kit (%d)', 'jhmg-converter-for-elementor-to-divi' ), count( $kit_pages ) ); ?></h3>
+                <h3><?php
+                /* translators: %d is the number of pages in the kit */
+                printf( esc_html__( 'Pages in Kit (%d)', 'jhmg-converter-for-elementor-to-divi' ), absint( count( $kit_pages ) ) ); ?></h3>
                 <form method="post" action="" class="edc-kit-pages-form">
                     <?php wp_nonce_field( self::KIT_CONVERT_NONCE_ACTION, self::KIT_CONVERT_NONCE_NAME ); ?>
                     <input type="hidden" name="action" value="edc_convert_kit_pages">

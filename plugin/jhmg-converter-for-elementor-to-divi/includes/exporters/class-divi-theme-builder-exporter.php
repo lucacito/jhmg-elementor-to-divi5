@@ -190,7 +190,7 @@ class DiviThemeBuilderExporter {
             'no_found_rows'          => true,
             'update_post_meta_cache' => false,
             'update_post_term_cache' => false,
-            'meta_query'             => [ [
+            'meta_query'             => [ [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
                 'key'     => '_et_library_theme_builder',
                 'compare' => 'NOT EXISTS',
             ] ],

@@ -103,7 +103,7 @@ class ElementskitHeadingConverter extends BaseElementorConverter {
         ];
 
         // When there is extra description content, emit it as a sibling text block.
-        $extra_stripped = trim( function_exists( 'wp_strip_all_tags' ) ? wp_strip_all_tags( $extra ) : strip_tags( $extra ) );
+        $extra_stripped = trim( wp_strip_all_tags( $extra ) );
         if ( $extra_stripped !== '' ) {
             $this->engine->logConverted( 'text' );
             return [

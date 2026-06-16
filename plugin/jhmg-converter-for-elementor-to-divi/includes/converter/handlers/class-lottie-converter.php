@@ -29,8 +29,8 @@ class LottieConverter extends BaseElementorConverter {
         $autoplay = ( ( $settings['autoplay'] ?? 'yes' ) === 'yes' ) ? 'true' : 'false';
 
         if ( $url !== '' ) {
-            $html = '<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>'
-                . '<lottie-player src="' . esc_url( $url ) . '" background="transparent" speed="1"'
+            // Note: lottie-player web component must be loaded separately (e.g. via a Lottie plugin).
+            $html = '<lottie-player src="' . esc_url( $url ) . '" background="transparent" speed="1"'
                 . ( $loop === 'true' ? ' loop' : '' )
                 . ( $autoplay === 'true' ? ' autoplay' : '' )
                 . '></lottie-player>';
