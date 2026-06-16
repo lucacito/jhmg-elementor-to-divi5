@@ -296,7 +296,7 @@ class AdminPage {
             <div class="edc-lp-hero">
                 <p class="edc-lp-subtitle"><?php esc_html_e( 'Easily convert Elementor pages to Divi 5 with 1 click. Free for single page imports. Upgrade to Premium for full kit imports, global headers, and global footers.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
                 <div class="edc-lp-brand-row">
-                    <img src="<?php echo esc_url( EDC_PLUGIN_URL . 'assets/simple-logo-elementor-to-divi.png' ); ?>" alt="<?php esc_attr_e( 'Elementor to Divi 5 Converter', 'jhmg-converter-for-elementor-to-divi' ); ?>" class="edc-lp-brand-logo">
+                    <img src="<?php echo esc_url( EDC_PLUGIN_URL . 'assets/NEW-logo-elementor-to-divi.png' ); ?>" alt="<?php esc_attr_e( 'Elementor to Divi 5 Converter', 'jhmg-converter-for-elementor-to-divi' ); ?>" class="edc-lp-brand-logo">
                 </div>
             </div>
 
@@ -1007,6 +1007,7 @@ class AdminPage {
 
         $kit_name = $parsed['name'] ?: sanitize_file_name( pathinfo( $upload['name'], PATHINFO_FILENAME ) );
         GlobalsStore::save( $parsed['colors'], $parsed['typography'], $kit_name, $kit_path, $pages );
+        PremiumManager::activate();
 
         wp_safe_redirect( add_query_arg(
             [
@@ -1191,6 +1192,24 @@ class AdminPage {
         $kit = GlobalsStore::load();
 
         if ( $kit ) {
+            if ( empty( $kit['pages'] ) && ! empty( $kit['zip_path'] ) && is_readable( $kit['zip_path'] ) ) {
+                $parser = new KitGlobalsParser();
+                try {
+                    $pages = $parser->extract_pages( $kit['zip_path'] );
+                    if ( ! empty( $pages ) ) {
+                        GlobalsStore::save(
+                            $kit['colors']     ?? [],
+                            $kit['typography'] ?? [],
+                            $kit['loaded_from'] ?? '',
+                            $kit['zip_path'],
+                            $pages
+                        );
+                        $kit['pages'] = $pages;
+                    }
+                } catch ( \RuntimeException $e ) {
+                    // zip unreadable — show kit status without pages
+                }
+            }
             $this->render_kit_status( $kit );
         }
 

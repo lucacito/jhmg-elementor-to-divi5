@@ -26,4 +26,8 @@ defined( 'EDC_PLUGIN_VERSION' ) || define( 'EDC_PLUGIN_VERSION', '2.0.0' );
 
 require_once EDC_PLUGIN_DIR . 'includes/helpers/class-autoloader.php';
 
+register_deactivation_hook( __FILE__, static function () {
+    delete_option( 'edc_premium_active' );
+} );
+
 \ElementorDivi5Converter\Plugin::instance()->init();

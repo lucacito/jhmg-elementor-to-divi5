@@ -112,10 +112,13 @@ class KitGlobalsParser {
                 continue;
             }
             $name = $stat['name'];
-            if ( ! preg_match( '#^content/(page|post)/[^/]+\.json$#i', $name, $m ) ) {
+            if ( preg_match( '#^content/(page|post)/[^/]+\.json$#i', $name, $m ) ) {
+                $type = strtolower( $m[1] );
+            } elseif ( preg_match( '#^templates/[^/]+\.json$#i', $name ) ) {
+                $type = 'page';
+            } else {
                 continue;
             }
-            $type    = strtolower( $m[1] );
             $raw     = $zip->getFromIndex( $i );
             $decoded = $raw !== false ? json_decode( $raw, true ) : null;
             $title   = '';
