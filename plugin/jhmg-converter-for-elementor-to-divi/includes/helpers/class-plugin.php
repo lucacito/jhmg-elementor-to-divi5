@@ -31,6 +31,13 @@ class Plugin {
     }
 
     public function enqueue_frontend_styles(): void {
+        if ( ! is_singular() ) {
+            return;
+        }
+        $post_id = get_the_ID();
+        if ( ! $post_id || get_post_meta( $post_id, '_et_pb_use_builder', true ) !== 'on' ) {
+            return;
+        }
         wp_enqueue_style(
             'edc-frontend',
             EDC_PLUGIN_URL . 'assets/css/frontend.css',

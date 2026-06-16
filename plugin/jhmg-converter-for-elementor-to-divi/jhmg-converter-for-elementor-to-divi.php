@@ -11,7 +11,7 @@
  * Text Domain: jhmg-converter-for-elementor-to-divi
  * Domain Path: /languages
  * Requires at least: 5.8
- * Requires PHP: 7.4
+ * Requires PHP: 8.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

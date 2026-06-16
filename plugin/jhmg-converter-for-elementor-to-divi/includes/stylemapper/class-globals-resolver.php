@@ -2,6 +2,8 @@
 
 namespace ElementorDivi5Converter\StyleMapper;
 
+use ElementorDivi5Converter\Premium\GlobalsStore;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -11,14 +13,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Elementor stores references to global presets in the `__globals__` key of each
  * widget's settings using the pattern `globals/colors?id=<ID>` or
- * `globals/typography?id=<ID>`.  These IDs are site-specific; the maps below are
- * populated from the HavaLock site's Elementor global kit.
+ * `globals/typography?id=<ID>`. These IDs are site-specific.
  *
- * How to update for a new site:
- *   1. In the Divi JSON export, open the first section's `css.desktop.value.before`
- *      string and extract all `--e-global-color-*` and `--e-global-typography-*`
- *      custom-property declarations.
- *   2. Replace the COLOR_MAP and TYPOGRAPHY_MAP constants below.
+ * When a Global Kit is loaded (via the Global Kit tab), its colors and typography
+ * take priority over the fallback maps below. The fallback maps provide example
+ * defaults; upload a kit ZIP to apply your own site's global styles.
  */
 class GlobalsResolver {
 
@@ -49,7 +48,7 @@ class GlobalsResolver {
      * 'uppercase', 'lowercase', 'italic', 'underline', 'strikethrough').
      */
     private const TYPOGRAPHY_MAP = [
-        // h1 label style — "Welcome to Havalock"
+        // h1 label style
         '84ca66e' => [
             'family'        => 'Rethink Sans',
             'size'          => 'clamp(1.125rem, 1.0761rem + 0.2174vw, 1.25rem)',
@@ -57,7 +56,7 @@ class GlobalsResolver {
             'letterSpacing' => '0.5px',
             'lineHeight'    => '1em',
         ],
-        // Large headline — "Your Trusted Locksmith, Anytime Anywhere"
+        // Large headline
         '3715edf' => [
             'family'        => 'Roboto',
             'size'          => 'clamp(2.3125rem, 1.7255rem + 2.6087vw, 3.8125rem)',
@@ -155,6 +154,12 @@ class GlobalsResolver {
      * Returns null when the ID is not in the map.
      */
     public static function resolveColor( string $id ): ?string {
+        if ( function_exists( 'get_option' ) ) {
+            $kit = GlobalsStore::load();
+            if ( $kit !== null && isset( $kit['colors'][ $id ] ) ) {
+                return $kit['colors'][ $id ];
+            }
+        }
         return self::COLOR_MAP[ $id ] ?? null;
     }
 
@@ -163,6 +168,12 @@ class GlobalsResolver {
      * Returns null when the ID is not in the map.
      */
     public static function resolveTypography( string $id ): ?array {
+        if ( function_exists( 'get_option' ) ) {
+            $kit = GlobalsStore::load();
+            if ( $kit !== null && isset( $kit['typography'][ $id ] ) ) {
+                return $kit['typography'][ $id ];
+            }
+        }
         return self::TYPOGRAPHY_MAP[ $id ] ?? null;
     }
 
