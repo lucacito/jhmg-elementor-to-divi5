@@ -218,7 +218,6 @@ class AdminPage {
         ?>
         <div class="wrap edc-wrap edc-wrap--landing">
             <h1><?php esc_html_e( 'Elementor to Divi 5 Converter', 'jhmg-converter-for-elementor-to-divi' ); ?></h1>
-            <?php $this->render_notice(); ?>
             <?php $this->render_landing(); ?>
         </div>
         <?php
@@ -238,7 +237,7 @@ class AdminPage {
         <div class="edc-lp">
 
             <div class="edc-lp-hero">
-                <p class="edc-lp-subtitle"><?php esc_html_e( 'Easily convert Elementor pages to Divi 5 with 1 click. Free for single page imports. Upgrade to Premium for full kit imports, global headers, and global footers.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
+                <p class="edc-lp-subtitle"><?php esc_html_e( 'Easily convert Elementor pages to Divi 5 with 1 click. Free for single page imports. Upgrade to Pro for full kit imports, global headers, and global footers.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
                 <div class="edc-lp-brand-row">
                     <img src="<?php echo esc_url( EDC_PLUGIN_URL . 'assets/NEW-logo-elementor-to-divi.png' ); ?>" alt="<?php esc_attr_e( 'Elementor to Divi 5 Converter', 'jhmg-converter-for-elementor-to-divi' ); ?>" class="edc-lp-brand-logo">
                 </div>
@@ -312,7 +311,7 @@ class AdminPage {
                             <span class="edc-lp-badge edc-lp-badge--pro"><?php esc_html_e( 'PRO', 'jhmg-converter-for-elementor-to-divi' ); ?></span>
                             <span class="edc-lp-badge edc-lp-badge--best"><?php esc_html_e( 'BEST VALUE', 'jhmg-converter-for-elementor-to-divi' ); ?></span>
                         </div>
-                        <h2 class="edc-lp-plan-name"><?php esc_html_e( 'Premium Version', 'jhmg-converter-for-elementor-to-divi' ); ?></h2>
+                        <h2 class="edc-lp-plan-name"><?php esc_html_e( 'Pro Version', 'jhmg-converter-for-elementor-to-divi' ); ?></h2>
                         <p class="edc-lp-plan-tagline"><?php esc_html_e( 'The complete solution for professionals.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
                     </div>
 
@@ -360,7 +359,7 @@ class AdminPage {
                         <tr>
                             <th><?php esc_html_e( 'Feature', 'jhmg-converter-for-elementor-to-divi' ); ?></th>
                             <th><?php esc_html_e( 'Free Version', 'jhmg-converter-for-elementor-to-divi' ); ?></th>
-                            <th class="edc-lp-col-premium"><?php esc_html_e( 'Premium Version', 'jhmg-converter-for-elementor-to-divi' ); ?></th>
+                            <th class="edc-lp-col-premium"><?php esc_html_e( 'Pro Version', 'jhmg-converter-for-elementor-to-divi' ); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -679,29 +678,6 @@ class AdminPage {
             <p><?php esc_html_e( 'No warnings, unsupported elements, or skipped settings.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
         </div>
         <?php endif;
-    }
-
-    // ------------------------------------------------------------------
-    // Global Kit views
-    // ------------------------------------------------------------------
-
-    private function render_notice(): void {
-        $notice = sanitize_key( $_GET['edc_notice'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only display parameter
-        if ( ! $notice ) {
-            return;
-        }
-        switch ( $notice ) {
-            case 'kit_error':
-                $error = get_transient( 'edc_kit_upload_error_' . get_current_user_id() );
-                if ( $error ) {
-                    delete_transient( 'edc_kit_upload_error_' . get_current_user_id() );
-                    printf(
-                        '<div class="notice notice-error is-dismissible"><p>%s</p></div>',
-                        esc_html( $error )
-                    );
-                }
-                break;
-        }
     }
 
     // ------------------------------------------------------------------
