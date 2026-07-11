@@ -3,7 +3,7 @@
 use PHPUnit\Framework\TestCase;
 use ElementorDivi5Converter\Parsers\ElementorImportParser;
 use ElementorDivi5Converter\Admin\BatchImporter;
-use ElementorDivi5Converter\Exporters\DiviThemeBuilderExporter;
+use ElementorDivi5Converter\Pro\Exporters\DiviThemeBuilderExporter;
 
 /**
  * Tests for Elementor footer template → Divi Theme Builder footer conversion.

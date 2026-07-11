@@ -300,6 +300,42 @@ if ( ! function_exists( 'set_transient' ) ) {
     }
 }
 
+// Simple in-memory options store (used by Kit\GlobalsStore).
+if ( ! function_exists( 'get_option' ) ) {
+    $GLOBALS['__test_options'] = [];
+
+    function get_option( string $key, $default = false ) {
+        return $GLOBALS['__test_options'][ $key ] ?? $default;
+    }
+
+    function update_option( string $key, $value, $autoload = null ): bool {
+        $GLOBALS['__test_options'][ $key ] = $value;
+        return true;
+    }
+
+    function delete_option( string $key ): bool {
+        unset( $GLOBALS['__test_options'][ $key ] );
+        return true;
+    }
+}
+
+if ( ! function_exists( 'wp_upload_dir' ) ) {
+    function wp_upload_dir(): array {
+        return [
+            'basedir' => sys_get_temp_dir(),
+            'baseurl' => 'file://' . sys_get_temp_dir(),
+        ];
+    }
+}
+
+if ( ! function_exists( 'wp_delete_file' ) ) {
+    function wp_delete_file( string $file ): void {
+        if ( file_exists( $file ) ) {
+            @unlink( $file ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+        }
+    }
+}
+
 if ( ! function_exists( 'wp_get_theme' ) ) {
     function wp_get_theme( $template = null ) {
         return new class {

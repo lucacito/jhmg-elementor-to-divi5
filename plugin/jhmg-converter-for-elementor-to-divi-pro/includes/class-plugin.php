@@ -25,8 +25,17 @@ class Plugin {
         }
 
         add_filter( 'edc_pro_active', '__return_true' );
-        // Feature wiring (kit globals, theme-builder exporter, admin pages,
-        // licensing) is registered here by later tasks.
+
+        add_filter( 'edc_kit_globals', static fn ( $v ) => $v ?? Kit\GlobalsStore::load() );
+        add_filter( 'edc_theme_builder_exporter', static function ( $v ) {
+            return $v ?? new Exporters\DiviThemeBuilderExporter( new \ElementorDivi5Converter\Exporters\DiviExporter() );
+        } );
+
+        if ( is_admin() ) {
+            ( new Admin\KitPage() )->init();
+        }
+
+        // Licensing is registered here by later tasks.
     }
 
     public function render_missing_free_notice(): void {
