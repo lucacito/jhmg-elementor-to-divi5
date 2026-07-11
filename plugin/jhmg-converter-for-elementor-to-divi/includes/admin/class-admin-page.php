@@ -189,17 +189,6 @@ class AdminPage {
         exit;
     }
 
-    private function protect_kit_directory( string $dir ): void {
-        $htaccess = $dir . '.htaccess';
-        if ( ! file_exists( $htaccess ) ) {
-            file_put_contents( $htaccess, "deny from all\n" );
-        }
-        $index = $dir . 'index.php';
-        if ( ! file_exists( $index ) ) {
-            file_put_contents( $index, "<?php\n// Silence is golden.\n" );
-        }
-    }
-
     private function generate_import_id(): string {
         return function_exists( 'wp_generate_uuid4' )
             ? wp_generate_uuid4()
@@ -238,7 +227,11 @@ class AdminPage {
     private function render_landing(): void {
         if ( apply_filters( 'edc_pro_active', false ) ) {
             echo '<div class="notice notice-success inline"><p>';
-            echo wp_kses_post( __( '<strong>Pro is active.</strong> Kit import and Theme Builder tools live under <a href="' . esc_url( admin_url( 'tools.php?page=edcp-kit' ) ) . '">Tools → Elementor → Divi 5 Pro</a>.', 'jhmg-converter-for-elementor-to-divi' ) );
+            echo wp_kses_post( sprintf(
+                /* translators: %s: Pro Kit tools URL */
+                __( '<strong>Pro is active.</strong> Kit import and Theme Builder tools live under <a href="%s">Tools → Elementor → Divi 5 Pro</a>.', 'jhmg-converter-for-elementor-to-divi' ),
+                esc_url( admin_url( 'tools.php?page=edcp-kit' ) )
+            ) );
             echo '</p></div>';
         }
         ?>
@@ -698,25 +691,6 @@ class AdminPage {
             return;
         }
         switch ( $notice ) {
-            case 'kit_loaded':
-                $name  = sanitize_text_field( wp_unslash( $_GET['kit_name'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-                $count = absint( wp_unslash( $_GET['color_count'] ?? 0 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-                printf(
-                    '<div class="notice notice-success is-dismissible"><p>%s</p></div>',
-                    esc_html( sprintf(
-                        /* translators: 1: kit name, 2: number of colors */
-                        __( 'Global Kit "%1$s" loaded — %2$d colors imported.', 'jhmg-converter-for-elementor-to-divi' ),
-                        $name,
-                        $count
-                    ) )
-                );
-                break;
-            case 'kit_cleared':
-                echo '<div class="notice notice-info is-dismissible"><p>' . esc_html__( 'Global Kit removed.', 'jhmg-converter-for-elementor-to-divi' ) . '</p></div>';
-                break;
-            case 'premium_activated':
-                echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Premium Preview activated — you can now upload a Global Kit.', 'jhmg-converter-for-elementor-to-divi' ) . '</p></div>';
-                break;
             case 'kit_error':
                 $error = get_transient( 'edc_kit_upload_error_' . get_current_user_id() );
                 if ( $error ) {
@@ -809,73 +783,6 @@ class AdminPage {
 /* Tabs */
 .edc-nav-tabs { margin: 16px 0 0; }
 .edc-tab-content { margin-top: 0; }
-
-/* Premium upsell panel */
-.edc-premium-panel { background: #fff; border: 1px solid #dcdcde; border-left: 4px solid #f0b429; border-radius: 3px; padding: 24px 28px; margin: 20px 0; max-width: 640px; }
-.edc-premium-panel h2 { margin: 8px 0 10px; font-size: 16px; }
-.edc-premium-panel p { margin: 0 0 14px; color: #444; }
-.edc-premium-panel form { margin-top: 18px; }
-.edc-premium-badge { display: inline-block; background: #f0b429; color: #7a4f00; border-radius: 3px; padding: 2px 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-
-/* Kit status card */
-.edc-kit-status { background: #fff; border: 1px solid #dcdcde; border-left: 4px solid #2e7d32; border-radius: 3px; padding: 20px 24px; margin: 20px 0; }
-.edc-kit-status-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
-.edc-kit-status-header h2 { margin: 0 0 4px; font-size: 15px; }
-.edc-kit-name { color: #2271b1; }
-.edc-kit-date { margin: 0; color: #757575; font-size: 12px; }
-.edc-btn-remove-kit { color: #c62828 !important; border-color: #c62828 !important; flex-shrink: 0; }
-.edc-btn-remove-kit:hover { background: #fde8e8 !important; }
-
-/* Kit sections */
-.edc-kit-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f1; }
-.edc-kit-section h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: .04em; }
-
-/* Color swatches */
-.edc-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
-.edc-swatch { display: flex; align-items: center; gap: 6px; background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 3px; padding: 4px 8px; font-size: 12px; }
-.edc-swatch-color { display: inline-block; width: 22px; height: 22px; border-radius: 3px; border: 1px solid rgba(0,0,0,.12); flex-shrink: 0; }
-.edc-swatch-label { color: #333; font-weight: 500; }
-.edc-swatch-hex { color: #757575; font-size: 11px; background: transparent; border: none; padding: 0; }
-
-/* Typography list */
-.edc-typo-list { margin: 0; padding: 0; list-style: none; }
-.edc-typo-item { padding: 4px 0; border-bottom: 1px solid #f0f0f1; font-size: 13px; }
-.edc-typo-item:last-child { border-bottom: none; }
-
-/* Kit upload section */
-.edc-kit-upload-section { background: #fff; border: 1px solid #dcdcde; border-left: 4px solid #2271b1; border-radius: 3px; padding: 20px 24px; margin: 20px 0; }
-.edc-kit-upload-section h2 { margin: 0 0 6px; font-size: 15px; }
-.edc-kit-upload-section h3 { margin: 0 0 12px; font-size: 14px; }
-.edc-kit-upload-replace { border-left-color: #888; }
-
-/* Three-option upload layout */
-.edc-upload-options { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
-.edc-upload-option { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 3px solid #cbd5e1; border-radius: 6px; padding: 12px 14px; }
-.edc-upload-option--kit    { border-left-color: #2271b1; }
-.edc-upload-option--header { border-left-color: #7c3aed; }
-.edc-upload-option--footer { border-left-color: #e44d26; }
-.edc-upload-option-title { margin-bottom: 8px; }
-.edc-upload-option-title strong { display: block; font-size: 13px; margin-bottom: 2px; }
-.edc-upload-option-title .description { margin: 0; font-size: 11px; color: #666; }
-.edc-upload-option-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.edc-upload-option-form input[type="file"] { flex: 1; min-width: 160px; padding: 3px 0; font-size: 12px; }
-
-/* Landing page upload options (compact) */
-.edc-lp-import-panel .edc-upload-options { gap: 8px; }
-.edc-lp-import-panel .edc-upload-option { padding: 10px 12px; }
-.edc-lp-import-panel .edc-upload-option-form { gap: 6px; }
-.edc-lp-import-panel .edc-upload-option-form input[type="file"] { font-size: 11px; }
-
-/* Kit pages table */
-.edc-kit-pages-controls { margin-bottom: 8px; }
-.edc-select-all-label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; }
-.edc-pages-table { margin: 0 0 0; }
-.edc-pages-table .check-column { width: 30px; }
-.edc-type-col { width: 80px; }
-.edc-type-badge { display: inline-block; border-radius: 3px; padding: 1px 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-.edc-type-badge--page { background: #e8f0fe; color: #1a56db; }
-.edc-type-badge--post { background: #fef3c7; color: #92400e; }
-.edc-kit-convert-options { margin-top: 16px; }
 
 /* Free tier notice */
 .edc-free-notice { color: #946f00; }

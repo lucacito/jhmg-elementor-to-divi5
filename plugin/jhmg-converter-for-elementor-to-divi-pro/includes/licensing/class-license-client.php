@@ -17,11 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class LicenseClient {
-    private const OPT_KEY     = 'edcp_license_key';
-    private const OPT_STATE   = 'edcp_license_state';
-    private const OPT_BLOCKED = 'edcp_update_blocked';
-    private const CACHE_TTL   = DAY_IN_SECONDS;
-    private const GRACE_TTL   = 3 * DAY_IN_SECONDS;
+    private const OPT_KEY            = 'edcp_license_key';
+    private const OPT_STATE          = 'edcp_license_state';
+    private const OPT_BLOCKED        = 'edcp_update_blocked';
+    private const CACHE_TTL          = DAY_IN_SECONDS;
+    private const GRACE_TTL          = 3 * DAY_IN_SECONDS;
+    private const UPDATE_CHECK_TTL   = 6 * HOUR_IN_SECONDS;
 
     public function __construct(
         private string $product,
@@ -61,6 +62,10 @@ class LicenseClient {
 
     public function refresh( bool $force = false ): void {
         $key = $this->get_key();
+        if ( $force ) {
+            // Busts the update-check cache too, so "Check again" always hits the network.
+            delete_transient( $this->update_check_transient_key( $key ) );
+        }
         if ( ! $key ) { return; }
         $state = $this->get_state();
         $age   = time() - (int) ( $state['checked_at'] ?? 0 );
@@ -72,39 +77,76 @@ class LicenseClient {
             if ( $age < self::CACHE_TTL + self::GRACE_TTL && $state ) { return; }
             return; // Beyond grace we STILL keep last state (soft enforcement) — notices handle messaging.
         }
+
+        $code = $res['code'] ?? null;
+        if ( $code === 429 || ( null !== $code && $code >= 500 ) ) {
+            // Transient server error (rate limit / 5xx): keep last-known state and do NOT
+            // bump checked_at, so the next admin load retries instead of being downgraded
+            // by a blip on the license server.
+            return;
+        }
+
         if ( $res['ok'] ) {
             $this->store_state( $res['body'] );
         } else {
+            // Definitive verdict (403 license_not_usable/product_mismatch, 404 invalid_key, ...).
             $this->store_state( [ 'status' => $res['body']['status'] ?? 'invalid', 'expires' => $state['expires'] ?? null ] );
         }
     }
 
     public function inject_update( $transient ) {
-        $key = $this->get_key();
-        $url = sprintf(
-            '%s/api/plugin/update-check?product=%s&version=%s%s',
-            $this->api_base,
-            rawurlencode( $this->product ),
-            rawurlencode( $this->plugin_version ),
-            $key ? '&key=' . rawurlencode( $key ) : ''
-        );
-        $raw = wp_remote_get( $url, [ 'timeout' => 10 ] );
-        if ( is_wp_error( $raw ) || wp_remote_retrieve_response_code( $raw ) !== 200 ) { return $transient; }
-        $body = json_decode( wp_remote_retrieve_body( $raw ), true );
-        if ( empty( $body['update'] ) ) { delete_option( self::OPT_BLOCKED ); return $transient; }
+        $key        = $this->get_key();
+        $cache_key  = $this->update_check_transient_key( $key );
+        $body       = get_transient( $cache_key );
+
+        if ( false === $body ) {
+            $url = sprintf(
+                '%s/api/plugin/update-check?product=%s&version=%s%s',
+                $this->api_base,
+                rawurlencode( $this->product ),
+                rawurlencode( $this->plugin_version ),
+                $key ? '&key=' . rawurlencode( $key ) : ''
+            );
+            $raw = wp_remote_get( $url, [ 'timeout' => 10 ] );
+            if ( is_wp_error( $raw ) || wp_remote_retrieve_response_code( $raw ) !== 200 ) { return $transient; }
+            $body = json_decode( wp_remote_retrieve_body( $raw ), true );
+            set_transient( $cache_key, $body, self::UPDATE_CHECK_TTL );
+        }
+
+        if ( ! is_object( $transient ) ) { $transient = (object) [ 'response' => [] ]; }
+
+        if ( empty( $body['update'] ) ) {
+            delete_option( self::OPT_BLOCKED );
+            if ( ! isset( $transient->no_update ) || ! is_array( $transient->no_update ) ) {
+                $transient->no_update = [];
+            }
+            // Populate no_update so WP core's auto-update UI renders this plugin correctly.
+            $transient->no_update[ $this->plugin_basename ] = (object) [
+                'plugin'      => $this->plugin_basename,
+                'slug'        => dirname( $this->plugin_basename ),
+                'new_version' => $this->plugin_version,
+            ];
+            return $transient;
+        }
         if ( empty( $body['package'] ) ) {
             update_option( self::OPT_BLOCKED, $body['version'] ?? '1', false );
             return $transient;
         }
         delete_option( self::OPT_BLOCKED );
-        if ( ! is_object( $transient ) ) { $transient = (object) [ 'response' => [] ]; }
         $transient->response[ $this->plugin_basename ] = (object) [
+            'plugin'      => $this->plugin_basename,
+            'id'          => $this->plugin_basename,
             'slug'        => dirname( $this->plugin_basename ),
             'new_version' => $body['version'],
             'package'     => $body['package'],
             'url'         => 'https://divi5lab.com/plugins/elementor-to-divi-5',
         ];
         return $transient;
+    }
+
+    /** Cache key for a cached update-check response, scoped to product|version|key. */
+    private function update_check_transient_key( ?string $key ): string {
+        return 'edcp_update_check_' . md5( $this->product . '|' . $this->plugin_version . '|' . ( $key ?? '' ) );
     }
 
     /**
@@ -168,7 +210,7 @@ class LicenseClient {
         ], false );
     }
 
-    /** @return array{ok:bool, error:?string, body:array, network_error:bool} */
+    /** @return array{ok:bool, error:?string, body:array, network_error:bool, code:?int} */
     private function post( string $path, array $payload ): array {
         $raw = wp_remote_post( $this->api_base . $path, [
             'timeout' => 10,
@@ -176,13 +218,13 @@ class LicenseClient {
             'body'    => wp_json_encode( $payload ),
         ] );
         if ( is_wp_error( $raw ) ) {
-            return [ 'ok' => false, 'error' => 'network_error', 'body' => [], 'network_error' => true ];
+            return [ 'ok' => false, 'error' => 'network_error', 'body' => [], 'network_error' => true, 'code' => null ];
         }
         $code = wp_remote_retrieve_response_code( $raw );
         $body = json_decode( wp_remote_retrieve_body( $raw ), true ) ?: [];
         if ( $code === 200 ) {
-            return [ 'ok' => true, 'error' => null, 'body' => $body, 'network_error' => false ];
+            return [ 'ok' => true, 'error' => null, 'body' => $body, 'network_error' => false, 'code' => $code ];
         }
-        return [ 'ok' => false, 'error' => $body['error'] ?? "http_$code", 'body' => $body, 'network_error' => false ];
+        return [ 'ok' => false, 'error' => $body['error'] ?? "http_$code", 'body' => $body, 'network_error' => false, 'code' => $code ];
     }
 }
