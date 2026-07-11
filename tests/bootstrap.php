@@ -32,6 +32,18 @@ if ( ! function_exists( 'esc_html' ) ) {
     }
 }
 
+if ( ! function_exists( 'esc_html__' ) ) {
+    function esc_html__( $text, $domain = 'default' ) {
+        return htmlspecialchars( (string) $text, ENT_QUOTES );
+    }
+}
+
+if ( ! function_exists( '__return_true' ) ) {
+    function __return_true() {
+        return true;
+    }
+}
+
 $GLOBALS['edc_test_hooks'] = [];
 
 if ( ! function_exists( 'edc_test_reset_hooks' ) ) {
@@ -326,4 +338,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php' ) ) {
     require_once __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php';
+}
+
+if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php' ) ) {
+    require_once __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php';
 }
