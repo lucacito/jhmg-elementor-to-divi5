@@ -19,13 +19,19 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class KitPage {
 
+    // All dispatch identifiers are edcp_-prefixed on purpose: free's
+    // AdminPage::handle_post() hooks admin_init unscoped, runs BEFORE Pro's
+    // (free registers plugins_loaded at priority 10, Pro at 20), and dispatches
+    // purely on the POST action / GET edc_action params. Reusing free's strings
+    // would let free intercept every form submitted on this page (its ZIP
+    // Premium gate would wp_die on Pro's own kit upload).
     const MENU_SLUG                = 'edcp-kit';
-    const IMPORT_NONCE_NAME        = 'edc_import_nonce';
-    const IMPORT_NONCE_ACTION      = 'edc_import';
-    const KIT_NONCE_NAME           = 'edc_kit_nonce';
-    const KIT_NONCE_ACTION         = 'edc_upload_kit';
-    const KIT_CONVERT_NONCE_NAME   = 'edc_kit_convert_nonce';
-    const KIT_CONVERT_NONCE_ACTION = 'edc_convert_kit_pages';
+    const IMPORT_NONCE_NAME        = 'edcp_import_nonce';
+    const IMPORT_NONCE_ACTION      = 'edcp_import';
+    const KIT_NONCE_NAME           = 'edcp_kit_nonce';
+    const KIT_NONCE_ACTION         = 'edcp_upload_kit';
+    const KIT_CONVERT_NONCE_NAME   = 'edcp_kit_convert_nonce';
+    const KIT_CONVERT_NONCE_ACTION = 'edcp_convert_kit_pages';
 
     public function init(): void {
         add_action( 'admin_menu', [ $this, 'register_menu' ] );
@@ -108,21 +114,21 @@ class KitPage {
         }
 
         $action = sanitize_key( $_POST['action'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- each handler verifies its own nonce
-        if ( $action === 'edc_import' ) {
+        if ( $action === 'edcp_import' ) {
             $this->handle_import();
         }
-        if ( $action === 'edc_upload_kit' ) {
+        if ( $action === 'edcp_upload_kit' ) {
             $this->handle_upload_kit();
         }
-        if ( $action === 'edc_convert_kit_pages' ) {
+        if ( $action === 'edcp_convert_kit_pages' ) {
             $this->handle_convert_kit_pages();
         }
 
-        $edc_action = sanitize_key( $_GET['edc_action'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- each handler verifies its own nonce
-        if ( $edc_action === 'publish' ) {
+        $edcp_action = sanitize_key( $_GET['edcp_action'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- each handler verifies its own nonce
+        if ( $edcp_action === 'publish' ) {
             $this->handle_publish();
         }
-        if ( $edc_action === 'clear_kit' ) {
+        if ( $edcp_action === 'clear_kit' ) {
             $this->handle_clear_kit();
         }
     }
@@ -209,7 +215,7 @@ class KitPage {
         $post_id   = absint( wp_unslash( $_GET['post_id'] ?? 0 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- nonce checked below
         $import_id = sanitize_key( $_GET['import_id'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-        check_admin_referer( 'edc_publish_' . $post_id );
+        check_admin_referer( 'edcp_publish_' . $post_id );
 
         if ( $post_id <= 0 ) {
             wp_die( esc_html__( 'Invalid post ID.', 'jhmg-converter-for-elementor-to-divi-pro' ) );
@@ -482,7 +488,7 @@ class KitPage {
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( esc_html__( 'Insufficient permissions.', 'jhmg-converter-for-elementor-to-divi-pro' ) );
         }
-        check_admin_referer( 'edc_clear_kit' );
+        check_admin_referer( 'edcp_clear_kit' );
         GlobalsStore::clear();
         wp_safe_redirect( add_query_arg(
             [ 'page' => self::MENU_SLUG, 'tab' => 'kit', 'edc_notice' => 'kit_cleared' ],
@@ -604,10 +610,10 @@ class KitPage {
             : '';
         $clear_url = wp_nonce_url(
             add_query_arg(
-                [ 'page' => self::MENU_SLUG, 'tab' => 'kit', 'edc_action' => 'clear_kit' ],
+                [ 'page' => self::MENU_SLUG, 'tab' => 'kit', 'edcp_action' => 'clear_kit' ],
                 admin_url( 'tools.php' )
             ),
-            'edc_clear_kit'
+            'edcp_clear_kit'
         );
         ?>
         <div class="edc-kit-status">
@@ -684,7 +690,7 @@ class KitPage {
                 <form method="post" action="" class="edc-kit-pages-form">
                     <?php wp_nonce_field( self::KIT_CONVERT_NONCE_ACTION, self::KIT_CONVERT_NONCE_NAME ); ?>
                     <input type="hidden" name="page" value="<?php echo esc_attr( self::MENU_SLUG ); ?>">
-                    <input type="hidden" name="action" value="edc_convert_kit_pages">
+                    <input type="hidden" name="action" value="edcp_convert_kit_pages">
 
                     <div class="edc-kit-pages-controls">
                         <label class="edc-select-all-label">
@@ -800,7 +806,7 @@ class KitPage {
                     <form method="post" enctype="multipart/form-data" action="" class="edc-upload-option-form">
                         <?php wp_nonce_field( self::KIT_NONCE_ACTION, self::KIT_NONCE_NAME ); ?>
                         <input type="hidden" name="page" value="<?php echo esc_attr( self::MENU_SLUG ); ?>">
-                        <input type="hidden" name="action" value="edc_upload_kit">
+                        <input type="hidden" name="action" value="edcp_upload_kit">
                         <input type="hidden" name="edc_upload_type" value="kit">
                         <input type="file" name="edc_kit_file" accept=".zip" required>
                         <button type="submit" class="button button-primary">
@@ -819,7 +825,7 @@ class KitPage {
                     <form method="post" enctype="multipart/form-data" action="" class="edc-upload-option-form">
                         <?php wp_nonce_field( self::KIT_NONCE_ACTION, self::KIT_NONCE_NAME ); ?>
                         <input type="hidden" name="page" value="<?php echo esc_attr( self::MENU_SLUG ); ?>">
-                        <input type="hidden" name="action" value="edc_upload_kit">
+                        <input type="hidden" name="action" value="edcp_upload_kit">
                         <input type="hidden" name="edc_upload_type" value="header">
                         <input type="file" name="edc_kit_file" accept=".json" required>
                         <button type="submit" class="button button-primary">
@@ -836,7 +842,7 @@ class KitPage {
                     <form method="post" enctype="multipart/form-data" action="" class="edc-upload-option-form">
                         <?php wp_nonce_field( self::KIT_NONCE_ACTION, self::KIT_NONCE_NAME ); ?>
                         <input type="hidden" name="page" value="<?php echo esc_attr( self::MENU_SLUG ); ?>">
-                        <input type="hidden" name="action" value="edc_upload_kit">
+                        <input type="hidden" name="action" value="edcp_upload_kit">
                         <input type="hidden" name="edc_upload_type" value="footer">
                         <input type="file" name="edc_kit_file" accept=".json" required>
                         <button type="submit" class="button button-primary">
@@ -866,7 +872,7 @@ class KitPage {
             <form method="post" enctype="multipart/form-data" action="" class="edc-import-form">
                 <?php wp_nonce_field( self::IMPORT_NONCE_ACTION, self::IMPORT_NONCE_NAME ); ?>
                 <input type="hidden" name="page" value="<?php echo esc_attr( self::MENU_SLUG ); ?>">
-                <input type="hidden" name="action" value="edc_import">
+                <input type="hidden" name="action" value="edcp_import">
 
                 <div class="edc-import-fields">
                     <div class="edc-import-field">
@@ -1061,12 +1067,12 @@ class KitPage {
                                                 'page'       => self::MENU_SLUG,
                                                 'action'     => 'batch_result',
                                                 'import_id'  => $import_id,
-                                                'edc_action' => 'publish',
+                                                'edcp_action' => 'publish',
                                                 'post_id'    => $result['post_id'],
                                             ],
                                             admin_url( 'tools.php' )
                                         ),
-                                        'edc_publish_' . $result['post_id']
+                                        'edcp_publish_' . $result['post_id']
                                     );
                                 ?>
                                     <a href="<?php echo esc_url( $publish_url ); ?>" class="button button-small button-primary">

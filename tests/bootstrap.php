@@ -47,7 +47,12 @@ if ( ! function_exists( '__return_true' ) ) {
 $GLOBALS['edc_test_hooks'] = [];
 
 if ( ! function_exists( 'edc_test_reset_hooks' ) ) {
-    function edc_test_reset_hooks() { $GLOBALS['edc_test_hooks'] = []; }
+    function edc_test_reset_hooks() {
+        $GLOBALS['edc_test_hooks'] = [];
+        if ( isset( $GLOBALS['__test_options'] ) ) {
+            $GLOBALS['__test_options'] = [];
+        }
+    }
 }
 
 if ( ! function_exists( 'add_filter' ) ) {
