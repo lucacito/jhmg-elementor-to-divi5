@@ -28,6 +28,9 @@ class Plugin {
         }
 
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_styles' ] );
+
+        // Extension point for the Pro add-on (and future companions).
+        do_action( 'edc_loaded', $this );
     }
 
     public function enqueue_frontend_styles(): void {

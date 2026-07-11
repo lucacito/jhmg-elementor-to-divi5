@@ -4,7 +4,6 @@ namespace ElementorDivi5Converter\Admin;
 
 use ElementorDivi5Converter\Converter\ConverterEngine;
 use ElementorDivi5Converter\Exporters\DiviExporter;
-use ElementorDivi5Converter\Exporters\DiviThemeBuilderExporter;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -22,16 +21,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 class BatchImporter {
     private ConverterEngine $engine;
     private DiviExporter $exporter;
-    private DiviThemeBuilderExporter $themeBuilderExporter;
+    /** Theme Builder exporter supplied by the Pro add-on via filter (null when absent). */
+    private ?object $themeBuilderExporter;
 
     public function __construct(
         ?ConverterEngine $engine = null,
         ?DiviExporter $exporter = null,
-        ?DiviThemeBuilderExporter $themeBuilderExporter = null
+        ?object $themeBuilderExporter = null
     ) {
-        $this->engine               = $engine               ?? new ConverterEngine();
-        $this->exporter             = $exporter             ?? new DiviExporter();
-        $this->themeBuilderExporter = $themeBuilderExporter ?? new DiviThemeBuilderExporter( $this->exporter );
+        $this->engine   = $engine   ?? new ConverterEngine();
+        $this->exporter = $exporter ?? new DiviExporter();
+        $this->themeBuilderExporter = $themeBuilderExporter
+            ?? ( function_exists( 'apply_filters' ) ? apply_filters( 'edc_theme_builder_exporter', null ) : null );
 
         $global_colors = $this->extractElementorGlobalColors();
         if ( ! empty( $global_colors ) ) {
@@ -97,6 +98,16 @@ class BatchImporter {
 
         foreach ( $items as $item ) {
             $template_type = (string) ( $item['template_type'] ?? '' );
+
+            $wants_theme_builder = ( $template_type === 'header' && $convert_headers )
+                || ( $template_type === 'footer' && $convert_footers );
+
+            if ( $wants_theme_builder && $this->themeBuilderExporter === null ) {
+                $result = $this->importPageItem( $item, $default_post_type, $default_post_status );
+                $result['report']['warnings'][] = 'Theme Builder export for headers/footers requires the Pro add-on — imported as a regular draft instead. Get Pro: https://divi5lab.com/plugins/elementor-to-divi-5';
+                $results[] = $result;
+                continue;
+            }
 
             if ( $template_type === 'header' && $convert_headers ) {
                 $results[] = $this->importHeaderTemplate( $item, $default_post_status );

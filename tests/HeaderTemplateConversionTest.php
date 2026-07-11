@@ -8,12 +8,19 @@ use ElementorDivi5Converter\Converter\ConverterEngine;
 
 /**
  * Tests for Elementor header template → Divi Theme Builder header conversion.
+ *
+ * The Theme Builder exporter is a Pro-only seam (see SeamsTest); these tests
+ * register a real DiviThemeBuilderExporter via the `edc_theme_builder_exporter`
+ * filter so header routing still exercises the full Theme Builder path.
  */
 final class HeaderTemplateConversionTest extends TestCase {
     private ElementorImportParser $parser;
     private string $tmp_dir;
 
     protected function setUp(): void {
+        edc_test_reset_hooks();
+        add_filter( 'edc_theme_builder_exporter', fn( $v ) => new DiviThemeBuilderExporter() );
+
         $this->parser  = new ElementorImportParser();
         $this->tmp_dir = sys_get_temp_dir();
 

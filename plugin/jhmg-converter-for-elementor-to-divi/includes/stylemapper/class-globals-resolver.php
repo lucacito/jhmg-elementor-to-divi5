@@ -2,8 +2,6 @@
 
 namespace ElementorDivi5Converter\StyleMapper;
 
-use ElementorDivi5Converter\Premium\GlobalsStore;
-
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -149,16 +147,23 @@ class GlobalsResolver {
         ],
     ];
 
+    /** Kit globals supplied by the Pro add-on (null when Pro absent). */
+    private static function kitGlobals(): ?array {
+        if ( ! function_exists( 'apply_filters' ) ) {
+            return null;
+        }
+        $kit = apply_filters( 'edc_kit_globals', null );
+        return is_array( $kit ) ? $kit : null;
+    }
+
     /**
      * Resolve `globals/colors?id=<id>` to a concrete hex/rgba string.
      * Returns null when the ID is not in the map.
      */
     public static function resolveColor( string $id ): ?string {
-        if ( function_exists( 'get_option' ) ) {
-            $kit = GlobalsStore::load();
-            if ( $kit !== null && isset( $kit['colors'][ $id ] ) ) {
-                return $kit['colors'][ $id ];
-            }
+        $kit = self::kitGlobals();
+        if ( $kit !== null && isset( $kit['colors'][ $id ] ) ) {
+            return $kit['colors'][ $id ];
         }
         return self::COLOR_MAP[ $id ] ?? null;
     }
@@ -168,11 +173,9 @@ class GlobalsResolver {
      * Returns null when the ID is not in the map.
      */
     public static function resolveTypography( string $id ): ?array {
-        if ( function_exists( 'get_option' ) ) {
-            $kit = GlobalsStore::load();
-            if ( $kit !== null && isset( $kit['typography'][ $id ] ) ) {
-                return $kit['typography'][ $id ];
-            }
+        $kit = self::kitGlobals();
+        if ( $kit !== null && isset( $kit['typography'][ $id ] ) ) {
+            return $kit['typography'][ $id ];
         }
         return self::TYPOGRAPHY_MAP[ $id ] ?? null;
     }
