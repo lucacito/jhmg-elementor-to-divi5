@@ -16,6 +16,22 @@ if ( ! function_exists( 'plugin_dir_url' ) ) {
     }
 }
 
+if ( ! function_exists( 'register_deactivation_hook' ) ) {
+    function register_deactivation_hook( $file, $callback ) {}
+}
+
+if ( ! function_exists( 'wp_parse_url' ) ) {
+    function wp_parse_url( $url, $component = -1 ) {
+        return parse_url( (string) $url, $component );
+    }
+}
+
+if ( ! function_exists( 'esc_html' ) ) {
+    function esc_html( $text ) {
+        return htmlspecialchars( (string) $text, ENT_QUOTES );
+    }
+}
+
 if ( ! function_exists( 'add_action' ) ) {
     function add_action( $hook, $callback ) {
         return true;
