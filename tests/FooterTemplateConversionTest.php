@@ -3,15 +3,23 @@
 use PHPUnit\Framework\TestCase;
 use ElementorDivi5Converter\Parsers\ElementorImportParser;
 use ElementorDivi5Converter\Admin\BatchImporter;
+use ElementorDivi5Converter\Pro\Exporters\DiviThemeBuilderExporter;
 
 /**
  * Tests for Elementor footer template → Divi Theme Builder footer conversion.
+ *
+ * The Theme Builder exporter is a Pro-only seam (see SeamsTest); these tests
+ * register a real DiviThemeBuilderExporter via the `edc_theme_builder_exporter`
+ * filter so footer routing still exercises the full Theme Builder path.
  */
 final class FooterTemplateConversionTest extends TestCase {
     private ElementorImportParser $parser;
     private string $tmp_dir;
 
     protected function setUp(): void {
+        edc_test_reset_hooks();
+        add_filter( 'edc_theme_builder_exporter', fn( $v ) => new DiviThemeBuilderExporter() );
+
         $this->parser  = new ElementorImportParser();
         $this->tmp_dir = sys_get_temp_dir();
 

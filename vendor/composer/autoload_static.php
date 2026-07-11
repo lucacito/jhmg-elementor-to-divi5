@@ -19,7 +19,7 @@ class ComposerStaticInitfbee484fbcb98ba45566f17e8eb69e9b
         'E' =>
         array (
             'ElementorDivi5Converter\\Tests\\' => 30,
-            'ElementorDivi5Converter\\Premium\\' => 32,
+            'ElementorDivi5Converter\\Pro\\' => 28,
             'ElementorDivi5Converter\\' => 24,
         ),
         'D' =>
@@ -37,9 +37,9 @@ class ComposerStaticInitfbee484fbcb98ba45566f17e8eb69e9b
         array (
             0 => __DIR__ . '/../..' . '/tests',
         ),
-        'ElementorDivi5Converter\\Premium\\' =>
+        'ElementorDivi5Converter\\Pro\\' =>
         array (
-            0 => __DIR__ . '/../..' . '/plugin/jhmg-converter-for-elementor-to-divi/includes/premium',
+            0 => __DIR__ . '/../..' . '/plugin/jhmg-converter-for-elementor-to-divi-pro/includes',
         ),
         'ElementorDivi5Converter\\' =>
         array (

@@ -1,6 +1,6 @@
 <?php
 
-namespace ElementorDivi5Converter\Premium;
+namespace ElementorDivi5Converter\Pro\Kit;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;

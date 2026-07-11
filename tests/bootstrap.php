@@ -16,22 +16,72 @@ if ( ! function_exists( 'plugin_dir_url' ) ) {
     }
 }
 
-if ( ! function_exists( 'add_action' ) ) {
-    function add_action( $hook, $callback ) {
+if ( ! function_exists( 'register_deactivation_hook' ) ) {
+    function register_deactivation_hook( $file, $callback ) {}
+}
+
+if ( ! function_exists( 'wp_parse_url' ) ) {
+    function wp_parse_url( $url, $component = -1 ) {
+        return parse_url( (string) $url, $component );
+    }
+}
+
+if ( ! function_exists( 'esc_html' ) ) {
+    function esc_html( $text ) {
+        return htmlspecialchars( (string) $text, ENT_QUOTES );
+    }
+}
+
+if ( ! function_exists( 'esc_html__' ) ) {
+    function esc_html__( $text, $domain = 'default' ) {
+        return htmlspecialchars( (string) $text, ENT_QUOTES );
+    }
+}
+
+if ( ! function_exists( '__return_true' ) ) {
+    function __return_true() {
         return true;
+    }
+}
+
+$GLOBALS['edc_test_hooks'] = [];
+
+if ( ! function_exists( 'edc_test_reset_hooks' ) ) {
+    function edc_test_reset_hooks() {
+        $GLOBALS['edc_test_hooks'] = [];
+        if ( isset( $GLOBALS['__test_options'] ) ) {
+            $GLOBALS['__test_options'] = [];
+        }
     }
 }
 
 if ( ! function_exists( 'add_filter' ) ) {
     function add_filter( $tag, $callback, $priority = 10, $accepted_args = 1 ) {
-        // No-op stub for tests.
+        $GLOBALS['edc_test_hooks'][ $tag ][] = [ 'cb' => $callback, 'args' => $accepted_args ];
         return true;
     }
 }
 
+if ( ! function_exists( 'add_action' ) ) {
+    function add_action( $tag, $callback, $priority = 10, $accepted_args = 1 ) {
+        return add_filter( $tag, $callback, $priority, $accepted_args );
+    }
+}
+
 if ( ! function_exists( 'apply_filters' ) ) {
-    function apply_filters( $tag, $value ) {
+    function apply_filters( $tag, $value, ...$args ) {
+        foreach ( $GLOBALS['edc_test_hooks'][ $tag ] ?? [] as $entry ) {
+            $value = call_user_func_array( $entry['cb'], array_slice( array_merge( [ $value ], $args ), 0, max( 1, $entry['args'] ) ) );
+        }
         return $value;
+    }
+}
+
+if ( ! function_exists( 'do_action' ) ) {
+    function do_action( $tag, ...$args ) {
+        foreach ( $GLOBALS['edc_test_hooks'][ $tag ] ?? [] as $entry ) {
+            call_user_func_array( $entry['cb'], array_slice( $args, 0, max( 1, $entry['args'] ) ) );
+        }
     }
 }
 
@@ -255,6 +305,42 @@ if ( ! function_exists( 'set_transient' ) ) {
     }
 }
 
+// Simple in-memory options store (used by Kit\GlobalsStore).
+if ( ! function_exists( 'get_option' ) ) {
+    $GLOBALS['__test_options'] = [];
+
+    function get_option( string $key, $default = false ) {
+        return $GLOBALS['__test_options'][ $key ] ?? $default;
+    }
+
+    function update_option( string $key, $value, $autoload = null ): bool {
+        $GLOBALS['__test_options'][ $key ] = $value;
+        return true;
+    }
+
+    function delete_option( string $key ): bool {
+        unset( $GLOBALS['__test_options'][ $key ] );
+        return true;
+    }
+}
+
+if ( ! function_exists( 'wp_upload_dir' ) ) {
+    function wp_upload_dir(): array {
+        return [
+            'basedir' => sys_get_temp_dir(),
+            'baseurl' => 'file://' . sys_get_temp_dir(),
+        ];
+    }
+}
+
+if ( ! function_exists( 'wp_delete_file' ) ) {
+    function wp_delete_file( string $file ): void {
+        if ( file_exists( $file ) ) {
+            @unlink( $file ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+        }
+    }
+}
+
 if ( ! function_exists( 'wp_get_theme' ) ) {
     function wp_get_theme( $template = null ) {
         return new class {
@@ -289,8 +375,70 @@ if ( ! class_exists( 'ET_Core_Portability' ) ) {
     }
 }
 
+// Licensing HTTP stubs (used by Pro\Licensing\LicenseClient).
+if ( ! defined( 'DAY_IN_SECONDS' ) ) {
+    define( 'DAY_IN_SECONDS', 86400 );
+}
+
+if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
+    define( 'HOUR_IN_SECONDS', 3600 );
+}
+
+if ( ! function_exists( 'home_url' ) ) {
+    function home_url( $path = '', $scheme = null ) {
+        return 'https://test-site.example' . $path;
+    }
+}
+
+if ( ! function_exists( 'plugin_basename' ) ) {
+    function plugin_basename( $file ) {
+        return basename( dirname( $file ) ) . '/' . basename( $file );
+    }
+}
+
+$GLOBALS['edc_test_http'] = [ 'queue' => [], 'log' => [] ];
+
+if ( ! function_exists( 'edc_test_http_queue' ) ) {
+    /** Queue a fake response: ['code'=>200,'body'=>['status'=>'active',...]] or new WP_Error(...) */
+    function edc_test_http_queue( $response ) {
+        $GLOBALS['edc_test_http']['queue'][] = $response;
+    }
+}
+
+if ( ! function_exists( 'wp_remote_post' ) ) {
+    function wp_remote_post( $url, $args = [] ) {
+        $GLOBALS['edc_test_http']['log'][] = [ 'method' => 'POST', 'url' => $url, 'args' => $args ];
+        $r = array_shift( $GLOBALS['edc_test_http']['queue'] );
+        return $r instanceof WP_Error ? $r : [ 'response' => [ 'code' => $r['code'] ], 'body' => json_encode( $r['body'] ) ];
+    }
+}
+
+if ( ! function_exists( 'wp_remote_get' ) ) {
+    function wp_remote_get( $url, $args = [] ) {
+        $GLOBALS['edc_test_http']['log'][] = [ 'method' => 'GET', 'url' => $url, 'args' => $args ];
+        $r = array_shift( $GLOBALS['edc_test_http']['queue'] );
+        return $r instanceof WP_Error ? $r : [ 'response' => [ 'code' => $r['code'] ], 'body' => json_encode( $r['body'] ) ];
+    }
+}
+
+if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
+    function wp_remote_retrieve_response_code( $r ) {
+        return is_array( $r ) ? ( $r['response']['code'] ?? 0 ) : 0;
+    }
+}
+
+if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
+    function wp_remote_retrieve_body( $r ) {
+        return is_array( $r ) ? ( $r['body'] ?? '' ) : '';
+    }
+}
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php' ) ) {
     require_once __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php';
+}
+
+if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php' ) ) {
+    require_once __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php';
 }

@@ -1,6 +1,8 @@
 <?php
 
-namespace ElementorDivi5Converter\Exporters;
+namespace ElementorDivi5Converter\Pro\Exporters;
+
+use ElementorDivi5Converter\Exporters\DiviExporter;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;

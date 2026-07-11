@@ -3,20 +3,20 @@ Contributors: lucaslopvet
 Tags: divi migration, elementor export, page builder converter, elementor to divi, divi 5
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 2.0.0
+Stable tag: 2.1.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Migrate Elementor pages and templates to Divi 5. Free for single-page imports; Premium adds kit imports, global headers, and footers.
+Migrate Elementor pages and templates to Divi 5. Unlimited single-page JSON imports for free; the Pro add-on adds kit imports, global headers, and footers.
 
 == Description ==
 
-Convert Elementor-built pages and templates into native Divi 5 blocks with precision and ease. Upload an Elementor JSON export or a full Kit ZIP and the plugin creates converted pages directly in your WordPress site — no live Elementor installation required on the destination.
+Convert Elementor-built pages and templates into native Divi 5 blocks with precision and ease. Upload an Elementor page JSON export and the plugin creates a converted page directly in your WordPress site — no live Elementor installation required on the destination. (Full Kit ZIP import for whole-site migrations is available in the [Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5).)
 
 Version 2.0 is a full rewrite targeting Divi 5's native block format, not legacy shortcodes. All conversion happens from the exported file, so your live Elementor site is never touched.
 
-### Free vs Premium
+### Free vs Pro
 
 **Free — Convert single pages at no cost:**
 
@@ -26,8 +26,11 @@ Version 2.0 is a full rewrite targeting Divi 5's native block format, not legacy
 * Core Elementor widgets and most popular addons supported
 * No Elementor required on the destination site
 * Unlimited conversions — one page at a time
+* 140+ widget mappings and a detailed per-page conversion report
 
-**Premium — The full migration toolkit:**
+**[Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5) — The full migration toolkit:**
+
+The Pro add-on is a separate plugin, purchased and installed alongside this one, that unlocks:
 
 * **Full Kit import (ZIP)**: upload your Elementor Export Kit and convert every page in one batch
 * **Global Header**: upload a single Elementor header template JSON and register it directly as a Divi Theme Builder global header
@@ -35,23 +38,25 @@ Version 2.0 is a full rewrite targeting Divi 5's native block format, not legacy
 * **Global styles**: extract your kit's exact colors and typography and apply them across all conversions
 * Priority support and regular updates
 
+Get the Pro add-on at [divi5lab.com/plugins/elementor-to-divi-5](https://divi5lab.com/plugins/elementor-to-divi-5).
+
 ### Why Choose This Converter
 
 * **No Elementor Required on Destination**: Convert from an exported file — Elementor does not need to be active on the target site
 * **Divi 5 Native Output**: Pages are written in the Divi 5 block format, not legacy shortcodes
-* **Theme Builder Headers & Footers** *(Premium)*: Elementor header and footer templates become Divi Theme Builder global layouts — not just regular pages
-* **Bulk Import** *(Premium)*: Convert an entire Elementor Kit ZIP in one upload
-* **Global Styles** *(Premium)*: Colors and typography from your kit are preserved and applied to every conversion
+* **Theme Builder Headers & Footers** *(Pro add-on)*: Elementor header and footer templates become Divi Theme Builder global layouts — not just regular pages
+* **Bulk Import** *(Pro add-on)*: Convert an entire Elementor Kit ZIP in one upload
+* **Global Styles** *(Pro add-on)*: Colors and typography from your kit are preserved and applied to every conversion
 * **Save Countless Hours**: Avoid manually rebuilding pages from scratch
 * **Precision Mapping**: Accurate widget-by-widget conversion from Elementor to Divi 5
 
-### Theme Builder: Headers & Footers *(Premium)*
+### Theme Builder: Headers & Footers *(Pro add-on)*
 
-With Premium you can bring your Elementor header and footer templates directly into the Divi Theme Builder — two ways:
+The [Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5) brings your Elementor header and footer templates directly into the Divi Theme Builder — two ways:
 
 **From a Kit ZIP**: when running a kit page conversion, the converter detects header and footer templates and registers them in the Divi Theme Builder automatically.
 
-**From a single JSON file**: go to the Global Kit tab and use the dedicated upload sections — **Set as Global Header** for a header JSON, or **Set as Global Footer** for a footer JSON. Each template is created as a Divi Theme Builder layout immediately, ready to configure.
+**From a single JSON file**: upload a header or footer template JSON directly and it's created as a Divi Theme Builder layout immediately, ready to configure.
 
 After importing, go to **Divi → Theme Builder** in the WordPress admin to:
 
@@ -69,15 +74,9 @@ After importing, go to **Divi → Theme Builder** in the WordPress admin to:
 4. Upload the JSON file and click **Convert Now**
 5. Review the converted draft in Divi Builder, then publish when ready
 
-**For a full site (Premium):**
+**For a full site (Pro add-on):**
 
-1. In Elementor, export your kit: Elementor → Tools → Export Kit → download the ZIP
-2. Go to **Tools → Elementor → Divi 5 → Global Kit tab**
-3. Upload the Kit ZIP under **Full Kit** and click **Upload Kit** — global colors and typography are extracted
-4. Select the pages to convert and click **Convert Selected**
-5. To convert your header: upload the header template JSON and click **Set as Global Header**
-6. To convert your footer: upload the footer template JSON and click **Set as Global Footer**
-7. Go to **Divi → Theme Builder** to set display conditions and activate your header and footer
+Whole-site migration — kit ZIP import, global header/footer conversion, and global style extraction — requires the separate [Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5). Purchase and install it alongside this free plugin, then follow its own setup guide to import your Elementor kit and register your header and footer in the Divi Theme Builder.
 
 ### Supported Elementor Components
 
@@ -122,11 +121,11 @@ The Premium Addons blog listing widget is converted to the Divi Blog module, pre
 
 No. The converter works from the exported file directly. You only need Divi 5 installed on the destination site.
 
-= What is free and what requires Premium? =
+= What is free and what requires the Pro add-on? =
 
 **Free**: convert single Elementor pages via JSON — unlimited, one page at a time.
 
-**Premium**: import full Elementor Kit ZIPs to convert entire sites in one batch; upload a header template JSON to set it as a Divi Theme Builder global header; upload a footer template JSON to set it as a Divi Theme Builder global footer; extract and apply global colors and typography from your kit.
+**Pro add-on** (a separate plugin — [divi5lab.com/plugins/elementor-to-divi-5](https://divi5lab.com/plugins/elementor-to-divi-5)): import full Elementor Kit ZIPs to convert entire sites in one batch; upload a header template JSON to set it as a Divi Theme Builder global header; upload a footer template JSON to set it as a Divi Theme Builder global footer; extract and apply global colors and typography from your kit.
 
 = What's the conversion accuracy rate? =
 
@@ -146,11 +145,11 @@ Basic inline styles are converted. Custom CSS classes and complex styling may ne
 
 = Can I convert my entire site at once? =
 
-Yes, with Premium. Export a full Elementor Kit ZIP and upload it — the plugin converts all pages in the ZIP in one batch. You can then separately upload your header and footer JSON templates to register them in the Divi Theme Builder.
+Yes, with the [Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5). Export a full Elementor Kit ZIP and upload it there — Pro converts all pages in the ZIP in one batch. You can then separately upload your header and footer JSON templates to register them in the Divi Theme Builder.
 
 = Where do my converted header and footer templates end up? =
 
-With Premium, they are created directly inside the Divi Theme Builder — not as regular pages. After importing, go to **Divi → Theme Builder** in your WordPress admin. Set display conditions (e.g. "All Pages") and save the Theme Builder to make them live across your site.
+With the Pro add-on, they are created directly inside the Divi Theme Builder — not as regular pages. After importing, go to **Divi → Theme Builder** in your WordPress admin. Set display conditions (e.g. "All Pages") and save the Theme Builder to make them live across your site.
 
 = What if something doesn't convert properly? =
 
@@ -158,15 +157,20 @@ Unsupported elements are listed in the conversion report shown after each import
 
 = What changed from version 1.x? =
 
-Version 2.0 is a full rewrite. The key differences are: Divi 5 block output (not legacy shortcodes), file-based import (no live Elementor required), and batch ZIP support. If you are still using Divi 4, continue using version 1.1.
+Version 2.0 is a full rewrite. The key differences are: Divi 5 block output (not legacy shortcodes) and file-based import (no live Elementor required). Batch Kit ZIP import is available via the separate Pro add-on. If you are still using Divi 4, continue using version 1.1.
 
 == Screenshots ==
 
-1. Migration dashboard — landing page showing Free and Premium plans side by side
+1. Migration dashboard — landing page showing the free single-page importer and a link to the Pro add-on
 2. Import form — single page JSON conversion (Free)
-3. Global Kit tab — full kit upload, global header and footer template import (Premium)
+3. Conversion report — converted elements, warnings, and unsupported widgets after an import
 
 == Changelog ==
+
+= 2.1.0 =
+* Premium features (kit ZIP import, Theme Builder headers/footers, global styles) now live in the separate Pro add-on, available at https://divi5lab.com/plugins/elementor-to-divi-5
+* New: extension hooks for companion plugins (edc_loaded, edc_kit_globals, edc_theme_builder_exporter, edc_pro_active)
+* The in-plugin "premium preview" toggle has been removed
 
 = 2.0.0 =
 * Full rewrite targeting Divi 5 native block format
@@ -196,6 +200,9 @@ Version 2.0 is a full rewrite. The key differences are: Divi 5 block output (not
 * Detailed conversion logging
 
 == Upgrade Notice ==
+
+= 2.1.0 =
+Premium features (kit ZIP import, Theme Builder headers/footers, global styles) have moved to the separate Pro add-on at https://divi5lab.com/plugins/elementor-to-divi-5. This free plugin still handles unlimited single-page JSON conversion at no cost. If you were using an older in-plugin premium unlock, install the Pro add-on to keep that functionality.
 
 = 2.0.0 =
 This is a full rewrite for Divi 5. The workflow has changed: instead of exporting from within WordPress, you now upload an Elementor export file. If you are still on Divi 4, do not upgrade — stay on version 1.1.
