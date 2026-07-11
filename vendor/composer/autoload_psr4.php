@@ -8,7 +8,7 @@ $baseDir = dirname($vendorDir);
 return array(
     'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),
     'ElementorDivi5Converter\\Tests\\' => array($baseDir . '/tests'),
-    'ElementorDivi5Converter\\Premium\\' => array($baseDir . '/plugin/jhmg-converter-for-elementor-to-divi/includes/premium'),
+    'ElementorDivi5Converter\\Pro\\' => array($baseDir . '/plugin/jhmg-converter-for-elementor-to-divi-pro/includes'),
     'ElementorDivi5Converter\\' => array($baseDir . '/plugin/jhmg-converter-for-elementor-to-divi/includes'),
     'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
 );
