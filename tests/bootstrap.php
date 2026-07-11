@@ -32,22 +32,39 @@ if ( ! function_exists( 'esc_html' ) ) {
     }
 }
 
-if ( ! function_exists( 'add_action' ) ) {
-    function add_action( $hook, $callback ) {
-        return true;
-    }
+$GLOBALS['edc_test_hooks'] = [];
+
+if ( ! function_exists( 'edc_test_reset_hooks' ) ) {
+    function edc_test_reset_hooks() { $GLOBALS['edc_test_hooks'] = []; }
 }
 
 if ( ! function_exists( 'add_filter' ) ) {
     function add_filter( $tag, $callback, $priority = 10, $accepted_args = 1 ) {
-        // No-op stub for tests.
+        $GLOBALS['edc_test_hooks'][ $tag ][] = [ 'cb' => $callback, 'args' => $accepted_args ];
         return true;
     }
 }
 
+if ( ! function_exists( 'add_action' ) ) {
+    function add_action( $tag, $callback, $priority = 10, $accepted_args = 1 ) {
+        return add_filter( $tag, $callback, $priority, $accepted_args );
+    }
+}
+
 if ( ! function_exists( 'apply_filters' ) ) {
-    function apply_filters( $tag, $value ) {
+    function apply_filters( $tag, $value, ...$args ) {
+        foreach ( $GLOBALS['edc_test_hooks'][ $tag ] ?? [] as $entry ) {
+            $value = call_user_func_array( $entry['cb'], array_slice( array_merge( [ $value ], $args ), 0, max( 1, $entry['args'] ) ) );
+        }
         return $value;
+    }
+}
+
+if ( ! function_exists( 'do_action' ) ) {
+    function do_action( $tag, ...$args ) {
+        foreach ( $GLOBALS['edc_test_hooks'][ $tag ] ?? [] as $entry ) {
+            call_user_func_array( $entry['cb'], array_slice( $args, 0, max( 1, $entry['args'] ) ) );
+        }
     }
 }
 
