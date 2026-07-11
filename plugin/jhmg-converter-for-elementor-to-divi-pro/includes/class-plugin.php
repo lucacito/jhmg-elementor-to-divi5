@@ -31,11 +31,19 @@ class Plugin {
             return $v ?? new Exporters\DiviThemeBuilderExporter( new \ElementorDivi5Converter\Exporters\DiviExporter() );
         } );
 
-        if ( is_admin() ) {
-            ( new Admin\KitPage() )->init();
-        }
+        $license = new Licensing\LicenseClient(
+            EDCP_PRODUCT_SLUG,
+            EDCP_PLUGIN_VERSION,
+            EDCP_API_BASE,
+            plugin_basename( EDCP_PLUGIN_FILE )
+        );
+        add_filter( 'pre_set_site_transient_update_plugins', [ $license, 'inject_update' ] );
 
-        // Licensing is registered here by later tasks.
+        if ( is_admin() ) {
+            ( new Admin\KitPage( $license ) )->init();
+            add_action( 'admin_init', function () use ( $license ) { $license->refresh(); } );
+            add_action( 'admin_notices', [ new Licensing\LicensePage( $license ), 'maybe_render_notice' ] );
+        }
     }
 
     public function render_missing_free_notice(): void {

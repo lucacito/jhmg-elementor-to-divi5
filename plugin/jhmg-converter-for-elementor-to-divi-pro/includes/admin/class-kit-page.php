@@ -4,6 +4,8 @@ namespace ElementorDivi5Converter\Pro\Admin;
 
 use ElementorDivi5Converter\Pro\Kit\GlobalsStore;
 use ElementorDivi5Converter\Pro\Kit\KitGlobalsParser;
+use ElementorDivi5Converter\Pro\Licensing\LicenseClient;
+use ElementorDivi5Converter\Pro\Licensing\LicensePage;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -32,6 +34,12 @@ class KitPage {
     const KIT_NONCE_ACTION         = 'edcp_upload_kit';
     const KIT_CONVERT_NONCE_NAME   = 'edcp_kit_convert_nonce';
     const KIT_CONVERT_NONCE_ACTION = 'edcp_convert_kit_pages';
+
+    private ?LicensePage $license_page;
+
+    public function __construct( ?LicenseClient $license = null ) {
+        $this->license_page = $license ? new LicensePage( $license ) : null;
+    }
 
     public function init(): void {
         add_action( 'admin_menu', [ $this, 'register_menu' ] );
@@ -68,8 +76,9 @@ class KitPage {
             return;
         }
 
+        $allowed_tabs = $this->license_page ? [ 'kit', 'convert', 'license' ] : [ 'kit', 'convert' ];
         $tab = sanitize_key( $_GET['tab'] ?? 'kit' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-        if ( ! in_array( $tab, [ 'kit', 'convert' ], true ) ) {
+        if ( ! in_array( $tab, $allowed_tabs, true ) ) {
             $tab = 'kit';
         }
         $base_url = admin_url( 'tools.php?page=' . self::MENU_SLUG );
@@ -88,11 +97,19 @@ class KitPage {
                    class="nav-tab<?php echo $tab === 'convert' ? ' nav-tab-active' : ''; ?>">
                     <?php esc_html_e( 'Convert', 'jhmg-converter-for-elementor-to-divi-pro' ); ?>
                 </a>
+                <?php if ( $this->license_page ) : ?>
+                <a href="<?php echo esc_url( $base_url . '&tab=license' ); ?>"
+                   class="nav-tab<?php echo $tab === 'license' ? ' nav-tab-active' : ''; ?>">
+                    <?php esc_html_e( 'License', 'jhmg-converter-for-elementor-to-divi-pro' ); ?>
+                </a>
+                <?php endif; ?>
             </nav>
 
             <div class="edcp-tab-content">
                 <?php if ( $tab === 'convert' ) : ?>
                     <?php $this->render_convert_section(); ?>
+                <?php elseif ( $tab === 'license' && $this->license_page ) : ?>
+                    <?php $this->license_page->render(); ?>
                 <?php else : ?>
                     <?php $this->render_global_kit_section(); ?>
                 <?php endif; ?>
@@ -123,6 +140,9 @@ class KitPage {
         if ( $action === 'edcp_convert_kit_pages' ) {
             $this->handle_convert_kit_pages();
         }
+        if ( $action === 'edcp_save_license' && $this->license_page ) {
+            $this->license_page->handle_post();
+        }
 
         $edcp_action = sanitize_key( $_GET['edcp_action'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- each handler verifies its own nonce
         if ( $edcp_action === 'publish' ) {
@@ -130,6 +150,9 @@ class KitPage {
         }
         if ( $edcp_action === 'clear_kit' ) {
             $this->handle_clear_kit();
+        }
+        if ( in_array( $edcp_action, [ 'deactivate_license', 'refresh_license' ], true ) && $this->license_page ) {
+            $this->license_page->handle_post();
         }
     }
 

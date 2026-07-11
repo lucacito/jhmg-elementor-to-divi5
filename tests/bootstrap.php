@@ -375,6 +375,60 @@ if ( ! class_exists( 'ET_Core_Portability' ) ) {
     }
 }
 
+// Licensing HTTP stubs (used by Pro\Licensing\LicenseClient).
+if ( ! defined( 'DAY_IN_SECONDS' ) ) {
+    define( 'DAY_IN_SECONDS', 86400 );
+}
+
+if ( ! function_exists( 'home_url' ) ) {
+    function home_url( $path = '', $scheme = null ) {
+        return 'https://test-site.example' . $path;
+    }
+}
+
+if ( ! function_exists( 'plugin_basename' ) ) {
+    function plugin_basename( $file ) {
+        return basename( dirname( $file ) ) . '/' . basename( $file );
+    }
+}
+
+$GLOBALS['edc_test_http'] = [ 'queue' => [], 'log' => [] ];
+
+if ( ! function_exists( 'edc_test_http_queue' ) ) {
+    /** Queue a fake response: ['code'=>200,'body'=>['status'=>'active',...]] or new WP_Error(...) */
+    function edc_test_http_queue( $response ) {
+        $GLOBALS['edc_test_http']['queue'][] = $response;
+    }
+}
+
+if ( ! function_exists( 'wp_remote_post' ) ) {
+    function wp_remote_post( $url, $args = [] ) {
+        $GLOBALS['edc_test_http']['log'][] = [ 'method' => 'POST', 'url' => $url, 'args' => $args ];
+        $r = array_shift( $GLOBALS['edc_test_http']['queue'] );
+        return $r instanceof WP_Error ? $r : [ 'response' => [ 'code' => $r['code'] ], 'body' => json_encode( $r['body'] ) ];
+    }
+}
+
+if ( ! function_exists( 'wp_remote_get' ) ) {
+    function wp_remote_get( $url, $args = [] ) {
+        $GLOBALS['edc_test_http']['log'][] = [ 'method' => 'GET', 'url' => $url, 'args' => $args ];
+        $r = array_shift( $GLOBALS['edc_test_http']['queue'] );
+        return $r instanceof WP_Error ? $r : [ 'response' => [ 'code' => $r['code'] ], 'body' => json_encode( $r['body'] ) ];
+    }
+}
+
+if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
+    function wp_remote_retrieve_response_code( $r ) {
+        return is_array( $r ) ? ( $r['response']['code'] ?? 0 ) : 0;
+    }
+}
+
+if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
+    function wp_remote_retrieve_body( $r ) {
+        return is_array( $r ) ? ( $r['body'] ?? '' ) : '';
+    }
+}
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php' ) ) {
