@@ -29,23 +29,29 @@ class ProKitTest extends TestCase {
      * action/nonce strings, every form on Pro's own page would be intercepted by
      * free first (e.g. Pro's ZIP upload would wp_die on free's Premium gate).
      * Pro must use edcp_-prefixed identifiers that never collide with free's.
+     *
+     * Free's kit/premium nonce constants (KIT_NONCE_*, KIT_CONVERT_NONCE_*) were
+     * removed entirely in the free-plugin surgery (Task 5) — kit dispatch is now
+     * Pro-only, so there is no free-side identifier left to collide with. Only
+     * IMPORT_NONCE_* still exists on both sides and is checked for divergence.
      */
     public function test_kit_page_dispatch_identifiers_use_edcp_prefix_and_do_not_collide_with_free(): void {
         $kit_page = \ElementorDivi5Converter\Pro\Admin\KitPage::class;
         $free     = \ElementorDivi5Converter\Admin\AdminPage::class;
 
         $pairs = [
-            [ $kit_page::IMPORT_NONCE_ACTION,      $free::IMPORT_NONCE_ACTION ],
-            [ $kit_page::IMPORT_NONCE_NAME,        $free::IMPORT_NONCE_NAME ],
-            [ $kit_page::KIT_NONCE_ACTION,         $free::KIT_NONCE_ACTION ],
-            [ $kit_page::KIT_NONCE_NAME,           $free::KIT_NONCE_NAME ],
-            [ $kit_page::KIT_CONVERT_NONCE_ACTION, $free::KIT_CONVERT_NONCE_ACTION ],
-            [ $kit_page::KIT_CONVERT_NONCE_NAME,   $free::KIT_CONVERT_NONCE_NAME ],
+            [ $kit_page::IMPORT_NONCE_ACTION, $free::IMPORT_NONCE_ACTION ],
+            [ $kit_page::IMPORT_NONCE_NAME,   $free::IMPORT_NONCE_NAME ],
         ];
 
         foreach ( $pairs as [ $pro_value, $free_value ] ) {
             $this->assertStringStartsWith( 'edcp_', $pro_value );
             $this->assertNotSame( $free_value, $pro_value );
+        }
+
+        $free_reflection = new \ReflectionClass( $free );
+        foreach ( [ 'KIT_NONCE_ACTION', 'KIT_NONCE_NAME', 'KIT_CONVERT_NONCE_ACTION', 'KIT_CONVERT_NONCE_NAME' ] as $removed_const ) {
+            $this->assertFalse( $free_reflection->hasConstant( $removed_const ), "AdminPage still defines {$removed_const}" );
         }
 
         $this->assertSame( 'edcp_import', $kit_page::IMPORT_NONCE_ACTION );

@@ -3,9 +3,6 @@
 namespace ElementorDivi5Converter\Admin;
 
 use ElementorDivi5Converter\Parsers\ElementorImportParser;
-use ElementorDivi5Converter\Premium\GlobalsStore;
-use ElementorDivi5Converter\Premium\KitGlobalsParser;
-use ElementorDivi5Converter\Premium\PremiumManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -16,11 +13,6 @@ class AdminPage {
     const MENU_SLUG             = 'edc-converter';
     const IMPORT_NONCE_NAME     = 'edc_import_nonce';
     const IMPORT_NONCE_ACTION   = 'edc_import';
-    const KIT_NONCE_NAME        = 'edc_kit_nonce';
-    const KIT_NONCE_ACTION      = 'edc_upload_kit';
-    const ACTIVATE_NONCE_ACTION     = 'edc_activate_premium';
-    const KIT_CONVERT_NONCE_NAME    = 'edc_kit_convert_nonce';
-    const KIT_CONVERT_NONCE_ACTION  = 'edc_convert_kit_pages';
 
     public function init(): void {
         add_action( 'admin_menu', [ $this, 'register_menu' ] );
@@ -78,22 +70,10 @@ class AdminPage {
         if ( $action === 'edc_import' ) {
             $this->handle_import();
         }
-        if ( $action === 'edc_activate_premium' ) {
-            $this->handle_activate_premium();
-        }
-        if ( $action === 'edc_upload_kit' ) {
-            $this->handle_upload_kit();
-        }
-        if ( $action === 'edc_convert_kit_pages' ) {
-            $this->handle_convert_kit_pages();
-        }
 
         $edc_action = sanitize_key( $_GET['edc_action'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- each handler verifies its own nonce
         if ( $edc_action === 'publish' ) {
             $this->handle_publish();
-        }
-        if ( $edc_action === 'clear_kit' ) {
-            $this->handle_clear_kit();
         }
     }
 
@@ -120,11 +100,12 @@ class AdminPage {
             wp_die( esc_html( $this->upload_error_message( $upload['error'] ) ) );
         }
 
-        if ( ! PremiumManager::is_active() ) {
-            $ext = strtolower( pathinfo( $upload['name'], PATHINFO_EXTENSION ) );
-            if ( $ext === 'zip' ) {
-                wp_die( esc_html__( 'ZIP kit import requires Premium. Please upgrade to convert full Elementor Kit ZIPs. Single-page JSON conversion is free and unlimited.', 'jhmg-converter-for-elementor-to-divi' ) );
-            }
+        if ( strtolower( pathinfo( $upload['name'], PATHINFO_EXTENSION ) ) === 'zip' ) {
+            wp_die(
+                esc_html__( 'Full kit ZIP import is a Pro feature. The free plugin imports single-page JSON exports (unlimited). Get Pro at divi5lab.com/plugins/elementor-to-divi-5', 'jhmg-converter-for-elementor-to-divi' ),
+                '',
+                [ 'back_link' => true ]
+            );
         }
 
         $post_type = sanitize_key( $_POST['edc_post_type'] ?? 'page' );
@@ -245,51 +226,21 @@ class AdminPage {
     // ------------------------------------------------------------------
 
     private function render_list(): void {
-        if ( ! PremiumManager::is_active() ) {
-            ?>
-            <div class="wrap edc-wrap edc-wrap--landing">
-                <h1><?php esc_html_e( 'Elementor to Divi 5 Converter', 'jhmg-converter-for-elementor-to-divi' ); ?></h1>
-                <?php $this->render_notice(); ?>
-                <?php $this->render_premium_landing(); ?>
-            </div>
-            <?php
-            return;
-        }
-
-        $tab = sanitize_key( $_GET['tab'] ?? 'convert' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-        if ( ! in_array( $tab, [ 'convert', 'global-kit' ], true ) ) {
-            $tab = 'convert';
-        }
-        $base_url = admin_url( 'tools.php?page=' . self::MENU_SLUG );
         ?>
-        <div class="wrap edc-wrap">
-            <h1 class="wp-heading-inline"><?php esc_html_e( 'Elementor to Divi 5 Converter', 'jhmg-converter-for-elementor-to-divi' ); ?></h1>
-
+        <div class="wrap edc-wrap edc-wrap--landing">
+            <h1><?php esc_html_e( 'Elementor to Divi 5 Converter', 'jhmg-converter-for-elementor-to-divi' ); ?></h1>
             <?php $this->render_notice(); ?>
-
-            <nav class="nav-tab-wrapper edc-nav-tabs">
-                <a href="<?php echo esc_url( $base_url . '&tab=convert' ); ?>"
-                   class="nav-tab<?php echo $tab === 'convert' ? ' nav-tab-active' : ''; ?>">
-                    <?php esc_html_e( 'Convert', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                </a>
-                <a href="<?php echo esc_url( $base_url . '&tab=global-kit' ); ?>"
-                   class="nav-tab<?php echo $tab === 'global-kit' ? ' nav-tab-active' : ''; ?>">
-                    <?php esc_html_e( 'Global Kit', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                </a>
-            </nav>
-
-            <div class="edc-tab-content">
-                <?php if ( $tab === 'global-kit' ) : ?>
-                    <?php $this->render_global_kit_section(); ?>
-                <?php else : ?>
-                    <?php $this->render_import_section(); ?>
-                <?php endif; ?>
-            </div>
+            <?php $this->render_landing(); ?>
         </div>
         <?php
     }
 
-    private function render_premium_landing(): void {
+    private function render_landing(): void {
+        if ( apply_filters( 'edc_pro_active', false ) ) {
+            echo '<div class="notice notice-success inline"><p>';
+            echo wp_kses_post( __( '<strong>Pro is active.</strong> Kit import and Theme Builder tools live under <a href="' . esc_url( admin_url( 'tools.php?page=edcp-kit' ) ) . '">Tools → Elementor → Divi 5 Pro</a>.', 'jhmg-converter-for-elementor-to-divi' ) );
+            echo '</p></div>';
+        }
         ?>
         <div class="edc-lp">
 
@@ -398,57 +349,13 @@ class AdminPage {
                     </div>
 
                     <div class="edc-lp-upgrade-form">
-                        <button type="button" class="edc-lp-btn-premium" id="edc-toggle-kit-form">
-                            <?php esc_html_e( 'Import Full Kit or Template — Upgrade to Premium', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                        </button>
-
-                        <div class="edc-lp-import-panel" id="edc-kit-panel" style="display:none;">
-                            <div class="edc-upload-options">
-
-                                <div class="edc-upload-option edc-upload-option--kit">
-                                    <div class="edc-upload-option-title">
-                                        <strong><?php esc_html_e( 'Full Kit (ZIP)', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                                        <p class="description"><?php esc_html_e( 'Import your entire Elementor Export Kit — pages, templates, global styles.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
-                                    </div>
-                                    <form method="post" enctype="multipart/form-data" action="" class="edc-upload-option-form">
-                                        <?php wp_nonce_field( self::KIT_NONCE_ACTION, self::KIT_NONCE_NAME ); ?>
-                                        <input type="hidden" name="action" value="edc_upload_kit">
-                                        <input type="hidden" name="edc_upload_type" value="kit">
-                                        <input type="file" name="edc_kit_file" accept=".zip" required>
-                                        <button type="submit" class="button button-primary"><?php esc_html_e( 'Upload Kit', 'jhmg-converter-for-elementor-to-divi' ); ?></button>
-                                    </form>
-                                </div>
-
-                                <div class="edc-upload-option edc-upload-option--header">
-                                    <div class="edc-upload-option-title">
-                                        <strong><?php esc_html_e( 'Header Template (JSON)', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                                        <p class="description"><?php esc_html_e( 'Import a single Elementor header template and register it as a Divi Theme Builder global header.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
-                                    </div>
-                                    <form method="post" enctype="multipart/form-data" action="" class="edc-upload-option-form">
-                                        <?php wp_nonce_field( self::KIT_NONCE_ACTION, self::KIT_NONCE_NAME ); ?>
-                                        <input type="hidden" name="action" value="edc_upload_kit">
-                                        <input type="hidden" name="edc_upload_type" value="header">
-                                        <input type="file" name="edc_kit_file" accept=".json" required>
-                                        <button type="submit" class="button button-primary"><?php esc_html_e( 'Set as Global Header', 'jhmg-converter-for-elementor-to-divi' ); ?></button>
-                                    </form>
-                                </div>
-
-                                <div class="edc-upload-option edc-upload-option--footer">
-                                    <div class="edc-upload-option-title">
-                                        <strong><?php esc_html_e( 'Footer Template (JSON)', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                                        <p class="description"><?php esc_html_e( 'Import a single Elementor footer template and register it as a Divi Theme Builder global footer.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
-                                    </div>
-                                    <form method="post" enctype="multipart/form-data" action="" class="edc-upload-option-form">
-                                        <?php wp_nonce_field( self::KIT_NONCE_ACTION, self::KIT_NONCE_NAME ); ?>
-                                        <input type="hidden" name="action" value="edc_upload_kit">
-                                        <input type="hidden" name="edc_upload_type" value="footer">
-                                        <input type="file" name="edc_kit_file" accept=".json" required>
-                                        <button type="submit" class="button button-primary"><?php esc_html_e( 'Set as Global Footer', 'jhmg-converter-for-elementor-to-divi' ); ?></button>
-                                    </form>
-                                </div>
-
-                            </div>
-                        </div>
+                        <?php
+                        printf(
+                            '<a class="button button-primary button-hero edc-lp-btn-premium" href="%s" target="_blank" rel="noopener">%s</a>',
+                            esc_url( 'https://divi5lab.com/plugins/elementor-to-divi-5?utm_source=plugin&utm_medium=upsell&utm_campaign=free-landing' ),
+                            esc_html__( 'Get Pro — $49/yr, unlimited sites', 'jhmg-converter-for-elementor-to-divi' )
+                        );
+                        ?>
                     </div>
                 </div>
             </div>
@@ -502,13 +409,13 @@ class AdminPage {
                     </div>
                 </div>
                 <div class="edc-lp-cta-right">
-                    <form method="post" action="">
-                        <?php wp_nonce_field( self::ACTIVATE_NONCE_ACTION, 'edc_activate_nonce' ); ?>
-                        <input type="hidden" name="action" value="edc_activate_premium">
-                        <button type="submit" class="edc-lp-btn-premium-large">
-                            <?php esc_html_e( 'Upgrade to Premium Now →', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                        </button>
-                    </form>
+                    <?php
+                    printf(
+                        '<a class="button button-primary button-hero" href="%s" target="_blank" rel="noopener">%s</a>',
+                        esc_url( 'https://divi5lab.com/plugins/elementor-to-divi-5?utm_source=plugin&utm_medium=upsell&utm_campaign=free-landing' ),
+                        esc_html__( 'Get Pro — $49/yr, unlimited sites', 'jhmg-converter-for-elementor-to-divi' )
+                    );
+                    ?>
                 </div>
             </div>
         </div>
@@ -537,92 +444,8 @@ class AdminPage {
                 'edc-lp-btn-free--open'
             );
 
-            wireToggle(
-                'edc-toggle-kit-form',
-                'edc-kit-panel',
-                '<?php echo esc_js( __( 'Import Full Kit or Template — Upgrade to Premium', 'jhmg-converter-for-elementor-to-divi' ) ); ?>',
-                '<?php echo esc_js( __( '✕  Close Form', 'jhmg-converter-for-elementor-to-divi' ) ); ?>',
-                null
-            );
-
         })();
         </script>
-        <?php
-    }
-
-    private function render_import_section(): void {
-        ?>
-        <div class="edc-import-section">
-            <h2><?php esc_html_e( 'Import from Elementor JSON / ZIP', 'jhmg-converter-for-elementor-to-divi' ); ?></h2>
-            <p class="edc-description">
-                <?php esc_html_e( 'Upload an Elementor JSON export or a full-site Kit ZIP. No Elementor plugin required — this converts the exported file directly. Pages will be created in this Divi site.', 'jhmg-converter-for-elementor-to-divi' ); ?>
-            </p>
-
-            <form method="post" enctype="multipart/form-data" action="" class="edc-import-form">
-                <?php wp_nonce_field( self::IMPORT_NONCE_ACTION, self::IMPORT_NONCE_NAME ); ?>
-                <input type="hidden" name="action" value="edc_import">
-
-                <div class="edc-import-fields">
-                    <div class="edc-import-field">
-                        <label for="edc_import_file">
-                            <strong><?php esc_html_e( 'File', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                        </label>
-                        <input type="file" id="edc_import_file" name="edc_import_file" accept=".json,.zip" required>
-                        <p class="description"><?php esc_html_e( 'Accepted: .json (single page or template) or .zip (Elementor Kit export)', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
-                        <?php if ( ! PremiumManager::is_active() ) : ?>
-                        <p class="description edc-free-notice"><?php esc_html_e( 'ZIP kit import, header template, and footer template conversion require Premium. Single-page JSON conversion is free and unlimited.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="edc-import-field">
-                        <label for="edc_post_type">
-                            <strong><?php esc_html_e( 'Create as', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                        </label>
-                        <select id="edc_post_type" name="edc_post_type">
-                            <option value="page"><?php esc_html_e( 'Page', 'jhmg-converter-for-elementor-to-divi' ); ?></option>
-                            <option value="post"><?php esc_html_e( 'Post', 'jhmg-converter-for-elementor-to-divi' ); ?></option>
-                        </select>
-                    </div>
-
-                    <div class="edc-import-field">
-                        <label for="edc_post_status">
-                            <strong><?php esc_html_e( 'Status', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                        </label>
-                        <select id="edc_post_status" name="edc_post_status">
-                            <option value="draft"><?php esc_html_e( 'Draft (recommended)', 'jhmg-converter-for-elementor-to-divi' ); ?></option>
-                            <option value="publish"><?php esc_html_e( 'Published', 'jhmg-converter-for-elementor-to-divi' ); ?></option>
-                        </select>
-                    </div>
-
-                </div>
-
-                <div class="edc-import-field edc-import-field--checkbox">
-                    <label>
-                        <input type="checkbox" name="edc_convert_headers" value="1">
-                        <strong><?php esc_html_e( 'Convert header templates as Divi Theme Builder headers', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                    </label>
-                    <p class="description">
-                        <?php esc_html_e( 'When checked, Elementor header templates are imported as Divi Theme Builder global headers. Uncheck to import them as regular draft pages instead.', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                    </p>
-                </div>
-
-                <div class="edc-import-field edc-import-field--checkbox">
-                    <label>
-                        <input type="checkbox" name="edc_convert_footers" value="1">
-                        <strong><?php esc_html_e( 'Convert footer templates as Divi Theme Builder footers', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                    </label>
-                    <p class="description">
-                        <?php esc_html_e( 'When checked, Elementor footer templates are imported as Divi Theme Builder global footers. Uncheck to import them as regular draft pages instead.', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                    </p>
-                </div>
-
-                <div class="edc-import-submit">
-                    <button type="submit" class="button button-primary">
-                        <?php esc_html_e( 'Import and Convert', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                    </button>
-                </div>
-            </form>
-        </div>
         <?php
     }
 
@@ -866,282 +689,6 @@ class AdminPage {
     }
 
     // ------------------------------------------------------------------
-    // Global Kit handlers
-    // ------------------------------------------------------------------
-
-    private function handle_activate_premium(): void {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( esc_html__( 'Insufficient permissions.', 'jhmg-converter-for-elementor-to-divi' ) );
-        }
-        check_admin_referer( self::ACTIVATE_NONCE_ACTION, 'edc_activate_nonce' );
-        PremiumManager::activate();
-        wp_safe_redirect( add_query_arg(
-            [ 'page' => self::MENU_SLUG, 'tab' => 'global-kit', 'edc_notice' => 'premium_activated' ],
-            admin_url( 'tools.php' )
-        ) );
-        exit;
-    }
-
-    private function handle_upload_kit(): void {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( esc_html__( 'Insufficient permissions.', 'jhmg-converter-for-elementor-to-divi' ) );
-        }
-        check_admin_referer( self::KIT_NONCE_ACTION, self::KIT_NONCE_NAME );
-
-        $upload = isset( $_FILES['edc_kit_file'] ) && is_array( $_FILES['edc_kit_file'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-            ? $_FILES['edc_kit_file'] // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-            : null;
-
-        if ( ! $upload || $upload['error'] !== UPLOAD_ERR_OK ) {
-            $error = ( $upload && is_array( $upload ) )
-                ? $this->upload_error_message( $upload['error'] )
-                : __( 'No file was uploaded.', 'jhmg-converter-for-elementor-to-divi' );
-            set_transient( 'edc_kit_upload_error_' . get_current_user_id(), $error, 60 );
-            wp_safe_redirect( add_query_arg(
-                [ 'page' => self::MENU_SLUG, 'tab' => 'global-kit', 'edc_notice' => 'kit_error' ],
-                admin_url( 'tools.php' )
-            ) );
-            exit;
-        }
-
-        $upload_type = sanitize_key( $_POST['edc_upload_type'] ?? 'kit' );
-
-        if ( $upload_type === 'header' || $upload_type === 'footer' ) {
-            $parser = new ElementorImportParser();
-            try {
-                $items = $parser->parse( $upload['tmp_name'], $upload['name'] );
-            } catch ( \RuntimeException $e ) {
-                set_transient( 'edc_kit_upload_error_' . get_current_user_id(), $e->getMessage(), 60 );
-                wp_safe_redirect( add_query_arg(
-                    [ 'page' => self::MENU_SLUG, 'tab' => 'global-kit', 'edc_notice' => 'kit_error' ],
-                    admin_url( 'tools.php' )
-                ) );
-                exit;
-            }
-
-            if ( empty( $items ) ) {
-                set_transient( 'edc_kit_upload_error_' . get_current_user_id(), __( 'No templates found in the uploaded JSON file.', 'jhmg-converter-for-elementor-to-divi' ), 60 );
-                wp_safe_redirect( add_query_arg(
-                    [ 'page' => self::MENU_SLUG, 'tab' => 'global-kit', 'edc_notice' => 'kit_error' ],
-                    admin_url( 'tools.php' )
-                ) );
-                exit;
-            }
-
-            $importer = new BatchImporter();
-            $results  = $importer->import( $items, [
-                'post_type'       => 'page',
-                'post_status'     => 'draft',
-                'convert_headers' => ( $upload_type === 'header' ),
-                'convert_footers' => ( $upload_type === 'footer' ),
-            ] );
-
-            $import_id = $this->generate_import_id();
-            set_transient( 'edc_batch_' . $import_id, $results, HOUR_IN_SECONDS );
-
-            wp_safe_redirect( add_query_arg(
-                [
-                    'page'      => self::MENU_SLUG,
-                    'action'    => 'batch_result',
-                    'import_id' => $import_id,
-                ],
-                admin_url( 'tools.php' )
-            ) );
-            exit;
-        }
-
-        $upload_dir = wp_upload_dir();
-        $kit_dir    = $upload_dir['basedir'] . '/edc-kits/';
-        wp_mkdir_p( $kit_dir );
-        $this->protect_kit_directory( $kit_dir );
-
-        if ( ! function_exists( 'wp_handle_upload' ) ) {
-            require_once ABSPATH . 'wp-admin/includes/file.php';
-        }
-
-        $kit_dir_path        = $kit_dir;
-        $kit_dir_filter      = static function ( $dirs ) use ( $kit_dir_path ) {
-            $dirs['path']   = untrailingslashit( $kit_dir_path );
-            $dirs['url']    = '';
-            $dirs['subdir'] = '';
-            return $dirs;
-        };
-        add_filter( 'upload_dir', $kit_dir_filter );
-        $upload['name'] = 'kit.zip';
-        $moved = wp_handle_upload(
-            $upload,
-            [
-                'test_form'                => false,
-                'mimes'                    => [ 'zip' => 'application/zip' ],
-                'unique_filename_callback' => static function () { return 'kit.zip'; },
-            ]
-        );
-        remove_filter( 'upload_dir', $kit_dir_filter );
-
-        if ( ! empty( $moved['error'] ) || empty( $moved['file'] ) ) {
-            set_transient( 'edc_kit_upload_error_' . get_current_user_id(), __( 'Failed to save the uploaded file. Check directory permissions.', 'jhmg-converter-for-elementor-to-divi' ), 60 );
-            wp_safe_redirect( add_query_arg(
-                [ 'page' => self::MENU_SLUG, 'tab' => 'global-kit', 'edc_notice' => 'kit_error' ],
-                admin_url( 'tools.php' )
-            ) );
-            exit;
-        }
-
-        $kit_path = $moved['file'];
-
-        $parser = new KitGlobalsParser();
-        try {
-            $parsed = $parser->parse( $kit_path );
-            $pages  = $parser->extract_pages( $kit_path );
-        } catch ( \RuntimeException $e ) {
-            if ( file_exists( $kit_path ) ) {
-                wp_delete_file( $kit_path );
-            }
-            set_transient( 'edc_kit_upload_error_' . get_current_user_id(), $e->getMessage(), 60 );
-            wp_safe_redirect( add_query_arg(
-                [ 'page' => self::MENU_SLUG, 'tab' => 'global-kit', 'edc_notice' => 'kit_error' ],
-                admin_url( 'tools.php' )
-            ) );
-            exit;
-        }
-
-        $kit_name = $parsed['name'] ?: sanitize_file_name( pathinfo( $upload['name'], PATHINFO_FILENAME ) );
-        GlobalsStore::save( $parsed['colors'], $parsed['typography'], $kit_name, $kit_path, $pages );
-        PremiumManager::activate();
-
-        wp_safe_redirect( add_query_arg(
-            [
-                'page'        => self::MENU_SLUG,
-                'tab'         => 'global-kit',
-                'edc_notice'  => 'kit_loaded',
-                'kit_name'    => $kit_name,
-                'color_count' => count( $parsed['colors'] ),
-            ],
-            admin_url( 'tools.php' )
-        ) );
-        exit;
-    }
-
-    private function handle_convert_kit_pages(): void {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( esc_html__( 'Insufficient permissions.', 'jhmg-converter-for-elementor-to-divi' ) );
-        }
-
-        check_admin_referer( self::KIT_CONVERT_NONCE_ACTION, self::KIT_CONVERT_NONCE_NAME );
-
-        if ( ! PremiumManager::is_active() ) {
-            wp_die( esc_html__( 'Kit page conversion requires Premium.', 'jhmg-converter-for-elementor-to-divi' ) );
-        }
-
-        $kit = GlobalsStore::load();
-        if ( ! $kit ) {
-            wp_die( esc_html__( 'No Global Kit loaded.', 'jhmg-converter-for-elementor-to-divi' ) );
-        }
-
-        $zip_path     = $kit['zip_path'] ?? '';
-        $stored_pages = $kit['pages']    ?? [];
-
-        if ( $zip_path === '' || ! is_readable( $zip_path ) ) {
-            wp_die( esc_html__( 'Kit ZIP file is not available. Please re-upload the kit.', 'jhmg-converter-for-elementor-to-divi' ) );
-        }
-
-        $valid_entries   = array_column( $stored_pages, 'zip_entry' );
-        $raw_kit_pages   = isset( $_POST['edc_kit_pages'] ) ? wp_unslash( (array) $_POST['edc_kit_pages'] ) : []; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        $selected        = array_filter(
-            array_map( 'sanitize_text_field', $raw_kit_pages ),
-            fn( $e ) => in_array( $e, $valid_entries, true )
-        );
-
-        if ( empty( $selected ) ) {
-            wp_die( esc_html__( 'No pages were selected.', 'jhmg-converter-for-elementor-to-divi' ) );
-        }
-
-        $post_type = sanitize_key( $_POST['edc_post_type'] ?? 'page' );
-        if ( ! in_array( $post_type, [ 'page', 'post' ], true ) ) {
-            $post_type = 'page';
-        }
-
-        $post_status = sanitize_key( $_POST['edc_post_status'] ?? 'draft' );
-        if ( ! in_array( $post_status, [ 'draft', 'publish' ], true ) ) {
-            $post_status = 'draft';
-        }
-
-        $convert_headers = isset( $_POST['edc_convert_headers'] ) && $_POST['edc_convert_headers'] === '1';
-        $convert_footers = isset( $_POST['edc_convert_footers'] ) && $_POST['edc_convert_footers'] === '1';
-
-        $zip = new \ZipArchive();
-        if ( $zip->open( $zip_path ) !== true ) {
-            wp_die( esc_html__( 'Could not open kit ZIP file.', 'jhmg-converter-for-elementor-to-divi' ) );
-        }
-
-        $parser = new ElementorImportParser();
-        $items  = [];
-
-        foreach ( $selected as $entry ) {
-            $raw = $zip->getFromName( $entry );
-            if ( $raw === false ) {
-                continue;
-            }
-            $tmp = tempnam( sys_get_temp_dir(), 'edc_' );
-            if ( $tmp === false || file_put_contents( $tmp, $raw ) === false ) {
-                continue;
-            }
-            try {
-                $entry_items = $parser->parse( $tmp, basename( $entry ) );
-                $items       = array_merge( $items, $entry_items );
-            } catch ( \RuntimeException $e ) {
-                // skip unreadable entries
-            } finally {
-                if ( $tmp !== false && file_exists( $tmp ) ) {
-                    wp_delete_file( $tmp );
-                }
-            }
-        }
-
-        $zip->close();
-
-        if ( empty( $items ) ) {
-            wp_die( esc_html__( 'No convertible pages were found in the selected entries.', 'jhmg-converter-for-elementor-to-divi' ) );
-        }
-
-        $importer = new BatchImporter();
-        $results  = $importer->import( $items, [
-            'post_type'       => $post_type,
-            'post_status'     => $post_status,
-            'convert_headers' => $convert_headers,
-            'convert_footers' => $convert_footers,
-        ] );
-
-        $import_id = $this->generate_import_id();
-        set_transient( 'edc_batch_' . $import_id, $results, HOUR_IN_SECONDS );
-
-        wp_safe_redirect(
-            add_query_arg(
-                [
-                    'page'      => self::MENU_SLUG,
-                    'action'    => 'batch_result',
-                    'import_id' => $import_id,
-                ],
-                admin_url( 'tools.php' )
-            )
-        );
-        exit;
-    }
-
-    private function handle_clear_kit(): void {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( esc_html__( 'Insufficient permissions.', 'jhmg-converter-for-elementor-to-divi' ) );
-        }
-        check_admin_referer( 'edc_clear_kit' );
-        GlobalsStore::clear();
-        wp_safe_redirect( add_query_arg(
-            [ 'page' => self::MENU_SLUG, 'tab' => 'global-kit', 'edc_notice' => 'kit_cleared' ],
-            admin_url( 'tools.php' )
-        ) );
-        exit;
-    }
-
-    // ------------------------------------------------------------------
     // Global Kit views
     // ------------------------------------------------------------------
 
@@ -1181,309 +728,6 @@ class AdminPage {
                 }
                 break;
         }
-    }
-
-    private function render_global_kit_section(): void {
-        if ( ! PremiumManager::is_active() ) {
-            $this->render_premium_upsell();
-            return;
-        }
-
-        $kit = GlobalsStore::load();
-
-        if ( $kit ) {
-            if ( empty( $kit['pages'] ) && ! empty( $kit['zip_path'] ) && is_readable( $kit['zip_path'] ) ) {
-                $parser = new KitGlobalsParser();
-                try {
-                    $pages = $parser->extract_pages( $kit['zip_path'] );
-                    if ( ! empty( $pages ) ) {
-                        GlobalsStore::save(
-                            $kit['colors']     ?? [],
-                            $kit['typography'] ?? [],
-                            $kit['loaded_from'] ?? '',
-                            $kit['zip_path'],
-                            $pages
-                        );
-                        $kit['pages'] = $pages;
-                    }
-                } catch ( \RuntimeException $e ) {
-                    // zip unreadable — show kit status without pages
-                }
-            }
-            $this->render_kit_status( $kit );
-        }
-
-        $this->render_kit_upload_form();
-    }
-
-    private function render_premium_upsell(): void {
-        ?>
-        <div class="edc-premium-panel">
-            <div class="edc-premium-badge"><?php esc_html_e( 'Premium', 'jhmg-converter-for-elementor-to-divi' ); ?></div>
-            <h2><?php esc_html_e( 'Global Kit, Header & Footer Templates', 'jhmg-converter-for-elementor-to-divi' ); ?></h2>
-            <p><?php esc_html_e( 'Upload your Elementor Export Kit ZIP to extract global colors and typography. Or upload a single header or footer template JSON to register it directly in the Divi Theme Builder as a global header or footer.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
-            <p><strong><?php esc_html_e( 'Free Preview — activate now at no cost.', 'jhmg-converter-for-elementor-to-divi' ); ?></strong></p>
-            <form method="post" action="">
-                <?php wp_nonce_field( self::ACTIVATE_NONCE_ACTION, 'edc_activate_nonce' ); ?>
-                <input type="hidden" name="action" value="edc_activate_premium">
-                <button type="submit" class="button button-primary button-large">
-                    <?php esc_html_e( 'Activate Premium Preview (Free)', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                </button>
-            </form>
-        </div>
-        <?php
-    }
-
-    private function render_kit_status( array $kit ): void {
-        $meta      = GlobalsStore::get_meta();
-        $colors    = $kit['colors']    ?? [];
-        $typo      = $kit['typography'] ?? [];
-        $kit_name  = $meta['loaded_from'] ?? '';
-        $date      = ! empty( $meta['loaded_at'] )
-            ? date_i18n( get_option( 'date_format' ), $meta['loaded_at'] )
-            : '';
-        $clear_url = wp_nonce_url(
-            add_query_arg(
-                [ 'page' => self::MENU_SLUG, 'tab' => 'global-kit', 'edc_action' => 'clear_kit' ],
-                admin_url( 'tools.php' )
-            ),
-            'edc_clear_kit'
-        );
-        ?>
-        <div class="edc-kit-status">
-            <div class="edc-kit-status-header">
-                <div>
-                    <h2>
-                        <?php esc_html_e( 'Active Kit', 'jhmg-converter-for-elementor-to-divi' ); ?>:
-                        <span class="edc-kit-name"><?php echo esc_html( $kit_name ); ?></span>
-                    </h2>
-                    <?php if ( $date ) : ?>
-                        <p class="edc-kit-date"><?php
-                        /* translators: %s is the date the kit was loaded */
-                        printf( esc_html__( 'Loaded on %s', 'jhmg-converter-for-elementor-to-divi' ), esc_html( $date ) ); ?></p>
-                    <?php endif; ?>
-                </div>
-                <a href="<?php echo esc_url( $clear_url ); ?>" class="button edc-btn-remove-kit"
-                   onclick="return confirm('<?php esc_attr_e( 'Remove the active Global Kit?', 'jhmg-converter-for-elementor-to-divi' ); ?>')">
-                    <?php esc_html_e( 'Remove Kit', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                </a>
-            </div>
-
-            <?php if ( ! empty( $colors ) ) : ?>
-            <div class="edc-kit-section">
-                <h3><?php
-                /* translators: %d is the number of colors in the kit */
-                printf( esc_html__( 'Colors (%d)', 'jhmg-converter-for-elementor-to-divi' ), absint( count( $colors ) ) ); ?></h3>
-                <div class="edc-swatches">
-                    <?php foreach ( $colors as $id => $hex ) : ?>
-                    <div class="edc-swatch">
-                        <span class="edc-swatch-color" style="background-color:<?php echo esc_attr( $hex ); ?>;"></span>
-                        <span class="edc-swatch-label"><?php echo esc_html( $id ); ?></span>
-                        <code class="edc-swatch-hex"><?php echo esc_html( $hex ); ?></code>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <?php if ( ! empty( $typo ) ) : ?>
-            <div class="edc-kit-section">
-                <h3><?php
-                /* translators: %d is the number of typography styles in the kit */
-                printf( esc_html__( 'Typography (%d)', 'jhmg-converter-for-elementor-to-divi' ), absint( count( $typo ) ) ); ?></h3>
-                <ul class="edc-typo-list">
-                    <?php foreach ( $typo as $id => $props ) : ?>
-                    <li class="edc-typo-item">
-                        <strong><?php echo esc_html( $id ); ?></strong> &mdash;
-                        <?php
-                        $raw_parts = [];
-                        if ( ! empty( $props['family'] ) ) {
-                            $raw_parts[] = $props['family'];
-                        }
-                        if ( ! empty( $props['weight'] ) ) {
-                            $raw_parts[] = $props['weight'];
-                        }
-                        if ( ! empty( $props['size'] ) ) {
-                            $raw_parts[] = $props['size'];
-                        }
-                        echo esc_html( implode( ', ', $raw_parts ) );
-                        ?>
-                    </li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-            <?php endif; ?>
-
-            <?php
-            $kit_pages = $kit['pages'] ?? [];
-            if ( ! empty( $kit_pages ) ) : ?>
-            <div class="edc-kit-section">
-                <h3><?php
-                /* translators: %d is the number of pages in the kit */
-                printf( esc_html__( 'Pages in Kit (%d)', 'jhmg-converter-for-elementor-to-divi' ), absint( count( $kit_pages ) ) ); ?></h3>
-                <form method="post" action="" class="edc-kit-pages-form">
-                    <?php wp_nonce_field( self::KIT_CONVERT_NONCE_ACTION, self::KIT_CONVERT_NONCE_NAME ); ?>
-                    <input type="hidden" name="action" value="edc_convert_kit_pages">
-
-                    <div class="edc-kit-pages-controls">
-                        <label class="edc-select-all-label">
-                            <input type="checkbox" id="edc-select-all-pages">
-                            <?php esc_html_e( 'Select all / Deselect all', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                        </label>
-                    </div>
-
-                    <table class="wp-list-table widefat striped edc-pages-table">
-                        <thead>
-                            <tr>
-                                <th class="check-column"></th>
-                                <th><?php esc_html_e( 'Title', 'jhmg-converter-for-elementor-to-divi' ); ?></th>
-                                <th class="edc-type-col"><?php esc_html_e( 'Type', 'jhmg-converter-for-elementor-to-divi' ); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ( $kit_pages as $kit_page ) : ?>
-                            <tr>
-                                <td class="check-column">
-                                    <input type="checkbox" name="edc_kit_pages[]" value="<?php echo esc_attr( $kit_page['zip_entry'] ); ?>" class="edc-page-checkbox" checked>
-                                </td>
-                                <td><?php echo esc_html( $kit_page['title'] ); ?></td>
-                                <td>
-                                    <span class="edc-type-badge edc-type-badge--<?php echo esc_attr( $kit_page['type'] ); ?>">
-                                        <?php echo esc_html( ucfirst( $kit_page['type'] ) ); ?>
-                                    </span>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-
-                    <div class="edc-kit-convert-options">
-                        <div class="edc-import-fields">
-                            <div class="edc-import-field">
-                                <label for="edc_kit_post_type">
-                                    <strong><?php esc_html_e( 'Create as', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                                </label>
-                                <select id="edc_kit_post_type" name="edc_post_type">
-                                    <option value="page"><?php esc_html_e( 'Page', 'jhmg-converter-for-elementor-to-divi' ); ?></option>
-                                    <option value="post"><?php esc_html_e( 'Post', 'jhmg-converter-for-elementor-to-divi' ); ?></option>
-                                </select>
-                            </div>
-                            <div class="edc-import-field">
-                                <label for="edc_kit_post_status">
-                                    <strong><?php esc_html_e( 'Status', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                                </label>
-                                <select id="edc_kit_post_status" name="edc_post_status">
-                                    <option value="draft"><?php esc_html_e( 'Draft (recommended)', 'jhmg-converter-for-elementor-to-divi' ); ?></option>
-                                    <option value="publish"><?php esc_html_e( 'Published', 'jhmg-converter-for-elementor-to-divi' ); ?></option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="edc-import-field edc-import-field--checkbox">
-                            <label>
-                                <input type="checkbox" name="edc_convert_headers" value="1">
-                                <strong><?php esc_html_e( 'Convert header templates as Divi Theme Builder headers', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                            </label>
-                        </div>
-
-                        <div class="edc-import-field edc-import-field--checkbox">
-                            <label>
-                                <input type="checkbox" name="edc_convert_footers" value="1">
-                                <strong><?php esc_html_e( 'Convert footer templates as Divi Theme Builder footers', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                            </label>
-                        </div>
-
-                        <div class="edc-import-submit">
-                            <button type="submit" class="button button-primary">
-                                <?php esc_html_e( 'Convert Selected', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                            </button>
-                        </div>
-                    </div>
-                </form>
-                <script>
-                (function() {
-                    var selectAll = document.getElementById('edc-select-all-pages');
-                    if ( ! selectAll ) { return; }
-                    selectAll.checked = true;
-                    selectAll.addEventListener('change', function() {
-                        document.querySelectorAll('.edc-page-checkbox').forEach(function(cb) {
-                            cb.checked = selectAll.checked;
-                        });
-                    });
-                })();
-                </script>
-            </div>
-            <?php endif; ?>
-        </div>
-        <?php
-    }
-
-    private function render_kit_upload_form(): void {
-        $replacing = GlobalsStore::has_kit();
-        ?>
-        <div class="edc-kit-upload-section<?php echo $replacing ? ' edc-kit-upload-replace' : ''; ?>">
-            <?php if ( $replacing ) : ?>
-                <h3><?php esc_html_e( 'Replace Kit or Import Template', 'jhmg-converter-for-elementor-to-divi' ); ?></h3>
-            <?php else : ?>
-                <h2><?php esc_html_e( 'Upload Elementor Export Kit or Template', 'jhmg-converter-for-elementor-to-divi' ); ?></h2>
-                <p class="edc-description"><?php esc_html_e( 'Upload your full Elementor Export Kit to extract global styles and pages, or import a single header/footer template JSON directly into Divi Theme Builder.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
-            <?php endif; ?>
-
-            <div class="edc-upload-options">
-
-                <div class="edc-upload-option edc-upload-option--kit">
-                    <div class="edc-upload-option-title">
-                        <strong><?php esc_html_e( 'Full Kit (ZIP)', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                        <p class="description"><?php esc_html_e( 'Import your entire Elementor Export Kit — pages, templates, global colors and typography.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
-                    </div>
-                    <form method="post" enctype="multipart/form-data" action="" class="edc-upload-option-form">
-                        <?php wp_nonce_field( self::KIT_NONCE_ACTION, self::KIT_NONCE_NAME ); ?>
-                        <input type="hidden" name="action" value="edc_upload_kit">
-                        <input type="hidden" name="edc_upload_type" value="kit">
-                        <input type="file" name="edc_kit_file" accept=".zip" required>
-                        <button type="submit" class="button button-primary">
-                            <?php echo $replacing
-                                ? esc_html__( 'Replace Kit', 'jhmg-converter-for-elementor-to-divi' )
-                                : esc_html__( 'Upload Kit', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                        </button>
-                    </form>
-                </div>
-
-                <div class="edc-upload-option edc-upload-option--header">
-                    <div class="edc-upload-option-title">
-                        <strong><?php esc_html_e( 'Header Template (JSON)', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                        <p class="description"><?php esc_html_e( 'Import a single Elementor header template and register it as a Divi Theme Builder global header.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
-                    </div>
-                    <form method="post" enctype="multipart/form-data" action="" class="edc-upload-option-form">
-                        <?php wp_nonce_field( self::KIT_NONCE_ACTION, self::KIT_NONCE_NAME ); ?>
-                        <input type="hidden" name="action" value="edc_upload_kit">
-                        <input type="hidden" name="edc_upload_type" value="header">
-                        <input type="file" name="edc_kit_file" accept=".json" required>
-                        <button type="submit" class="button button-primary">
-                            <?php esc_html_e( 'Set as Global Header', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                        </button>
-                    </form>
-                </div>
-
-                <div class="edc-upload-option edc-upload-option--footer">
-                    <div class="edc-upload-option-title">
-                        <strong><?php esc_html_e( 'Footer Template (JSON)', 'jhmg-converter-for-elementor-to-divi' ); ?></strong>
-                        <p class="description"><?php esc_html_e( 'Import a single Elementor footer template and register it as a Divi Theme Builder global footer.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
-                    </div>
-                    <form method="post" enctype="multipart/form-data" action="" class="edc-upload-option-form">
-                        <?php wp_nonce_field( self::KIT_NONCE_ACTION, self::KIT_NONCE_NAME ); ?>
-                        <input type="hidden" name="action" value="edc_upload_kit">
-                        <input type="hidden" name="edc_upload_type" value="footer">
-                        <input type="file" name="edc_kit_file" accept=".json" required>
-                        <button type="submit" class="button button-primary">
-                            <?php esc_html_e( 'Set as Global Footer', 'jhmg-converter-for-elementor-to-divi' ); ?>
-                        </button>
-                    </form>
-                </div>
-
-            </div>
-        </div>
-        <?php
     }
 
     // ------------------------------------------------------------------
