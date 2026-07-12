@@ -3,6 +3,7 @@
  * JHMG License Client — CANONICAL COPY.
  * Source of truth: layoutlab repo, lib/license-server/php-client/class-license-client.php
  * Synced into Pro plugins via scripts/sync-license-client.sh — DO NOT edit the plugin copies.
+ * Constructor-parameterized per product; see sync script for consumers.
  * API contract (frozen): /api/license/{activate,validate,deactivate}, /api/plugin/update-check
  * Error codes: invalid_key | product_mismatch | license_not_usable | rate_limited | invalid_request
  * Enforcement policy (frozen): SOFT. License state gates update delivery + admin notices only —
@@ -17,22 +18,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class LicenseClient {
-    private const OPT_KEY            = 'edcp_license_key';
-    private const OPT_STATE          = 'edcp_license_state';
-    private const OPT_BLOCKED        = 'edcp_update_blocked';
     private const CACHE_TTL          = DAY_IN_SECONDS;
     private const GRACE_TTL          = 3 * DAY_IN_SECONDS;
     private const UPDATE_CHECK_TTL   = 6 * HOUR_IN_SECONDS;
+
+    private string $opt_key;
+    private string $opt_state;
+    private string $opt_blocked;
+    private string $update_check_prefix;
 
     public function __construct(
         private string $product,
         private string $plugin_version,
         private string $api_base,
-        private string $plugin_basename
-    ) {}
+        private string $plugin_basename,
+        private string $admin_page_slug,   // e.g. 'edcp-kit' — used in status_notice() links
+        private string $product_page_url,  // e.g. 'https://divi5lab.com/plugins/elementor-to-divi-5' — update entry `url` + renew links
+        private string $option_prefix      // e.g. 'edcp' — scopes option/transient storage so co-installed Pro plugins never collide
+    ) {
+        $this->opt_key             = "{$this->option_prefix}_license_key";
+        $this->opt_state           = "{$this->option_prefix}_license_state";
+        $this->opt_blocked         = "{$this->option_prefix}_update_blocked";
+        $this->update_check_prefix = "{$this->option_prefix}_update_check_";
+    }
 
-    public function get_key(): ?string { $k = get_option( self::OPT_KEY, '' ); return $k !== '' ? $k : null; }
-    public function get_state(): ?array { $s = get_option( self::OPT_STATE, null ); return is_array( $s ) ? $s : null; }
+    public function get_key(): ?string { $k = get_option( $this->opt_key, '' ); return $k !== '' ? $k : null; }
+    public function get_state(): ?array { $s = get_option( $this->opt_state, null ); return is_array( $s ) ? $s : null; }
 
     public function activate( string $key ): array {
         $res = $this->post( '/api/license/activate', [
@@ -43,7 +54,7 @@ class LicenseClient {
             'wp_version'     => function_exists( 'get_bloginfo' ) ? get_bloginfo( 'version' ) : '',
         ] );
         if ( $res['ok'] ) {
-            update_option( self::OPT_KEY, $key, false );
+            update_option( $this->opt_key, $key, false );
             $this->store_state( $res['body'] );
             return [ 'ok' => true, 'error' => null, 'status' => $res['body']['status'] ?? null ];
         }
@@ -55,9 +66,9 @@ class LicenseClient {
         if ( $key ) {
             $this->post( '/api/license/deactivate', [ 'key' => $key, 'site_url' => home_url() ] );
         }
-        delete_option( self::OPT_KEY );
-        delete_option( self::OPT_STATE );
-        delete_option( self::OPT_BLOCKED );
+        delete_option( $this->opt_key );
+        delete_option( $this->opt_state );
+        delete_option( $this->opt_blocked );
     }
 
     public function refresh( bool $force = false ): void {
@@ -116,7 +127,7 @@ class LicenseClient {
         if ( ! is_object( $transient ) ) { $transient = (object) [ 'response' => [] ]; }
 
         if ( empty( $body['update'] ) ) {
-            delete_option( self::OPT_BLOCKED );
+            delete_option( $this->opt_blocked );
             if ( ! isset( $transient->no_update ) || ! is_array( $transient->no_update ) ) {
                 $transient->no_update = [];
             }
@@ -129,24 +140,24 @@ class LicenseClient {
             return $transient;
         }
         if ( empty( $body['package'] ) ) {
-            update_option( self::OPT_BLOCKED, $body['version'] ?? '1', false );
+            update_option( $this->opt_blocked, $body['version'] ?? '1', false );
             return $transient;
         }
-        delete_option( self::OPT_BLOCKED );
+        delete_option( $this->opt_blocked );
         $transient->response[ $this->plugin_basename ] = (object) [
             'plugin'      => $this->plugin_basename,
             'id'          => $this->plugin_basename,
             'slug'        => dirname( $this->plugin_basename ),
             'new_version' => $body['version'],
             'package'     => $body['package'],
-            'url'         => 'https://divi5lab.com/plugins/elementor-to-divi-5',
+            'url'         => $this->product_page_url,
         ];
         return $transient;
     }
 
     /** Cache key for a cached update-check response, scoped to product|version|key. */
     private function update_check_transient_key( ?string $key ): string {
-        return 'edcp_update_check_' . md5( $this->product . '|' . $this->plugin_version . '|' . ( $key ?? '' ) );
+        return $this->update_check_prefix . md5( $this->product . '|' . $this->plugin_version . '|' . ( $key ?? '' ) );
     }
 
     /**
@@ -158,7 +169,7 @@ class LicenseClient {
             return;
         }
 
-        $license_url = function_exists( 'admin_url' ) ? admin_url( 'tools.php?page=edcp-kit&tab=license' ) : '';
+        $license_url = function_exists( 'admin_url' ) ? admin_url( 'tools.php?page=' . $this->admin_page_slug . '&tab=license' ) : '';
 
         $key = $this->get_key();
         if ( ! $key ) {
@@ -183,7 +194,7 @@ class LicenseClient {
             return;
         }
 
-        if ( get_option( self::OPT_BLOCKED ) ) {
+        if ( get_option( $this->opt_blocked ) ) {
             $this->render_notice(
                 'notice-info',
                 __( 'JHMG Converter Pro: an update is available. Renew your license to receive it.', 'jhmg-converter-for-elementor-to-divi-pro' ),
@@ -203,7 +214,7 @@ class LicenseClient {
     }
 
     private function store_state( array $body ): void {
-        update_option( self::OPT_STATE, [
+        update_option( $this->opt_state, [
             'status'     => $body['status'] ?? 'unknown',
             'expires'    => $body['expires'] ?? null,
             'checked_at' => time(),

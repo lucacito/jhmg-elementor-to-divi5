@@ -13,7 +13,7 @@ class LicenseClientTest extends TestCase {
         delete_option( 'edcp_license_key' );
         delete_option( 'edcp_license_state' );
         delete_option( 'edcp_update_blocked' );
-        $this->client = new LicenseClient( 'elementor-to-divi5-pro', '1.0.0', 'https://divi5lab.com', 'jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php' );
+        $this->client = new LicenseClient( 'elementor-to-divi5-pro', '1.0.0', 'https://divi5lab.com', 'jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php', 'edcp-kit', 'https://divi5lab.com/plugins/elementor-to-divi-5', 'edcp' );
     }
 
     public function test_activate_success_stores_key_and_state(): void {
@@ -59,6 +59,7 @@ class LicenseClientTest extends TestCase {
         $entry = $t->response['jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php'];
         $this->assertSame( '1.1.0', $entry->new_version );
         $this->assertStringContainsString( '/api/plugin/download', $entry->package );
+        $this->assertSame( 'https://divi5lab.com/plugins/elementor-to-divi-5', $entry->url );
     }
 
     public function test_inject_update_without_package_sets_renewal_flag(): void {
@@ -169,5 +170,29 @@ class LicenseClientTest extends TestCase {
         $this->assertSame( 'jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php', $entry->plugin );
         $this->assertSame( 'jhmg-converter-for-elementor-to-divi-pro', $entry->slug );
         $this->assertSame( '1.0.0', $entry->new_version );
+    }
+
+    // ------------------------------------------------------------------
+    // option_prefix — cross-plugin storage isolation (Task 7 forward-ref)
+    // ------------------------------------------------------------------
+
+    public function test_option_prefix_scopes_license_storage_per_product(): void {
+        $other = new LicenseClient(
+            'other-product',
+            '1.0.0',
+            'https://divi5lab.com',
+            'other-plugin/other-plugin.php',
+            'other-kit',
+            'https://divi5lab.com/plugins/other',
+            'd2ep'
+        );
+
+        edc_test_http_queue( [ 'code' => 200, 'body' => [ 'status' => 'active', 'product' => 'other-product', 'expires' => null ] ] );
+        $other->activate( 'JHMG-OTHER-KEY' );
+
+        // A differently-prefixed client (a second Pro plugin on the same site) must not
+        // see or clobber this client's ('edcp') license storage.
+        $this->assertNull( $this->client->get_key() );
+        $this->assertSame( 'JHMG-OTHER-KEY', $other->get_key() );
     }
 }
