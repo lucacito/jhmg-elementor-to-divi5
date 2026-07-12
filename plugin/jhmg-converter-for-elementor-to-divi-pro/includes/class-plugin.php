@@ -35,7 +35,10 @@ class Plugin {
             EDCP_PRODUCT_SLUG,
             EDCP_PLUGIN_VERSION,
             EDCP_API_BASE,
-            plugin_basename( EDCP_PLUGIN_FILE )
+            plugin_basename( EDCP_PLUGIN_FILE ),
+            'edcp-kit',
+            'https://divi5lab.com/plugins/elementor-to-divi-5',
+            'edcp'
         );
         add_filter( 'pre_set_site_transient_update_plugins', [ $license, 'inject_update' ] );
 
