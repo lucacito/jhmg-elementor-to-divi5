@@ -3,7 +3,7 @@ Contributors: lucaslopvet
 Tags: divi migration, elementor export, page builder converter, elementor to divi, divi 5
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 2.1.0
+Stable tag: 2.2.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -167,6 +167,11 @@ Version 2.0 is a full rewrite. The key differences are: Divi 5 block output (not
 
 == Changelog ==
 
+= 2.2.0 =
+* Pro is now $25/yr, reduced from $49/yr — same unlimited-sites license
+* Fixed: the upgrade screen quoted the old $49/yr price; the price is now single-sourced so it cannot drift again
+* New: a dismissible admin notice announcing the new price (dismissed per user, and it stops showing after 2026-10-27)
+
 = 2.1.0 =
 * Premium features (kit ZIP import, Theme Builder headers/footers, global styles) now live in the separate Pro add-on, available at https://divi5lab.com/plugins/elementor-to-divi-5
 * New: extension hooks for companion plugins (edc_loaded, edc_kit_globals, edc_theme_builder_exporter, edc_pro_active)
@@ -200,6 +205,9 @@ Version 2.0 is a full rewrite. The key differences are: Divi 5 block output (not
 * Detailed conversion logging
 
 == Upgrade Notice ==
+
+= 2.2.0 =
+Pro dropped to $25/yr from $49/yr — the same unlimited-sites license covering kit ZIP import, global headers and footers, and global styles. The free plugin is unchanged and still converts unlimited single pages.
 
 = 2.1.0 =
 Premium features (kit ZIP import, Theme Builder headers/footers, global styles) have moved to the separate Pro add-on at https://divi5lab.com/plugins/elementor-to-divi-5. This free plugin still handles unlimited single-page JSON conversion at no cost. If you were using an older in-plugin premium unlock, install the Pro add-on to keep that functionality.

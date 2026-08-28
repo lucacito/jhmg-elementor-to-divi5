@@ -14,6 +14,13 @@ class AdminPage {
     const IMPORT_NONCE_NAME     = 'edc_import_nonce';
     const IMPORT_NONCE_ACTION   = 'edc_import';
 
+    /**
+     * Pro price as shown in the upgrade CTAs. Single-sourced: this must match the
+     * live price on divi5lab.com. Shipping a stale literal here quotes free users
+     * the wrong price with no other symptom.
+     */
+    const PRO_PRICE             = '$25/yr';
+
     public function init(): void {
         add_action( 'admin_menu', [ $this, 'register_menu' ] );
         add_action( 'admin_init', [ $this, 'handle_post' ] );
@@ -345,7 +352,11 @@ class AdminPage {
                         printf(
                             '<a class="button button-primary button-hero edc-lp-btn-premium" href="%s" target="_blank" rel="noopener">%s</a>',
                             esc_url( 'https://divi5lab.com/plugins/elementor-to-divi-5?utm_source=plugin&utm_medium=upsell&utm_campaign=free-landing' ),
-                            esc_html__( 'Get Pro — $49/yr, unlimited sites', 'jhmg-converter-for-elementor-to-divi' )
+                            esc_html( sprintf(
+                                /* translators: %s: Pro subscription price, e.g. $25/yr */
+                                __( 'Get Pro — %s, unlimited sites', 'jhmg-converter-for-elementor-to-divi' ),
+                                self::PRO_PRICE
+                            ) )
                         );
                         ?>
                     </div>
@@ -405,7 +416,11 @@ class AdminPage {
                     printf(
                         '<a class="button button-primary button-hero" href="%s" target="_blank" rel="noopener">%s</a>',
                         esc_url( 'https://divi5lab.com/plugins/elementor-to-divi-5?utm_source=plugin&utm_medium=upsell&utm_campaign=free-landing' ),
-                        esc_html__( 'Get Pro — $49/yr, unlimited sites', 'jhmg-converter-for-elementor-to-divi' )
+                        esc_html( sprintf(
+                            /* translators: %s: Pro subscription price, e.g. $25/yr */
+                            __( 'Get Pro — %s, unlimited sites', 'jhmg-converter-for-elementor-to-divi' ),
+                            self::PRO_PRICE
+                        ) )
                     );
                     ?>
                 </div>

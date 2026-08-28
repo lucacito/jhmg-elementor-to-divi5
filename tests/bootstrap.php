@@ -235,7 +235,8 @@ if ( ! function_exists( 'is_customize_preview' ) ) {
 
 if ( ! function_exists( 'current_user_can' ) ) {
     function current_user_can( $cap = null ) {
-        return true;
+        // Tests may deny capabilities by setting $GLOBALS['__test_caps'] = false.
+        return array_key_exists( '__test_caps', $GLOBALS ) ? (bool) $GLOBALS['__test_caps'] : true;
     }
 }
 
@@ -434,6 +435,64 @@ if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
 }
 
 require_once __DIR__ . '/../vendor/autoload.php';
+
+// --- user meta, nonces, escaping, admin URL helpers (PriceDropNotice) ---
+if ( ! function_exists( 'get_user_meta' ) ) {
+    $GLOBALS['__test_user_meta'] = [];
+    $GLOBALS['__test_current_user'] = 1;
+
+    function get_current_user_id(): int { return (int) $GLOBALS['__test_current_user']; }
+
+    function get_user_meta( int $user_id, string $key, bool $single = false ) {
+        $v = $GLOBALS['__test_user_meta'][ $user_id ][ $key ] ?? ( $single ? '' : [] );
+        return $v;
+    }
+
+    function update_user_meta( int $user_id, string $key, $value ): bool {
+        $GLOBALS['__test_user_meta'][ $user_id ][ $key ] = $value;
+        return true;
+    }
+
+    function delete_user_meta( int $user_id, string $key ): bool {
+        unset( $GLOBALS['__test_user_meta'][ $user_id ][ $key ] );
+        return true;
+    }
+}
+
+if ( ! function_exists( '__' ) ) {
+    function __( string $text, string $domain = 'default' ): string { return $text; }
+}
+if ( ! function_exists( 'esc_attr' ) ) {
+    function esc_attr( $t ): string { return htmlspecialchars( (string) $t, ENT_QUOTES ); }
+}
+if ( ! function_exists( 'esc_url' ) ) {
+    function esc_url( $u ): string { return (string) $u; }
+}
+if ( ! function_exists( 'esc_html_e' ) ) {
+    function esc_html_e( string $text, string $domain = 'default' ): void { echo esc_html( $text ); }
+}
+if ( ! function_exists( 'wp_kses_post' ) ) {
+    function wp_kses_post( $t ): string { return (string) $t; }
+}
+if ( ! function_exists( 'admin_url' ) ) {
+    function admin_url( string $path = '' ): string { return 'https://example.test/wp-admin/' . ltrim( $path, '/' ); }
+}
+if ( ! function_exists( 'add_query_arg' ) ) {
+    function add_query_arg( $key, $value = null, $url = null ): string {
+        $base = is_string( $url ) ? $url : 'https://example.test/wp-admin/plugins.php';
+        return $base . ( strpos( $base, '?' ) === false ? '?' : '&' ) . rawurlencode( (string) $key ) . '=' . rawurlencode( (string) $value );
+    }
+}
+if ( ! function_exists( 'wp_create_nonce' ) ) {
+    function wp_create_nonce( string $action = '-1' ): string { return 'nonce-' . md5( $action ); }
+    function wp_verify_nonce( $nonce, string $action = '-1' ) { return $nonce === 'nonce-' . md5( $action ) ? 1 : false; }
+}
+if ( ! function_exists( 'wp_unslash' ) ) {
+    function wp_unslash( $v ) { return is_string( $v ) ? stripslashes( $v ) : $v; }
+}
+if ( ! function_exists( 'register_activation_hook' ) ) {
+    function register_activation_hook( $file, $cb ): void {}
+}
 
 if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php' ) ) {
     require_once __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php';
