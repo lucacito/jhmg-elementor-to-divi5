@@ -385,6 +385,10 @@ if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
     define( 'HOUR_IN_SECONDS', 3600 );
 }
 
+if ( ! defined( 'MINUTE_IN_SECONDS' ) ) {
+    define( 'MINUTE_IN_SECONDS', 60 );
+}
+
 if ( ! function_exists( 'home_url' ) ) {
     function home_url( $path = '', $scheme = null ) {
         return 'https://test-site.example' . $path;
@@ -497,6 +501,19 @@ if ( ! function_exists( 'wp_unslash' ) ) {
 }
 if ( ! function_exists( 'register_activation_hook' ) ) {
     function register_activation_hook( $file, $cb ): void {}
+}
+
+if ( ! function_exists( 'wp_trash_post' ) ) {
+    $GLOBALS['__test_trashed']      = [];
+    $GLOBALS['__test_trash_fails']  = [];
+
+    function wp_trash_post( int $post_id ) {
+        if ( in_array( $post_id, $GLOBALS['__test_trash_fails'] ?? [], true ) ) {
+            return false;
+        }
+        $GLOBALS['__test_trashed'][] = $post_id;
+        return (object) [ 'ID' => $post_id ];
+    }
 }
 
 if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php' ) ) {
