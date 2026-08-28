@@ -70,19 +70,34 @@ class CoveragePanel {
 
     /** Recent runs, each undoable while it still owns the posts it created. */
     private function runs_table(): string {
-        $rows = '';
+        $rows            = '';
+        $trash_available = ImportRollback::trash_available();
 
         foreach ( $this->history->all() as $run ) {
-            $undo = ! empty( $run['rolled_back'] )
-                ? esc_html__( 'Undone', 'jhmg-converter-for-elementor-to-divi' )
-                : sprintf(
-                    '<a href="%1$s" class="button button-small">%2$s</a>',
+            if ( ! empty( $run['rolled_back'] ) ) {
+                $undo = esc_html__( 'Undone', 'jhmg-converter-for-elementor-to-divi' );
+            } elseif ( ! $trash_available ) {
+                // Never offer a control that would refuse to work: on a site
+                // configured with EMPTY_TRASH_DAYS = 0, wp_trash_post() would
+                // permanently delete instead of trashing.
+                $undo = esc_html__( 'Undo is unavailable because this site empties the trash immediately.', 'jhmg-converter-for-elementor-to-divi' );
+            } else {
+                $confirm_message = sprintf(
+                    /* translators: %d: number of pages this import created. */
+                    __( 'Move the %d page(s) this import created to the Trash?', 'jhmg-converter-for-elementor-to-divi' ),
+                    count( $run['post_ids'] ?? [] )
+                );
+
+                $undo = sprintf(
+                    '<a href="%1$s" class="button button-small" onclick="%2$s">%3$s</a>',
                     esc_url(
                         add_query_arg( ImportRollback::QUERY_ACTION, $run['id'] )
                         . '&_wpnonce=' . wp_create_nonce( ImportRollback::NONCE_ACTION )
                     ),
+                    esc_attr( sprintf( "return confirm('%s');", addslashes( $confirm_message ) ) ),
                     esc_html__( 'Undo', 'jhmg-converter-for-elementor-to-divi' )
                 );
+            }
 
             $rows .= sprintf(
                 '<tr><td>%1$s</td><td>%2$d</td><td>%3$s</td></tr>',

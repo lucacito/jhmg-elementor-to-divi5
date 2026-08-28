@@ -1,6 +1,8 @@
 <?php
 // tests/ImportRollbackTest.php
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use ElementorDivi5Converter\History\ImportHistory;
 use ElementorDivi5Converter\History\ImportRollback;
 
@@ -8,9 +10,10 @@ class ImportRollbackTest extends TestCase {
     protected function setUp(): void {
         $GLOBALS['__test_options']   = [];
         $GLOBALS['__test_postmeta']  = [];
-        $GLOBALS['__test_trashed']   = [];
-        $GLOBALS['__test_caps']      = true;
-        $_GET                        = [];
+        $GLOBALS['__test_trashed']      = [];
+        $GLOBALS['__test_trash_fails']  = [];
+        $GLOBALS['__test_caps']         = true;
+        $_GET                           = [];
     }
 
     private function seed( array $post_ids, array $owned ): ImportHistory {
@@ -88,5 +91,44 @@ class ImportRollbackTest extends TestCase {
         );
         $this->assertStringContainsString( 'wp_trash_post', $src );
         $this->assertStringNotContainsString( 'wp_delete_post', $src );
+    }
+
+    public function test_a_failed_trash_is_reported_as_skipped_not_trashed(): void {
+        $h = $this->seed( [ 10, 11 ], [ 10, 11 ] );
+        $GLOBALS['__test_trash_fails'] = [ 11 ];
+
+        $out = ( new ImportRollback( $h ) )->rollback( 'run1' );
+
+        $this->assertSame( [ 10 ], $GLOBALS['__test_trashed'], 'a post whose trash call failed must not be reported as trashed' );
+        $this->assertSame( 1, $out['trashed'] );
+        $this->assertSame( 1, $out['skipped'] );
+    }
+
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState( false )]
+    public function test_trash_unavailable_skips_every_post_and_does_not_mark_rolled_back(): void {
+        define( 'EMPTY_TRASH_DAYS', 0 );
+
+        $h = $this->seed( [ 10, 11 ], [ 10, 11 ] );
+        $out = ( new ImportRollback( $h ) )->rollback( 'run1' );
+
+        $this->assertSame( [], $GLOBALS['__test_trashed'], 'must never fall through to a permanent delete' );
+        $this->assertSame( 0, $out['trashed'] );
+        $this->assertSame( 2, $out['skipped'] );
+        $this->assertTrue( $out['trash_unavailable'] );
+        $this->assertFalse( $h->find( 'run1' )['rolled_back'], 'a run that was never actually undone must not be marked rolled back' );
+    }
+
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState( false )]
+    public function test_trash_available_when_empty_trash_days_is_nonzero(): void {
+        define( 'EMPTY_TRASH_DAYS', 30 );
+
+        $h = $this->seed( [ 10 ], [ 10 ] );
+        $out = ( new ImportRollback( $h ) )->rollback( 'run1' );
+
+        $this->assertSame( [ 10 ], $GLOBALS['__test_trashed'] );
+        $this->assertSame( 1, $out['trashed'] );
+        $this->assertFalse( $out['trash_unavailable'] );
     }
 }

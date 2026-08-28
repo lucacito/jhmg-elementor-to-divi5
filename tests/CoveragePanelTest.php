@@ -1,8 +1,11 @@
 <?php
 // tests/CoveragePanelTest.php
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use ElementorDivi5Converter\Admin\CoveragePanel;
 use ElementorDivi5Converter\History\ImportHistory;
+use ElementorDivi5Converter\History\ImportRollback;
 
 class CoveragePanelTest extends TestCase {
     protected function setUp(): void {
@@ -76,5 +79,36 @@ class CoveragePanelTest extends TestCase {
             $html,
             'an already-undone run must not offer Undo again'
         );
+    }
+
+    public function test_undo_control_confirms_before_trashing(): void {
+        $h = new ImportHistory();
+        $h->record( 'run1', [ [ 'success' => true, 'post_id' => 7, 'unsupported' => [] ] ] );
+
+        $html = ( new CoveragePanel( $h ) )->markup();
+
+        $this->assertMatchesRegularExpression(
+            '/<a[^>]*onclick="[^"]*confirm\(/',
+            $html,
+            'the Undo control must confirm before trashing, like WP core Trash links do'
+        );
+    }
+
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState( false )]
+    public function test_undo_control_hidden_when_trash_is_unavailable(): void {
+        define( 'EMPTY_TRASH_DAYS', 0 );
+
+        $h = new ImportHistory();
+        $h->record( 'run1', [ [ 'success' => true, 'post_id' => 7, 'unsupported' => [] ] ] );
+
+        $html = ( new CoveragePanel( $h ) )->markup();
+
+        $this->assertStringNotContainsString(
+            ImportRollback::QUERY_ACTION,
+            $html,
+            'must not offer a button that would refuse to work'
+        );
+        $this->assertStringNotContainsString( 'Undone', $html, 'the run was never actually undone' );
     }
 }

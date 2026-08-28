@@ -500,9 +500,13 @@ if ( ! function_exists( 'register_activation_hook' ) ) {
 }
 
 if ( ! function_exists( 'wp_trash_post' ) ) {
-    $GLOBALS['__test_trashed'] = [];
+    $GLOBALS['__test_trashed']      = [];
+    $GLOBALS['__test_trash_fails']  = [];
 
     function wp_trash_post( int $post_id ) {
+        if ( in_array( $post_id, $GLOBALS['__test_trash_fails'] ?? [], true ) ) {
+            return false;
+        }
         $GLOBALS['__test_trashed'][] = $post_id;
         return (object) [ 'ID' => $post_id ];
     }
