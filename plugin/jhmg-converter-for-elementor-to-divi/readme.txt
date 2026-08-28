@@ -171,6 +171,7 @@ Version 2.0 is a full rewrite. The key differences are: Divi 5 block output (not
 * Pro is now $25/yr, reduced from $49/yr — same unlimited-sites license
 * Fixed: the upgrade screen quoted the old $49/yr price; the price is now single-sourced so it cannot drift again
 * New: a dismissible admin notice announcing the new price (dismissed per user, and it stops showing after 2026-10-27)
+* New: after three successful conversions, the results screen asks once whether you'd like to review the plugin on WordPress.org — dismissible, snoozeable, per user, and never shown after a run that had any failures
 
 = 2.1.0 =
 * Premium features (kit ZIP import, Theme Builder headers/footers, global styles) now live in the separate Pro add-on, available at https://divi5lab.com/plugins/elementor-to-divi-5

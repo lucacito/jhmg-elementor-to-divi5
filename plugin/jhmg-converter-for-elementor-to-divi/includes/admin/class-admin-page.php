@@ -148,6 +148,10 @@ class AdminPage {
             'convert_footers' => $convert_footers,
         ] );
 
+        // Counted here rather than on the results screen: that view renders from
+        // a transient keyed in the URL, so refreshing it would inflate the total.
+        ( new ReviewPrompt() )->record_run( $results );
+
         $import_id = $this->generate_import_id();
         set_transient( 'edc_batch_' . $import_id, $results, HOUR_IN_SECONDS );
 
@@ -476,9 +480,16 @@ class AdminPage {
         $total     = count( $results );
         $succeeded = count( array_filter( $results, fn( $r ) => $r['success'] ) );
         $failed    = $total - $succeeded;
+        $review = new ReviewPrompt();
         ?>
         <div class="wrap edc-wrap">
             <h1><?php esc_html_e( 'Batch Import Results', 'jhmg-converter-for-elementor-to-divi' ); ?></h1>
+            <?php
+            if ( $review->should_ask( $results ) ) {
+                // Escaped at every interpolation inside markup().
+                echo $review->markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            }
+            ?>
 
             <div class="edc-result-actions">
                 <a href="<?php echo esc_url( admin_url( 'tools.php?page=' . self::MENU_SLUG ) ); ?>" class="button">

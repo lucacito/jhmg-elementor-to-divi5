@@ -26,6 +26,7 @@ class Plugin {
         if ( is_admin() ) {
             ( new \ElementorDivi5Converter\Admin\AdminPage() )->init();
             ( new \ElementorDivi5Converter\Admin\PriceDropNotice() )->init();
+            ( new \ElementorDivi5Converter\Admin\ReviewPrompt() )->init();
         }
 
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_styles' ] );

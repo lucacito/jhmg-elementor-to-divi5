@@ -471,6 +471,11 @@ if ( ! function_exists( 'esc_url' ) ) {
 if ( ! function_exists( 'esc_html_e' ) ) {
     function esc_html_e( string $text, string $domain = 'default' ): void { echo esc_html( $text ); }
 }
+if ( ! function_exists( '_n' ) ) {
+    function _n( string $single, string $plural, int $number, string $domain = 'default' ): string {
+        return $number === 1 ? $single : $plural;
+    }
+}
 if ( ! function_exists( 'wp_kses_post' ) ) {
     function wp_kses_post( $t ): string { return (string) $t; }
 }
