@@ -499,6 +499,15 @@ if ( ! function_exists( 'register_activation_hook' ) ) {
     function register_activation_hook( $file, $cb ): void {}
 }
 
+if ( ! function_exists( 'wp_trash_post' ) ) {
+    $GLOBALS['__test_trashed'] = [];
+
+    function wp_trash_post( int $post_id ) {
+        $GLOBALS['__test_trashed'][] = $post_id;
+        return (object) [ 'ID' => $post_id ];
+    }
+}
+
 if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php' ) ) {
     require_once __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php';
 }

@@ -53,4 +53,28 @@ class CoveragePanelTest extends TestCase {
         $this->assertStringNotContainsString( '<script>alert(1)</script>', $html );
         $this->assertStringContainsString( '&lt;script&gt;', $html );
     }
+
+    public function test_lists_recent_imports_with_an_undo_control(): void {
+        $h = new ImportHistory();
+        $h->record( 'run1', [ [ 'success' => true, 'post_id' => 7, 'unsupported' => [] ] ] );
+
+        $html = ( new CoveragePanel( $h ) )->markup();
+        $this->assertStringContainsString( 'Recent imports', $html );
+        $this->assertStringContainsString( \ElementorDivi5Converter\History\ImportRollback::QUERY_ACTION, $html );
+        $this->assertStringContainsString( 'run1', $html );
+    }
+
+    public function test_rolled_back_runs_show_no_undo_control(): void {
+        $h = new ImportHistory();
+        $h->record( 'run1', [ [ 'success' => true, 'post_id' => 7, 'unsupported' => [] ] ] );
+        $h->mark_rolled_back( 'run1' );
+
+        $html = ( new CoveragePanel( $h ) )->markup();
+        $this->assertStringContainsString( 'Undone', $html );
+        $this->assertStringNotContainsString(
+            \ElementorDivi5Converter\History\ImportRollback::QUERY_ACTION,
+            $html,
+            'an already-undone run must not offer Undo again'
+        );
+    }
 }
