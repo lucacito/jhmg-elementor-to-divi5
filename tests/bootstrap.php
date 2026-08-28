@@ -385,6 +385,10 @@ if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
     define( 'HOUR_IN_SECONDS', 3600 );
 }
 
+if ( ! defined( 'MINUTE_IN_SECONDS' ) ) {
+    define( 'MINUTE_IN_SECONDS', 60 );
+}
+
 if ( ! function_exists( 'home_url' ) ) {
     function home_url( $path = '', $scheme = null ) {
         return 'https://test-site.example' . $path;

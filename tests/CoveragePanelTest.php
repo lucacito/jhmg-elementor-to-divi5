@@ -94,6 +94,16 @@ class CoveragePanelTest extends TestCase {
         );
     }
 
+    public function test_undo_copy_does_not_promise_edit_based_protection(): void {
+        $h = new ImportHistory();
+        $h->record( 'run1', [ [ 'success' => true, 'post_id' => 7, 'unsupported' => [] ] ] );
+
+        $html = ( new CoveragePanel( $h ) )->markup();
+
+        $this->assertStringNotContainsString( 'edited since', $html, 'the guard does not detect edits, so the copy must not claim it does' );
+        $this->assertStringNotContainsString( 'you have edited', $html );
+    }
+
     #[RunInSeparateProcess]
     #[PreserveGlobalState( false )]
     public function test_undo_control_hidden_when_trash_is_unavailable(): void {

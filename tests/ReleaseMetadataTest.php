@@ -27,6 +27,16 @@ class ReleaseMetadataTest extends TestCase {
         $this->assertStringNotContainsString( '= 2.2.0 =', $readme, '2.2.0 was never published' );
     }
 
+    public function test_changelog_does_not_promise_edit_based_rollback_protection(): void {
+        $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
+        $this->assertStringNotContainsString(
+            'edited since',
+            $readme,
+            'the rollback guard only checks plugin ownership, not whether the page was edited'
+        );
+        $this->assertStringNotContainsString( 'never touches a page you have edited', $readme );
+    }
+
     public function test_privacy_disclosure_accounts_for_all_payload_keys(): void {
         // Get actual payload keys from CoverageTelemetry
         $payload = ( new CoverageTelemetry() )->payload();

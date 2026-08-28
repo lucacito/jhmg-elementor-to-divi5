@@ -32,8 +32,12 @@ class ImportRollback {
         $this->history = $history ?? new ImportHistory();
     }
 
+    /** Transient key prefix; the current user's ID is appended so the notice is per-user. */
+    const NOTICE_TRANSIENT_PREFIX = 'edc_rollback_notice_';
+
     public function init(): void {
         add_action( 'admin_init', [ $this, 'maybe_handle_request' ] );
+        add_action( 'admin_notices', [ $this, 'render_notice' ] );
     }
 
     /** @return array{trashed:int, skipped:int, trash_unavailable:bool} */
@@ -100,6 +104,87 @@ class ImportRollback {
             return;
         }
 
-        $this->rollback( sanitize_key( wp_unslash( $_GET[ self::QUERY_ACTION ] ) ) );
+        $result = $this->rollback( sanitize_key( wp_unslash( $_GET[ self::QUERY_ACTION ] ) ) );
+
+        // Short-lived: only needs to survive the redirect back to this screen.
+        set_transient( $this->notice_transient_key(), $result, MINUTE_IN_SECONDS );
+    }
+
+    /**
+     * Reports the outcome of the last rollback the current user triggered, once.
+     * Hooked to `admin_notices`; reads and immediately clears its transient so
+     * the notice cannot reappear on a later page load.
+     */
+    public function render_notice(): void {
+        $result = get_transient( $this->notice_transient_key() );
+
+        if ( ! is_array( $result ) ) {
+            return;
+        }
+
+        delete_transient( $this->notice_transient_key() );
+
+        // Every interpolation in notice_markup() is escaped at the point of use.
+        echo $this->notice_markup( $result ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    }
+
+    /**
+     * @param array{trashed:int, skipped:int, trash_unavailable:bool} $result
+     */
+    public function notice_markup( array $result ): string {
+        if ( ! empty( $result['trash_unavailable'] ) ) {
+            $body = esc_html__(
+                'Undo did not run: this site is configured to empty the Trash immediately, so nothing could be trashed. No pages were changed.',
+                'jhmg-converter-for-elementor-to-divi'
+            );
+
+            return '<div class="notice notice-warning is-dismissible edc-rollback-notice"><p>' . $body . '</p></div>';
+        }
+
+        $trashed = (int) ( $result['trashed'] ?? 0 );
+        $skipped = (int) ( $result['skipped'] ?? 0 );
+        $parts   = [];
+
+        if ( $trashed > 0 ) {
+            $parts[] = esc_html(
+                sprintf(
+                    /* translators: %d: number of pages moved to the Trash. */
+                    _n(
+                        '%d page was moved to the Trash. You can restore it from Posts → Trash if needed.',
+                        '%d pages were moved to the Trash. You can restore them from Posts → Trash if needed.',
+                        $trashed,
+                        'jhmg-converter-for-elementor-to-divi'
+                    ),
+                    $trashed
+                )
+            );
+        }
+
+        if ( $skipped > 0 ) {
+            $parts[] = esc_html(
+                sprintf(
+                    /* translators: %d: number of pages skipped. */
+                    _n(
+                        '%d page was skipped because it is no longer owned by this plugin (already gone, or replaced since the import).',
+                        '%d pages were skipped because they are no longer owned by this plugin (already gone, or replaced since the import).',
+                        $skipped,
+                        'jhmg-converter-for-elementor-to-divi'
+                    ),
+                    $skipped
+                )
+            );
+        }
+
+        if ( empty( $parts ) ) {
+            $parts[] = esc_html__( 'Nothing to undo: this import had already been undone or had no pages left to trash.', 'jhmg-converter-for-elementor-to-divi' );
+        }
+
+        return '<div class="notice notice-success is-dismissible edc-rollback-notice"><p>'
+            . implode( ' ', $parts )
+            . '</p></div>';
+    }
+
+    private function notice_transient_key(): string {
+        return self::NOTICE_TRANSIENT_PREFIX . get_current_user_id();
     }
 }

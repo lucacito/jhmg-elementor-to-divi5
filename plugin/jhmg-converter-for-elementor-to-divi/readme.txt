@@ -186,7 +186,7 @@ commonly missing Elementor widgets get built first.
 
 = 2.3.0 =
 * New: Conversion coverage — see every Elementor widget your imports could not convert, ranked by how many imports each affected
-* New: Undo an import — moves the pages that import created to the trash, and never touches a page you have edited since
+* New: Undo an import — moves the pages that import created to the trash, skipping any that are no longer linked to that import (already gone, or replaced); editing a page does not exempt it from Undo
 * New: Optional, opt-in sharing of unsupported widget names with divi5lab so the most-needed widgets get built first. Off by default; sends only widget names and a plugin identifier
 * Pro is now $25/yr, reduced from $49/yr — same unlimited-sites license
 * Fixed: the upgrade screen quoted the old $49/yr price; the price is now single-sourced so it cannot drift again

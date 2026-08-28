@@ -137,7 +137,7 @@ class CoveragePanel {
             . '<table class="widefat striped"><thead><tr><th>%3$s</th><th>%4$s</th><th></th></tr></thead>'
             . '<tbody>%5$s</tbody></table></div>',
             esc_html__( 'Recent imports', 'jhmg-converter-for-elementor-to-divi' ),
-            esc_html__( 'Undo moves the pages an import created to the trash. Pages you have edited since are left alone.', 'jhmg-converter-for-elementor-to-divi' ),
+            esc_html__( 'Undo moves the pages an import created to the trash. It skips only pages that are no longer linked to this import (already gone, or replaced) — editing a page does not exempt it from Undo.', 'jhmg-converter-for-elementor-to-divi' ),
             esc_html__( 'When', 'jhmg-converter-for-elementor-to-divi' ),
             esc_html__( 'Pages', 'jhmg-converter-for-elementor-to-divi' ),
             $rows
