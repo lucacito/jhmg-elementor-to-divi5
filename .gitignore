@@ -3,3 +3,6 @@ vendor/
 visual-diffs/*/
 !visual-diffs/.gitkeep
 .DS_Store
+
+# wp.org SVN working copy (recreated on demand, never part of the repo)
+wporg-svn/
