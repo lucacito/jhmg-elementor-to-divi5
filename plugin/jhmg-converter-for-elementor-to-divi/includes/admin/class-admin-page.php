@@ -14,6 +14,13 @@ class AdminPage {
     const IMPORT_NONCE_NAME     = 'edc_import_nonce';
     const IMPORT_NONCE_ACTION   = 'edc_import';
 
+    /**
+     * Pro price as shown in the upgrade CTAs. Single-sourced: this must match the
+     * live price on divi5lab.com. Shipping a stale literal here quotes free users
+     * the wrong price with no other symptom.
+     */
+    const PRO_PRICE             = '$25/yr';
+
     public function init(): void {
         add_action( 'admin_menu', [ $this, 'register_menu' ] );
         add_action( 'admin_init', [ $this, 'handle_post' ] );
@@ -140,6 +147,10 @@ class AdminPage {
             'convert_headers' => $convert_headers,
             'convert_footers' => $convert_footers,
         ] );
+
+        // Counted here rather than on the results screen: that view renders from
+        // a transient keyed in the URL, so refreshing it would inflate the total.
+        ( new ReviewPrompt() )->record_run( $results );
 
         $import_id = $this->generate_import_id();
         set_transient( 'edc_batch_' . $import_id, $results, HOUR_IN_SECONDS );
@@ -345,7 +356,11 @@ class AdminPage {
                         printf(
                             '<a class="button button-primary button-hero edc-lp-btn-premium" href="%s" target="_blank" rel="noopener">%s</a>',
                             esc_url( 'https://divi5lab.com/plugins/elementor-to-divi-5?utm_source=plugin&utm_medium=upsell&utm_campaign=free-landing' ),
-                            esc_html__( 'Get Pro — $49/yr, unlimited sites', 'jhmg-converter-for-elementor-to-divi' )
+                            esc_html( sprintf(
+                                /* translators: %s: Pro subscription price, e.g. $25/yr */
+                                __( 'Get Pro — %s, unlimited sites', 'jhmg-converter-for-elementor-to-divi' ),
+                                self::PRO_PRICE
+                            ) )
                         );
                         ?>
                     </div>
@@ -405,7 +420,11 @@ class AdminPage {
                     printf(
                         '<a class="button button-primary button-hero" href="%s" target="_blank" rel="noopener">%s</a>',
                         esc_url( 'https://divi5lab.com/plugins/elementor-to-divi-5?utm_source=plugin&utm_medium=upsell&utm_campaign=free-landing' ),
-                        esc_html__( 'Get Pro — $49/yr, unlimited sites', 'jhmg-converter-for-elementor-to-divi' )
+                        esc_html( sprintf(
+                            /* translators: %s: Pro subscription price, e.g. $25/yr */
+                            __( 'Get Pro — %s, unlimited sites', 'jhmg-converter-for-elementor-to-divi' ),
+                            self::PRO_PRICE
+                        ) )
                     );
                     ?>
                 </div>
@@ -461,9 +480,16 @@ class AdminPage {
         $total     = count( $results );
         $succeeded = count( array_filter( $results, fn( $r ) => $r['success'] ) );
         $failed    = $total - $succeeded;
+        $review = new ReviewPrompt();
         ?>
         <div class="wrap edc-wrap">
             <h1><?php esc_html_e( 'Batch Import Results', 'jhmg-converter-for-elementor-to-divi' ); ?></h1>
+            <?php
+            if ( $review->should_ask( $results ) ) {
+                // Escaped at every interpolation inside markup().
+                echo $review->markup(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            }
+            ?>
 
             <div class="edc-result-actions">
                 <a href="<?php echo esc_url( admin_url( 'tools.php?page=' . self::MENU_SLUG ) ); ?>" class="button">
