@@ -29,6 +29,12 @@ class CoverageTelemetry {
     const ENDPOINT         = 'https://divi5lab.com/api/plugin/coverage';
     const INTERVAL_DAYS    = 7;
 
+    // Mirror the receiving endpoint's zod schema exactly:
+    // widget_types: z.array( z.string().min(1).max(64) ).min(1).max(100)
+    // Change one side, change the other.
+    const MAX_TYPE_LENGTH  = 64;
+    const MAX_TYPES        = 100;
+
     private ImportHistory $history;
     private string $today;
 
@@ -58,11 +64,25 @@ class CoverageTelemetry {
         return $this->today >= gmdate( 'Y-m-d', strtotime( $last . ' +' . self::INTERVAL_DAYS . ' days' ) );
     }
 
-    /** @return array{product:string, widget_types:string[]} */
+    /**
+     * Clamped to the receiving endpoint's contract (see MAX_TYPE_LENGTH,
+     * MAX_TYPES above). ImportHistory::coverage() is already sorted by
+     * imports-affected descending, so taking the first MAX_TYPES after the
+     * length filter keeps the most significant gaps without re-sorting.
+     *
+     * @return array{product:string, widget_types:string[]}
+     */
     public function payload(): array {
+        $types = array_column( $this->history->coverage(), 'type' );
+
+        $types = array_values( array_filter(
+            $types,
+            static fn( string $type ): bool => strlen( $type ) <= self::MAX_TYPE_LENGTH
+        ) );
+
         return [
             'product'      => self::PRODUCT,
-            'widget_types' => array_column( $this->history->coverage(), 'type' ),
+            'widget_types' => array_slice( $types, 0, self::MAX_TYPES ),
         ];
     }
 
