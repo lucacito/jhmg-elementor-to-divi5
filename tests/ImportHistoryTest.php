@@ -88,4 +88,16 @@ class ImportHistoryTest extends TestCase {
         $this->assertTrue( $h->find( 'a' )['rolled_back'] );
         $this->assertFalse( $h->find( 'b' )['rolled_back'] );
     }
+
+    public function test_admin_page_records_history_keyed_by_import_id(): void {
+        $src = (string) file_get_contents(
+            __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/includes/admin/class-admin-page.php'
+        );
+        $this->assertStringContainsString( 'ImportHistory', $src );
+        $this->assertMatchesRegularExpression(
+            '/\$import_id\s*=\s*\$this->generate_import_id\(\);[\s\S]{0,400}?->record\(\s*\$import_id\s*,\s*\$results\s*\)/',
+            $src,
+            'history must be recorded with the same import_id the results transient uses'
+        );
+    }
 }

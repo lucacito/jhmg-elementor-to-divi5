@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Admin;
 
 use ElementorDivi5Converter\Parsers\ElementorImportParser;
+use ElementorDivi5Converter\History\ImportHistory;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -153,6 +154,11 @@ class AdminPage {
         ( new ReviewPrompt() )->record_run( $results );
 
         $import_id = $this->generate_import_id();
+
+        // Durable record: the transient below expires in an hour, but the
+        // coverage screen and rollback both need this run afterwards.
+        ( new ImportHistory() )->record( $import_id, $results );
+
         set_transient( 'edc_batch_' . $import_id, $results, HOUR_IN_SECONDS );
 
         wp_safe_redirect(
