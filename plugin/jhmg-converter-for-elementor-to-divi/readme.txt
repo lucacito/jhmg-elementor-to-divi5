@@ -3,7 +3,7 @@ Contributors: lucaslopvet
 Tags: divi migration, elementor export, page builder converter, elementor to divi, divi 5
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 2.2.0
+Stable tag: 2.3.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -165,12 +165,30 @@ Version 2.0 is a full rewrite. The key differences are: Divi 5 block output (not
 2. Import form — single page JSON conversion (Free)
 3. Conversion report — converted elements, warnings, and unsupported widgets after an import
 
+== External services ==
+
+This plugin can optionally send a short report to divi5lab.com so that the most
+commonly missing Elementor widgets get built first.
+
+* **Service:** divi5lab.com coverage endpoint — https://divi5lab.com/api/plugin/coverage
+* **What is sent:** the names of Elementor widget types your imports could not
+  convert (for example `lottie`). Nothing else — no site address, no page
+  content, no personal data, no license or account information.
+* **When:** at most once a week, and only after you explicitly turn sharing on
+  from the Conversion coverage panel. Sharing is off by default and nothing is
+  sent until you enable it.
+* **Turning it off:** use "Stop sharing" on the same panel at any time.
+* Terms: https://divi5lab.com/terms — Privacy policy: https://divi5lab.com/privacy
+
 == Changelog ==
 
-= 2.2.0 =
+= 2.3.0 =
+* New: Conversion coverage — see every Elementor widget your imports could not convert, ranked by how many imports each affected
+* New: Undo an import — moves the pages that import created to the trash, and never touches a page you have edited since
+* New: Optional, opt-in sharing of unsupported widget names with divi5lab so the most-needed widgets get built first. Off by default; sends widget names only
 * Pro is now $25/yr, reduced from $49/yr — same unlimited-sites license
 * Fixed: the upgrade screen quoted the old $49/yr price; the price is now single-sourced so it cannot drift again
-* New: a dismissible admin notice announcing the new price (dismissed per user, and it stops showing after 2026-10-27)
+* New: a dismissible notice announcing the new price (dismissed per user, and it stops showing after 2026-10-27)
 * New: after three successful conversions, the results screen asks once whether you'd like to review the plugin on WordPress.org — dismissible, snoozeable, per user, and never shown after a run that had any failures
 
 = 2.1.0 =
@@ -207,8 +225,8 @@ Version 2.0 is a full rewrite. The key differences are: Divi 5 block output (not
 
 == Upgrade Notice ==
 
-= 2.2.0 =
-Pro dropped to $25/yr from $49/yr — the same unlimited-sites license covering kit ZIP import, global headers and footers, and global styles. The free plugin is unchanged and still converts unlimited single pages.
+= 2.3.0 =
+Adds a conversion coverage report and one-click undo for an import. Pro dropped to $25/yr from $49/yr — the same unlimited-sites license. The free plugin still converts unlimited single pages.
 
 = 2.1.0 =
 Premium features (kit ZIP import, Theme Builder headers/footers, global styles) have moved to the separate Pro add-on at https://divi5lab.com/plugins/elementor-to-divi-5. This free plugin still handles unlimited single-page JSON conversion at no cost. If you were using an older in-plugin premium unlock, install the Pro add-on to keep that functionality.
