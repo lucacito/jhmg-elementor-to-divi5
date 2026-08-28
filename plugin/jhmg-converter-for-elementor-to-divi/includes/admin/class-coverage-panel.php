@@ -10,6 +10,7 @@ namespace ElementorDivi5Converter\Admin;
 
 use ElementorDivi5Converter\History\ImportHistory;
 use ElementorDivi5Converter\History\ImportRollback;
+use ElementorDivi5Converter\Telemetry\CoverageTelemetry;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -58,14 +59,38 @@ class CoveragePanel {
         return sprintf(
             '<div class="edc-card"><h2>%1$s</h2><p class="description">%2$s</p>'
             . '<table class="widefat striped"><thead><tr><th>%3$s</th><th>%4$s</th><th>%5$s</th></tr></thead>'
-            . '<tbody>%6$s</tbody></table></div>',
+            . '<tbody>%6$s</tbody></table>%7$s</div>',
             esc_html__( 'Conversion coverage', 'jhmg-converter-for-elementor-to-divi' ),
             esc_html__( 'Elementor widgets from your recent imports that have no Divi 5 equivalent yet. These need rebuilding by hand.', 'jhmg-converter-for-elementor-to-divi' ),
             esc_html__( 'Widget', 'jhmg-converter-for-elementor-to-divi' ),
             esc_html__( 'Imports affected', 'jhmg-converter-for-elementor-to-divi' ),
             esc_html__( 'Last seen', 'jhmg-converter-for-elementor-to-divi' ),
-            $rows
+            $rows,
+            $this->consent_line()
         ) . $this->runs_table();
+    }
+
+    /**
+     * The opt-in lives here because this is the one screen where the user is
+     * already looking at exactly the data being asked for.
+     */
+    private function consent_line(): string {
+        $telemetry = new CoverageTelemetry( $this->history );
+        $on        = $telemetry->has_consent();
+
+        $url = add_query_arg( CoverageTelemetry::QUERY_ACTION, $on ? '0' : '1' )
+            . '&_wpnonce=' . wp_create_nonce( CoverageTelemetry::NONCE_ACTION );
+
+        return sprintf(
+            '<p class="description">%1$s <a href="%2$s">%3$s</a></p>',
+            $on
+                ? esc_html__( 'Sharing this list of widget names with divi5lab so these gaps get prioritised. No site address, no content, no personal data.', 'jhmg-converter-for-elementor-to-divi' )
+                : esc_html__( 'Help prioritise these widgets? Sharing sends only the widget names above, once a week. No site address, no content, no personal data.', 'jhmg-converter-for-elementor-to-divi' ),
+            esc_url( $url ),
+            $on
+                ? esc_html__( 'Stop sharing', 'jhmg-converter-for-elementor-to-divi' )
+                : esc_html__( 'Share these widget names', 'jhmg-converter-for-elementor-to-divi' )
+        );
     }
 
     /** Recent runs, each undoable while it still owns the posts it created. */
