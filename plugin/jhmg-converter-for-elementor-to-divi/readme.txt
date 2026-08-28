@@ -171,9 +171,11 @@ This plugin can optionally send a short report to divi5lab.com so that the most
 commonly missing Elementor widgets get built first.
 
 * **Service:** divi5lab.com coverage endpoint — https://divi5lab.com/api/plugin/coverage
-* **What is sent:** the names of Elementor widget types your imports could not
-  convert (for example `lottie`). Nothing else — no site address, no page
-  content, no personal data, no license or account information.
+* **What is sent:** two fields — `widget_types` (the names of Elementor widget
+  types your imports could not convert, for example `lottie`) and `product` (a
+  fixed identifier indicating this plugin sent the report). Nothing else — no
+  site address, no page content, no personal data, no license or account
+  information.
 * **When:** at most once a week, and only after you explicitly turn sharing on
   from the Conversion coverage panel. Sharing is off by default and nothing is
   sent until you enable it.
@@ -185,7 +187,7 @@ commonly missing Elementor widgets get built first.
 = 2.3.0 =
 * New: Conversion coverage — see every Elementor widget your imports could not convert, ranked by how many imports each affected
 * New: Undo an import — moves the pages that import created to the trash, and never touches a page you have edited since
-* New: Optional, opt-in sharing of unsupported widget names with divi5lab so the most-needed widgets get built first. Off by default; sends widget names only
+* New: Optional, opt-in sharing of unsupported widget names with divi5lab so the most-needed widgets get built first. Off by default; sends only widget names and a plugin identifier
 * Pro is now $25/yr, reduced from $49/yr — same unlimited-sites license
 * Fixed: the upgrade screen quoted the old $49/yr price; the price is now single-sourced so it cannot drift again
 * New: a dismissible notice announcing the new price (dismissed per user, and it stops showing after 2026-10-27)
