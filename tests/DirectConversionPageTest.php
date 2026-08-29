@@ -111,6 +111,17 @@ class DirectConversionPageTest extends TestCase {
         $this->assertSame( [ 209 ], $ids );
     }
 
+    public function test_invalid_ids_do_not_consume_the_selection_limit(): void {
+        $bad  = $this->seed( 220, 'Plain', false );
+        $good = $this->seed( 221 );
+
+        $ids = ( new DirectConversionPage() )->selected_post_ids( [
+            'edc_post_ids' => [ (string) $bad, (string) $good ],
+        ] );
+
+        $this->assertSame( [ 221 ], $ids, 'verification must happen before the cap is applied' );
+    }
+
     public function test_plan_for_produces_a_plan_without_writing(): void {
         $id = $this->seed( 210, 'Preview Me' );
 
