@@ -125,7 +125,12 @@ class DirectConversionPageTest extends TestCase {
     public function test_plan_for_produces_a_plan_without_writing(): void {
         $id = $this->seed( 210, 'Preview Me' );
 
-        $posts_before = $GLOBALS['__test_posts'];
+        // Deep-copy the snapshot: a shallow array copy still shares the same
+        // post objects, so assertSame() would compare them by identity and
+        // an in-place mutation of a post object would slip through
+        // undetected. Cloning each post and comparing with assertEquals()
+        // (value equality) instead catches that.
+        $posts_before = array_map( fn( $p ) => clone $p, $GLOBALS['__test_posts'] );
         $meta_before  = $GLOBALS['__test_postmeta'];
 
         $plan = ( new DirectConversionPage() )->plan_for( [ $id ] );
@@ -133,7 +138,7 @@ class DirectConversionPageTest extends TestCase {
         $this->assertInstanceOf( ConversionPlan::class, $plan );
         $this->assertSame( 'Preview Me', $plan->items()[0]['title'] );
         $this->assertNotEmpty( $plan->items()[0]['outline'] );
-        $this->assertSame( $posts_before, $GLOBALS['__test_posts'] );
+        $this->assertEquals( $posts_before, $GLOBALS['__test_posts'] );
         $this->assertSame( $meta_before, $GLOBALS['__test_postmeta'] );
     }
 
