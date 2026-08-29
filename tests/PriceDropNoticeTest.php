@@ -17,10 +17,40 @@ class PriceDropNoticeTest extends TestCase {
         $GLOBALS['__test_current_user'] = 1;
         $GLOBALS['__test_caps']         = true;
         $_GET                           = [];
+        $GLOBALS['pagenow']             = 'plugins.php';
     }
 
     private function notice( ?string $now = null ): PriceDropNotice {
         return new PriceDropNotice( $now ?? '2026-09-01' );
+    }
+
+    /**
+     * This shipped as a notice on EVERY admin screen. Narrowed after review:
+     * a plugin that nags on every page is how you earn the one-star reviews
+     * this release is trying to avoid. plugins.php is where people already
+     * are when a plugin updates; the plugin's own screens are where the
+     * offer is actually relevant.
+     */
+    public function test_shows_on_the_plugins_screen(): void {
+        $GLOBALS['pagenow'] = 'plugins.php';
+        $this->assertTrue( $this->notice()->should_show() );
+    }
+
+    public function test_shows_on_the_plugins_own_screen(): void {
+        $GLOBALS['pagenow'] = 'tools.php';
+        $_GET['page']       = 'edc-converter';
+        $this->assertTrue( $this->notice()->should_show() );
+    }
+
+    public function test_hidden_on_unrelated_admin_screens(): void {
+        foreach ( [ 'index.php', 'edit.php', 'upload.php', 'options-general.php' ] as $screen ) {
+            $GLOBALS['pagenow'] = $screen;
+            $_GET               = [];
+            $this->assertFalse(
+                $this->notice()->should_show(),
+                "the notice must not appear on {$screen}"
+            );
+        }
     }
 
     public function test_shows_for_an_admin_before_expiry(): void {
