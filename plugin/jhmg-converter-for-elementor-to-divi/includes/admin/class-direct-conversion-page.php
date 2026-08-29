@@ -141,11 +141,15 @@ class DirectConversionPage {
         $per_page = ElementorPageRepository::PER_PAGE;
 
         // One extra row reveals whether a next page exists without the
-        // repository needing to report a total count.
+        // repository needing to report a total count. The offset must still
+        // be computed on the real per-page size (PER_PAGE), not the
+        // inflated probe count — otherwise it advances by 21 while only 20
+        // rows are ever shown, silently skipping a row on every page turn.
         $rows = $this->repo->find( [
             'search'   => $search,
             'paged'    => $paged,
             'per_page' => $per_page + 1,
+            'offset'   => ( $paged - 1 ) * $per_page,
         ] );
 
         $has_next = count( $rows ) > $per_page;

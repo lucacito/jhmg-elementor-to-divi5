@@ -167,6 +167,52 @@ class DirectConversionRenderTest extends TestCase {
         $this->assertStringContainsString( 'Previous', $html, 'page 2 of results must offer a way back to page 1' );
     }
 
+    /**
+     * Every other pager test above uses a stub repository that ignores
+     * per_page/paged entirely and just returns whatever rows it was built
+     * with — so none of them can catch an offset bug. This stub instead
+     * behaves the way a real WP_Query would: it honours whatever args it is
+     * handed, computing the offset from an explicit 'offset' key if present,
+     * or from posts_per_page * (paged - 1) otherwise (WP_Query's own
+     * fallback when no offset is given).
+     *
+     * render_picker() asks for 21 rows (PER_PAGE + 1) purely to detect
+     * whether a next page exists. If that inflated count is also used to
+     * derive the offset, the offset advances by 21 per page while only 20
+     * rows are ever displayed — silently skipping one row (page 21 on a
+     * real site) every time the user turns the page.
+     */
+    public function test_paging_never_skips_or_repeats_a_row(): void {
+        $all = [];
+        for ( $i = 1; $i <= 25; $i++ ) {
+            $all[] = $this->row( $i, 'Page ' . $i );
+        }
+
+        $repo = new ElementorPageRepository( function ( array $args ) use ( $all ) {
+            $per_page = (int) $args['posts_per_page'];
+            $offset   = array_key_exists( 'offset', $args )
+                ? (int) $args['offset']
+                : $per_page * ( max( 1, (int) $args['paged'] ) - 1 );
+
+            return array_slice( $all, $offset, $per_page );
+        } );
+
+        $page = new DirectConversionPage( $repo );
+
+        $html_page_1 = $page->render_picker();
+        $html_page_2 = $page->render_picker( [ 'paged' => 2 ] );
+
+        for ( $i = 1; $i <= 20; $i++ ) {
+            $this->assertStringContainsString( 'value="' . $i . '"', $html_page_1, "row $i must appear on page 1" );
+            $this->assertStringNotContainsString( 'value="' . $i . '"', $html_page_2, "row $i must not repeat on page 2" );
+        }
+
+        for ( $i = 21; $i <= 25; $i++ ) {
+            $this->assertStringNotContainsString( 'value="' . $i . '"', $html_page_1, "row $i must not leak onto page 1" );
+            $this->assertStringContainsString( 'value="' . $i . '"', $html_page_2, "row $i must appear on page 2 — a skipped row here is exactly the offset bug this test exists to catch" );
+        }
+    }
+
     public function test_the_report_shows_the_outline_and_the_convert_button(): void {
         $plan = new ConversionPlan( [ ConversionPlan::item( [
             'title'   => 'Home',

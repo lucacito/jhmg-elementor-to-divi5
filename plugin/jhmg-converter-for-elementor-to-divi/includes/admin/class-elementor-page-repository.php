@@ -44,6 +44,16 @@ class ElementorPageRepository {
             'paged'          => $paged,
         ];
 
+        // Explicit offset, when given, is what actually drives WP_Query's
+        // SQL OFFSET — it overrides the offset WP_Query would otherwise
+        // derive from posts_per_page * (paged - 1). A caller that needs to
+        // probe for one extra row beyond the display count (the picker's
+        // next-page check) can raise posts_per_page for that probe without
+        // also inflating the offset every subsequent page is computed from.
+        if ( isset( $args['offset'] ) ) {
+            $query['offset'] = max( 0, (int) $args['offset'] );
+        }
+
         if ( $search !== '' ) {
             $query['s'] = $search;
         }
