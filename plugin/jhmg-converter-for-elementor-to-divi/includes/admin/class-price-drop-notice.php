@@ -55,11 +55,37 @@ class PriceDropNotice {
             return false;
         }
 
+        if ( ! $this->on_relevant_screen() ) {
+            return false;
+        }
+
         if ( $this->today > self::CAMPAIGN_END ) {
             return false;
         }
 
         return ! get_user_meta( get_current_user_id(), self::USER_META_KEY, true );
+    }
+
+    /**
+     * The notice appears on the plugins screen and on this plugin's own pages,
+     * not across all of wp-admin.
+     *
+     * A price drop is worth announcing, but an announcement that follows the
+     * user onto every screen in their site reads as a nag — and this release
+     * also asks for a wordpress.org review, so the two together would be one
+     * ask too many. plugins.php is where people already are when a plugin
+     * updates, which keeps most of the reach without the intrusion.
+     */
+    private function on_relevant_screen(): bool {
+        $pagenow = isset( $GLOBALS['pagenow'] ) ? (string) $GLOBALS['pagenow'] : '';
+
+        if ( $pagenow === 'plugins.php' ) {
+            return true;
+        }
+
+        $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+        return $page !== '' && strpos( $page, 'edc' ) === 0;
     }
 
     /** Records a nonce-verified dismissal against the current user. */

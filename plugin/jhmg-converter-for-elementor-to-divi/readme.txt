@@ -185,12 +185,12 @@ commonly missing Elementor widgets get built first.
 == Changelog ==
 
 = 2.3.0 =
-* New: Conversion coverage — see every Elementor widget your imports could not convert, ranked by how many imports each affected
-* New: Undo an import — moves the pages that import created to the trash, skipping any that are no longer linked to that import (already gone, or replaced); editing a page does not exempt it from Undo
+* New: Undo an import — one click moves the pages an import created to the trash, so trying a conversion is no longer a one-way door. Pages that are no longer linked to that import (already gone, or replaced) are skipped; note that editing a page does not exempt it from Undo
+* New: Conversion coverage — see every Elementor widget your imports could not convert, ranked by how many imports each affected, so you know exactly what still needs rebuilding by hand
 * New: Optional, opt-in sharing of unsupported widget names with divi5lab so the most-needed widgets get built first. Off by default; sends only widget names and a plugin identifier
 * Pro is now $25/yr, reduced from $49/yr — same unlimited-sites license
 * Fixed: the upgrade screen quoted the old $49/yr price; the price is now single-sourced so it cannot drift again
-* New: a dismissible notice announcing the new price (dismissed per user, and it stops showing after 2026-10-27)
+* New: a dismissible notice announcing the new price, shown on the Plugins screen and this plugin's own pages (dismissed per user, and it stops showing after 2026-10-27)
 * New: after three successful conversions, the results screen asks once whether you'd like to review the plugin on WordPress.org — dismissible, snoozeable, per user, and never shown after a run that had any failures
 
 = 2.1.0 =
@@ -228,7 +228,7 @@ commonly missing Elementor widgets get built first.
 == Upgrade Notice ==
 
 = 2.3.0 =
-Adds a conversion coverage report and one-click undo for an import. Pro dropped to $25/yr from $49/yr — the same unlimited-sites license. The free plugin still converts unlimited single pages.
+Adds one-click Undo for an import, so trying a conversion is no longer a one-way door, plus a coverage report showing which Elementor widgets could not be converted. Pro also dropped to $25/yr from $49/yr — the same unlimited-sites license. The free plugin still converts unlimited single pages.
 
 = 2.1.0 =
 Premium features (kit ZIP import, Theme Builder headers/footers, global styles) have moved to the separate Pro add-on at https://divi5lab.com/plugins/elementor-to-divi-5. This free plugin still handles unlimited single-page JSON conversion at no cost. If you were using an older in-plugin premium unlock, install the Pro add-on to keep that functionality.
