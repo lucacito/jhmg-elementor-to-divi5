@@ -50,4 +50,14 @@ class SeamsTest extends TestCase {
         );
         $this->assertSame( [ 'header' ], $fake->calls );
     }
+
+    public function test_direct_conversion_limit_defaults_to_one_without_a_filter(): void {
+        $this->assertSame( 1, \ElementorDivi5Converter\Conversion\ConversionPreflight::limit() );
+    }
+
+    public function test_pro_raises_the_direct_conversion_limit(): void {
+        add_filter( 'edc_direct_conversion_limit', fn( $v ) => PHP_INT_MAX );
+
+        $this->assertSame( PHP_INT_MAX, \ElementorDivi5Converter\Conversion\ConversionPreflight::limit() );
+    }
 }

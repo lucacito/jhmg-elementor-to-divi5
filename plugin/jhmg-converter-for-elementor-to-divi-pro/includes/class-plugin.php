@@ -31,6 +31,11 @@ class Plugin {
             return $v ?? new Exporters\DiviThemeBuilderExporter( new \ElementorDivi5Converter\Exporters\DiviExporter() );
         } );
 
+        // Free converts one installed page per run; Pro converts as many as the
+        // user selects. This is a quantity boundary, not a feature flag — the
+        // whole picker and commit loop live in the free plugin.
+        add_filter( 'edc_direct_conversion_limit', static fn ( $v ) => PHP_INT_MAX );
+
         $license = new Licensing\LicenseClient(
             EDCP_PRODUCT_SLUG,
             EDCP_PLUGIN_VERSION,

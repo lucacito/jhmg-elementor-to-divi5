@@ -15,4 +15,11 @@ class ProPluginTest extends TestCase {
         $this->assertSame( 'elementor-to-divi5-pro', EDCP_PRODUCT_SLUG );
         $this->assertSame( '1.0.0', EDCP_PLUGIN_VERSION );
     }
+
+    public function test_pro_registers_the_direct_conversion_limit_filter(): void {
+        $pro = \ElementorDivi5Converter\Pro\Plugin::instance();
+        $pro->register_hooks();
+
+        $this->assertSame( PHP_INT_MAX, apply_filters( 'edc_direct_conversion_limit', 1 ) );
+    }
 }
