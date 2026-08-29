@@ -124,6 +124,9 @@ class ConversionPreflightTest extends TestCase {
             array_sum( $plan->items()[1]['report']['converted'] ),
             'report state leaked between items'
         );
+        // Guard against both sides being vacuously empty: the comparison above
+        // would also pass if neither item converted anything.
+        $this->assertGreaterThan( 0, array_sum( $plan->items()[0]['report']['converted'] ) );
     }
 
     public function test_an_item_arriving_with_an_error_passes_through_unconverted(): void {
@@ -178,5 +181,78 @@ class ConversionPreflightTest extends TestCase {
         add_filter( 'edc_direct_conversion_limit', fn( $v ) => 0 );
 
         $this->assertSame( 1, ConversionPreflight::limit() );
+    }
+
+    public function test_a_filtered_negative_limit_is_clamped_to_one(): void {
+        add_filter( 'edc_direct_conversion_limit', fn( $v ) => -5 );
+
+        $this->assertSame( 1, ConversionPreflight::limit() );
+    }
+
+    public function test_a_filtered_non_numeric_limit_is_clamped_to_one(): void {
+        add_filter( 'edc_direct_conversion_limit', fn( $v ) => 'abc' );
+
+        $this->assertSame( 1, ConversionPreflight::limit() );
+    }
+
+    /**
+     * The whole point of per-item try/catch in planItem() is that one broken
+     * page cannot take a multi-page run down with it. 'not-an-array' fails
+     * ConverterEngine::convert()'s `array $elementor_data` type hint with a
+     * genuine TypeError — a Throwable, not a contrived error() call — so this
+     * exercises the real catch path, not a stand-in for it.
+     */
+    public function test_a_throwing_item_fails_alone_and_the_run_continues(): void {
+        add_filter( 'edc_direct_conversion_limit', fn( $v ) => 2 );
+
+        $broken = $this->heading_item( 'Broken' );
+        $broken['elements'] = 'not-an-array';
+
+        $plan = ( new ConversionPreflight() )->run( new FakeConversionSource( [
+            $broken,
+            $this->heading_item( 'Good' ),
+        ] ) );
+
+        $this->assertNotSame( '', $plan->items()[0]['error'], 'the throwing item should have failed' );
+        $this->assertNotEmpty( $plan->items()[1]['content'], 'the second item should still have converted' );
+    }
+
+    /**
+     * get_option('elementor_active_kit') returns 0 in the harness by default,
+     * so ConversionPreflight::elementorGlobalColors() short-circuits to [] and
+     * ConverterEngine::setGlobalColors() is never reached by any other test in
+     * this file. Seed the kit id and its page-settings meta the way Elementor
+     * really stores them, and confirm the color actually lands in the
+     * converted, serialized output — not just in elementorGlobalColors()'s
+     * return value.
+     */
+    public function test_elementor_global_colors_reach_the_converted_output(): void {
+        $GLOBALS['__test_options']['elementor_active_kit'] = 55;
+        update_post_meta( 55, '_elementor_page_settings', [
+            'system_colors' => [
+                [ '_id' => 'primary', 'color' => '#ff0000' ],
+            ],
+        ] );
+
+        $item = [
+            'title'         => 'Colored',
+            'post_type'     => 'page',
+            'post_name'     => 'colored',
+            'template_type' => '',
+            'elements'      => [ [
+                'elType'   => 'section',
+                'settings' => [
+                    'background_background' => 'classic',
+                    '__globals__'            => [ 'background_color' => 'globals/colors?id=primary' ],
+                ],
+                'elements' => [],
+            ] ],
+            'source_ref'    => [ 'kind' => 'installed', 'post_id' => 55, 'file' => null ],
+        ];
+
+        $plan = ( new ConversionPreflight() )->run( new FakeConversionSource( [ $item ] ) );
+
+        $this->assertSame( '', $plan->items()[0]['error'] );
+        $this->assertStringContainsString( '#ff0000', $plan->items()[0]['content'] );
     }
 }
