@@ -278,8 +278,12 @@ class AdminPage {
                     ?>
                     <p class="description"><?php esc_html_e( 'Pick an Elementor page below and click Check this page. Converting creates a new Divi draft — your Elementor page is left exactly as it is.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
                     <?php
+                    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only paging/search state, sanitized below.
+                    $edc_search = sanitize_text_field( wp_unslash( $_GET['edc_s'] ?? '' ) );
+                    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only paging/search state, sanitized below.
+                    $edc_paged  = absint( $_GET['paged'] ?? 1 );
                     // Escaped at every interpolation inside render_picker().
-                    echo $direct_conversion->render_picker(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                    echo $direct_conversion->render_picker( [ 'search' => $edc_search, 'paged' => $edc_paged ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                     ?>
                 <?php else : ?>
                     <p class="description"><?php esc_html_e( 'No Elementor pages were found installed on this site. Use the JSON import below instead.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
@@ -878,10 +882,14 @@ class AdminPage {
 .edc-lp-direct .description { color: #64748b; font-size: 13px; margin: 0 0 16px; }
 
 .edc-direct-empty { color: #64748b; }
+.edc-direct-search { margin-bottom: 12px; }
+.edc-direct-search input[type="search"] { min-width: 240px; margin-right: 6px; }
 .edc-direct-table { margin-bottom: 12px; }
 .edc-direct-table td { padding: 10px 12px; }
 .edc-direct-meta { color: #64748b; font-size: 12px; margin-left: 6px; }
 .edc-badge-converted { display: inline-block; background: #dcfce7; color: #15803d; border-radius: 10px; padding: 1px 8px; font-size: 11px; font-weight: 700; margin-left: 6px; }
+.edc-direct-pager { margin-top: 8px; }
+.edc-direct-pager a { margin-right: 6px; }
 
 .edc-direct-report h3 { margin: 20px 0 6px; }
 .edc-direct-unsupported { color: #7a4f00; }

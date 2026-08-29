@@ -133,13 +133,33 @@ class DirectConversionPage {
     /**
      * The page picker: lists installed Elementor pages and posts the
      * selection to handle_check(). Renders, never echoes.
+     *
+     * @param array $args Accepts 'search' (string) and 'paged' (int), read by
+     *   AdminPage from $_GET['edc_s'] / $_GET['paged'] and sanitized there.
      */
     public function render_picker( array $args = [] ): string {
-        $rows  = $this->repo->find( $args );
-        $limit = ConversionPreflight::limit();
+        $limit    = ConversionPreflight::limit();
+        $search   = trim( (string) ( $args['search'] ?? '' ) );
+        $paged    = max( 1, (int) ( $args['paged'] ?? 1 ) );
+        $per_page = ElementorPageRepository::PER_PAGE;
+
+        // One extra row reveals whether a next page exists without the
+        // repository needing to report a total count.
+        $rows = $this->repo->find( [
+            'search'   => $search,
+            'paged'    => $paged,
+            'per_page' => $per_page + 1,
+        ] );
+
+        $has_next = count( $rows ) > $per_page;
+        if ( $has_next ) {
+            $rows = array_slice( $rows, 0, $per_page );
+        }
+
+        $html = $this->render_search_box( $search );
 
         if ( empty( $rows ) ) {
-            return '<p class="edc-direct-empty">'
+            return $html . '<p class="edc-direct-empty">'
                 . esc_html__( 'No Elementor pages found on this site. If your pages live elsewhere, use the JSON import above.', 'jhmg-converter-for-elementor-to-divi' )
                 . '</p>';
         }
@@ -147,7 +167,7 @@ class DirectConversionPage {
         $input_type = $limit > 1 ? 'checkbox' : 'radio';
         $name       = $limit > 1 ? 'edc_post_ids[]' : 'edc_post_ids';
 
-        $html  = '<form method="post" class="edc-direct-picker">';
+        $html .= '<form method="post" class="edc-direct-picker">';
         $html .= wp_nonce_field( self::CHECK_ACTION, self::CHECK_NONCE, true, false );
         $html .= '<input type="hidden" name="action" value="' . esc_attr( self::CHECK_ACTION ) . '">';
         $html .= '<table class="widefat edc-direct-table"><tbody>';
@@ -176,7 +196,55 @@ class DirectConversionPage {
                 . '</p>';
         }
 
+        $html .= '</form>';
+        $html .= $this->render_pager( $search, $paged, $has_next );
+
+        return $html;
+    }
+
+    /** A GET form so search state (and a fresh page=1) lives in the URL. */
+    private function render_search_box( string $search ): string {
+        $html  = '<form method="get" class="edc-direct-search">';
+        $html .= '<input type="hidden" name="page" value="' . esc_attr( AdminPage::MENU_SLUG ) . '">';
+        $html .= '<label class="screen-reader-text" for="edc-direct-search-input">'
+            . esc_html__( 'Search Elementor pages', 'jhmg-converter-for-elementor-to-divi' )
+            . '</label>';
+        $html .= '<input type="search" id="edc-direct-search-input" name="edc_s" value="'
+            . esc_attr( $search ) . '" placeholder="'
+            . esc_attr( __( 'Search by title…', 'jhmg-converter-for-elementor-to-divi' ) ) . '">';
+        $html .= '<button type="submit" class="button">'
+            . esc_html__( 'Search', 'jhmg-converter-for-elementor-to-divi' )
+            . '</button>';
+
         return $html . '</form>';
+    }
+
+    /** Plain prev/next links; a full WP_List_Table pager is more than this screen needs. */
+    private function render_pager( string $search, int $paged, bool $has_next ): string {
+        if ( $paged <= 1 && ! $has_next ) {
+            return '';
+        }
+
+        $base_args = [ 'page' => AdminPage::MENU_SLUG ];
+        if ( $search !== '' ) {
+            $base_args['edc_s'] = $search;
+        }
+
+        $html = '<p class="edc-direct-pager">';
+
+        if ( $paged > 1 ) {
+            $prev_url = add_query_arg( $base_args + [ 'paged' => $paged - 1 ], admin_url( 'tools.php' ) );
+            $html    .= '<a class="button" href="' . esc_url( $prev_url ) . '">&laquo; '
+                . esc_html__( 'Previous', 'jhmg-converter-for-elementor-to-divi' ) . '</a> ';
+        }
+
+        if ( $has_next ) {
+            $next_url = add_query_arg( $base_args + [ 'paged' => $paged + 1 ], admin_url( 'tools.php' ) );
+            $html    .= '<a class="button" href="' . esc_url( $next_url ) . '">'
+                . esc_html__( 'Next', 'jhmg-converter-for-elementor-to-divi' ) . ' &raquo;</a>';
+        }
+
+        return $html . '</p>';
     }
 
     /**

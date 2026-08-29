@@ -107,6 +107,66 @@ class DirectConversionRenderTest extends TestCase {
         $this->assertStringContainsString( 'edc-badge-converted', $html );
     }
 
+    public function test_the_search_term_reaches_the_repository_query(): void {
+        $seen = null;
+        $repo = new ElementorPageRepository( function ( array $args ) use ( &$seen ) {
+            $seen = $args;
+            return [ $this->row( 11, 'Home' ) ];
+        } );
+
+        ( new DirectConversionPage( $repo ) )->render_picker( [ 'search' => 'contact' ] );
+
+        $this->assertSame( 'contact', $seen['s'] ?? null, 'the search term must reach the repository query args' );
+    }
+
+    public function test_the_search_box_renders_and_preserves_its_value(): void {
+        $page = new DirectConversionPage( $this->repo_with( [ $this->row( 11, 'Home' ) ] ) );
+
+        $html = $page->render_picker( [ 'search' => 'About Us <script>' ] );
+
+        $this->assertStringContainsString( 'name="edc_s"', $html );
+        $this->assertStringContainsString( 'value="About Us &lt;script&gt;"', $html, 'the search value must be escaped and preserved' );
+    }
+
+    public function test_no_pager_appears_when_a_single_page_of_rows_is_returned(): void {
+        $page = new DirectConversionPage( $this->repo_with( [ $this->row( 11, 'Home' ) ] ) );
+
+        $html = $page->render_picker();
+
+        $this->assertStringNotContainsString( 'edc-direct-pager', $html );
+    }
+
+    public function test_the_pager_appears_when_there_are_more_rows_than_a_page(): void {
+        $rows = [];
+        for ( $i = 1; $i <= ElementorPageRepository::PER_PAGE + 1; $i++ ) {
+            $rows[] = $this->row( $i, 'Page ' . $i );
+        }
+
+        $page = new DirectConversionPage( $this->repo_with( $rows ) );
+
+        $html = $page->render_picker();
+
+        $this->assertStringContainsString( 'edc-direct-pager', $html );
+        $this->assertStringContainsString( 'Next', $html );
+        // Only a full page of rows is shown; the extra probe row is trimmed.
+        $this->assertStringNotContainsString( 'value="' . ( ElementorPageRepository::PER_PAGE + 1 ) . '"', $html );
+    }
+
+    public function test_the_pager_preserves_the_search_term_and_the_page_slug(): void {
+        $rows = [];
+        for ( $i = 1; $i <= ElementorPageRepository::PER_PAGE + 1; $i++ ) {
+            $rows[] = $this->row( $i, 'Page ' . $i );
+        }
+
+        $page = new DirectConversionPage( $this->repo_with( $rows ) );
+
+        $html = $page->render_picker( [ 'search' => 'contact', 'paged' => 2 ] );
+
+        $this->assertStringContainsString( 'page=edc-converter', $html );
+        $this->assertStringContainsString( 'edc_s=contact', $html );
+        $this->assertStringContainsString( 'Previous', $html, 'page 2 of results must offer a way back to page 1' );
+    }
+
     public function test_the_report_shows_the_outline_and_the_convert_button(): void {
         $plan = new ConversionPlan( [ ConversionPlan::item( [
             'title'   => 'Home',
