@@ -122,11 +122,21 @@ class InstalledPostSourceTest extends TestCase {
     }
 
     public function test_reading_a_source_writes_nothing(): void {
-        $id     = $this->seed_elementor_post( 508, 'Untouched' );
-        $before = [ $GLOBALS['__test_posts'], $GLOBALS['__test_postmeta'] ];
+        $id = $this->seed_elementor_post( 508, 'Untouched' );
+
+        // $GLOBALS['__test_posts'] holds stdClass objects: PHP copies the
+        // array by value but the objects inside it by handle, so a naive
+        // `$before = $GLOBALS['__test_posts']` snapshot would still point at
+        // the SAME post object the harness's wp_update_post() mutates in
+        // place. Casting to array copies the object's scalar properties by
+        // value, so this snapshot is actually independent of what happens
+        // to the live object afterward.
+        $before_post = (array) $GLOBALS['__test_posts'][ $id ];
+        $before_meta = $GLOBALS['__test_postmeta'];
 
         ( new InstalledPostSource( [ $id ] ) )->items();
 
-        $this->assertSame( $before, [ $GLOBALS['__test_posts'], $GLOBALS['__test_postmeta'] ] );
+        $this->assertSame( $before_post, (array) $GLOBALS['__test_posts'][ $id ] );
+        $this->assertSame( $before_meta, $GLOBALS['__test_postmeta'] );
     }
 }

@@ -21,9 +21,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class InstalledPostSource implements ConversionSource {
 
-    /** Elementor's own marker for a post built with its editor. */
-    const EDIT_MODE_META = '_elementor_edit_mode';
-
     /** @var int[] */
     private array $postIds;
     private ElementorDocumentParser $parser;
