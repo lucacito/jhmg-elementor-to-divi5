@@ -13,7 +13,7 @@ class ProPluginTest extends TestCase {
 
     public function test_constants_defined(): void {
         $this->assertSame( 'elementor-to-divi5-pro', EDCP_PRODUCT_SLUG );
-        $this->assertSame( '1.0.0', EDCP_PLUGIN_VERSION );
+        $this->assertSame( '1.1.0', EDCP_PLUGIN_VERSION );
     }
 
     public function test_pro_registers_the_direct_conversion_limit_filter(): void {

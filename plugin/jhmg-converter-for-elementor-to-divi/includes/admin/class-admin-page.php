@@ -305,6 +305,7 @@ class AdminPage {
 
                     <ul class="edc-lp-features">
                         <li><span class="edc-lp-check edc-lp-check--green">✓</span><?php esc_html_e( 'Convert single Elementor pages, one at a time', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
+                        <li><span class="edc-lp-check edc-lp-check--green">✓</span><?php esc_html_e( 'Convert a page directly from this site — check its structure first, then convert with one click', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
                         <li><span class="edc-lp-check edc-lp-check--green">✓</span><?php esc_html_e( 'Full layout, content, and style preservation', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
                         <li><span class="edc-lp-check edc-lp-check--green">✓</span><?php esc_html_e( 'Core Elementor widgets and popular addons', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
                         <li><span class="edc-lp-check edc-lp-check--green">✓</span><?php esc_html_e( 'No Elementor required on the destination site', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
@@ -368,6 +369,7 @@ class AdminPage {
 
                     <ul class="edc-lp-features">
                         <li><span class="edc-lp-check edc-lp-check--purple">✓</span><?php esc_html_e( 'Bulk import full Elementor kits via ZIP — entire sites in one upload', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
+                        <li><span class="edc-lp-check edc-lp-check--purple">✓</span><?php esc_html_e( 'Convert several installed pages from this site in one run', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
                         <li><span class="edc-lp-check edc-lp-check--purple">✓</span><?php esc_html_e( 'Set a header template JSON as your Divi Theme Builder global header', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
                         <li><span class="edc-lp-check edc-lp-check--purple">✓</span><?php esc_html_e( 'Set a footer template JSON as your Divi Theme Builder global footer', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
                         <li><span class="edc-lp-check edc-lp-check--purple">✓</span><?php esc_html_e( 'Apply global kit colors and typography across all conversions', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
