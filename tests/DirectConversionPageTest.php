@@ -51,11 +51,12 @@ class DirectConversionPageTest extends TestCase {
     }
 
     public function test_it_drops_a_post_that_is_not_elementor_built(): void {
-        $good = $this->seed( 203 );
+        add_filter( 'edc_direct_conversion_limit', fn( $v ) => 10 );
         $bad  = $this->seed( 204, 'Plain', false );
+        $good = $this->seed( 203 );
 
         $ids = ( new DirectConversionPage() )->selected_post_ids( [
-            'edc_post_ids' => [ (string) $good, (string) $bad ],
+            'edc_post_ids' => [ (string) $bad, (string) $good ],
         ] );
 
         $this->assertSame( [ 203 ], $ids, 'the rendered list must not be trusted as an allowlist' );
@@ -68,8 +69,10 @@ class DirectConversionPageTest extends TestCase {
     }
 
     public function test_it_drops_garbage_input(): void {
+        $this->seed( 1 );
+
         $ids = ( new DirectConversionPage() )->selected_post_ids( [
-            'edc_post_ids' => [ 'abc', '-1', '0', '<script>' ],
+            'edc_post_ids' => [ 'abc', '-1', '0', '<script>', [ 'nested' ] ],
         ] );
 
         $this->assertSame( [], $ids );

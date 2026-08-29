@@ -59,7 +59,10 @@ class DirectConversionPage {
 
         $ids = [];
         foreach ( $raw as $value ) {
-            $id = absint( $value );
+            if ( ! is_scalar( $value ) || ! ctype_digit( (string) $value ) ) {
+                continue;
+            }
+            $id = (int) $value;
             if ( $id <= 0 || in_array( $id, $ids, true ) ) {
                 continue;
             }
