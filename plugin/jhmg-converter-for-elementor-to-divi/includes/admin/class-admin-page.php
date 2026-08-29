@@ -16,6 +16,14 @@ class AdminPage {
     const IMPORT_NONCE_ACTION   = 'edc_import';
 
     /**
+     * The 'action' query value the direct-conversion report screen answers
+     * to. Shared with DirectConversionPage::handle_check(), which writes this
+     * exact value into its redirect — a typo on either side would otherwise
+     * silently produce a dead screen with a green test suite.
+     */
+    const VIEW_DIRECT_REPORT    = 'direct_report';
+
+    /**
      * Pro price as shown in the upgrade CTAs. Single-sourced: this must match the
      * live price on divi5lab.com. Shipping a stale literal here quotes free users
      * the wrong price with no other symptom.
@@ -64,7 +72,7 @@ class AdminPage {
 
         if ( $action === 'batch_result' ) {
             $this->render_batch_result();
-        } elseif ( $action === 'direct_report' ) {
+        } elseif ( $action === self::VIEW_DIRECT_REPORT ) {
             $this->render_direct_report();
         } else {
             $this->render_list();

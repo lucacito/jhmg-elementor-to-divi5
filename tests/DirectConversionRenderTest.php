@@ -1,6 +1,7 @@
 <?php
 // tests/DirectConversionRenderTest.php
 use PHPUnit\Framework\TestCase;
+use ElementorDivi5Converter\Admin\AdminPage;
 use ElementorDivi5Converter\Admin\DirectConversionPage;
 use ElementorDivi5Converter\Admin\ElementorPageRepository;
 use ElementorDivi5Converter\Conversion\ConversionPlan;
@@ -16,6 +17,7 @@ class DirectConversionRenderTest extends TestCase {
         $GLOBALS['__test_redirects'] = [];
         $GLOBALS['__test_caps'] = true;
         $_POST = [];
+        $_GET  = [];
     }
 
     private function repo_with( array $rows ): ElementorPageRepository {
@@ -222,7 +224,42 @@ class DirectConversionRenderTest extends TestCase {
         $this->assertNotEmpty( $page->redirected_to, 'handle_check must redirect' );
         $location = end( $page->redirected_to );
         $this->assertStringContainsString( 'page=edc-converter', $location );
-        $this->assertStringContainsString( 'action=direct_report', $location );
+        // Referencing the constant, not re-typing the literal: a one-side typo
+        // between here and AdminPage's router would fail this line.
+        $this->assertStringContainsString( 'action=' . AdminPage::VIEW_DIRECT_REPORT, $location );
+    }
+
+    /**
+     * Closes the loop the previous test cannot: it is not enough that
+     * handle_check() redirects to *a* string that happens to match the
+     * constant — the actual router in AdminPage::render_page() must accept
+     * that exact value and render the report screen, not silently fall
+     * through to the list view.
+     */
+    public function test_the_redirect_action_is_exactly_what_the_router_branches_on(): void {
+        $id = $this->seed( 310 );
+
+        $_POST = [
+            'action'       => DirectConversionPage::CHECK_ACTION,
+            'edc_post_ids' => (string) $id,
+        ];
+
+        $page = $this->non_exiting_page();
+        $page->maybe_handle_request();
+
+        $location = end( $page->redirected_to );
+        parse_str( (string) wp_parse_url( $location, PHP_URL_QUERY ), $query );
+
+        $this->assertSame( AdminPage::VIEW_DIRECT_REPORT, $query['action'] ?? null );
+
+        // Feed that exact redirect back into the real router.
+        $_GET = $query;
+
+        ob_start();
+        ( new AdminPage() )->render_page();
+        $html = ob_get_clean();
+
+        $this->assertStringContainsString( 'Conversion report', $html, 'the router must render the report screen for the action handle_check() redirects to' );
     }
 
     public function test_handle_check_stashes_the_verified_selection_for_the_report_screen(): void {
@@ -308,7 +345,41 @@ class DirectConversionRenderTest extends TestCase {
             'edc_post_ids' => '306',
         ];
 
+        // Uses the non-exiting seam: if the capability gate were ever
+        // deleted, a real DirectConversionPage would run handle_check() for
+        // real and hit the literal exit() in redirect(), killing the whole
+        // (non-process-isolated) PHPUnit run instead of failing this one
+        // test. The seam makes that failure loud and local.
+        $page = $this->non_exiting_page();
         $this->expectException( \RuntimeException::class );
-        ( new DirectConversionPage() )->maybe_handle_request();
+        $page->maybe_handle_request();
+    }
+
+    /**
+     * ImportHistory is capped at MAX_RUNS entries; a junk run recorded for an
+     * empty selection can evict a real, genuinely-undoable one. Converting
+     * nothing must therefore record nothing.
+     */
+    public function test_handle_convert_refuses_an_empty_selection_without_recording_a_run(): void {
+        $_POST = [
+            'action'       => DirectConversionPage::CONVERT_ACTION,
+            'edc_post_ids' => [],
+        ];
+
+        $history_before = ( new ImportHistory() )->all();
+
+        $page = $this->non_exiting_page();
+        $this->expectException( \RuntimeException::class );
+
+        try {
+            $page->maybe_handle_request();
+        } finally {
+            $this->assertSame(
+                $history_before,
+                ( new ImportHistory() )->all(),
+                'an empty selection must not write (and so must not evict) any run'
+            );
+            $this->assertEmpty( $page->redirected_to, 'an empty selection must not redirect to a fabricated result screen' );
+        }
     }
 }

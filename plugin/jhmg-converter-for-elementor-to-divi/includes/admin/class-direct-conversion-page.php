@@ -282,7 +282,7 @@ class DirectConversionPage {
         $this->redirect( add_query_arg(
             [
                 'page'   => AdminPage::MENU_SLUG,
-                'action' => 'direct_report',
+                'action' => AdminPage::VIEW_DIRECT_REPORT,
             ],
             admin_url( 'tools.php' )
         ) );
@@ -297,7 +297,17 @@ class DirectConversionPage {
      * path without silently losing that guarantee.
      */
     protected function handle_convert(): void {
-        $ids     = $this->selected_post_ids( wp_unslash( $_POST ) );
+        $ids = $this->selected_post_ids( wp_unslash( $_POST ) );
+
+        // A stale form, a tampered request, or the page being deleted between
+        // check and convert can all empty the selection out from under us.
+        // Converting nothing must not write a junk run to ImportHistory:
+        // that history is capped at MAX_RUNS, so a junk entry can evict a
+        // real one and quietly take its Undo affordance with it.
+        if ( empty( $ids ) ) {
+            wp_die( esc_html__( 'No pages were selected to convert.', 'jhmg-converter-for-elementor-to-divi' ) );
+        }
+
         $results = $this->convert( $ids );
 
         // Counted here rather than on the results screen: that view renders
