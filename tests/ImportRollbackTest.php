@@ -37,6 +37,25 @@ class ImportRollbackTest extends TestCase {
         $this->assertSame( 0, $out['skipped'] );
     }
 
+    public function test_trashes_a_directly_converted_post(): void {
+        // Direct conversions stamp _edc_import_source = 'direct' (plus
+        // _edc_source_post_id) instead of 'file_upload'; the rollback guard
+        // only checks that the meta is non-empty, so this must be undoable
+        // exactly like an uploaded import.
+        $h = new ImportHistory();
+        $h->record( 'run1', [
+            [ 'success' => true, 'post_id' => 20, 'unsupported' => [] ],
+        ] );
+        update_post_meta( 20, '_edc_import_source', 'direct' );
+        update_post_meta( 20, '_edc_source_post_id', 5 );
+
+        $out = ( new ImportRollback( $h ) )->rollback( 'run1' );
+
+        $this->assertSame( [ 20 ], $GLOBALS['__test_trashed'], 'a directly-converted post must be undoable like any other import' );
+        $this->assertSame( 1, $out['trashed'] );
+        $this->assertSame( 0, $out['skipped'] );
+    }
+
     public function test_skips_posts_the_plugin_does_not_own(): void {
         // 11 has no _edc_import_source meta — the user may have replaced it.
         $h = $this->seed( [ 10, 11 ], [ 10 ] );

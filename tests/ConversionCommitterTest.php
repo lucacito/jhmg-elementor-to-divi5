@@ -151,9 +151,13 @@ class ConversionCommitterTest extends TestCase {
         };
         add_filter( 'edc_theme_builder_exporter', fn( $v ) => $fake );
 
-        $plan = new ConversionPlan( [ $this->plan_item( [ 'template_type' => 'header' ] ) ] );
-        ( new ConversionCommitter() )->commit( $plan, [ 'convert_headers' => false ] );
+        $plan    = new ConversionPlan( [ $this->plan_item( [ 'template_type' => 'header' ] ) ] );
+        $results = ( new ConversionCommitter() )->commit( $plan, [ 'convert_headers' => false ] );
 
         $this->assertSame( [], $fake->calls );
+        $this->assertCount( 1, $results );
+        $this->assertTrue( $results[0]['success'], 'the header must still be imported, just as a plain page' );
+        $post = $GLOBALS['__test_posts'][ $results[0]['post_id'] ];
+        $this->assertSame( 'page', $post->post_type );
     }
 }

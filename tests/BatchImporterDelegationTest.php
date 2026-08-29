@@ -47,6 +47,14 @@ class BatchImporterDelegationTest extends TestCase {
         $results = ( new BatchImporter() )->import( $items );
 
         $this->assertCount( 3, $results, 'the upload path must not inherit the direct-conversion cap' );
+        foreach ( $results as $result ) {
+            $this->assertTrue( $result['success'], 'every uploaded item must actually convert, not merely be counted' );
+        }
+        $this->assertCount(
+            3,
+            array_unique( array_column( $results, 'post_id' ) ),
+            'three distinct posts must have actually been created'
+        );
     }
 
     public function test_import_plan_commits_an_already_built_plan(): void {
