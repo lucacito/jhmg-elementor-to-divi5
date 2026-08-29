@@ -3,24 +3,28 @@ Contributors: lucaslopvet
 Tags: divi migration, elementor export, page builder converter, elementor to divi, divi 5
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 2.3.0
+Stable tag: 3.0.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Migrate Elementor pages and templates to Divi 5. Unlimited single-page JSON imports for free; the Pro add-on adds kit imports, global headers, and footers.
+Convert a page straight from your installed Elementor site — pick it from a list, no export or upload needed. Unlimited single-page conversions for free; the Pro add-on converts many pages in one run.
 
 == Description ==
 
-Convert Elementor-built pages and templates into native Divi 5 blocks with precision and ease. Upload an Elementor page JSON export and the plugin creates a converted page directly in your WordPress site — no live Elementor installation required on the destination. (Full Kit ZIP import for whole-site migrations is available in the [Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5).)
+Convert Elementor-built pages and templates into native Divi 5 blocks with precision and ease. If Elementor is installed on this site, just pick the page you want to convert from a list — no export, no upload. Converting from a different site instead? Upload an Elementor page JSON export and the plugin creates a converted page directly in your WordPress site — no live Elementor installation required on the destination.
 
-Version 2.0 is a full rewrite targeting Divi 5's native block format, not legacy shortcodes. All conversion happens from the exported file, so your live Elementor site is never touched.
+Before you convert, click **Check this page** to see a conversion report: the structure the conversion will produce (sections, rows, columns, and modules, laid out as an outline) and the names of any widgets that could not be converted. Nothing is written to your site until you click Convert. Converting always creates a new Divi draft — your Elementor page is never modified — and every run is recorded in the import history, so it can be undone with one click.
+
+(Full Kit ZIP import for whole-site migrations, plus Theme Builder headers, footers, and global styles, are available in the [Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5).)
 
 ### Free vs Pro
 
 **Free — Convert single pages at no cost:**
 
-* Upload any Elementor page JSON export
+* Convert a page straight from your Elementor site — pick it from a list, no export needed
+* Check any page before converting: see the structure and exactly which widgets could not be converted, before anything is written
+* Upload an Elementor page JSON export instead, if you're converting from a different site
 * Get a fully converted Divi 5 page instantly
 * Full layout, content, and style preservation
 * Core Elementor widgets and most popular addons supported
@@ -32,7 +36,7 @@ Version 2.0 is a full rewrite targeting Divi 5's native block format, not legacy
 
 The Pro add-on is a separate plugin, purchased and installed alongside this one, that unlocks:
 
-* **Full Kit import (ZIP)**: upload your Elementor Export Kit and convert every page in one batch
+* **Convert many pages in one run**: select several installed pages (or a full Elementor Export Kit ZIP) and convert them together
 * **Global Header**: upload a single Elementor header template JSON and register it directly as a Divi Theme Builder global header
 * **Global Footer**: upload a single Elementor footer template JSON and register it directly as a Divi Theme Builder global footer
 * **Global styles**: extract your kit's exact colors and typography and apply them across all conversions
@@ -66,7 +70,15 @@ After importing, go to **Divi → Theme Builder** in the WordPress admin to:
 
 ### Complete Migration: Step by Step
 
-**For a single page (Free):**
+**For a single page (Free), converting from this same site:**
+
+1. Install and activate this plugin on your Divi 5 site (Elementor must already be installed here too)
+2. Go to **Tools → Elementor → Divi 5** in the WordPress admin
+3. Pick the page you want to convert from the list
+4. Click **Check this page** to see the conversion report — the structure it will produce, and any widgets that could not be converted
+5. Click **Convert** — a new Divi draft is created; review it in Divi Builder, then publish when ready
+
+**For a single page (Free), converting from a different site:**
 
 1. In Elementor, export the page: Page → Export Template → download the JSON
 2. Install and activate this plugin on your Divi 5 site
@@ -117,13 +129,17 @@ The Premium Addons blog listing widget is converted to the Divi Blog module, pre
 
 == Frequently Asked Questions ==
 
+= Do I need to export a JSON file? =
+
+No, if Elementor is installed on the same site — pick the page from the list on **Tools → Elementor → Divi 5** and convert it directly. Yes, if you're converting from a different site: export the page in Elementor first, then upload that JSON file here.
+
 = Do I need Elementor installed on the destination site? =
 
-No. The converter works from the exported file directly. You only need Divi 5 installed on the destination site.
+Only if you want to convert a page directly from that site's list. If you're uploading a JSON export instead, no — the converter works from the exported file directly, and you only need Divi 5 installed on the destination site.
 
 = What is free and what requires the Pro add-on? =
 
-**Free**: convert single Elementor pages via JSON — unlimited, one page at a time.
+**Free**: convert single Elementor pages — either picked directly from your installed Elementor site, or via a JSON upload — unlimited, one page at a time.
 
 **Pro add-on** (a separate plugin — [divi5lab.com/plugins/elementor-to-divi-5](https://divi5lab.com/plugins/elementor-to-divi-5)): import full Elementor Kit ZIPs to convert entire sites in one batch; upload a header template JSON to set it as a Divi Theme Builder global header; upload a footer template JSON to set it as a Divi Theme Builder global footer; extract and apply global colors and typography from your kit.
 
@@ -137,15 +153,15 @@ The plugin preserves all text, images, videos, and basic styling. Some advanced 
 
 = Will this affect my live Elementor pages? =
 
-No. The plugin works from an exported file and creates new posts. Your original Elementor pages remain untouched.
+No. Whether you pick a page from the list or upload a JSON export, the plugin never modifies the Elementor page — it always creates a new Divi draft. Your original Elementor pages remain untouched, and every conversion run can be undone with one click.
 
 = What about custom CSS from Elementor? =
 
 Basic inline styles are converted. Custom CSS classes and complex styling may need manual recreation in Divi 5 after conversion.
 
-= Can I convert my entire site at once? =
+= Can I convert several pages at once? =
 
-Yes, with the [Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5). Export a full Elementor Kit ZIP and upload it there — Pro converts all pages in the ZIP in one batch. You can then separately upload your header and footer JSON templates to register them in the Divi Theme Builder.
+Yes, with the [Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5). Select as many installed pages as you like and convert them in one run, or export a full Elementor Kit ZIP and upload it — Pro converts every page in the ZIP in one batch. You can then separately upload your header and footer JSON templates to register them in the Divi Theme Builder.
 
 = Where do my converted header and footer templates end up? =
 
@@ -153,7 +169,7 @@ With the Pro add-on, they are created directly inside the Divi Theme Builder —
 
 = What if something doesn't convert properly? =
 
-Unsupported elements are listed in the conversion report shown after each import, so you know exactly what to manually recreate.
+Click **Check this page** before converting to see the widgets that can't be converted, by name — nothing is written to your site yet at that point. The same list also appears in the conversion report shown after each import, so you always know exactly what to manually recreate.
 
 = What changed from version 1.x? =
 
@@ -183,6 +199,13 @@ commonly missing Elementor widgets get built first.
 * Terms: https://divi5lab.com/terms — Privacy policy: https://divi5lab.com/privacy
 
 == Changelog ==
+
+= 3.0.0 =
+* New: convert directly from your installed Elementor site — pick a page from a list, no export or upload
+* New: check any page before converting — see the converted structure and which widgets could not be converted, before anything is written to your site
+* Converting never touches your Elementor page: it always creates a new Divi draft, and every run is undoable
+* Pro: convert several pages from your site in one run
+* Fixed: on a multi-page kit import the per-page conversion counts accumulated instead of being counted per page, so later pages reported inflated totals (Pro)
 
 = 2.3.0 =
 * New: Undo an import — one click moves the pages an import created to the trash, so trying a conversion is no longer a one-way door. Pages that are no longer linked to that import (already gone, or replaced) are skipped; note that editing a page does not exempt it from Undo
@@ -226,6 +249,9 @@ commonly missing Elementor widgets get built first.
 * Detailed conversion logging
 
 == Upgrade Notice ==
+
+= 3.0.0 =
+The export-and-upload step is gone: if Elementor is installed on this site, pick a page from a list and convert it directly, with a "Check this page" report before anything is written. Pro users running multi-page kit imports will now see correct per-page conversion counts (they used to accumulate across pages).
 
 = 2.3.0 =
 Adds one-click Undo for an import, so trying a conversion is no longer a one-way door, plus a coverage report showing which Elementor widgets could not be converted. Pro also dropped to $25/yr from $49/yr — the same unlimited-sites license. The free plugin still converts unlimited single pages.
