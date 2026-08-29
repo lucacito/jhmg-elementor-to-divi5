@@ -516,6 +516,45 @@ if ( ! function_exists( 'wp_trash_post' ) ) {
     }
 }
 
+if ( ! function_exists( 'sanitize_text_field' ) ) {
+    function sanitize_text_field( $str ) {
+        return trim( strip_tags( (string) $str ) );
+    }
+}
+
+if ( ! function_exists( 'absint' ) ) {
+    function absint( $n ) {
+        return abs( (int) $n );
+    }
+}
+
+if ( ! function_exists( 'get_post_types' ) ) {
+    // Tests seed $GLOBALS['__test_post_types'] when they need more than the default two.
+    function get_post_types( $args = [], $output = 'names' ) {
+        return $GLOBALS['__test_post_types'] ?? [ 'post' => 'post', 'page' => 'page' ];
+    }
+}
+
+if ( ! function_exists( 'checked' ) ) {
+    function checked( $checked, $current = true, $echo = true ) {
+        $result = (string) $checked === (string) $current ? " checked='checked'" : '';
+        if ( $echo ) {
+            echo $result;
+        }
+        return $result;
+    }
+}
+
+if ( ! function_exists( 'selected' ) ) {
+    function selected( $selected, $current = true, $echo = true ) {
+        $result = (string) $selected === (string) $current ? " selected='selected'" : '';
+        if ( $echo ) {
+            echo $result;
+        }
+        return $result;
+    }
+}
+
 if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php' ) ) {
     require_once __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php';
 }
