@@ -2,6 +2,10 @@
 
 namespace ElementorDivi5Converter\Admin;
 
+use ElementorDivi5Converter\Conversion\ConversionCommitter;
+use ElementorDivi5Converter\Conversion\ConversionPlan;
+use ElementorDivi5Converter\Conversion\ConversionPreflight;
+use ElementorDivi5Converter\Conversion\ConversionSource;
 use ElementorDivi5Converter\Converter\ConverterEngine;
 use ElementorDivi5Converter\Exporters\DiviExporter;
 
@@ -12,6 +16,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Runs the converter + exporter for a list of import items and returns results.
  *
+ * Since 3.0.0 this is a thin orchestrator over ConversionPreflight (convert,
+ * writing nothing) and ConversionCommitter (write). Its signature and result
+ * shape are unchanged, because AdminPage and the Pro add-on both depend on them.
+ *
  * Each input item must have shape:
  *   ['title' => string, 'post_type' => string, 'post_name' => string, 'elements' => array]
  *
@@ -19,68 +27,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   ['title' => string, 'post_id' => int, 'success' => bool, 'error' => string, 'report' => array]
  */
 class BatchImporter {
-    private ConverterEngine $engine;
-    private DiviExporter $exporter;
-    /** Theme Builder exporter supplied by the Pro add-on via filter (null when absent). */
-    private ?object $themeBuilderExporter;
+
+    private ConversionPreflight $preflight;
+    private ConversionCommitter $committer;
 
     public function __construct(
         ?ConverterEngine $engine = null,
         ?DiviExporter $exporter = null,
         ?object $themeBuilderExporter = null
     ) {
-        $this->engine   = $engine   ?? new ConverterEngine();
-        $this->exporter = $exporter ?? new DiviExporter();
-        $this->themeBuilderExporter = $themeBuilderExporter
-            ?? ( function_exists( 'apply_filters' ) ? apply_filters( 'edc_theme_builder_exporter', null ) : null );
-
-        $global_colors = $this->extractElementorGlobalColors();
-        if ( ! empty( $global_colors ) ) {
-            $this->engine->setGlobalColors( $global_colors );
-        }
-    }
-
-    /**
-     * Reads Elementor global colors from the active Kit post so they can be
-     * resolved during conversion.
-     *
-     * Elementor stores the active Kit post ID in the `elementor_active_kit`
-     * option. The Kit's `_elementor_page_settings` meta holds `system_colors`
-     * and `custom_colors` arrays, each containing `{_id, color}` objects.
-     *
-     * @return array<string,string> Map of color id → hex value.
-     */
-    private function extractElementorGlobalColors(): array {
-        if ( ! function_exists( 'get_option' ) ) {
-            return [];
-        }
-
-        $kit_id = (int) get_option( 'elementor_active_kit', 0 );
-        if ( $kit_id <= 0 ) {
-            return [];
-        }
-
-        $kit_settings = get_post_meta( $kit_id, '_elementor_page_settings', true );
-        if ( ! is_array( $kit_settings ) ) {
-            return [];
-        }
-
-        $colors = [];
-        foreach ( [ 'system_colors', 'custom_colors' ] as $group_key ) {
-            $group = $kit_settings[ $group_key ] ?? [];
-            if ( ! is_array( $group ) ) {
-                continue;
-            }
-            foreach ( $group as $color_item ) {
-                $id  = $color_item['_id']   ?? '';
-                $hex = $color_item['color'] ?? '';
-                if ( $id !== '' && $hex !== '' ) {
-                    $colors[ $id ] = $hex;
-                }
-            }
-        }
-
-        return $colors;
+        $this->preflight = new ConversionPreflight( $engine );
+        $this->committer = new ConversionCommitter( $exporter, $themeBuilderExporter );
     }
 
     /**
@@ -89,154 +46,24 @@ class BatchImporter {
      * @return array[] Per-item results.
      */
     public function import( array $items, array $options = [] ): array {
-        $default_post_type   = $options['post_type']      ?? 'page';
-        $default_post_status = $options['post_status']    ?? 'draft';
-        $convert_headers     = $options['convert_headers'] ?? true;
-        $convert_footers     = $options['convert_footers'] ?? true;
+        return $this->committer->commit( $this->preflight->runUnlimited( $this->sourceFor( $items ) ), $options );
+    }
 
-        $results = [];
-
-        foreach ( $items as $item ) {
-            $template_type = (string) ( $item['template_type'] ?? '' );
-
-            $wants_theme_builder = ( $template_type === 'header' && $convert_headers )
-                || ( $template_type === 'footer' && $convert_footers );
-
-            if ( $wants_theme_builder && $this->themeBuilderExporter === null ) {
-                $result = $this->importPageItem( $item, $default_post_type, $default_post_status );
-                $result['report']['warnings'][] = 'Theme Builder export for headers/footers requires the Pro add-on — imported as a regular draft instead. Get Pro: https://divi5lab.com/plugins/elementor-to-divi-5';
-                $results[] = $result;
-                continue;
-            }
-
-            if ( $template_type === 'header' && $convert_headers ) {
-                $results[] = $this->importHeaderTemplate( $item, $default_post_status );
-                continue;
-            }
-
-            if ( $template_type === 'footer' && $convert_footers ) {
-                $results[] = $this->importFooterTemplate( $item, $default_post_status );
-                continue;
-            }
-
-            $results[] = $this->importPageItem( $item, $default_post_type, $default_post_status );
-        }
-
-        return $results;
+    /** Commit a plan a caller already built — the preview screen's convert step. */
+    public function importPlan( ConversionPlan $plan, array $options = [] ): array {
+        return $this->committer->commit( $plan, $options );
     }
 
     /**
-     * Import a standard page/post item.
+     * The direct-conversion limit caps what the picker may select; it must not
+     * cap an upload. A kit ZIP's page count is the user's file, not a tier
+     * boundary, so uploads are planned at an unlimited cap.
      */
-    private function importPageItem( array $item, string $post_type, string $post_status ): array {
-        $title     = (string) ( $item['title']     ?? 'Imported Page' );
-        $post_name = (string) ( $item['post_name'] ?? '' );
-        $elements  = $item['elements'] ?? [];
-
-        try {
-            $post_args = [
-                'post_type'    => $post_type,
-                'post_title'   => $title ?: 'Imported Page',
-                'post_status'  => $post_status,
-                'post_content' => '',
-            ];
-
-            if ( $post_name !== '' ) {
-                $post_args['post_name'] = $post_name;
-            }
-
-            $post_id = wp_insert_post( $post_args );
-
-            if ( is_wp_error( $post_id ) || (int) $post_id === 0 ) {
-                $error = is_wp_error( $post_id ) ? $post_id->get_error_message() : 'wp_insert_post returned 0';
-                return $this->failResult( $title, $error );
-            }
-
-            $post_id   = (int) $post_id;
-            $converted = $this->engine->convert( $elements );
-            $this->exporter->save( $post_id, $converted );
-
-            update_post_meta( $post_id, '_edc_import_source', 'file_upload' );
-
-            return [
-                'title'       => $title,
-                'post_id'     => $post_id,
-                'success'     => true,
-                'error'       => '',
-                'report'      => $converted['report']      ?? [],
-                'unsupported' => $converted['unsupported'] ?? [],
-            ];
-        } catch ( \Throwable $e ) {
-            return $this->failResult( $title, $e->getMessage() );
-        }
-    }
-
-    /**
-     * Import an Elementor header template into the Divi Theme Builder.
-     */
-    private function importHeaderTemplate( array $item, string $post_status ): array {
-        $title    = (string) ( $item['title']    ?? 'Imported Header' );
-        $elements = $item['elements'] ?? [];
-
-        try {
-            $converted = $this->engine->convert( $elements );
-            $tb_result = $this->themeBuilderExporter->saveHeader( $title, $converted );
-
-            update_post_meta( $tb_result['post_id'], '_edc_import_source', 'file_upload' );
-
-            return [
-                'title'            => $title,
-                'post_id'          => $tb_result['post_id'],
-                'template_id'      => $tb_result['template_id'],
-                'theme_builder_id' => $tb_result['theme_builder_id'],
-                'template_type'    => 'header',
-                'success'          => $tb_result['success'],
-                'error'            => $tb_result['error'],
-                'report'           => $converted['report']      ?? [],
-                'unsupported'      => $converted['unsupported'] ?? [],
-            ];
-        } catch ( \Throwable $e ) {
-            return $this->failResult( $title, $e->getMessage() );
-        }
-    }
-
-    /**
-     * Import an Elementor footer template into the Divi Theme Builder.
-     */
-    private function importFooterTemplate( array $item, string $post_status ): array {
-        $title    = (string) ( $item['title']    ?? 'Imported Footer' );
-        $elements = $item['elements'] ?? [];
-
-        try {
-            $converted = $this->engine->convert( $elements );
-            $tb_result = $this->themeBuilderExporter->saveFooter( $title, $converted );
-
-            update_post_meta( $tb_result['post_id'], '_edc_import_source', 'file_upload' );
-
-            return [
-                'title'            => $title,
-                'post_id'          => $tb_result['post_id'],
-                'template_id'      => $tb_result['template_id'],
-                'theme_builder_id' => $tb_result['theme_builder_id'],
-                'template_type'    => 'footer',
-                'success'          => $tb_result['success'],
-                'error'            => $tb_result['error'],
-                'report'           => $converted['report']      ?? [],
-                'unsupported'      => $converted['unsupported'] ?? [],
-            ];
-        } catch ( \Throwable $e ) {
-            return $this->failResult( $title, $e->getMessage() );
-        }
-    }
-
-    private function failResult( string $title, string $error ): array {
-        return [
-            'title'      => $title,
-            'post_id'    => 0,
-            'success'    => false,
-            'error'      => $error,
-            'report'     => [],
-            'unsupported' => [],
-        ];
+    private function sourceFor( array $items ): ConversionSource {
+        return new class( $items ) implements ConversionSource {
+            private array $items;
+            public function __construct( array $items ) { $this->items = $items; }
+            public function items(): array { return $this->items; }
+        };
     }
 }

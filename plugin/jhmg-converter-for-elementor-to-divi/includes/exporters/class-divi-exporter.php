@@ -48,18 +48,13 @@ class DiviExporter {
     /**
      * Save the exported Divi meta to a post.
      *
-     * @param int $post_id
+     * @param int   $post_id
      * @param array $divi_data
-     * @param bool $dry_run If true, do not persist, just return meta.
-     * @return array|bool If $dry_run returns meta array, otherwise boolean success.
+     * @return bool
      */
-    public function save( int $post_id, array $divi_data, bool $dry_run = false ) {
+    public function save( int $post_id, array $divi_data ) {
         $meta         = $this->export( $divi_data );
         $post_content = $this->serializer->serialize( $divi_data );
-
-        if ( $dry_run ) {
-            return $meta;
-        }
 
         // wp_update_post expects slashed data; wp_slash prevents double-unslash.
         wp_update_post( [

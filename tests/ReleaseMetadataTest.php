@@ -10,9 +10,9 @@ class ReleaseMetadataTest extends TestCase {
         $main   = (string) file_get_contents( self::FREE . '/jhmg-converter-for-elementor-to-divi.php' );
         $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
 
-        $this->assertStringContainsString( 'Version:     2.3.0', $main );
-        $this->assertStringContainsString( "EDC_PLUGIN_VERSION', '2.3.0'", $main );
-        $this->assertStringContainsString( 'Stable tag: 2.3.0', $readme );
+        $this->assertStringContainsString( 'Version:     3.0.0', $main );
+        $this->assertStringContainsString( "EDC_PLUGIN_VERSION', '3.0.0'", $main );
+        $this->assertStringContainsString( 'Stable tag: 3.0.0', $readme );
     }
 
     public function test_readme_discloses_the_external_service(): void {
@@ -59,5 +59,31 @@ class ReleaseMetadataTest extends TestCase {
             $readme,
             'External services section must explicitly state what is NOT sent'
         );
+    }
+
+    public function test_version_is_three_zero_zero_everywhere(): void {
+        $main   = (string) file_get_contents( self::FREE . '/jhmg-converter-for-elementor-to-divi.php' );
+        $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
+
+        $this->assertMatchesRegularExpression( '/^\s*\*\s*Version:\s*3\.0\.0\s*$/m', $main );
+        $this->assertMatchesRegularExpression( '/^Stable tag:\s*3\.0\.0\s*$/m', $readme );
+    }
+
+    public function test_readme_changelog_documents_3_0_0(): void {
+        $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
+
+        $this->assertStringContainsString( '= 3.0.0 =', $readme );
+    }
+
+    public function test_readme_does_not_promise_a_visual_preview(): void {
+        $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
+
+        $this->assertStringNotContainsString( 'visual preview', strtolower( $readme ), 'checking a page reports structure, not pixels' );
+    }
+
+    public function test_readme_documents_the_accumulated_count_fix(): void {
+        $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
+
+        $this->assertStringContainsString( 'accumulated', $readme, 'the per-page conversion count fix must be disclosed for Pro kit-import users' );
     }
 }

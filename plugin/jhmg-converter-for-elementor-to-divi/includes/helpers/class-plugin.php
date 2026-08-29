@@ -25,6 +25,7 @@ class Plugin {
     public function register_hooks(): void {
         if ( is_admin() ) {
             ( new \ElementorDivi5Converter\Admin\AdminPage() )->init();
+            ( new \ElementorDivi5Converter\Admin\DirectConversionPage() )->init();
             ( new \ElementorDivi5Converter\Admin\PriceDropNotice() )->init();
             ( new \ElementorDivi5Converter\Admin\ReviewPrompt() )->init();
             ( new \ElementorDivi5Converter\History\ImportRollback() )->init();

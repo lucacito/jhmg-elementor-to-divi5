@@ -52,6 +52,7 @@ if ( ! function_exists( 'edc_test_reset_hooks' ) ) {
         if ( isset( $GLOBALS['__test_options'] ) ) {
             $GLOBALS['__test_options'] = [];
         }
+        $GLOBALS['__test_redirects'] = [];
     }
 }
 
@@ -487,14 +488,57 @@ if ( ! function_exists( 'admin_url' ) ) {
     function admin_url( string $path = '' ): string { return 'https://example.test/wp-admin/' . ltrim( $path, '/' ); }
 }
 if ( ! function_exists( 'add_query_arg' ) ) {
+    // Supports both the array form add_query_arg( [ 'k' => 'v', ... ], $url )
+    // and the single-pair form add_query_arg( $key, $value, $url ) — the admin
+    // handlers in this plugin use the array form exclusively.
     function add_query_arg( $key, $value = null, $url = null ): string {
-        $base = is_string( $url ) ? $url : 'https://example.test/wp-admin/plugins.php';
-        return $base . ( strpos( $base, '?' ) === false ? '?' : '&' ) . rawurlencode( (string) $key ) . '=' . rawurlencode( (string) $value );
+        if ( is_array( $key ) ) {
+            $args = $key;
+            $base = is_string( $value ) ? $value : 'https://example.test/wp-admin/plugins.php';
+        } else {
+            $args = [ (string) $key => $value ];
+            $base = is_string( $url ) ? $url : 'https://example.test/wp-admin/plugins.php';
+        }
+
+        $pairs = [];
+        foreach ( $args as $k => $v ) {
+            $pairs[] = rawurlencode( (string) $k ) . '=' . rawurlencode( (string) $v );
+        }
+
+        return $base . ( strpos( $base, '?' ) === false ? '?' : '&' ) . implode( '&', $pairs );
     }
 }
 if ( ! function_exists( 'wp_create_nonce' ) ) {
     function wp_create_nonce( string $action = '-1' ): string { return 'nonce-' . md5( $action ); }
     function wp_verify_nonce( $nonce, string $action = '-1' ) { return $nonce === 'nonce-' . md5( $action ) ? 1 : false; }
+}
+if ( ! function_exists( 'wp_nonce_field' ) ) {
+    function wp_nonce_field( $action = -1, $name = '_wpnonce', $referer = true, $echo = true ) {
+        $field = '<input type="hidden" name="' . $name . '" value="testnonce">';
+        if ( $echo ) {
+            echo $field;
+        }
+        return $field;
+    }
+}
+if ( ! function_exists( 'check_admin_referer' ) ) {
+    function check_admin_referer( $action = -1, $name = '_wpnonce' ) {
+        return true;
+    }
+}
+if ( ! function_exists( 'wp_safe_redirect' ) ) {
+    $GLOBALS['__test_redirects'] = [];
+
+    // Records the redirect instead of sending headers, so handler tests can assert it.
+    function wp_safe_redirect( $location, $status = 302 ) {
+        $GLOBALS['__test_redirects'][] = $location;
+        return true;
+    }
+}
+if ( ! function_exists( 'wp_die' ) ) {
+    function wp_die( $message = '' ) {
+        throw new \RuntimeException( (string) $message );
+    }
 }
 if ( ! function_exists( 'wp_unslash' ) ) {
     function wp_unslash( $v ) { return is_string( $v ) ? stripslashes( $v ) : $v; }
@@ -513,6 +557,45 @@ if ( ! function_exists( 'wp_trash_post' ) ) {
         }
         $GLOBALS['__test_trashed'][] = $post_id;
         return (object) [ 'ID' => $post_id ];
+    }
+}
+
+if ( ! function_exists( 'sanitize_text_field' ) ) {
+    function sanitize_text_field( $str ) {
+        return trim( strip_tags( (string) $str ) );
+    }
+}
+
+if ( ! function_exists( 'absint' ) ) {
+    function absint( $n ) {
+        return abs( (int) $n );
+    }
+}
+
+if ( ! function_exists( 'get_post_types' ) ) {
+    // Tests seed $GLOBALS['__test_post_types'] when they need more than the default two.
+    function get_post_types( $args = [], $output = 'names' ) {
+        return $GLOBALS['__test_post_types'] ?? [ 'post' => 'post', 'page' => 'page' ];
+    }
+}
+
+if ( ! function_exists( 'checked' ) ) {
+    function checked( $checked, $current = true, $echo = true ) {
+        $result = (string) $checked === (string) $current ? " checked='checked'" : '';
+        if ( $echo ) {
+            echo $result;
+        }
+        return $result;
+    }
+}
+
+if ( ! function_exists( 'selected' ) ) {
+    function selected( $selected, $current = true, $echo = true ) {
+        $result = (string) $selected === (string) $current ? " selected='selected'" : '';
+        if ( $echo ) {
+            echo $result;
+        }
+        return $result;
     }
 }
 

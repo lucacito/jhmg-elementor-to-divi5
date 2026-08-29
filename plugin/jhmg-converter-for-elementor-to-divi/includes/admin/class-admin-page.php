@@ -16,6 +16,14 @@ class AdminPage {
     const IMPORT_NONCE_ACTION   = 'edc_import';
 
     /**
+     * The 'action' query value the direct-conversion report screen answers
+     * to. Shared with DirectConversionPage::handle_check(), which writes this
+     * exact value into its redirect — a typo on either side would otherwise
+     * silently produce a dead screen with a green test suite.
+     */
+    const VIEW_DIRECT_REPORT    = 'direct_report';
+
+    /**
      * Pro price as shown in the upgrade CTAs. Single-sourced: this must match the
      * live price on divi5lab.com. Shipping a stale literal here quotes free users
      * the wrong price with no other symptom.
@@ -64,6 +72,8 @@ class AdminPage {
 
         if ( $action === 'batch_result' ) {
             $this->render_batch_result();
+        } elseif ( $action === self::VIEW_DIRECT_REPORT ) {
+            $this->render_direct_report();
         } else {
             $this->render_list();
         }
@@ -260,6 +270,26 @@ class AdminPage {
                 </div>
             </div>
 
+            <div class="edc-lp-direct">
+                <h2 class="edc-lp-section-title"><?php esc_html_e( 'Convert a page already on this site', 'jhmg-converter-for-elementor-to-divi' ); ?></h2>
+                <?php
+                $direct_conversion = new DirectConversionPage();
+                if ( $direct_conversion->has_elementor_content() ) :
+                    ?>
+                    <p class="description"><?php esc_html_e( 'Pick an Elementor page below and click Check this page. Converting creates a new Divi draft — your Elementor page is left exactly as it is.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
+                    <?php
+                    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only paging/search state, sanitized below.
+                    $edc_search = sanitize_text_field( wp_unslash( $_GET['edc_s'] ?? '' ) );
+                    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only paging/search state, sanitized below.
+                    $edc_paged  = absint( $_GET['paged'] ?? 1 );
+                    // Escaped at every interpolation inside render_picker().
+                    echo $direct_conversion->render_picker( [ 'search' => $edc_search, 'paged' => $edc_paged ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                    ?>
+                <?php else : ?>
+                    <p class="description"><?php esc_html_e( 'No Elementor pages were found installed on this site. Use the JSON import below instead.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
+                <?php endif; ?>
+            </div>
+
             <div class="edc-lp-plans">
 
                 <div class="edc-lp-card edc-lp-card--free">
@@ -275,6 +305,7 @@ class AdminPage {
 
                     <ul class="edc-lp-features">
                         <li><span class="edc-lp-check edc-lp-check--green">✓</span><?php esc_html_e( 'Convert single Elementor pages, one at a time', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
+                        <li><span class="edc-lp-check edc-lp-check--green">✓</span><?php esc_html_e( 'Convert a page directly from this site — check its structure first, then convert with one click', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
                         <li><span class="edc-lp-check edc-lp-check--green">✓</span><?php esc_html_e( 'Full layout, content, and style preservation', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
                         <li><span class="edc-lp-check edc-lp-check--green">✓</span><?php esc_html_e( 'Core Elementor widgets and popular addons', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
                         <li><span class="edc-lp-check edc-lp-check--green">✓</span><?php esc_html_e( 'No Elementor required on the destination site', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
@@ -338,6 +369,7 @@ class AdminPage {
 
                     <ul class="edc-lp-features">
                         <li><span class="edc-lp-check edc-lp-check--purple">✓</span><?php esc_html_e( 'Bulk import full Elementor kits via ZIP — entire sites in one upload', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
+                        <li><span class="edc-lp-check edc-lp-check--purple">✓</span><?php esc_html_e( 'Convert several installed pages from this site in one run', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
                         <li><span class="edc-lp-check edc-lp-check--purple">✓</span><?php esc_html_e( 'Set a header template JSON as your Divi Theme Builder global header', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
                         <li><span class="edc-lp-check edc-lp-check--purple">✓</span><?php esc_html_e( 'Set a footer template JSON as your Divi Theme Builder global footer', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
                         <li><span class="edc-lp-check edc-lp-check--purple">✓</span><?php esc_html_e( 'Apply global kit colors and typography across all conversions', 'jhmg-converter-for-elementor-to-divi' ); ?></li>
@@ -632,6 +664,41 @@ class AdminPage {
     }
 
     // ------------------------------------------------------------------
+    // Direct conversion report view ("Check this page")
+    // ------------------------------------------------------------------
+
+    /**
+     * Renders the report for the page(s) DirectConversionPage::handle_check()
+     * just verified. The selection itself travels via a per-user transient
+     * rather than the query string — see DirectConversionPage::handle_check().
+     */
+    private function render_direct_report(): void {
+        $ids = get_transient( DirectConversionPage::PLAN_IDS_TRANSIENT_PREFIX . get_current_user_id() );
+
+        if ( ! is_array( $ids ) || empty( $ids ) ) {
+            wp_die( esc_html__( 'No checked selection found or it has expired. Please pick a page again.', 'jhmg-converter-for-elementor-to-divi' ) );
+        }
+
+        $plan = ( new DirectConversionPage() )->plan_for( $ids );
+        ?>
+        <div class="wrap edc-wrap">
+            <h1><?php esc_html_e( 'Elementor to Divi 5 Converter', 'jhmg-converter-for-elementor-to-divi' ); ?></h1>
+
+            <div class="edc-result-actions">
+                <a href="<?php echo esc_url( admin_url( 'tools.php?page=' . self::MENU_SLUG ) ); ?>" class="button">
+                    &larr; <?php esc_html_e( 'Back to converter', 'jhmg-converter-for-elementor-to-divi' ); ?>
+                </a>
+            </div>
+
+            <?php
+            // Escaped at every interpolation inside render_report().
+            echo ( new DirectConversionPage() )->render_report( $plan ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            ?>
+        </div>
+        <?php
+    }
+
+    // ------------------------------------------------------------------
     // Shared report card rendering
     // ------------------------------------------------------------------
 
@@ -810,6 +877,29 @@ class AdminPage {
 .edc-lp-subtitle { margin: 0; color: #1e293b; font-size: 19px; font-weight: 700; line-height: 1.5; }
 .edc-lp-brand-row { display: flex; align-items: center; flex-shrink: 0; }
 .edc-lp-brand-logo { height: 48px; width: auto; display: block; }
+
+/* Convert-from-this-site card */
+.edc-lp-direct { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,.06); margin-bottom: 32px; }
+.edc-lp-direct .edc-lp-section-title { margin-bottom: 8px; }
+.edc-lp-direct .description { color: #64748b; font-size: 13px; margin: 0 0 16px; }
+
+.edc-direct-empty { color: #64748b; }
+.edc-direct-search { margin-bottom: 12px; }
+.edc-direct-search input[type="search"] { min-width: 240px; margin-right: 6px; }
+.edc-direct-table { margin-bottom: 12px; }
+.edc-direct-table td { padding: 10px 12px; }
+.edc-direct-meta { color: #64748b; font-size: 12px; margin-left: 6px; }
+.edc-badge-converted { display: inline-block; background: #dcfce7; color: #15803d; border-radius: 10px; padding: 1px 8px; font-size: 11px; font-weight: 700; margin-left: 6px; }
+.edc-direct-pager { margin-top: 8px; }
+.edc-direct-pager a { margin-right: 6px; }
+
+.edc-direct-report h3 { margin: 20px 0 6px; }
+.edc-direct-unsupported { color: #7a4f00; }
+.edc-outline { list-style: none; margin: 0 0 10px; padding-left: 16px; }
+.edc-outline .edc-outline { margin-top: 4px; }
+.edc-outline-node { margin-bottom: 4px; font-size: 13px; }
+.edc-outline-node--unsupported > .edc-outline-label { color: #c62828; }
+.edc-outline-empty { color: #64748b; }
 
 /* Plans grid */
 .edc-lp-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px; align-items: stretch; }
