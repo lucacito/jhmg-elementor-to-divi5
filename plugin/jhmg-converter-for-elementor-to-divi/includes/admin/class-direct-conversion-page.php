@@ -31,9 +31,6 @@ class DirectConversionPage {
     const CHECK_NONCE    = 'edc_direct_check_nonce';
     const CONVERT_NONCE  = 'edc_direct_convert_nonce';
 
-    /** Elementor's own marker for a post built with its editor. */
-    const EDIT_MODE_META = '_elementor_edit_mode';
-
     const CAPABILITY = 'manage_options';
 
     /**
@@ -122,7 +119,7 @@ class DirectConversionPage {
             return false;
         }
 
-        return get_post_meta( $post_id, self::EDIT_MODE_META, true ) === 'builder';
+        return get_post_meta( $post_id, ElementorPageRepository::EDIT_MODE_META, true ) === 'builder';
     }
 
     /** Whether the landing page should offer this screen at all. */
