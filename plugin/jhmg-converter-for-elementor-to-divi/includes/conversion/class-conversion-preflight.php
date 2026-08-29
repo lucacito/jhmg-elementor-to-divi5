@@ -65,6 +65,19 @@ class ConversionPreflight {
         return new ConversionPlan( $planned, $limit, $truncated );
     }
 
+    /**
+     * Plan every item, ignoring the direct-conversion cap. Used by the upload
+     * path: a kit ZIP's page count is the user's file, not a tier boundary.
+     */
+    public function runUnlimited( ConversionSource $source ): ConversionPlan {
+        $planned = [];
+        foreach ( $source->items() as $item ) {
+            $planned[] = $this->planItem( $item );
+        }
+
+        return new ConversionPlan( $planned, PHP_INT_MAX, false );
+    }
+
     private function planItem( array $item ): array {
         $base = [
             'title'         => $item['title']         ?? '',
