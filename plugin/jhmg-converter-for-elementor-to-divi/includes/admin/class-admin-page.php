@@ -64,6 +64,8 @@ class AdminPage {
 
         if ( $action === 'batch_result' ) {
             $this->render_batch_result();
+        } elseif ( $action === 'direct_report' ) {
+            $this->render_direct_report();
         } else {
             $this->render_list();
         }
@@ -258,6 +260,22 @@ class AdminPage {
                 <div class="edc-lp-brand-row">
                     <img src="<?php echo esc_url( EDC_PLUGIN_URL . 'assets/NEW-logo-elementor-to-divi.png' ); ?>" alt="<?php esc_attr_e( 'Elementor to Divi 5 Converter', 'jhmg-converter-for-elementor-to-divi' ); ?>" class="edc-lp-brand-logo">
                 </div>
+            </div>
+
+            <div class="edc-lp-direct">
+                <h2 class="edc-lp-section-title"><?php esc_html_e( 'Convert a page already on this site', 'jhmg-converter-for-elementor-to-divi' ); ?></h2>
+                <?php
+                $direct_conversion = new DirectConversionPage();
+                if ( $direct_conversion->has_elementor_content() ) :
+                    ?>
+                    <p class="description"><?php esc_html_e( 'Pick an Elementor page below and click Check this page. Converting creates a new Divi draft — your Elementor page is left exactly as it is.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
+                    <?php
+                    // Escaped at every interpolation inside render_picker().
+                    echo $direct_conversion->render_picker(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                    ?>
+                <?php else : ?>
+                    <p class="description"><?php esc_html_e( 'No Elementor pages were found installed on this site. Use the JSON import below instead.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
+                <?php endif; ?>
             </div>
 
             <div class="edc-lp-plans">
@@ -632,6 +650,41 @@ class AdminPage {
     }
 
     // ------------------------------------------------------------------
+    // Direct conversion report view ("Check this page")
+    // ------------------------------------------------------------------
+
+    /**
+     * Renders the report for the page(s) DirectConversionPage::handle_check()
+     * just verified. The selection itself travels via a per-user transient
+     * rather than the query string — see DirectConversionPage::handle_check().
+     */
+    private function render_direct_report(): void {
+        $ids = get_transient( DirectConversionPage::PLAN_IDS_TRANSIENT_PREFIX . get_current_user_id() );
+
+        if ( ! is_array( $ids ) || empty( $ids ) ) {
+            wp_die( esc_html__( 'No checked selection found or it has expired. Please pick a page again.', 'jhmg-converter-for-elementor-to-divi' ) );
+        }
+
+        $plan = ( new DirectConversionPage() )->plan_for( $ids );
+        ?>
+        <div class="wrap edc-wrap">
+            <h1><?php esc_html_e( 'Elementor to Divi 5 Converter', 'jhmg-converter-for-elementor-to-divi' ); ?></h1>
+
+            <div class="edc-result-actions">
+                <a href="<?php echo esc_url( admin_url( 'tools.php?page=' . self::MENU_SLUG ) ); ?>" class="button">
+                    &larr; <?php esc_html_e( 'Back to converter', 'jhmg-converter-for-elementor-to-divi' ); ?>
+                </a>
+            </div>
+
+            <?php
+            // Escaped at every interpolation inside render_report().
+            echo ( new DirectConversionPage() )->render_report( $plan ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            ?>
+        </div>
+        <?php
+    }
+
+    // ------------------------------------------------------------------
     // Shared report card rendering
     // ------------------------------------------------------------------
 
@@ -810,6 +863,25 @@ class AdminPage {
 .edc-lp-subtitle { margin: 0; color: #1e293b; font-size: 19px; font-weight: 700; line-height: 1.5; }
 .edc-lp-brand-row { display: flex; align-items: center; flex-shrink: 0; }
 .edc-lp-brand-logo { height: 48px; width: auto; display: block; }
+
+/* Convert-from-this-site card */
+.edc-lp-direct { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,.06); margin-bottom: 32px; }
+.edc-lp-direct .edc-lp-section-title { margin-bottom: 8px; }
+.edc-lp-direct .description { color: #64748b; font-size: 13px; margin: 0 0 16px; }
+
+.edc-direct-empty { color: #64748b; }
+.edc-direct-table { margin-bottom: 12px; }
+.edc-direct-table td { padding: 10px 12px; }
+.edc-direct-meta { color: #64748b; font-size: 12px; margin-left: 6px; }
+.edc-badge-converted { display: inline-block; background: #dcfce7; color: #15803d; border-radius: 10px; padding: 1px 8px; font-size: 11px; font-weight: 700; margin-left: 6px; }
+
+.edc-direct-report h3 { margin: 20px 0 6px; }
+.edc-direct-unsupported { color: #7a4f00; }
+.edc-outline { list-style: none; margin: 0 0 10px; padding-left: 16px; }
+.edc-outline .edc-outline { margin-top: 4px; }
+.edc-outline-node { margin-bottom: 4px; font-size: 13px; }
+.edc-outline-node--unsupported > .edc-outline-label { color: #c62828; }
+.edc-outline-empty { color: #64748b; }
 
 /* Plans grid */
 .edc-lp-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px; align-items: stretch; }
