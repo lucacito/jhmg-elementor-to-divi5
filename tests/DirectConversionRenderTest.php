@@ -276,6 +276,91 @@ class DirectConversionRenderTest extends TestCase {
         $this->assertSame( [ $id ], $stashed, 'the report screen must be able to recover exactly what was checked' );
     }
 
+    /**
+     * End-to-end proof that the "truncated" notice is actually reachable: a
+     * selection over the free limit must be stashed UNCAPPED by
+     * handle_check() (so ConversionPreflight::run() — not the request
+     * handler — is the thing that slices it and sets truncated()), and the
+     * report screen the real router renders for that exact redirect must
+     * show the notice text, not merely have the flag computed and dropped.
+     *
+     * If selected_post_ids() (which caps) were used here instead of
+     * verified_post_ids(), the stash would hold only 1 id and this test
+     * would fail on the assertCount() below before ever reaching the HTML
+     * assertion.
+     */
+    public function test_a_selection_over_the_limit_reaches_the_report_as_truncated(): void {
+        $a = $this->seed( 350 );
+        $b = $this->seed( 351 );
+        $c = $this->seed( 352 );
+
+        $_POST = [
+            'action'       => DirectConversionPage::CHECK_ACTION,
+            'edc_post_ids' => [ (string) $a, (string) $b, (string) $c ],
+        ];
+
+        $page = $this->non_exiting_page();
+        $page->maybe_handle_request();
+
+        $stashed = get_transient( DirectConversionPage::PLAN_IDS_TRANSIENT_PREFIX . get_current_user_id() );
+        $this->assertCount( 3, $stashed, 'the check handler must stash every verified id, not just the first one' );
+
+        $plan = ( new DirectConversionPage() )->plan_for( $stashed );
+        $this->assertTrue( $plan->truncated(), 'a 3-page selection against a 1-page limit must be reported as truncated' );
+
+        // Now follow the exact redirect into the real router, the way a
+        // browser would, and check the actual rendered markup.
+        $location = end( $page->redirected_to );
+        parse_str( (string) wp_parse_url( $location, PHP_URL_QUERY ), $query );
+        $_GET = $query;
+
+        ob_start();
+        ( new AdminPage() )->render_page();
+        $html = ob_get_clean();
+
+        $this->assertStringContainsString( 'Conversion report', $html );
+        $this->assertStringContainsString(
+            'Pro feature',
+            $html,
+            'the rendered report must actually show the truncation notice, not just compute the flag'
+        );
+    }
+
+    /**
+     * Mirrors handle_convert()'s existing empty-selection guard: a stale
+     * form or tampered request must not be allowed to stash an empty
+     * selection over a previously stashed valid one.
+     */
+    public function test_handle_check_refuses_an_empty_selection_without_clobbering_a_stashed_one(): void {
+        $id = $this->seed( 360 );
+
+        set_transient(
+            DirectConversionPage::PLAN_IDS_TRANSIENT_PREFIX . get_current_user_id(),
+            [ $id ],
+            HOUR_IN_SECONDS
+        );
+
+        $_POST = [
+            'action'       => DirectConversionPage::CHECK_ACTION,
+            'edc_post_ids' => [],
+        ];
+
+        $page = $this->non_exiting_page();
+        $this->expectException( \RuntimeException::class );
+
+        try {
+            $page->maybe_handle_request();
+        } finally {
+            $stashed = get_transient( DirectConversionPage::PLAN_IDS_TRANSIENT_PREFIX . get_current_user_id() );
+            $this->assertSame(
+                [ $id ],
+                $stashed,
+                'an empty check submission must not evict a previously stashed valid selection'
+            );
+            $this->assertEmpty( $page->redirected_to, 'an empty selection must not redirect to the report screen' );
+        }
+    }
+
     public function test_handle_convert_redirects_to_the_existing_batch_result_screen(): void {
         $id = $this->seed( 303 );
 

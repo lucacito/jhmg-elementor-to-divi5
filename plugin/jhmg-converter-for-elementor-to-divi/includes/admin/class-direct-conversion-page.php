@@ -54,12 +54,14 @@ class DirectConversionPage {
     }
 
     /**
-     * Sanitize, verify and cap a submitted selection.
+     * Sanitize and verify a submitted selection. Does NOT cap it — callers
+     * that need to know whether a selection would be truncated (the check
+     * handler) must see every verified id, not the already-sliced list.
      *
      * @param array $request Typically $_POST.
-     * @return int[] Post IDs safe to convert.
+     * @return int[] Post IDs that are real, Elementor-built, and deduplicated.
      */
-    public function selected_post_ids( array $request ): array {
+    public function verified_post_ids( array $request ): array {
         $raw = $request['edc_post_ids'] ?? [];
         if ( ! is_array( $raw ) ) {
             $raw = [ $raw ];
@@ -80,7 +82,17 @@ class DirectConversionPage {
             $ids[] = $id;
         }
 
-        return array_slice( $ids, 0, ConversionPreflight::limit() );
+        return $ids;
+    }
+
+    /**
+     * Sanitize, verify and cap a submitted selection.
+     *
+     * @param array $request Typically $_POST.
+     * @return int[] Post IDs safe to convert.
+     */
+    public function selected_post_ids( array $request ): array {
+        return array_slice( $this->verified_post_ids( $request ), 0, ConversionPreflight::limit() );
     }
 
     /** A dry run over the selection. Writes nothing. */
@@ -275,7 +287,18 @@ class DirectConversionPage {
      * per-user transient that AdminPage::render_direct_report() reads back.
      */
     protected function handle_check(): void {
-        $ids = $this->selected_post_ids( wp_unslash( $_POST ) );
+        // Verified but NOT capped: ConversionPreflight::run() (called from
+        // plan_for() when the report screen renders) needs the full,
+        // uncapped list to correctly compute whether the selection was
+        // truncated. Capping here, before that check ever runs, is exactly
+        // the bug that made the "truncated" notice unreachable.
+        $ids = $this->verified_post_ids( wp_unslash( $_POST ) );
+
+        // Guard before writing: an empty selection must not clobber a
+        // previously stashed valid one sitting in this same transient slot.
+        if ( empty( $ids ) ) {
+            wp_die( esc_html__( 'Pick a page to check first.', 'jhmg-converter-for-elementor-to-divi' ) );
+        }
 
         set_transient( self::PLAN_IDS_TRANSIENT_PREFIX . get_current_user_id(), $ids, HOUR_IN_SECONDS );
 
