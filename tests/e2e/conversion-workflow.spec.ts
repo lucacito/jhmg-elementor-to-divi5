@@ -285,9 +285,16 @@ test.describe.serial('Stress test: imperfect Elementor page conversion', () => {
     expect(unsupportedTypes).toContain('e-form');
     expect(unsupportedTypes).toContain('e-video');
 
-    // Warning: empty column (section 3 has only unsupported widgets).
-    const hasEmptyWarning = report.warnings.some((w) => w.includes('Empty column'));
-    expect(hasEmptyWarning, 'warning about empty column').toBe(true);
+    // Section 3 holds only unsupported widgets. They no longer vanish — each
+    // leaves a labelled placeholder block behind, so the column is not empty and
+    // the old 'Empty column' warning no longer fires for it. What must hold is
+    // that every unsupported widget is accounted for by a placeholder warning.
+    for (const type of ['e-carousel', 'e-form', 'e-video']) {
+      const hasPlaceholder = report.warnings.some(
+        (w) => w.includes(type) && w.includes('placeholder')
+      );
+      expect(hasPlaceholder, `placeholder warning for ${type}`).toBe(true);
+    }
 
     // Warning: image without alt text.
     const hasAltWarning = report.warnings.some((w) => w.includes('missing alt text'));

@@ -51,6 +51,27 @@ class ConverterRegistry {
     }
 
     /**
+     * The converter for a widget nothing else claimed.
+     *
+     * Returning null here used to mean the engine emitted no block at all, so an
+     * unregistered widget disappeared from the page and the only evidence was a
+     * line in the report explaining a hole the user had to find for themselves.
+     * A labelled placeholder keeps the widget's position and its text.
+     *
+     * Callers report the widget as unsupported before calling this — the
+     * placeholder is a rescue, not a conversion, and must not read as one.
+     */
+    public function defaultConverter( array $element ): ConverterInterface {
+        $widget_type = (string) ( $element['widgetType'] ?? $element['elType'] ?? 'unknown' );
+
+        return new \ElementorDivi5Converter\Converter\Handlers\GenericFallbackConverter(
+            $this->engine,
+            $widget_type,
+            false // Already counted as unsupported; see the constructor's docblock.
+        );
+    }
+
+    /**
      * Instantiate a converter from a class-name string or a factory closure.
      *
      * Closures receive the ConverterEngine as their sole argument and must

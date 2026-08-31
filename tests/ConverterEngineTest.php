@@ -71,10 +71,19 @@ final class ConverterEngineTest extends TestCase {
 
         $result = $engine->convert( $elementorData );
 
-        $this->assertEmpty( $result['divi']['elements'] );
         $this->assertCount( 1, $result['unsupported'] );
         $this->assertSame( 'e-unknown', $result['unsupported'][0]['widgetType'] );
         $this->assertSame( 'widget-unknown', $result['unsupported'][0]['id'] );
+
+        // An unregistered widget is still reported as unsupported, but it no
+        // longer disappears: it leaves a labelled placeholder in its own place
+        // so the hole in the layout is visible where it happened.
+        $this->assertCount( 1, $result['divi']['elements'] );
+        $this->assertSame( 'divi/code', $result['divi']['elements'][0]['name'] );
+        $this->assertStringContainsString(
+            'e-unknown',
+            $result['divi']['elements'][0]['settings']['content']['innerContent']['desktop']['value']
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -101,7 +110,10 @@ final class ConverterEngineTest extends TestCase {
             [ 'id' => 'w2', 'elType' => 'widget', 'widgetType' => 'e-unknown', 'settings' => [], 'elements' => [] ],
         ] );
         $coverage = $result['report']['quality']['widget_coverage'];
-        // 1 converted / 2 total = 50%
+        // 1 converted / 2 total = 50%. The unknown widget now leaves a
+        // placeholder block behind, but a placeholder is not a conversion — if it
+        // counted, coverage would climb towards 100% exactly as a page filled up
+        // with widgets nothing could convert.
         $this->assertSame( 50, $coverage );
     }
 

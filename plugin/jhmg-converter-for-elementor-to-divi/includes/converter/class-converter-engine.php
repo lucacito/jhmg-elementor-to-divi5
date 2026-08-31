@@ -151,7 +151,16 @@ class ConverterEngine {
 
         $this->logUnsupportedElement( $element );
 
-        return [];
+        // Structural element types have no meaningful placeholder — an orphan
+        // column or section is a container, not content, and emitting a code
+        // block for one would put a stray marker where a layout box used to be.
+        if ( ( $element['elType'] ?? '' ) !== 'widget' ) {
+            return [];
+        }
+
+        // Still unsupported, and still reported as such — but the widget keeps
+        // its place in the layout and its text instead of vanishing.
+        return $this->registry->defaultConverter( $element )->convert( $element );
     }
 
     /**

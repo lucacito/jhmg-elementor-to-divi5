@@ -91,18 +91,14 @@ final class ConversionReportTest extends TestCase {
                 'settings' => [],
                 'elements' => [
                     [
+                        // Genuinely empty. An unsupported widget no longer empties
+                        // its column — it leaves a labelled placeholder behind —
+                        // so a column with one of those in it is not the case
+                        // this warning is about.
                         'id'       => 'empty-col',
                         'elType'   => 'column',
                         'settings' => [],
-                        'elements' => [
-                            [
-                                'id'         => 'widget-unsupported',
-                                'elType'     => 'widget',
-                                'widgetType' => 'e-form',
-                                'settings'   => [],
-                                'elements'   => [],
-                            ],
-                        ],
+                        'elements' => [],
                     ],
                 ],
             ],
