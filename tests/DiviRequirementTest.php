@@ -156,4 +156,66 @@ final class DiviRequirementTest extends TestCase {
         $this->assertStringContainsString( 'notice-error', $html );
         $this->assertStringContainsString( 'Divi', $html );
     }
+
+    // -------------------------------------------------------------------------
+    // Pro reaches the converter through its own handlers
+    // -------------------------------------------------------------------------
+
+    private function proKitPage(): object {
+        return new class extends \ElementorDivi5Converter\Pro\Admin\KitPage {
+            public array $ran = [];
+            public function __construct() {}
+            protected function handle_import(): void { $this->ran[] = 'import'; }
+            protected function handle_convert_kit_pages(): void { $this->ran[] = 'convert_kit'; }
+            protected function handle_upload_kit(): void { $this->ran[] = 'upload_kit'; }
+        };
+    }
+
+    private function postToPro( object $page, string $action ): void {
+        $_GET  = [ 'page' => \ElementorDivi5Converter\Pro\Admin\KitPage::MENU_SLUG ];
+        $_POST = [ 'action' => $action ];
+        $page->handle_post();
+        $_GET  = [];
+        $_POST = [];
+    }
+
+    /**
+     * Pro's kit page does not route through free's AdminPage::handle_post(), so
+     * free's guard never sees its converting actions. Without a check of its
+     * own, every paying customer could still write Divi 5 blocks into a site
+     * that cannot render them.
+     */
+    public function test_pro_does_not_convert_without_divi(): void {
+        $GLOBALS['__test_divi_present'] = false;
+
+        foreach ( [ 'edcp_import', 'edcp_convert_kit_pages' ] as $action ) {
+            $page = $this->proKitPage();
+            $this->postToPro( $page, $action );
+
+            $this->assertSame( [], $page->ran, "'{$action}' must not run without a Divi that can render the result" );
+        }
+    }
+
+    public function test_pro_converts_normally_when_divi_is_present(): void {
+        $GLOBALS['__test_divi_version'] = '5.7.4';
+
+        $page = $this->proKitPage();
+        $this->postToPro( $page, 'edcp_import' );
+
+        $this->assertSame( [ 'import' ], $page->ran );
+    }
+
+    /**
+     * Only the two converting actions are gated. Storing a kit is not a
+     * conversion, and locking someone out of the rest of the plugin because
+     * their theme is wrong would be its own bug.
+     */
+    public function test_pro_still_accepts_a_kit_upload_without_divi(): void {
+        $GLOBALS['__test_divi_present'] = false;
+
+        $page = $this->proKitPage();
+        $this->postToPro( $page, 'edcp_upload_kit' );
+
+        $this->assertSame( [ 'upload_kit' ], $page->ran );
+    }
 }

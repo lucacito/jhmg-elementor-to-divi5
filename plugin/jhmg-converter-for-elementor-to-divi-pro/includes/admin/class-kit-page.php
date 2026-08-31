@@ -81,6 +81,15 @@ class KitPage {
         if ( ! in_array( $tab, $allowed_tabs, true ) ) {
             $tab = 'kit';
         }
+
+        // Every control on the kit and convert tabs produces Divi 5 content, so
+        // without a Divi that reads it they are shown the reason instead. The
+        // licence tab stays reachable: someone whose theme is wrong may still
+        // need to activate or move their licence.
+        if ( $tab !== 'license' && ! $this->divi_requirement_met() ) {
+            $this->render_requirement_failure();
+            return;
+        }
         $base_url = admin_url( 'tools.php?page=' . self::MENU_SLUG );
         ?>
         <div class="wrap edcp-wrap">
@@ -122,6 +131,55 @@ class KitPage {
     // POST dispatcher
     // ------------------------------------------------------------------
 
+    /**
+     * Whether this site has a Divi that can render what a conversion produces.
+     *
+     * Free owns the check; Pro depends on free and refuses to boot without it,
+     * so the class is always there. Guarded anyway — a fatal here would take out
+     * the licence screen too, which is the one thing that should keep working
+     * when the rest of the environment is wrong.
+     */
+    protected function divi_requirement_met(): bool {
+        if ( ! class_exists( \ElementorDivi5Converter\Helpers\DiviRequirement::class ) ) {
+            return true;
+        }
+
+        return \ElementorDivi5Converter\Helpers\DiviRequirement::is_satisfied();
+    }
+
+    /**
+     * Pro's Divi-missing screen. Mirrors free's, in Pro's own text domain.
+     *
+     * Renders the whole page wrapper: render_page() calls this before it has
+     * emitted any markup of its own.
+     */
+    private function render_requirement_failure(): void {
+        $message = class_exists( \ElementorDivi5Converter\Helpers\DiviRequirement::class )
+            ? \ElementorDivi5Converter\Helpers\DiviRequirement::message()
+            : '';
+        ?>
+        <div class="wrap edcp-wrap">
+            <h1 class="wp-heading-inline"><?php esc_html_e( 'Elementor to Divi 5 — Pro', 'jhmg-converter-for-elementor-to-divi-pro' ); ?></h1>
+
+            <div class="notice notice-error inline">
+                <p><?php echo esc_html( $message ); ?></p>
+            </div>
+
+            <p class="edc-description">
+                <?php esc_html_e( 'Install and activate Divi 5, then return to this screen. Nothing has been changed on your site, and your licence is unaffected.', 'jhmg-converter-for-elementor-to-divi-pro' ); ?>
+            </p>
+
+            <?php if ( $this->license_page ) : ?>
+                <p>
+                    <a href="<?php echo esc_url( admin_url( 'tools.php?page=' . self::MENU_SLUG . '&tab=license' ) ); ?>" class="button">
+                        <?php esc_html_e( 'Manage licence', 'jhmg-converter-for-elementor-to-divi-pro' ); ?>
+                    </a>
+                </p>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
     public function handle_post(): void {
         // Scope to this page's own submissions — other admin pages (including
         // the free plugin's) also hook admin_init and should not be double-processed.
@@ -131,6 +189,22 @@ class KitPage {
         }
 
         $action = sanitize_key( $_POST['action'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- each handler verifies its own nonce
+
+        // Pro reaches the converter through its own handlers, not through free's
+        // AdminPage::handle_post(), so free's Divi guard never sees these. Without
+        // this they would keep writing Divi 5 blocks into a site that cannot
+        // render them — the exact failure the guard exists to prevent, reachable
+        // by every paying customer.
+        //
+        // Only the two converting actions are gated. Managing a licence, clearing
+        // a stored kit or publishing an already-converted draft are not
+        // conversions, and locking someone out of their licence because their
+        // theme is wrong would be its own bug.
+        $converts = in_array( $action, [ 'edcp_import', 'edcp_convert_kit_pages' ], true );
+        if ( $converts && ! $this->divi_requirement_met() ) {
+            return;
+        }
+
         if ( $action === 'edcp_import' ) {
             $this->handle_import();
         }
@@ -162,7 +236,13 @@ class KitPage {
     // PremiumManager::is_active() there — Pro has no such gate).
     // ------------------------------------------------------------------
 
-    private function handle_import(): void {
+    /**
+     * Protected, not private, for the same reason DirectConversionPage's
+     * handlers are: a test can then observe whether the Divi guard actually
+     * stopped a conversion, rather than inferring it from the absence of a
+     * side effect a private method would have made unobservable.
+     */
+    protected function handle_import(): void {
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( esc_html__( 'Insufficient permissions.', 'jhmg-converter-for-elementor-to-divi-pro' ) );
         }
@@ -266,7 +346,7 @@ class KitPage {
     // Global Kit handlers
     // ------------------------------------------------------------------
 
-    private function handle_upload_kit(): void {
+    protected function handle_upload_kit(): void {
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( esc_html__( 'Insufficient permissions.', 'jhmg-converter-for-elementor-to-divi-pro' ) );
         }
@@ -405,7 +485,7 @@ class KitPage {
         exit;
     }
 
-    private function handle_convert_kit_pages(): void {
+    protected function handle_convert_kit_pages(): void {
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( esc_html__( 'Insufficient permissions.', 'jhmg-converter-for-elementor-to-divi-pro' ) );
         }
