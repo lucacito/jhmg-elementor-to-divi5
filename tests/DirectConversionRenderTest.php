@@ -573,4 +573,57 @@ class DirectConversionRenderTest extends TestCase {
             $this->assertEmpty( $page->redirected_to, 'an empty selection must not redirect to a fabricated result screen' );
         }
     }
+
+    // -------------------------------------------------------------------------
+    // "Not carried over" reaches the screen, not just the renderer
+    // -------------------------------------------------------------------------
+
+    /**
+     * NotCarriedOverRenderer has its own unit tests, but those pass whether or
+     * not anything calls it. This asserts the direct-conversion report actually
+     * wires it in — the losses it lists were invisible for exactly as long as
+     * nothing rendered them.
+     */
+    public function test_the_report_lists_what_could_not_be_carried_over(): void {
+        $plan = new ConversionPlan( [ ConversionPlan::item( [
+            'title'      => 'Home',
+            'report'     => [
+                'converted'           => [ 'heading' => 1 ],
+                'warnings'            => [],
+                'not_carried_over'    => [
+                    [ 'kind' => 'dynamic',     'element_id' => 'abc123', 'detail' => 'title' ],
+                    [ 'kind' => 'animation',   'element_id' => 'def456', 'detail' => 'fadeInUp' ],
+                    [ 'kind' => 'form_fields', 'element_id' => 'ghi789', 'detail' => '4 fields' ],
+                ],
+                'approximate_matches' => [
+                    [ 'element_id' => 'jkl012', 'widget_type' => 'odd-box', 'matched_to' => 'IconBoxConverter' ],
+                ],
+            ],
+            'source_ref' => [ 'kind' => 'installed', 'post_id' => 11, 'file' => null ],
+        ] ) ] );
+
+        $html = ( new DirectConversionPage() )->render_report( $plan );
+
+        $this->assertStringContainsString( 'Not carried over', $html );
+
+        foreach ( [ 'abc123', 'def456', 'ghi789', 'jkl012' ] as $element_id ) {
+            $this->assertStringContainsString( $element_id, $html, "Element {$element_id} must be named on the report" );
+        }
+
+        $this->assertStringContainsString( 'fadeInUp', $html );
+        $this->assertStringContainsString( '4 fields', $html );
+        $this->assertStringContainsString( 'odd-box', $html );
+    }
+
+    public function test_a_clean_page_gets_no_not_carried_over_section(): void {
+        $plan = new ConversionPlan( [ ConversionPlan::item( [
+            'title'      => 'Home',
+            'report'     => [ 'converted' => [ 'heading' => 1 ], 'warnings' => [] ],
+            'source_ref' => [ 'kind' => 'installed', 'post_id' => 11, 'file' => null ],
+        ] ) ] );
+
+        $html = ( new DirectConversionPage() )->render_report( $plan );
+
+        $this->assertStringNotContainsString( 'Not carried over', $html );
+    }
 }
