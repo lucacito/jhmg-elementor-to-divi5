@@ -11,6 +11,9 @@
     "test:all": "npm run test:php && npm run test:browser",
     "test:php": "vendor/bin/phpunit",
     "test:browser": "npx playwright test",
-    "visual-diff": "node scripts/visual-diff.js"
+    "visual-diff": "node scripts/visual-diff.js",
+    "i18n": "npm run i18n:free && npm run i18n:pro",
+    "i18n:free": "wp i18n make-pot plugin/jhmg-converter-for-elementor-to-divi plugin/jhmg-converter-for-elementor-to-divi/languages/jhmg-converter-for-elementor-to-divi.pot --slug=jhmg-converter-for-elementor-to-divi --exclude=vendor,node_modules",
+    "i18n:pro": "wp i18n make-pot plugin/jhmg-converter-for-elementor-to-divi-pro plugin/jhmg-converter-for-elementor-to-divi-pro/languages/jhmg-converter-for-elementor-to-divi-pro.pot --slug=jhmg-converter-for-elementor-to-divi-pro --exclude=vendor,node_modules"
   }
 }

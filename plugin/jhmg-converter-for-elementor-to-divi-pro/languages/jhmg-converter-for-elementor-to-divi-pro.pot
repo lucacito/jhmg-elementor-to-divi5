@@ -1,0 +1,496 @@
+# Copyright (C) 2026 Lucas Lopvet
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: JHMG Converter For Elementor to Divi 5 — Pro 1.1.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/jhmg-converter-for-elementor-to-divi-pro\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-08-31T23:10:51+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: jhmg-converter-for-elementor-to-divi-pro\n"
+
+#. Plugin Name of the plugin
+#: jhmg-converter-for-elementor-to-divi-pro.php
+msgid "JHMG Converter For Elementor to Divi 5 — Pro"
+msgstr ""
+
+#. Description of the plugin
+#: jhmg-converter-for-elementor-to-divi-pro.php
+msgid "Pro add-on: full Elementor kit ZIP import, global headers & footers to the Divi Theme Builder, and global styles."
+msgstr ""
+
+#. Author of the plugin
+#: jhmg-converter-for-elementor-to-divi-pro.php
+msgid "Lucas Lopvet"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:55
+msgid "Elementor to Divi 5 Pro"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:56
+msgid "Elementor → Divi 5 Pro"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:69
+msgid "You do not have permission to access this page."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:87
+msgid "Elementor to Divi 5 — Pro"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:94
+msgid "Global Kit"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:98
+msgid "Convert"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:103
+#: includes/licensing/class-license-page.php:175
+msgid "License"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:167
+#: includes/admin/class-kit-page.php:235
+#: includes/admin/class-kit-page.php:271
+#: includes/admin/class-kit-page.php:410
+#: includes/admin/class-kit-page.php:512
+#: includes/licensing/class-license-page.php:62
+#: includes/licensing/class-license-page.php:77
+#: includes/licensing/class-license-page.php:88
+msgid "Insufficient permissions."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:177
+#: includes/admin/class-kit-page.php:282
+msgid "No file was uploaded."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:202
+msgid "Failed to parse import file: "
+msgstr ""
+
+#: includes/admin/class-kit-page.php:206
+msgid "No pages found in the import file."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:244
+msgid "Invalid post ID."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:307
+msgid "No templates found in the uploaded JSON file."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:366
+msgid "Failed to save the uploaded file. Check directory permissions."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:417
+msgid "No Global Kit loaded."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:424
+msgid "Kit ZIP file is not available. Please re-upload the kit."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:435
+msgid "No pages were selected."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:453
+msgid "Could not open kit ZIP file."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:483
+msgid "No convertible pages were found in the selected entries."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:546
+msgid "File exceeds server upload limit."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:547
+msgid "File exceeds form upload limit."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:548
+msgid "File was only partially uploaded."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:549
+msgid "No file was selected."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:550
+msgid "Server is missing a temporary folder."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:551
+msgid "Failed to write file to server."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:552
+msgid "Upload stopped by server extension."
+msgstr ""
+
+#. translators: %d is the numeric upload error code
+#: includes/admin/class-kit-page.php:556
+#, php-format
+msgid "Unknown upload error (code %d)."
+msgstr ""
+
+#. translators: 1: kit name, 2: number of colors
+#: includes/admin/class-kit-page.php:576
+#, php-format
+msgid "Global Kit \"%1$s\" loaded — %2$d colors imported."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:583
+msgid "Global Kit removed."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:646
+msgid "Active Kit"
+msgstr ""
+
+#. translators: %s is the date the kit was loaded
+#: includes/admin/class-kit-page.php:652
+#, php-format
+msgid "Loaded on %s"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:656
+msgid "Remove the active Global Kit?"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:657
+msgid "Remove Kit"
+msgstr ""
+
+#. translators: %d is the number of colors in the kit
+#: includes/admin/class-kit-page.php:665
+#, php-format
+msgid "Colors (%d)"
+msgstr ""
+
+#. translators: %d is the number of typography styles in the kit
+#: includes/admin/class-kit-page.php:682
+#, php-format
+msgid "Typography (%d)"
+msgstr ""
+
+#. translators: %d is the number of pages in the kit
+#: includes/admin/class-kit-page.php:712
+#, php-format
+msgid "Pages in Kit (%d)"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:721
+msgid "Select all / Deselect all"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:729
+#: includes/admin/class-kit-page.php:1021
+msgid "Title"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:730
+msgid "Type"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:754
+#: includes/admin/class-kit-page.php:911
+msgid "Create as"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:757
+#: includes/admin/class-kit-page.php:914
+msgid "Page"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:758
+#: includes/admin/class-kit-page.php:915
+msgid "Post"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:763
+#: includes/admin/class-kit-page.php:921
+#: includes/admin/class-kit-page.php:1022
+#: includes/licensing/class-license-page.php:182
+msgid "Status"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:766
+#: includes/admin/class-kit-page.php:924
+msgid "Draft (recommended)"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:767
+#: includes/admin/class-kit-page.php:925
+#: includes/admin/class-kit-page.php:1105
+msgid "Published"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:775
+#: includes/admin/class-kit-page.php:934
+msgid "Convert header templates as Divi Theme Builder headers"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:782
+#: includes/admin/class-kit-page.php:944
+msgid "Convert footer templates as Divi Theme Builder footers"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:788
+msgid "Convert Selected"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:816
+msgid "Replace Kit or Import Template"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:818
+msgid "Upload Elementor Export Kit or Template"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:819
+msgid "Upload your full Elementor Export Kit to extract global styles and pages, or import a single header/footer template JSON directly into Divi Theme Builder."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:826
+msgid "Full Kit (ZIP)"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:827
+msgid "Import your entire Elementor Export Kit — pages, templates, global colors and typography."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:837
+msgid "Replace Kit"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:838
+msgid "Upload Kit"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:845
+msgid "Header Template (JSON)"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:846
+msgid "Import a single Elementor header template and register it as a Divi Theme Builder global header."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:855
+msgid "Set as Global Header"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:862
+msgid "Footer Template (JSON)"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:863
+msgid "Import a single Elementor footer template and register it as a Divi Theme Builder global footer."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:872
+msgid "Set as Global Footer"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:890
+msgid "Import from Elementor JSON / ZIP"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:892
+msgid "Upload an Elementor JSON export or a full-site Kit ZIP. No Elementor plugin required — this converts the exported file directly. Pages will be created in this Divi site."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:903
+msgid "File"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:906
+msgid "Accepted: .json (single page or template) or .zip (Elementor Kit export)"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:937
+msgid "When checked, Elementor header templates are imported as Divi Theme Builder global headers. Uncheck to import them as regular draft pages instead."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:947
+msgid "When checked, Elementor footer templates are imported as Divi Theme Builder global footers. Uncheck to import them as regular draft pages instead."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:953
+msgid "Import and Convert"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:971
+msgid "No import ID provided."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:977
+msgid "Import results not found or expired. Results are kept for one hour."
+msgstr ""
+
+#: includes/admin/class-kit-page.php:985
+msgid "Batch Import Results"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:989
+msgid "Back to converter"
+msgstr ""
+
+#. translators: %d is the number of pages processed
+#: includes/admin/class-kit-page.php:997
+#, php-format
+msgid "%d page(s) processed"
+msgstr ""
+
+#. translators: %d is the number of successfully converted pages
+#: includes/admin/class-kit-page.php:1004
+#, php-format
+msgid "%d converted"
+msgstr ""
+
+#. translators: %d is the number of pages that failed to convert
+#: includes/admin/class-kit-page.php:1012
+#, php-format
+msgid "%d failed"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:1023
+msgid "Issues"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:1024
+msgid "Actions"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:1035
+msgid "(no title)"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:1039
+msgid "Converted"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:1041
+msgid "Failed"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:1052
+msgid "issues"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:1060
+msgid "Unsupported:"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:1066
+msgid "Skipped:"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:1073
+msgid "Clean"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:1081
+msgid "Edit"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:1084
+msgid "View"
+msgstr ""
+
+#: includes/admin/class-kit-page.php:1102
+msgid "Publish"
+msgstr ""
+
+#: includes/class-plugin.php:88
+msgid "JHMG Converter Pro requires the free \"JHMG Converter For Elementor to Divi 5\" plugin. Please install and activate it."
+msgstr ""
+
+#: includes/licensing/class-license-client.php:180
+msgid "JHMG Converter Pro: activate your license to receive automatic updates and support."
+msgstr ""
+
+#: includes/licensing/class-license-client.php:181
+msgid "Activate now"
+msgstr ""
+
+#: includes/licensing/class-license-client.php:192
+msgid "JHMG Converter Pro: your license has expired. Renew to keep receiving updates."
+msgstr ""
+
+#: includes/licensing/class-license-client.php:193
+#: includes/licensing/class-license-client.php:203
+msgid "Renew"
+msgstr ""
+
+#: includes/licensing/class-license-client.php:202
+msgid "JHMG Converter Pro: an update is available. Renew your license to receive it."
+msgstr ""
+
+#: includes/licensing/class-license-page.php:132
+msgid "License activated."
+msgstr ""
+
+#: includes/licensing/class-license-page.php:135
+msgid "License deactivated."
+msgstr ""
+
+#: includes/licensing/class-license-page.php:138
+msgid "License status refreshed."
+msgstr ""
+
+#. translators: %s is the error code returned by the license server
+#: includes/licensing/class-license-page.php:146
+#, php-format
+msgid "Could not activate license: %s"
+msgstr ""
+
+#: includes/licensing/class-license-page.php:147
+msgid "unknown error"
+msgstr ""
+
+#: includes/licensing/class-license-page.php:178
+msgid "Key"
+msgstr ""
+
+#: includes/licensing/class-license-page.php:187
+msgid "Expires"
+msgstr ""
+
+#: includes/licensing/class-license-page.php:193
+msgid "Check again"
+msgstr ""
+
+#: includes/licensing/class-license-page.php:195
+msgid "Deactivate this license on this site?"
+msgstr ""
+
+#: includes/licensing/class-license-page.php:196
+msgid "Deactivate"
+msgstr ""
+
+#: includes/licensing/class-license-page.php:206
+msgid "Activate Your License"
+msgstr ""
+
+#: includes/licensing/class-license-page.php:208
+msgid "Enter your license key to enable automatic updates and support. Every conversion feature works whether or not a license is active."
+msgstr ""
+
+#: includes/licensing/class-license-page.php:218
+msgid "Activate"
+msgstr ""

@@ -19,6 +19,19 @@ class Plugin {
     }
 
     public function register_hooks(): void {
+        // Pro is sold from divi5lab.com, not wordpress.org, so nothing installs
+        // its translations into WP_LANG_DIR for the just-in-time loader to find.
+        // Without this the bundled languages/ directory is never read and the
+        // .pot is decorative. (Free is on wordpress.org, where translations are
+        // delivered and loaded for it automatically.)
+        if ( function_exists( 'load_plugin_textdomain' ) ) {
+            load_plugin_textdomain(
+                'jhmg-converter-for-elementor-to-divi-pro',
+                false,
+                dirname( plugin_basename( EDCP_PLUGIN_FILE ) ) . '/languages'
+            );
+        }
+
         if ( ! class_exists( \ElementorDivi5Converter\Plugin::class ) ) {
             add_action( 'admin_notices', [ $this, 'render_missing_free_notice' ] );
             return;

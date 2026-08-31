@@ -1,0 +1,770 @@
+# Copyright (C) 2026 Lucas Lopvet
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: JHMG Converter For Elementor to Divi 5 3.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/jhmg-converter-for-elementor-to-divi\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-08-31T23:10:50+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: jhmg-converter-for-elementor-to-divi\n"
+
+#. Plugin Name of the plugin
+#: jhmg-converter-for-elementor-to-divi.php
+msgid "JHMG Converter For Elementor to Divi 5"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: jhmg-converter-for-elementor-to-divi.php
+msgid "https://jhmediagroup.com/plugin"
+msgstr ""
+
+#. Description of the plugin
+#: jhmg-converter-for-elementor-to-divi.php
+msgid "Converts Elementor page and widget data into Divi 5 layout structure."
+msgstr ""
+
+#. Author of the plugin
+#: jhmg-converter-for-elementor-to-divi.php
+msgid "Lucas Lopvet"
+msgstr ""
+
+#. Author URI of the plugin
+#: jhmg-converter-for-elementor-to-divi.php
+msgid "https://jhmediagroup.com"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:82
+#: includes/admin/class-admin-page.php:125
+#: includes/admin/class-admin-page.php:334
+#: includes/admin/class-admin-page.php:356
+#: includes/admin/class-admin-page.php:792
+msgid "Elementor to Divi 5 Converter"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:83
+msgid "Elementor → Divi 5"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:96
+msgid "You do not have permission to access this page."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:130
+msgid "Install and activate Divi 5, then return to this screen. Nothing has been changed on your site."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:160
+#: includes/admin/class-admin-page.php:249
+msgid "Insufficient permissions."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:170
+msgid "No file was uploaded."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:183
+msgid "Full kit ZIP import is a Pro feature. The free plugin imports single-page JSON exports (unlimited). Get Pro at divi5lab.com/plugins/elementor-to-divi-5"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:207
+msgid "Failed to parse import file: "
+msgstr ""
+
+#: includes/admin/class-admin-page.php:211
+msgid "No pages found in the import file."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:258
+msgid "Invalid post ID."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:314
+msgid "File exceeds server upload limit."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:315
+msgid "File exceeds form upload limit."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:316
+msgid "File was only partially uploaded."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:317
+msgid "No file was selected."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:318
+msgid "Server is missing a temporary folder."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:319
+msgid "Failed to write file to server."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:320
+msgid "Upload stopped by server extension."
+msgstr ""
+
+#. translators: %d is the numeric upload error code
+#: includes/admin/class-admin-page.php:324
+#, php-format
+msgid "Unknown upload error (code %d)."
+msgstr ""
+
+#. translators: %s: Pro Kit tools URL
+#: includes/admin/class-admin-page.php:345
+#, php-format
+msgid "<strong>Pro is active.</strong> Kit import and Theme Builder tools live under <a href=\"%s\">Tools → Elementor → Divi 5 Pro</a>."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:354
+msgid "Easily convert Elementor pages to Divi 5 with 1 click. Free for single page imports. Upgrade to Pro for full kit imports, global headers, and global footers."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:361
+msgid "Convert a page already on this site"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:366
+msgid "Pick an Elementor page below and click Check this page. Converting creates a new Divi draft — your Elementor page is left exactly as it is."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:376
+msgid "No Elementor pages were found installed on this site. Use the JSON import below instead."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:384
+msgid "FREE"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:385
+#: includes/admin/class-admin-page.php:501
+msgid "Free Version"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:386
+msgid "Great for single pages and quick migrations."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:390
+msgid "Convert single Elementor pages to Divi 5 for free. Upload a JSON export and get a fully converted page instantly — no Elementor required on the destination site. Pages only."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:394
+msgid "Convert single Elementor pages, one at a time"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:395
+msgid "Convert a page directly from this site — check its structure first, then convert with one click"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:396
+msgid "Full layout, content, and style preservation"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:397
+msgid "Core Elementor widgets and popular addons"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:398
+msgid "No Elementor required on the destination site"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:408
+#: includes/admin/class-admin-page.php:578
+msgid "Import Single Page (JSON)"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:417
+msgid "JSON File"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:419
+msgid "Upload an Elementor page JSON export."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:422
+msgid "Create as"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:424
+msgid "Page"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:425
+msgid "Post"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:429
+#: includes/admin/class-admin-page.php:656
+msgid "Status"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:431
+msgid "Draft (recommended)"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:432
+#: includes/admin/class-admin-page.php:759
+msgid "Published"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:437
+msgid "Convert Now"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:446
+msgid "PRO"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:447
+msgid "BEST VALUE"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:449
+#: includes/admin/class-admin-page.php:502
+msgid "Pro Version"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:450
+msgid "The complete solution for professionals."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:454
+msgid "Convert entire Elementor sites in one upload. Import your full kit via ZIP, register a header template as your Divi global header, and set a footer template as your Divi global footer — all without touching your live site."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:458
+msgid "Bulk import full Elementor kits via ZIP — entire sites in one upload"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:459
+msgid "Convert several installed pages from this site in one run"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:460
+msgid "Set a header template JSON as your Divi Theme Builder global header"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:461
+msgid "Set a footer template JSON as your Divi Theme Builder global footer"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:462
+msgid "Apply global kit colors and typography across all conversions"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:463
+msgid "Priority support and regular updates"
+msgstr ""
+
+#. translators: %s: Pro subscription price, e.g. $25/yr
+#: includes/admin/class-admin-page.php:486
+#: includes/admin/class-admin-page.php:550
+#, php-format
+msgid "Get Pro — %s, unlimited sites"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:496
+msgid "Side by Side"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:500
+msgid "Feature"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:507
+msgid "Import Method"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:508
+msgid "JSON — one page at a time"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:509
+msgid "ZIP (full kit) + JSON (header & footer templates)"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:512
+msgid "What You Can Import"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:513
+msgid "Single pages only"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:514
+msgid "Full kits, global headers, global footers, and all assets"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:517
+msgid "Speed"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:518
+msgid "Manual, one page at a time"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:519
+msgid "Fast, entire site in one go"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:522
+msgid "Header & Footer Templates"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:523
+msgid "✗ Not available"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:524
+msgid "✓ Convert to Divi Theme Builder — ZIP or JSON"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:527
+msgid "Best For"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:528
+msgid "Testing, Small Projects"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:529
+msgid "Agencies, Freelancers, Large Sites"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:539
+msgid "Unlock the Full Power"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:540
+msgid "Import full kits, set global headers and footers, and convert entire Elementor sites to Divi 5 in one go."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:579
+msgid "✕  Close Form"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:598
+msgid "No import ID provided."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:604
+msgid "Import results not found or expired. Results are kept for one hour."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:613
+msgid "Batch Import Results"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:623
+#: includes/admin/class-admin-page.php:796
+msgid "Back to converter"
+msgstr ""
+
+#. translators: %d is the number of pages processed
+#: includes/admin/class-admin-page.php:631
+#, php-format
+msgid "%d page(s) processed"
+msgstr ""
+
+#. translators: %d is the number of successfully converted pages
+#: includes/admin/class-admin-page.php:638
+#, php-format
+msgid "%d converted"
+msgstr ""
+
+#. translators: %d is the number of pages that failed to convert
+#: includes/admin/class-admin-page.php:646
+#, php-format
+msgid "%d failed"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:655
+msgid "Title"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:657
+msgid "Issues"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:658
+msgid "Actions"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:676
+#: includes/admin/class-elementor-page-repository.php:82
+msgid "(no title)"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:680
+msgid "Converted"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:682
+msgid "Failed"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:693
+msgid "issues"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:701
+msgid "Unsupported:"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:707
+msgid "Skipped:"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:713
+msgid "Unresolved global — left unset:"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:727
+msgid "Clean"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:735
+msgid "Edit"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:738
+msgid "View"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:756
+msgid "Publish"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:786
+msgid "No checked selection found or it has expired. Please pick a page again."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:815
+msgid "Converted Elements"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:819
+msgid "Type"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:820
+msgid "Count"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:838
+msgid "Unsupported Elements"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:857
+msgid "Warnings"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:871
+msgid "Skipped Settings"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:874
+msgid "These Elementor settings have no Divi 5 mapping yet and were not converted."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:885
+msgid "Clean Conversion"
+msgstr ""
+
+#: includes/admin/class-admin-page.php:886
+msgid "No warnings, unsupported elements, or skipped settings."
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:42
+#: includes/admin/class-coverage-panel.php:63
+msgid "Conversion coverage"
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:44
+msgid "Everything converted. No unsupported widgets across your recent imports."
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:64
+msgid "Elementor widgets from your recent imports that have no Divi 5 equivalent yet. These need rebuilding by hand."
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:65
+msgid "Widget"
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:66
+msgid "Imports affected"
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:67
+msgid "Last seen"
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:87
+msgid "Sharing this list of widget names with divi5lab so these gaps get prioritised. No site address, no content, no personal data."
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:88
+msgid "Help prioritise these widgets? Sharing sends only the widget names above, once a week. No site address, no content, no personal data."
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:91
+msgid "Stop sharing"
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:92
+msgid "Share these widget names"
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:103
+msgid "Undone"
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:108
+msgid "Undo is unavailable because this site empties the trash immediately."
+msgstr ""
+
+#. translators: %d: number of pages this import created.
+#: includes/admin/class-coverage-panel.php:112
+#, php-format
+msgid "Move the %d page(s) this import created to the Trash?"
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:123
+msgid "Undo"
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:139
+msgid "Recent imports"
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:140
+msgid "Undo moves the pages an import created to the trash. It skips only pages that are no longer linked to this import (already gone, or replaced) — editing a page does not exempt it from Undo."
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:141
+msgid "When"
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:142
+msgid "Pages"
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:164
+msgid "No Elementor pages found on this site. If your pages live elsewhere, use the JSON import above."
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:183
+msgid "already converted"
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:191
+msgid "Check this page"
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:196
+msgid "Free converts one page at a time, as many times as you like. Pro converts your whole site in one run."
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:211
+msgid "Search Elementor pages"
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:215
+msgid "Search by title…"
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:217
+msgid "Search"
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:239
+msgid "Previous"
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:245
+msgid "Next"
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:258
+msgid "Conversion report"
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:260
+msgid "Nothing has been written yet. This is what the conversion will produce."
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:265
+msgid "Only the first page was checked. Converting several pages in one run is a Pro feature."
+msgstr ""
+
+#. translators: %d: number of Divi modules the conversion produced
+#: includes/admin/class-direct-conversion-page.php:287
+#, php-format
+msgid "%d module converted."
+msgid_plural "%d modules converted."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-direct-conversion-page.php:304
+msgid "Could not be converted:"
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:326
+msgid "Convert to Divi 5"
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:329
+msgid "Creates a new Divi draft. Your Elementor page is left exactly as it is."
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:351
+msgid "You do not have permission to do that."
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:381
+msgid "Pick a page to check first."
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:412
+msgid "No pages were selected to convert."
+msgstr ""
+
+#: includes/admin/class-not-carried-over-renderer.php:35
+msgid "Not carried over"
+msgstr ""
+
+#: includes/admin/class-not-carried-over-renderer.php:69
+msgid "Dynamic content bindings — the converted page keeps only the stored fallback text"
+msgstr ""
+
+#: includes/admin/class-not-carried-over-renderer.php:70
+msgid "Entrance animations — removed"
+msgstr ""
+
+#: includes/admin/class-not-carried-over-renderer.php:71
+msgid "Motion and sticky effects — removed"
+msgstr ""
+
+#: includes/admin/class-not-carried-over-renderer.php:72
+msgid "Form fields — discarded; the Divi form is created with its default name, email and message fields"
+msgstr ""
+
+#: includes/admin/class-not-carried-over-renderer.php:83
+msgid "Approximate matches — these widgets were not mapped; the closest module was guessed from their settings and should be checked"
+msgstr ""
+
+#: includes/admin/class-outline-renderer.php:20
+msgid "Nothing to show — this page converted to no Divi modules."
+msgstr ""
+
+#. translators: 1: new price e.g. $25/yr, 2: previous price e.g. $49/yr
+#: includes/admin/class-price-drop-notice.php:120
+#, php-format
+msgid "Pro is now %1$s — down from %2$s."
+msgstr ""
+
+#: includes/admin/class-price-drop-notice.php:125
+msgid "Same unlimited-sites license: full kit ZIP import, global headers and footers, and global styles."
+msgstr ""
+
+#: includes/admin/class-price-drop-notice.php:141
+msgid "Get Pro"
+msgstr ""
+
+#: includes/admin/class-price-drop-notice.php:143
+msgid "Dismiss"
+msgstr ""
+
+#. translators: %d: number of pages converted so far
+#: includes/admin/class-review-prompt.php:161
+#, php-format
+msgid "Converted %d page so far."
+msgid_plural "Converted %d pages so far."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-review-prompt.php:170
+msgid "If this saved you some time, a quick review on WordPress.org helps other people find it."
+msgstr ""
+
+#: includes/admin/class-review-prompt.php:184
+msgid "Leave a review"
+msgstr ""
+
+#: includes/admin/class-review-prompt.php:186
+msgid "Maybe later"
+msgstr ""
+
+#: includes/admin/class-review-prompt.php:188
+msgid "Don't ask again"
+msgstr ""
+
+#: includes/conversion/class-installed-post-source.php:47
+msgid "That page no longer exists."
+msgstr ""
+
+#: includes/conversion/class-installed-post-source.php:57
+msgid "No Elementor content found on that page."
+msgstr ""
+
+#: includes/conversion/class-installed-post-source.php:73
+msgid "Imported Page"
+msgstr ""
+
+#: includes/conversion/class-installed-post-source.php:96
+msgid "Unknown page"
+msgstr ""
+
+#. translators: %d: number of form fields that were discarded
+#: includes/converter/class-converter-engine.php:328
+#, php-format
+msgid "%d field"
+msgid_plural "%d fields"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %s: minimum required Divi version, e.g. 5.0.0
+#: includes/helpers/class-divi-requirement.php:100
+#, php-format
+msgid "Elementor to Divi 5 Converter is inactive: Divi %s or newer is required, and no Divi installation was found. Converted pages would be saved in a format nothing on this site can render."
+msgstr ""
+
+#. translators: 1: detected Divi version, 2: minimum required Divi version
+#: includes/helpers/class-divi-requirement.php:108
+#, php-format
+msgid "Elementor to Divi 5 Converter is inactive: this site runs Divi %1$s, and the converter writes Divi 5 block content that requires Divi %2$s or newer. Converting now would produce pages that render blank."
+msgstr ""
+
+#: includes/history/class-import-rollback.php:136
+msgid "Undo did not run: this site is configured to empty the Trash immediately, so nothing could be trashed. No pages were changed."
+msgstr ""
+
+#. translators: %d: number of pages moved to the Trash.
+#: includes/history/class-import-rollback.php:152
+#, php-format
+msgid "%d page was moved to the Trash. You can restore it from Posts → Trash if needed."
+msgid_plural "%d pages were moved to the Trash. You can restore them from Posts → Trash if needed."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: number of pages skipped.
+#: includes/history/class-import-rollback.php:167
+#, php-format
+msgid "%d page was skipped because it is no longer owned by this plugin (already gone, or replaced since the import)."
+msgid_plural "%d pages were skipped because they are no longer owned by this plugin (already gone, or replaced since the import)."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/history/class-import-rollback.php:179
+msgid "Nothing to undo: this import had already been undone or had no pages left to trash."
+msgstr ""

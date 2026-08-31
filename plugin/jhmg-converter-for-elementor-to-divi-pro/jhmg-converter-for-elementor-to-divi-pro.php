@@ -9,6 +9,7 @@
  * Author:            Lucas Lopvet
  * License:           GPLv2 or later
  * Text Domain:       jhmg-converter-for-elementor-to-divi-pro
+ * Domain Path:       /languages
  */
 
 defined( 'ABSPATH' ) || exit;
