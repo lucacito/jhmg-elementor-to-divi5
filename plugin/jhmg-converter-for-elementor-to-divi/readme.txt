@@ -30,7 +30,7 @@ Before you convert, click **Check this page** to see a conversion report: the st
 * Core Elementor widgets and most popular addons supported
 * No Elementor required on the destination site
 * Unlimited conversions — one page at a time
-* 140+ widget mappings and a detailed per-page conversion report
+* 129 recognised Elementor widget types — including Elementor's own nested accordion and nested tabs — and a detailed per-page conversion report
 
 **[Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5) — The full migration toolkit:**
 
@@ -206,6 +206,16 @@ commonly missing Elementor widgets get built first.
 * Converting never touches your Elementor page: it always creates a new Divi draft, and every run is undoable
 * Pro: convert several pages from your site in one run
 * Fixed: on a multi-page kit import the per-page conversion counts accumulated instead of being counted per page, so later pages reported inflated totals (Pro)
+* Fixed: global colours and fonts that could not be resolved were filled in from a built-in palette, which repainted pages in colours that were never on your site. Unresolved globals are now left alone and listed in the report
+* Fixed: Google Maps, Image Gallery and Progress Bar widgets were registered under names Elementor does not use, so they were dropped from every conversion
+* New: support for Elementor's nested accordion and nested tabs — the default accordion and tabs since Elementor 3.15
+* Fixed: a widget with no mapping vanished from the page. It now leaves a labelled placeholder holding its text, so you can see what was there and where
+* New: a "Not carried over" section in both reports listing dynamic content bindings, entrance animations, motion effects and discarded form fields, each with its element id. These were previously dropped without appearing anywhere
+* Changed: widgets matched by guesswork rather than a real mapping are now reported as approximate instead of being counted as converted
+* Fixed: the free plugin's kit ZIP limit could be bypassed by renaming the file
+* New: the converter now checks for Divi 5 and explains itself instead of writing pages that render blank on Divi 4 or with no Divi installed
+* Fixed: the Pro add-on's admin screens rendered completely unstyled
+* New: translation template (.pot) for both plugins
 
 = 2.3.0 =
 * New: Undo an import — one click moves the pages an import created to the trash, so trying a conversion is no longer a one-way door. Pages that are no longer linked to that import (already gone, or replaced) are skipped; note that editing a page does not exempt it from Undo
@@ -251,7 +261,7 @@ commonly missing Elementor widgets get built first.
 == Upgrade Notice ==
 
 = 3.0.0 =
-The export-and-upload step is gone: if Elementor is installed on this site, pick a page from a list and convert it directly, with a "Check this page" report before anything is written. Pro users running multi-page kit imports will now see correct per-page conversion counts (they used to accumulate across pages).
+The export-and-upload step is gone: pick an installed Elementor page from a list and convert it directly, with a "Check this page" report before anything is written. This release also fixes several silent losses: unresolved global colours are no longer replaced with a built-in palette, three common widgets that were being dropped now convert, unmapped widgets leave a visible placeholder instead of disappearing, and dropped animations, dynamic bindings and form fields are now listed in the report instead of going unmentioned. The converter also now requires Divi 5 and says so, rather than producing pages that render blank.
 
 = 2.3.0 =
 Adds one-click Undo for an import, so trying a conversion is no longer a one-way door, plus a coverage report showing which Elementor widgets could not be converted. Pro also dropped to $25/yr from $49/yr — the same unlimited-sites license. The free plugin still converts unlimited single pages.
