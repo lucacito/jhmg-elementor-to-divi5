@@ -1,0 +1,57 @@
+[
+  {
+    "id": "section-nt",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-nt",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "nt-1",
+            "elType": "widget",
+            "widgetType": "nested-tabs",
+            "settings": {
+              "tabs": [
+                { "tab_title": "Overview", "_id": "ccc333" },
+                { "tab_title": "Specs", "_id": "ddd444" }
+              ]
+            },
+            "elements": [
+              {
+                "id": "nt-body-1",
+                "elType": "container",
+                "settings": { "content_width": "full" },
+                "elements": [
+                  {
+                    "id": "nt-text-1",
+                    "elType": "widget",
+                    "widgetType": "text-editor",
+                    "settings": { "editor": "<p>What it does.</p>" },
+                    "elements": []
+                  }
+                ]
+              },
+              {
+                "id": "nt-body-2",
+                "elType": "container",
+                "settings": { "content_width": "full" },
+                "elements": [
+                  {
+                    "id": "nt-img-2",
+                    "elType": "widget",
+                    "widgetType": "image",
+                    "settings": { "image": { "url": "https://example.test/spec.png", "alt": "Spec sheet" } },
+                    "elements": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

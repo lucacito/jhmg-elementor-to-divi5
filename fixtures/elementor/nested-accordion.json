@@ -1,0 +1,66 @@
+[
+  {
+    "id": "section-na",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-na",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "na-1",
+            "elType": "widget",
+            "widgetType": "nested-accordion",
+            "settings": {
+              "items": [
+                { "item_title": "Shipping", "_id": "aaa111" },
+                { "item_title": "Returns", "_id": "bbb222" }
+              ],
+              "title_tag": "h3",
+              "default_state": "expanded"
+            },
+            "elements": [
+              {
+                "id": "na-body-1",
+                "elType": "container",
+                "settings": { "content_width": "full" },
+                "elements": [
+                  {
+                    "id": "na-text-1",
+                    "elType": "widget",
+                    "widgetType": "text-editor",
+                    "settings": { "editor": "<p>Ships in two days.</p>" },
+                    "elements": []
+                  }
+                ]
+              },
+              {
+                "id": "na-body-2",
+                "elType": "container",
+                "settings": { "content_width": "full" },
+                "elements": [
+                  {
+                    "id": "na-head-2",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": { "title": "Our policy", "header_size": "h4" },
+                    "elements": []
+                  },
+                  {
+                    "id": "na-text-2",
+                    "elType": "widget",
+                    "widgetType": "text-editor",
+                    "settings": { "editor": "<p>Thirty days.</p>" },
+                    "elements": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

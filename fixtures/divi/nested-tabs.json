@@ -1,0 +1,77 @@
+{
+    "divi": {
+        "elements": [
+            {
+                "id": "section-nt",
+                "name": "divi/section",
+                "settings": [],
+                "elements": [
+                    {
+                        "id": "section-nt-row",
+                        "name": "divi/row",
+                        "settings": [],
+                        "elements": [
+                            {
+                                "id": "column-nt",
+                                "name": "divi/column",
+                                "settings": [],
+                                "elements": [
+                                    {
+                                        "id": "nt-1",
+                                        "name": "divi/tabs",
+                                        "settings": [],
+                                        "elements": [
+                                            {
+                                                "id": "nt-1-tab-1",
+                                                "name": "divi/tab",
+                                                "settings": {
+                                                    "title": {
+                                                        "innerContent": {
+                                                            "desktop": {
+                                                                "value": "Overview"
+                                                            }
+                                                        }
+                                                    },
+                                                    "content": {
+                                                        "innerContent": {
+                                                            "desktop": {
+                                                                "value": "<p>What it does.</p>"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "elements": []
+                                            },
+                                            {
+                                                "id": "nt-1-tab-2",
+                                                "name": "divi/tab",
+                                                "settings": {
+                                                    "title": {
+                                                        "innerContent": {
+                                                            "desktop": {
+                                                                "value": "Specs"
+                                                            }
+                                                        }
+                                                    },
+                                                    "content": {
+                                                        "innerContent": {
+                                                            "desktop": {
+                                                                "value": "<img src=\"https://example.test/spec.png\" alt=\"Spec sheet\" />"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "elements": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "unsupported": []
+}

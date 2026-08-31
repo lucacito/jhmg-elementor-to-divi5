@@ -19,6 +19,106 @@ abstract class BaseElementorConverter implements ConverterInterface {
         return $this->engine->convertChildren( $element['elements'] ?? [] );
     }
 
+    /**
+     * Flattens an Elementor nested-widget child container to inline HTML.
+     *
+     * Elementor's nested widgets (nested-accordion, nested-tabs) keep only the
+     * item titles in their repeater; each item's body is a full container in the
+     * widget's own `elements` array, index-aligned with that repeater.
+     *
+     * Divi cannot mirror that. Its `divi/accordion-item` and `divi/tab` are both
+     * declared `"childrenName": []` in Divi 5.7.4's generated module.json, so
+     * they hold no child modules at all — the body is a single `content`
+     * attribute of elementType `content`. Flattening is therefore the only
+     * representation available, not a shortcut.
+     *
+     * Widgets with no inline equivalent are left as an HTML comment naming the
+     * type and reported via logWarning(), so a body that could not be carried
+     * over is visible in the conversion report rather than silently thinned.
+     */
+    protected function inlineHtmlFromNestedChild( array $child ): string {
+        $html = '';
+
+        foreach ( $child['elements'] ?? [] as $node ) {
+            if ( ! is_array( $node ) ) {
+                continue;
+            }
+
+            // Containers and columns nest arbitrarily deep; walk straight through.
+            if ( in_array( $node['elType'] ?? '', [ 'container', 'column', 'section' ], true ) ) {
+                $html .= $this->inlineHtmlFromNestedChild( $node );
+                continue;
+            }
+
+            $html .= $this->inlineHtmlFromWidget( $node );
+        }
+
+        return $html;
+    }
+
+    /** One widget's inline-HTML representation, or a reported placeholder. */
+    private function inlineHtmlFromWidget( array $node ): string {
+        $type     = (string) ( $node['widgetType'] ?? $node['elType'] ?? '' );
+        $settings = $node['settings'] ?? [];
+
+        switch ( $type ) {
+            case 'text-editor':
+            case 'e-paragraph':
+                $editor = $this->getSettingValue( $settings, 'editor', $this->getSettingValue( $settings, 'paragraph', '' ) );
+                return is_string( $editor ) ? $editor : '';
+
+            case 'heading':
+            case 'e-heading':
+                $title = (string) $this->getSettingValue( $settings, 'title', '' );
+                if ( $title === '' ) {
+                    return '';
+                }
+                $tag = (string) $this->getSettingValue( $settings, 'header_size', 'h2' );
+                $tag = preg_match( '/^h[1-6]$/', $tag ) ? $tag : 'h2';
+                return "<{$tag}>" . esc_html( $title ) . "</{$tag}>";
+
+            case 'image':
+            case 'e-image':
+                $image = $settings['image'] ?? [];
+                $url   = is_array( $image ) && is_string( $image['url'] ?? '' ) ? $image['url'] : '';
+                if ( $url === '' ) {
+                    return '';
+                }
+                $alt = is_array( $image ) && is_string( $image['alt'] ?? '' ) ? $image['alt'] : '';
+                return '<img src="' . esc_url( $url ) . '" alt="' . esc_attr( $alt ) . '" />';
+
+            case 'button':
+            case 'e-button':
+                $text = (string) $this->getSettingValue( $settings, 'text', '' );
+                if ( $text === '' ) {
+                    return '';
+                }
+                $link = $settings['link'] ?? [];
+                $href = is_array( $link ) && is_string( $link['url'] ?? '' ) ? $link['url'] : '';
+                return $href !== ''
+                    ? '<a href="' . esc_url( $href ) . '">' . esc_html( $text ) . '</a>'
+                    : '<p>' . esc_html( $text ) . '</p>';
+
+            case 'divider':
+            case 'e-divider':
+                return '<hr />';
+
+            case 'html':
+                $raw = $this->getSettingValue( $settings, 'html', '' );
+                return is_string( $raw ) ? $raw : '';
+
+            case 'shortcode':
+                $raw = $this->getSettingValue( $settings, 'shortcode', '' );
+                return is_string( $raw ) ? $raw : '';
+
+            default:
+                $this->engine->logWarning(
+                    "Nested item content '{$type}' has no inline HTML equivalent; Divi accordion and tab items cannot hold modules, so it was left as a placeholder comment."
+                );
+                return '<!-- elementor widget: ' . esc_html( $type ) . ' (could not be inlined) -->';
+        }
+    }
+
     protected function getSettingValue( array $settings, string $key, $default = '' ) {
         if ( ! isset( $settings[ $key ] ) ) {
             return $default;

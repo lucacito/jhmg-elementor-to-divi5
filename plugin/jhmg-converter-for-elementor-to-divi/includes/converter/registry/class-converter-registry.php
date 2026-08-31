@@ -149,6 +149,13 @@ class ConverterRegistry {
         $this->registerWidget( 'google_maps',   '\\ElementorDivi5Converter\\Converter\\Handlers\\GoogleMapsConverter' );
         $this->registerWidget( 'image-gallery', '\\ElementorDivi5Converter\\Converter\\Handlers\\GalleryConverter' );
         $this->registerWidget( 'progress',      '\\ElementorDivi5Converter\\Converter\\Handlers\\ProgressBarConverter' );
+
+        // Elementor's default accordion and tabs since 3.15. These are separate
+        // widgets from the legacy 'accordion'/'tabs' above — they keep only
+        // titles in their repeater and hold each panel's body as an
+        // index-aligned child container. See the two converters for the shape.
+        $this->registerWidget( 'nested-accordion', '\\ElementorDivi5Converter\\Converter\\Handlers\\NestedAccordionConverter' );
+        $this->registerWidget( 'nested-tabs',      '\\ElementorDivi5Converter\\Converter\\Handlers\\NestedTabsConverter' );
         $this->registerWidget( 'counter', '\\ElementorDivi5Converter\\Converter\\Handlers\\CounterConverter' );
         $this->registerWidget( 'call-to-action', '\\ElementorDivi5Converter\\Converter\\Handlers\\CtaConverter' );
         $this->registerWidget( 'progress-bar', '\\ElementorDivi5Converter\\Converter\\Handlers\\ProgressBarConverter' );

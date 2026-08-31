@@ -49,6 +49,10 @@ final class ConverterFixtureTest extends TestCase {
             [ 'google-maps-native' ],
             [ 'image-gallery-native' ],
             [ 'progress-native' ],
+            // Elementor's default accordion and tabs since 3.15: titles in the
+            // repeater, each body an index-aligned child container.
+            [ 'nested-accordion' ],
+            [ 'nested-tabs' ],
         ];
     }
 

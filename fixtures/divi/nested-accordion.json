@@ -1,0 +1,77 @@
+{
+    "divi": {
+        "elements": [
+            {
+                "id": "section-na",
+                "name": "divi/section",
+                "settings": [],
+                "elements": [
+                    {
+                        "id": "section-na-row",
+                        "name": "divi/row",
+                        "settings": [],
+                        "elements": [
+                            {
+                                "id": "column-na",
+                                "name": "divi/column",
+                                "settings": [],
+                                "elements": [
+                                    {
+                                        "id": "na-1",
+                                        "name": "divi/accordion",
+                                        "settings": [],
+                                        "elements": [
+                                            {
+                                                "id": "na-1-item-1",
+                                                "name": "divi/accordion-item",
+                                                "settings": {
+                                                    "title": {
+                                                        "innerContent": {
+                                                            "desktop": {
+                                                                "value": "Shipping"
+                                                            }
+                                                        }
+                                                    },
+                                                    "content": {
+                                                        "innerContent": {
+                                                            "desktop": {
+                                                                "value": "<p>Ships in two days.</p>"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "elements": []
+                                            },
+                                            {
+                                                "id": "na-1-item-2",
+                                                "name": "divi/accordion-item",
+                                                "settings": {
+                                                    "title": {
+                                                        "innerContent": {
+                                                            "desktop": {
+                                                                "value": "Returns"
+                                                            }
+                                                        }
+                                                    },
+                                                    "content": {
+                                                        "innerContent": {
+                                                            "desktop": {
+                                                                "value": "<h4>Our policy</h4><p>Thirty days.</p>"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "elements": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "unsupported": []
+}
