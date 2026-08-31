@@ -36,13 +36,41 @@ class AdminPage {
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_styles' ] );
     }
 
+    /**
+     * Page slugs this stylesheet covers.
+     *
+     * Pro renders its own 1,100-line screen using free's `edc-*` class names but
+     * ships no CSS of its own, and free's gate matched only 'edc-converter' —
+     * which 'edcp-kit' does not contain. Every Pro page therefore rendered
+     * completely unstyled. Pro cannot enqueue this itself: the stylesheet is
+     * free's, built from free's inline_css().
+     */
+    private const STYLED_PAGE_SLUGS = [
+        self::MENU_SLUG,   // free: tools.php?page=edc-converter
+        'edcp-kit',        // Pro:  tools.php?page=edcp-kit
+    ];
+
     public function enqueue_admin_styles( string $hook ): void {
-        if ( strpos( $hook, self::MENU_SLUG ) === false ) {
+        if ( ! $this->hook_is_styled( $hook ) ) {
             return;
         }
         wp_register_style( 'edc-admin', false, [], EDC_PLUGIN_VERSION );
         wp_enqueue_style( 'edc-admin' );
         wp_add_inline_style( 'edc-admin', $this->inline_css() );
+    }
+
+    /**
+     * WordPress passes hooks like 'tools_page_edc-converter'. Matching on a
+     * substring is what the original did; the list is what changed.
+     */
+    protected function hook_is_styled( string $hook ): bool {
+        foreach ( self::STYLED_PAGE_SLUGS as $slug ) {
+            if ( strpos( $hook, $slug ) !== false ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // ------------------------------------------------------------------
