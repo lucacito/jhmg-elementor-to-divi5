@@ -1,0 +1,30 @@
+[
+  {
+    "id": "section-ig",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-ig",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "ig-1",
+            "elType": "widget",
+            "widgetType": "image-gallery",
+            "settings": {
+              "wp_gallery": [
+                { "id": 11, "url": "https://example.test/one.jpg" },
+                { "id": 12, "url": "https://example.test/two.jpg" }
+              ],
+              "gallery_columns": 2,
+              "gallery_link": "file"
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

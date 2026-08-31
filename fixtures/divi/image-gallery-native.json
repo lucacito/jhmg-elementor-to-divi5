@@ -1,0 +1,47 @@
+{
+    "divi": {
+        "elements": [
+            {
+                "id": "section-ig",
+                "name": "divi/section",
+                "settings": [],
+                "elements": [
+                    {
+                        "id": "section-ig-row",
+                        "name": "divi/row",
+                        "settings": [],
+                        "elements": [
+                            {
+                                "id": "column-ig",
+                                "name": "divi/column",
+                                "settings": [],
+                                "elements": [
+                                    {
+                                        "id": "ig-1",
+                                        "name": "divi/gallery",
+                                        "settings": {
+                                            "image": {
+                                                "advanced": {
+                                                    "galleryIds": {
+                                                        "desktop": {
+                                                            "value": [
+                                                                11,
+                                                                12
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "elements": []
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "unsupported": []
+}

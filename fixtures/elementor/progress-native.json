@@ -1,0 +1,28 @@
+[
+  {
+    "id": "section-pg",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-pg",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "pg-1",
+            "elType": "widget",
+            "widgetType": "progress",
+            "settings": {
+              "title": "Design",
+              "percent": { "size": 80, "unit": "%" },
+              "display_percentage": "show",
+              "progress_type": "info"
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

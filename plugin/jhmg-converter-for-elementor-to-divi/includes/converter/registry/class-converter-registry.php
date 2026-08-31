@@ -137,6 +137,18 @@ class ConverterRegistry {
         $this->registerWidget( 'elementskit-accordion', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
         $this->registerWidget( 'html', '\\ElementorDivi5Converter\\Converter\\Handlers\\HtmlConverter' );
         $this->registerWidget( 'gallery', '\\ElementorDivi5Converter\\Converter\\Handlers\\GalleryConverter' );
+
+        // ── Real Elementor slugs for widgets registered above under a name
+        //    Elementor never emits. Verified against Elementor 3.28.2 get_name():
+        //      includes/widgets/google-maps.php   → 'google_maps'   (underscore)
+        //      includes/widgets/image-gallery.php → 'image-gallery'
+        //      includes/widgets/progress.php      → 'progress'
+        //    Until these existed, every one of these widgets fell through to
+        //    "unsupported" and was dropped from the page. The older spellings stay
+        //    registered as aliases so existing fixtures keep working.
+        $this->registerWidget( 'google_maps',   '\\ElementorDivi5Converter\\Converter\\Handlers\\GoogleMapsConverter' );
+        $this->registerWidget( 'image-gallery', '\\ElementorDivi5Converter\\Converter\\Handlers\\GalleryConverter' );
+        $this->registerWidget( 'progress',      '\\ElementorDivi5Converter\\Converter\\Handlers\\ProgressBarConverter' );
         $this->registerWidget( 'counter', '\\ElementorDivi5Converter\\Converter\\Handlers\\CounterConverter' );
         $this->registerWidget( 'call-to-action', '\\ElementorDivi5Converter\\Converter\\Handlers\\CtaConverter' );
         $this->registerWidget( 'progress-bar', '\\ElementorDivi5Converter\\Converter\\Handlers\\ProgressBarConverter' );

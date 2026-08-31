@@ -43,6 +43,12 @@ final class ConverterFixtureTest extends TestCase {
             [ 'real-elementor' ],
             [ 'column-overlay' ],
             [ 'elementskit-testimonial' ],
+            // Real Elementor 3.28.2 slugs and payload shapes for widgets whose
+            // registered spelling Elementor never emits — see the slug block in
+            // ConverterRegistry::registerDefaults().
+            [ 'google-maps-native' ],
+            [ 'image-gallery-native' ],
+            [ 'progress-native' ],
         ];
     }
 

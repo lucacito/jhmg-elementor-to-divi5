@@ -1,0 +1,26 @@
+[
+  {
+    "id": "section-gm",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "column-gm",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "gm-1",
+            "elType": "widget",
+            "widgetType": "google_maps",
+            "settings": {
+              "address": "221B Baker Street, London",
+              "zoom": { "size": 14, "unit": "px" }
+            },
+            "elements": []
+          }
+        ]
+      }
+    ]
+  }
+]

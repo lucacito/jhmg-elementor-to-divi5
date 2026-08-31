@@ -1,0 +1,56 @@
+{
+    "divi": {
+        "elements": [
+            {
+                "id": "section-pg",
+                "name": "divi/section",
+                "settings": [],
+                "elements": [
+                    {
+                        "id": "section-pg-row",
+                        "name": "divi/row",
+                        "settings": [],
+                        "elements": [
+                            {
+                                "id": "column-pg",
+                                "name": "divi/column",
+                                "settings": [],
+                                "elements": [
+                                    {
+                                        "id": "pg-1",
+                                        "name": "divi/counters",
+                                        "settings": [],
+                                        "elements": [
+                                            {
+                                                "id": "pg-1-bar-1",
+                                                "name": "divi/counter",
+                                                "settings": {
+                                                    "title": {
+                                                        "innerContent": {
+                                                            "desktop": {
+                                                                "value": "Design"
+                                                            }
+                                                        }
+                                                    },
+                                                    "barProgress": {
+                                                        "innerContent": {
+                                                            "desktop": {
+                                                                "value": "80"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "elements": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "unsupported": []
+}
