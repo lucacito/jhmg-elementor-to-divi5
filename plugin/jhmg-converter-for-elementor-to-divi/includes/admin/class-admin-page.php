@@ -118,7 +118,11 @@ class AdminPage {
             wp_die( esc_html( $this->upload_error_message( $upload['error'] ) ) );
         }
 
-        if ( strtolower( pathinfo( $upload['name'], PATHINFO_EXTENSION ) ) === 'zip' ) {
+        // Sniff the file, do not trust its name. ElementorImportParser detects a
+        // ZIP by its PK magic bytes regardless of extension, so a gate that only
+        // read the extension was lifted by renaming kit.zip to kit.json — the
+        // parser then happily unpacked the kit the gate exists to withhold.
+        if ( $this->is_zip_upload( $upload ) ) {
             wp_die(
                 esc_html__( 'Full kit ZIP import is a Pro feature. The free plugin imports single-page JSON exports (unlimited). Get Pro at divi5lab.com/plugins/elementor-to-divi-5', 'jhmg-converter-for-elementor-to-divi' ),
                 '',
@@ -214,6 +218,33 @@ class AdminPage {
             )
         );
         exit;
+    }
+
+    /**
+     * Whether an upload is a ZIP archive, judged the same way
+     * ElementorImportParser::isZipFile() judges it: the PK magic bytes first,
+     * falling back to the extension when the bytes cannot be read.
+     *
+     * The two must agree. When the gate read only the extension and the parser
+     * read only the bytes, the disagreement was the bypass.
+     *
+     * @param array $upload One entry from $_FILES.
+     */
+    protected function is_zip_upload( array $upload ): bool {
+        $tmp_name = isset( $upload['tmp_name'] ) ? (string) $upload['tmp_name'] : '';
+
+        if ( $tmp_name !== '' && is_readable( $tmp_name ) ) {
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+            $magic = file_get_contents( $tmp_name, false, null, 0, 2 );
+
+            if ( $magic !== false && $magic !== '' ) {
+                return $magic === 'PK';
+            }
+        }
+
+        $name = isset( $upload['name'] ) ? (string) $upload['name'] : '';
+
+        return strtolower( pathinfo( $name, PATHINFO_EXTENSION ) ) === 'zip';
     }
 
     private function generate_import_id(): string {
