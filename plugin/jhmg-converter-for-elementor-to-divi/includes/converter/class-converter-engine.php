@@ -17,7 +17,46 @@ class ConverterEngine {
     private array $conversionWarnings = [];
     private array $skippedSettings    = [];
     private array $unresolvedGlobals  = [];
+    private array $notCarriedOver     = [];
+    private array $approximateCounts  = [];
+    private array $approximateMatches = [];
     private int   $nestingDepth       = 0;
+
+    /**
+     * Set only for the duration of a shape-matched converter's convert() call, so
+     * its logConverted() lands in the approximate bucket instead of the real one.
+     */
+    private bool $countingApproximate = false;
+
+    /**
+     * Elementor settings that are dropped by design and, until now, without a
+     * trace: they sit in StyleMapper::suppressUnimplementable() or in
+     * logUnmappedSettings()'s $always_ignore, so they never reached the report at
+     * all. A page could lose every animation and every dynamic binding on it and
+     * still convert "clean".
+     *
+     * Keys are matched by prefix. Values are the report category.
+     */
+    private const NOT_CARRIED_PREFIXES = [
+        'motion_fx_' => 'motion',
+        'sticky_'    => 'motion',
+        '_animation' => 'animation',
+        'animation'  => 'animation',
+    ];
+
+    /**
+     * Exact keys, matched alongside the prefixes above.
+     *
+     * Sticky is an Elementor Pro feature, so its control schema could not be read
+     * from source here — only Pro ships the module. The rest of this codebase
+     * assumes the `sticky_` prefix; the bare key is matched too because missing a
+     * real sticky element costs the user a silent loss, while a widget that
+     * happens to have an unrelated setting named exactly `sticky` costs one
+     * accurate-looking line in a report.
+     */
+    private const NOT_CARRIED_EXACT = [
+        'sticky' => 'motion',
+    ];
 
     /** Map of Elementor global color id → hex value (e.g. 'bef7937' => '#14305A'). */
     private array $globalColors = [];
@@ -37,7 +76,55 @@ class ConverterEngine {
     }
 
     public function logConverted( string $type ): void {
+        if ( $this->countingApproximate ) {
+            $this->approximateCounts[ $type ] = ( $this->approximateCounts[ $type ] ?? 0 ) + 1;
+            return;
+        }
+
         $this->conversionCounts[ $type ] = ( $this->conversionCounts[ $type ] ?? 0 ) + 1;
+    }
+
+    /**
+     * Records that a widget reached its converter by settings-shape guesswork
+     * rather than by being registered — see ConverterRegistry::detectByShape().
+     *
+     * Such a match is a guess that happened to fit, so it is reported as
+     * approximate and kept out of the converted counts. Counting it as a clean
+     * conversion told the user a widget nobody had mapped came through intact.
+     */
+    public function flagApproximate( string $element_id, string $widget_type, string $matched_to ): void {
+        $this->approximateMatches[] = [
+            'element_id'  => $element_id,
+            'widget_type' => $widget_type,
+            'matched_to'  => $matched_to,
+        ];
+    }
+
+    /** @return array<int,array{element_id:string,widget_type:string,matched_to:string}> */
+    public function getApproximateMatches(): array {
+        return $this->approximateMatches;
+    }
+
+    /**
+     * Records something the conversion could not carry over at all.
+     *
+     * @param string $kind One of 'dynamic', 'animation', 'motion', 'form_fields'.
+     */
+    public function logNotCarriedOver( string $kind, string $element_id, string $detail ): void {
+        $entry = [
+            'kind'       => $kind,
+            'element_id' => $element_id,
+            'detail'     => $detail,
+        ];
+
+        if ( ! in_array( $entry, $this->notCarriedOver, true ) ) {
+            $this->notCarriedOver[] = $entry;
+        }
+    }
+
+    /** @return array<int,array{kind:string,element_id:string,detail:string}> */
+    public function getNotCarriedOver(): array {
+        return $this->notCarriedOver;
     }
 
     public function logWarning( string $message ): void {
@@ -75,17 +162,25 @@ class ConverterEngine {
     }
 
     public function getReport(): array {
-        $converted_total  = array_sum( $this->conversionCounts );
+        $converted_total   = array_sum( $this->conversionCounts );
+        $approximate_total = array_sum( $this->approximateCounts );
         $unsupported_total = count( $this->unsupportedWidgets );
-        $all_widgets       = $converted_total + $unsupported_total;
-        $widget_coverage   = $all_widgets > 0 ? (int) round( $converted_total / $all_widgets * 100 ) : 100;
-        $settings_issues   = count( $this->skippedSettings );
+
+        // Approximate matches sit in the denominator but not the numerator: they
+        // are widgets that arrived somewhere plausible by guesswork, and counting
+        // them as clean conversions overstated how much of the page came through.
+        $all_widgets     = $converted_total + $approximate_total + $unsupported_total;
+        $widget_coverage = $all_widgets > 0 ? (int) round( $converted_total / $all_widgets * 100 ) : 100;
+        $settings_issues = count( $this->skippedSettings );
 
         return [
             'converted'          => $this->conversionCounts,
+            'approximate'        => $this->approximateCounts,
+            'approximate_matches' => $this->approximateMatches,
             'warnings'           => $this->conversionWarnings,
             'skipped_settings'   => $this->skippedSettings,
             'unresolved_globals' => $this->unresolvedGlobals,
+            'not_carried_over'   => $this->notCarriedOver,
             'quality'            => [
                 'widget_coverage'  => $widget_coverage,
                 'settings_issues'  => $settings_issues,
@@ -143,10 +238,26 @@ class ConverterEngine {
 
     public function convertElement( array $element ): array {
         $element   = $this->resolveElementGlobals( $element );
-        $converter = $this->registry->getConverter( $element );
+        $this->recordNotCarriedOver( $element );
+
+        $matches_before = count( $this->approximateMatches );
+        $converter      = $this->registry->getConverter( $element );
 
         if ( $converter instanceof ConverterInterface ) {
-            return $converter->convert( $element );
+            // getConverter() flags a shape match as it makes one, so a new entry
+            // means this converter was guessed at rather than registered.
+            $is_approximate = count( $this->approximateMatches ) > $matches_before;
+
+            if ( ! $is_approximate ) {
+                return $converter->convert( $element );
+            }
+
+            $this->countingApproximate = true;
+            try {
+                return $converter->convert( $element );
+            } finally {
+                $this->countingApproximate = false;
+            }
         }
 
         $this->logUnsupportedElement( $element );
@@ -173,6 +284,96 @@ class ConverterEngine {
      * is injected into settings so downstream converters and StyleMapper see it
      * as a normal hex string.
      */
+    /**
+     * Notes the things this element carries that the conversion cannot express
+     * at all, before any converter runs.
+     *
+     * These are all suppressed further down the pipeline — dynamic tags and
+     * animation keys never reach logSkippedSetting(), and form_fields is listed
+     * as "mapped" by FormConverter while nothing reads it — so this is the only
+     * place they are visible. Detection lives here rather than in the handlers
+     * because the element id and the raw settings are both in hand exactly once.
+     */
+    private function recordNotCarriedOver( array $element ): void {
+        if ( ( $element['elType'] ?? '' ) !== 'widget' ) {
+            return;
+        }
+
+        $settings   = $element['settings'] ?? [];
+        $element_id = (string) ( $element['id'] ?? '' );
+
+        if ( ! is_array( $settings ) ) {
+            return;
+        }
+
+        // Dynamic tags: the widget renders a live value (a post field, an ACF
+        // field, a site setting). Conversion keeps only whatever static fallback
+        // happened to be stored alongside it, which is often nothing.
+        $dynamic = $settings['__dynamic__'] ?? [];
+        if ( is_array( $dynamic ) ) {
+            foreach ( array_keys( $dynamic ) as $setting_key ) {
+                $this->logNotCarriedOver( 'dynamic', $element_id, (string) $setting_key );
+            }
+        }
+
+        // Elementor Pro form field definitions. FormConverter maps the submit
+        // button, recipient and success message; every field is discarded and
+        // Divi renders its own default name/email/message trio instead.
+        $fields = $settings['form_fields'] ?? null;
+        if ( is_array( $fields ) && ! empty( $fields ) ) {
+            $this->logNotCarriedOver(
+                'form_fields',
+                $element_id,
+                /* translators: %d: number of form fields that were discarded */
+                sprintf( _n( '%d field', '%d fields', count( $fields ), 'jhmg-converter-for-elementor-to-divi' ), count( $fields ) )
+            );
+        }
+
+        $this->recordDroppedMotion( $settings, $element_id );
+    }
+
+    /** Entrance animations and motion effects, neither of which Divi 5 can express. */
+    private function recordDroppedMotion( array $settings, string $element_id ): void {
+        $found = [];
+
+        foreach ( $settings as $key => $value ) {
+            if ( ! is_string( $key ) || $this->isEmptyValue( $value ) ) {
+                continue;
+            }
+
+            if ( isset( self::NOT_CARRIED_EXACT[ $key ] ) && ! ( is_string( $value ) && $value === 'none' ) ) {
+                $kind           = self::NOT_CARRIED_EXACT[ $key ];
+                $found[ $kind ] = $found[ $kind ] ?? ( is_string( $value ) ? $value : $key );
+                continue;
+            }
+
+            foreach ( self::NOT_CARRIED_PREFIXES as $prefix => $kind ) {
+                if ( ! str_starts_with( $key, $prefix ) ) {
+                    continue;
+                }
+
+                // 'none' is Elementor's way of saying the control is switched off.
+                if ( is_string( $value ) && $value === 'none' ) {
+                    continue 2;
+                }
+
+                // One line per element per category: a single entrance animation
+                // sets half a dozen keys, and listing each would read as six
+                // separate losses.
+                $found[ $kind ] = $found[ $kind ] ?? ( is_string( $value ) ? $value : $key );
+                continue 2;
+            }
+        }
+
+        foreach ( $found as $kind => $detail ) {
+            $this->logNotCarriedOver( $kind, $element_id, $detail );
+        }
+    }
+
+    private function isEmptyValue( mixed $value ): bool {
+        return $value === '' || $value === null || $value === [] || $value === false;
+    }
+
     private function resolveElementGlobals( array $element ): array {
         $globals = $element['settings']['__globals__'] ?? [];
         if ( empty( $globals ) || ! is_array( $globals ) ) {

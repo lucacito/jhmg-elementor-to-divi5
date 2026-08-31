@@ -305,6 +305,12 @@ class DirectConversionPage {
                         . '</strong> ' . esc_html( implode( ', ', $names ) ) . '</p>';
                 }
             }
+
+            // Escaped at every interpolation inside render().
+            $html .= NotCarriedOverRenderer::render(
+                $item['report']['not_carried_over']    ?? [],
+                $item['report']['approximate_matches'] ?? []
+            );
         }
 
         if ( ! empty( $ids ) ) {

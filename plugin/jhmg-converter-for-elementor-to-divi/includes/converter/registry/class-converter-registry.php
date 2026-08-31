@@ -43,7 +43,19 @@ class ConverterRegistry {
         $fallbackClass = $this->detectByShape( $element );
         if ( $fallbackClass !== null ) {
             $widgetType = $element['widgetType'] ?? $elementType;
-            $this->engine->logWarning( "Widget '{$widgetType}' not registered; matched by settings shape to " . basename( str_replace( '\\', '/', $fallbackClass ) ) );
+            $matchedTo  = basename( str_replace( '\\', '/', $fallbackClass ) );
+
+            $this->engine->logWarning( "Widget '{$widgetType}' not registered; matched by settings shape to {$matchedTo}" );
+
+            // A shape match is a guess that fit, not a mapping anyone wrote. The
+            // engine keeps it out of the converted counts and reports it as
+            // approximate.
+            $this->engine->flagApproximate(
+                (string) ( $element['id'] ?? '' ),
+                (string) $widgetType,
+                $matchedTo
+            );
+
             return new $fallbackClass( $this->engine );
         }
 

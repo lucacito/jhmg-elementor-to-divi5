@@ -573,10 +573,16 @@ class AdminPage {
                 </thead>
                 <tbody>
                 <?php foreach ( $results as $result ) :
-                    $warn_count = count( $result['report']['warnings']            ?? [] )
-                                + count( $result['unsupported']                   ?? [] )
-                                + count( $result['report']['skipped_settings']    ?? [] )
-                                + count( $result['report']['unresolved_globals']  ?? [] );
+                    // Everything the page lost has to be counted here, or a run
+                    // whose only losses were dropped animations or discarded form
+                    // fields would render as "Clean" with the details hidden
+                    // inside a panel nothing opens.
+                    $warn_count = count( $result['report']['warnings']             ?? [] )
+                                + count( $result['unsupported']                    ?? [] )
+                                + count( $result['report']['skipped_settings']     ?? [] )
+                                + count( $result['report']['unresolved_globals']   ?? [] )
+                                + count( $result['report']['not_carried_over']     ?? [] )
+                                + count( $result['report']['approximate_matches']  ?? [] );
                 ?>
                     <tr>
                         <td class="column-title column-primary">
@@ -622,6 +628,13 @@ class AdminPage {
                                             </li>
                                         <?php endforeach; ?>
                                     </ul>
+                                    <?php
+                                    // Escaped at every interpolation inside render().
+                                    echo NotCarriedOverRenderer::render( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                                        $result['report']['not_carried_over']    ?? [],
+                                        $result['report']['approximate_matches'] ?? []
+                                    );
+                                    ?>
                                 </details>
                             <?php elseif ( $result['success'] ) : ?>
                                 <span class="edc-status--clean">&#10003; <?php esc_html_e( 'Clean', 'jhmg-converter-for-elementor-to-divi' ); ?></span>
@@ -845,6 +858,15 @@ class AdminPage {
 .edc-issue--warn { color: #7a4f00; }
 .edc-issue--unsupported { color: #c62828; }
 .edc-issue--skipped { color: #555; }
+.edc-issue--unresolved-global { color: #8a5a00; }
+
+/* Not carried over */
+.edc-not-carried { margin: 10px 0 0; padding: 10px 12px; border-left: 3px solid #c62828; background: #fdf6f6; }
+.edc-not-carried h3 { margin: 0 0 6px; font-size: 13px; }
+.edc-not-carried-label { margin: 8px 0 2px; font-size: 12px; font-weight: 400; }
+.edc-not-carried-list { margin: 0 0 6px; padding-left: 16px; font-size: 12px; }
+.edc-not-carried-list li { margin-bottom: 3px; line-height: 1.4; }
+.edc-not-carried-list code { font-size: 11px; }
 
 /* Publish action */
 .edc-published-label { color: #2e7d32; font-size: 12px; font-weight: 600; }
