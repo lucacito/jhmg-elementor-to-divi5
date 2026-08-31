@@ -26,4 +26,8 @@ defined( 'EDC_PLUGIN_VERSION' ) || define( 'EDC_PLUGIN_VERSION', '3.0.0' );
 
 require_once EDC_PLUGIN_DIR . 'includes/helpers/class-autoloader.php';
 
+// Activation runs inside an admin request, so the theme is loaded and Divi's
+// version is readable — unlike at plugins_loaded, where it is not yet.
+register_activation_hook( __FILE__, [ \ElementorDivi5Converter\Helpers\DiviRequirement::class, 'on_activation' ] );
+
 \ElementorDivi5Converter\Plugin::instance()->init();

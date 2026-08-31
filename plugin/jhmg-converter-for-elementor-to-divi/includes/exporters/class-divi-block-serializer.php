@@ -172,7 +172,15 @@ class DiviBlockSerializer {
      * display:'grid' with display:'block'.
      */
     private function withBuilderVersion( array $attrs ): array {
-        $version = defined( 'ET_BUILDER_VERSION' ) ? ET_BUILDER_VERSION : '5.0.0-public-alpha.18.2';
+        // The fallback used to be a hard-coded '5.0.0-public-alpha.18.2', a
+        // build that has long since shipped. It is now the declared minimum, and
+        // in practice unreachable: DiviRequirement stops a conversion running at
+        // all unless a Divi of at least that version is present, which means
+        // ET_BUILDER_VERSION is defined.
+        $version = defined( 'ET_BUILDER_VERSION' )
+            ? ET_BUILDER_VERSION
+            : \ElementorDivi5Converter\Helpers\DiviRequirement::MINIMUM_DIVI_VERSION;
+
         return array_merge( [ 'builderVersion' => $version ], $attrs );
     }
 }

@@ -26,7 +26,12 @@ class DiviExporter {
         $meta['_et_pb_use_builder'] = 'on';
 
         // Record builder version to indicate Divi 5 usage.
-        $meta['_et_builder_version'] = defined( 'ET_BUILDER_VERSION' ) ? sprintf( 'VB|Divi|%s', ET_BUILDER_VERSION ) : 'VB|Divi|5.0.0';
+        $meta['_et_builder_version'] = sprintf(
+            'VB|Divi|%s',
+            defined( 'ET_BUILDER_VERSION' )
+                ? ET_BUILDER_VERSION
+                : \ElementorDivi5Converter\Helpers\DiviRequirement::MINIMUM_DIVI_VERSION
+        );
 
         // Preserve the converted structure for debugging and later export.
         $meta['_edc_divi_data'] = json_encode( $divi_data );

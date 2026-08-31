@@ -53,6 +53,9 @@ if ( ! function_exists( 'edc_test_reset_hooks' ) ) {
             $GLOBALS['__test_options'] = [];
         }
         $GLOBALS['__test_redirects'] = [];
+        if ( function_exists( 'edc_test_reset_divi' ) ) {
+            edc_test_reset_divi();
+        }
     }
 }
 
@@ -343,11 +346,40 @@ if ( ! function_exists( 'wp_delete_file' ) ) {
     }
 }
 
+/**
+ * The theme this fake site is running. Divi 5.7.4 by default, because the
+ * converter's whole output format requires a Divi 5 and DiviRequirement now
+ * refuses to convert without one.
+ *
+ * The stub used to answer 'Divi' to every get() call including 'Version', which
+ * made the detected version the literal string "Divi".
+ *
+ * Tests that need a site without Divi, or with an older one, set these and call
+ * edc_test_reset_divi() afterwards.
+ */
+$GLOBALS['__test_divi_version'] = '5.7.4';
+$GLOBALS['__test_divi_present'] = true;
+
+if ( ! function_exists( 'edc_test_reset_divi' ) ) {
+    function edc_test_reset_divi(): void {
+        $GLOBALS['__test_divi_version'] = '5.7.4';
+        $GLOBALS['__test_divi_present'] = true;
+    }
+}
+
 if ( ! function_exists( 'wp_get_theme' ) ) {
     function wp_get_theme( $template = null ) {
         return new class {
             public function get( $key ) {
-                return 'Divi';
+                if ( empty( $GLOBALS['__test_divi_present'] ) ) {
+                    return $key === 'Version' ? '1.0' : 'Twenty Twenty-Four';
+                }
+
+                return $key === 'Version' ? (string) $GLOBALS['__test_divi_version'] : 'Divi';
+            }
+
+            public function get_template() {
+                return empty( $GLOBALS['__test_divi_present'] ) ? 'twentytwentyfour' : 'Divi';
             }
         };
     }

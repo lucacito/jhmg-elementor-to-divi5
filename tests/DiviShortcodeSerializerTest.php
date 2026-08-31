@@ -92,10 +92,13 @@ final class DiviShortcodeSerializerTest extends TestCase {
         $serializer = new DiviBlockSerializer();
         $blocks = $serializer->serialize( $divi_data );
 
-        $bv           = '{"builderVersion":"5.0.0-public-alpha.18.2"}';
-        $text_attrs   = '{"builderVersion":"5.0.0-public-alpha.18.2","content":{"innerContent":{"desktop":{"value":"<h2>Hello World</h2>"}}}}';
-        $button_attrs = '{"builderVersion":"5.0.0-public-alpha.18.2","button":{"innerContent":{"desktop":{"value":{"text":"Click Here","linkUrl":"https://example.com"}}}}}';
-        $image_attrs  = '{"builderVersion":"5.0.0-public-alpha.18.2","image":{"innerContent":{"desktop":{"value":{"src":"https://example.com/sample.jpg"}}}}}';
+        // Built from the constant so this expectation cannot drift from the
+        // code the way the previous hard-coded alpha string did.
+        $ver          = \ElementorDivi5Converter\Helpers\DiviRequirement::MINIMUM_DIVI_VERSION;
+        $bv           = '{"builderVersion":"' . $ver . '"}';
+        $text_attrs   = '{"builderVersion":"' . $ver . '","content":{"innerContent":{"desktop":{"value":"<h2>Hello World</h2>"}}}}';
+        $button_attrs = '{"builderVersion":"' . $ver . '","button":{"innerContent":{"desktop":{"value":{"text":"Click Here","linkUrl":"https://example.com"}}}}}';
+        $image_attrs  = '{"builderVersion":"' . $ver . '","image":{"innerContent":{"desktop":{"value":{"src":"https://example.com/sample.jpg"}}}}}';
 
         $expected = '<!-- wp:divi/placeholder -->'
             . "<!-- wp:divi/section {$bv} -->"

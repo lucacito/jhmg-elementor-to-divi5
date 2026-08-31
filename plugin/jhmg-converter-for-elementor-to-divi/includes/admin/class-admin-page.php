@@ -68,6 +68,13 @@ class AdminPage {
             wp_die( esc_html__( 'You do not have permission to access this page.', 'jhmg-converter-for-elementor-to-divi' ) );
         }
 
+        // Without a Divi that reads the block format, every control on this
+        // screen produces pages that render blank. Show why, and nothing else.
+        if ( ! \ElementorDivi5Converter\Helpers\DiviRequirement::is_satisfied() ) {
+            $this->render_requirement_failure();
+            return;
+        }
+
         $action = sanitize_key( $_GET['action'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
         if ( $action === 'batch_result' ) {
@@ -83,7 +90,28 @@ class AdminPage {
     // POST dispatcher
     // ------------------------------------------------------------------
 
+    /** The Divi-missing screen: the reason, and no controls. */
+    private function render_requirement_failure(): void {
+        ?>
+        <div class="wrap edc-wrap">
+            <h1><?php esc_html_e( 'Elementor to Divi 5 Converter', 'jhmg-converter-for-elementor-to-divi' ); ?></h1>
+            <div class="notice notice-error inline">
+                <p><?php echo esc_html( \ElementorDivi5Converter\Helpers\DiviRequirement::message() ); ?></p>
+            </div>
+            <p class="description">
+                <?php esc_html_e( 'Install and activate Divi 5, then return to this screen. Nothing has been changed on your site.', 'jhmg-converter-for-elementor-to-divi' ); ?>
+            </p>
+        </div>
+        <?php
+    }
+
     public function handle_post(): void {
+        // A conversion started here would write block content nothing on this
+        // site can render, and report it as a success.
+        if ( ! \ElementorDivi5Converter\Helpers\DiviRequirement::is_satisfied() ) {
+            return;
+        }
+
         $action = sanitize_key( $_POST['action'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification.Missing -- each handler verifies its own nonce
         if ( $action === 'edc_import' ) {
             $this->handle_import();

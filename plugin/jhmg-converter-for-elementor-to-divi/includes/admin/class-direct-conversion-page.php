@@ -335,6 +335,12 @@ class DirectConversionPage {
     }
 
     public function maybe_handle_request(): void {
+        // Converting into a site with no Divi 5 produces pages that render
+        // blank, so neither the check step nor the commit step runs.
+        if ( ! \ElementorDivi5Converter\Helpers\DiviRequirement::is_satisfied() ) {
+            return;
+        }
+
         $action = isset( $_POST['action'] ) ? sanitize_key( wp_unslash( $_POST['action'] ) ) : '';
 
         if ( $action !== self::CHECK_ACTION && $action !== self::CONVERT_ACTION ) {

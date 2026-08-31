@@ -24,6 +24,12 @@ class Plugin {
 
     public function register_hooks(): void {
         if ( is_admin() ) {
+            // Deliberately not gated on DiviRequirement here: this hook runs at
+            // plugins_loaded, before the theme is loaded, so Divi's version is
+            // not readable yet. Each screen and handler consults the requirement
+            // when it actually runs, on an admin hook, by which time it is.
+            add_action( 'admin_notices', [ \ElementorDivi5Converter\Helpers\DiviRequirement::class, 'render_notice' ] );
+
             ( new \ElementorDivi5Converter\Admin\AdminPage() )->init();
             ( new \ElementorDivi5Converter\Admin\DirectConversionPage() )->init();
             ( new \ElementorDivi5Converter\Admin\PriceDropNotice() )->init();
