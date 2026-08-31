@@ -7,7 +7,15 @@ final class StyleMapperTest extends TestCase {
     private StyleMapper $mapper;
 
     protected function setUp(): void {
+        // Global resolution reads the `edc_kit_globals` filter, so each test
+        // starts from a site with no kit registered.
+        edc_test_reset_hooks();
         $this->mapper = new StyleMapper();
+    }
+
+    /** Registers a kit supplying the given colours through `edc_kit_globals`. */
+    private function registerKitColors( array $colors ): void {
+        add_filter( 'edc_kit_globals', fn( $v ) => [ 'colors' => $colors, 'typography' => [] ] );
     }
 
     public function test_returns_empty_attrs_for_empty_settings(): void {
@@ -82,6 +90,8 @@ final class StyleMapperTest extends TestCase {
     }
 
     public function test_maps_background_color_via_global_reference(): void {
+        $this->registerKitColors( [ 'primary' => '#070707' ] );
+
         $settings = [
             '__globals__' => [ 'background_color' => 'globals/colors?id=primary' ],
         ];
@@ -93,6 +103,8 @@ final class StyleMapperTest extends TestCase {
     }
 
     public function test_maps_background_color_via_global_for_section(): void {
+        $this->registerKitColors( [ 'secondary' => '#110A72' ] );
+
         $settings = [
             '__globals__' => [ 'background_color' => 'globals/colors?id=secondary' ],
         ];
@@ -101,6 +113,25 @@ final class StyleMapperTest extends TestCase {
         $color  = $result['divi_attrs']['module']['decoration']['background']['desktop']['value']['color'] ?? null;
 
         $this->assertSame( '#110A72', $color, 'Global background color must resolve for sections' );
+    }
+
+    /**
+     * The resolver used to carry a built-in palette keyed on Elementor's
+     * universal system IDs, so this exact input silently produced one specific
+     * site's brand colour on every install. Nothing may be written now.
+     */
+    public function test_unresolvable_global_color_writes_no_color_attribute(): void {
+        $settings = [
+            '__globals__' => [ 'background_color' => 'globals/colors?id=primary' ],
+        ];
+
+        $result = $this->mapper->map( 'section', $settings );
+
+        $this->assertArrayNotHasKey(
+            'module',
+            $result['divi_attrs'],
+            'An unresolvable global must not produce a substituted colour'
+        );
     }
 
     public function test_handled_keys_includes_all_spacing_and_background_keys(): void {

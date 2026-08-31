@@ -26,7 +26,23 @@ class Plugin {
 
         add_filter( 'edc_pro_active', '__return_true' );
 
-        add_filter( 'edc_kit_globals', static fn ( $v ) => $v ?? Kit\GlobalsStore::load() );
+        // Source (a): the uploaded kit. Overrides key-wise rather than only
+        // filling a null, so it wins over free's installed-kit fallback whichever
+        // of the two callbacks runs first.
+        add_filter( 'edc_kit_globals', static function ( $kit ) {
+            $stored = Kit\GlobalsStore::load();
+            if ( ! is_array( $stored ) ) {
+                return $kit;
+            }
+            if ( ! is_array( $kit ) ) {
+                return $stored;
+            }
+
+            return array_merge( $kit, [
+                'colors'     => ( $stored['colors'] ?? [] ) + ( $kit['colors'] ?? [] ),
+                'typography' => ( $stored['typography'] ?? [] ) + ( $kit['typography'] ?? [] ),
+            ] );
+        } );
         add_filter( 'edc_theme_builder_exporter', static function ( $v ) {
             return $v ?? new Exporters\DiviThemeBuilderExporter( new \ElementorDivi5Converter\Exporters\DiviExporter() );
         } );

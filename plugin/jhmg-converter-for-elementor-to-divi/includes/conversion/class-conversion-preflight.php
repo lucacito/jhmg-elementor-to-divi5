@@ -139,17 +139,8 @@ class ConversionPreflight {
      * @return array<string,string> color id => hex
      */
     public static function elementorGlobalColors(): array {
-        if ( ! function_exists( 'get_option' ) ) {
-            return [];
-        }
-
-        $kit_id = (int) get_option( 'elementor_active_kit', 0 );
-        if ( $kit_id <= 0 ) {
-            return [];
-        }
-
-        $kit_settings = get_post_meta( $kit_id, '_elementor_page_settings', true );
-        if ( ! is_array( $kit_settings ) ) {
+        $kit_settings = self::activeKitSettings();
+        if ( $kit_settings === null ) {
             return [];
         }
 
@@ -169,5 +160,126 @@ class ConversionPreflight {
         }
 
         return $colors;
+    }
+
+    /**
+     * The installed Kit's global typography presets, in the same shape
+     * GlobalsResolver::resolveTypography() returns and StyleMapper's
+     * applyGlobalTypography() consumes (family, size, weight, lineHeight,
+     * letterSpacing).
+     *
+     * Mirrors Pro\Kit\KitGlobalsParser::parse()'s typography reader, which
+     * extracts the identical fields from a kit ZIP's site-settings.json. The two
+     * must stay in step: a preset shape only one of them produces would render
+     * differently depending on where the kit came from.
+     *
+     * @return array<string,array<string,string>> typography id => preset
+     */
+    public static function elementorGlobalTypography(): array {
+        $kit_settings = self::activeKitSettings();
+        if ( $kit_settings === null ) {
+            return [];
+        }
+
+        $typography = [];
+        foreach ( [ 'system_typography', 'custom_typography' ] as $group_key ) {
+            $group = $kit_settings[ $group_key ] ?? [];
+            if ( ! is_array( $group ) ) {
+                continue;
+            }
+
+            foreach ( $group as $entry ) {
+                if ( ! is_array( $entry ) ) {
+                    continue;
+                }
+                $id = $entry['_id'] ?? '';
+                if ( $id === '' ) {
+                    continue;
+                }
+
+                $preset = [];
+                if ( ! empty( $entry['typography_font_family'] ) ) {
+                    $preset['family'] = (string) $entry['typography_font_family'];
+                }
+                if ( ! empty( $entry['typography_font_weight'] ) ) {
+                    $preset['weight'] = (string) $entry['typography_font_weight'];
+                }
+                $size = self::sizeWithUnit( $entry['typography_font_size'] ?? null, 'px' );
+                if ( $size !== '' ) {
+                    $preset['size'] = $size;
+                }
+                $line_height = self::sizeWithUnit( $entry['typography_line_height'] ?? null, 'em' );
+                if ( $line_height !== '' ) {
+                    $preset['lineHeight'] = $line_height;
+                }
+                // Letter spacing is a {size,unit} group in current Elementor and a
+                // bare number in older kits; accept both.
+                $raw_spacing = $entry['typography_letter_spacing'] ?? null;
+                if ( is_array( $raw_spacing ) ) {
+                    $spacing = self::sizeWithUnit( $raw_spacing, 'px' );
+                } elseif ( is_scalar( $raw_spacing ) && (string) $raw_spacing !== '' ) {
+                    $spacing = (string) $raw_spacing . 'px';
+                } else {
+                    $spacing = '';
+                }
+                if ( $spacing !== '' ) {
+                    $preset['letterSpacing'] = $spacing;
+                }
+
+                if ( ! empty( $preset ) ) {
+                    $typography[ $id ] = $preset;
+                }
+            }
+        }
+
+        return $typography;
+    }
+
+    /**
+     * Both global groups on this site, in the `edc_kit_globals` shape. Registered
+     * by the free plugin as the gap-filling half of that filter — see
+     * Plugin::register_hooks().
+     *
+     * @return array{colors: array<string,string>, typography: array<string,array>}
+     */
+    public static function installedKitGlobals(): array {
+        return [
+            'colors'     => self::elementorGlobalColors(),
+            'typography' => self::elementorGlobalTypography(),
+        ];
+    }
+
+    /** The active Kit's `_elementor_page_settings`, or null when there is none. */
+    private static function activeKitSettings(): ?array {
+        if ( ! function_exists( 'get_option' ) ) {
+            return null;
+        }
+
+        $kit_id = (int) get_option( 'elementor_active_kit', 0 );
+        if ( $kit_id <= 0 ) {
+            return null;
+        }
+
+        $kit_settings = get_post_meta( $kit_id, '_elementor_page_settings', true );
+
+        return is_array( $kit_settings ) ? $kit_settings : null;
+    }
+
+    /**
+     * Elementor size controls serialise as `{size, unit}`. Returns '' when the
+     * value is absent or empty so callers can skip the property entirely rather
+     * than emitting a unit with no number.
+     */
+    private static function sizeWithUnit( mixed $raw, string $default_unit ): string {
+        if ( ! is_array( $raw ) ) {
+            return '';
+        }
+        $size = $raw['size'] ?? null;
+        if ( $size === null || $size === '' ) {
+            return '';
+        }
+        $unit = is_string( $raw['unit'] ?? '' ) && $raw['unit'] !== '' ? $raw['unit'] : $default_unit;
+
+        return (string) $size . $unit;
     }
 }

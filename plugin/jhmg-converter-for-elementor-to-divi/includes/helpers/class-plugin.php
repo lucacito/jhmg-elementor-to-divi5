@@ -32,10 +32,46 @@ class Plugin {
             ( new \ElementorDivi5Converter\Telemetry\CoverageTelemetry() )->init();
         }
 
+        // Source (b) for global colours and typography: the Elementor kit
+        // installed on this site. Registered as the gap-filling half of
+        // `edc_kit_globals` — it only supplies IDs no other provider knows, so
+        // Pro's uploaded kit always wins on a shared ID regardless of which
+        // callback runs first. Without a provider here, an unresolved global has
+        // nowhere left to look and is reported rather than invented.
+        add_filter( 'edc_kit_globals', [ $this, 'fill_kit_globals_from_installed_kit' ] );
+
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_styles' ] );
 
         // Extension point for the Pro add-on (and future companions).
         do_action( 'edc_loaded', $this );
+    }
+
+    /**
+     * Adds the installed Elementor kit's globals underneath whatever a
+     * higher-authority provider (Pro's uploaded kit) already supplied.
+     *
+     * Union semantics — `+` keeps the left operand's keys — so an ID both kits
+     * define keeps the incoming value. Pro's own callback overrides in the same
+     * key-wise way, which is what makes the pair order-independent: neither
+     * plugin has to care whether it hooked first.
+     *
+     * @param mixed $kit Value from earlier `edc_kit_globals` providers.
+     */
+    public function fill_kit_globals_from_installed_kit( $kit ) {
+        $installed = \ElementorDivi5Converter\Conversion\ConversionPreflight::installedKitGlobals();
+
+        if ( empty( $installed['colors'] ) && empty( $installed['typography'] ) ) {
+            return $kit;
+        }
+
+        if ( ! is_array( $kit ) ) {
+            return $installed;
+        }
+
+        return array_merge( $kit, [
+            'colors'     => ( $kit['colors'] ?? [] ) + $installed['colors'],
+            'typography' => ( $kit['typography'] ?? [] ) + $installed['typography'],
+        ] );
     }
 
     public function enqueue_frontend_styles(): void {

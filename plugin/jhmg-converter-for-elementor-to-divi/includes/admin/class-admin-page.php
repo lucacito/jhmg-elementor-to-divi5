@@ -573,9 +573,10 @@ class AdminPage {
                 </thead>
                 <tbody>
                 <?php foreach ( $results as $result ) :
-                    $warn_count = count( $result['report']['warnings']          ?? [] )
-                                + count( $result['unsupported']                 ?? [] )
-                                + count( $result['report']['skipped_settings']  ?? [] );
+                    $warn_count = count( $result['report']['warnings']            ?? [] )
+                                + count( $result['unsupported']                   ?? [] )
+                                + count( $result['report']['skipped_settings']    ?? [] )
+                                + count( $result['report']['unresolved_globals']  ?? [] );
                 ?>
                     <tr>
                         <td class="column-title column-primary">
@@ -612,6 +613,12 @@ class AdminPage {
                                             <li class="edc-issue edc-issue--skipped">
                                                 <?php esc_html_e( 'Skipped:', 'jhmg-converter-for-elementor-to-divi' ); ?>
                                                 <code><?php echo esc_html( $setting ); ?></code>
+                                            </li>
+                                        <?php endforeach; ?>
+                                        <?php foreach ( $result['report']['unresolved_globals'] ?? [] as $global ) : ?>
+                                            <li class="edc-issue edc-issue--unresolved-global">
+                                                <?php esc_html_e( 'Unresolved global — left unset:', 'jhmg-converter-for-elementor-to-divi' ); ?>
+                                                <code><?php echo esc_html( ( $global['element_id'] ?? '' ) . ': ' . ( $global['setting_key'] ?? '' ) ); ?></code>
                                             </li>
                                         <?php endforeach; ?>
                                     </ul>

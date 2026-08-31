@@ -12,11 +12,28 @@ class SeamsTest extends TestCase {
         $this->assertSame( '#ff0000', GlobalsResolver::resolveColor( 'abc123' ) );
     }
 
-    public function test_globals_resolver_falls_back_to_static_map_without_filter(): void {
-        // 'f8733ea' is in the static TYPOGRAPHY_MAP; no filter registered.
-        $t = GlobalsResolver::resolveTypography( 'f8733ea' );
-        $this->assertIsArray( $t );
-        $this->assertSame( 'Roboto', $t['family'] );
+    /**
+     * There is no built-in palette to fall back to. The resolver used to answer
+     * with one specific site's colours and type presets for any ID it did not
+     * know — including Elementor's universal system IDs — which repainted
+     * unrelated sites and reported the conversion as clean.
+     */
+    public function test_globals_resolver_returns_null_when_no_kit_knows_the_id(): void {
+        $this->assertNull( GlobalsResolver::resolveTypography( 'f8733ea' ) );
+        $this->assertNull( GlobalsResolver::resolveColor( 'primary' ) );
+        $this->assertNull( GlobalsResolver::resolveColor( 'accent' ) );
+    }
+
+    public function test_globals_resolver_reads_typography_from_kit_globals_filter(): void {
+        add_filter( 'edc_kit_globals', fn( $v ) => [
+            'colors'     => [],
+            'typography' => [ 'abc123' => [ 'family' => 'Inter', 'size' => '18px' ] ],
+        ] );
+
+        $preset = GlobalsResolver::resolveTypography( 'abc123' );
+
+        $this->assertIsArray( $preset );
+        $this->assertSame( 'Inter', $preset['family'] );
     }
 
     public function test_batch_importer_degrades_header_to_page_without_exporter(): void {

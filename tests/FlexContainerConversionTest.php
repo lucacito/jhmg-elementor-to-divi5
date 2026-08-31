@@ -20,6 +20,7 @@ final class FlexContainerConversionTest extends TestCase {
     private ConverterEngine $engine;
 
     protected function setUp(): void {
+        edc_test_reset_hooks();
         $this->engine = new ConverterEngine();
     }
 
@@ -817,6 +818,11 @@ final class FlexContainerConversionTest extends TestCase {
      * global color reference must resolve that color onto the divi/column.
      */
     public function test_container_as_column_global_background_color(): void {
+        add_filter( 'edc_kit_globals', fn( $v ) => [
+            'colors'     => [ 'primary' => '#070707' ],
+            'typography' => [],
+        ] );
+
         $result = $this->convert( [
             $this->container( 'parent', [
                 $this->container( 'col', [ $this->widget( 'w1' ) ], [
