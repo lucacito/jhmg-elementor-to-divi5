@@ -15,7 +15,7 @@ if ( ! $source_id ) {
     exit( 1 );
 }
 
-require_once ABSPATH . 'wp-content/plugins/elementor-divi5-converter/includes/helpers/class-autoloader.php';
+require_once ABSPATH . 'wp-content/plugins/jhmg-converter-for-elementor-to-divi/includes/helpers/class-autoloader.php';
 
 $source = get_post( $source_id );
 

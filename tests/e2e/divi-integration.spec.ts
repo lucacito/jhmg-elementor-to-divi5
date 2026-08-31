@@ -136,6 +136,10 @@ test.describe.serial('Divi 5 runtime validation', () => {
       await page.fill('input#user_login', 'admin');
       await page.fill('input#user_pass', 'admin');
       await page.click('input#wp-submit');
+      // Await the login redirect before navigating on. Without this the goto
+      // below races the login POST, the session cookie is never set, and the
+      // edit screen silently bounces back to wp-login.php.
+      await page.waitForURL(/wp-admin/, { timeout: 15000 });
 
       // Navigate directly to the edit screen by ID to avoid pagination issues.
       await page.goto(`${base}${WP_ADMIN}post.php?post=${pageId}&action=edit`);

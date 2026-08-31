@@ -25,6 +25,12 @@ WP=$(docker-compose -f "$COMPOSE_DIR/docker-compose.yml" ps -q wordpress)
 # install core
 docker exec -i $WP bash -lc "if ! wp core is-installed --allow-root; then wp core install --url=$WP_URL --title='Test' --admin_user=$ADMIN_USER --admin_password=$ADMIN_PASS --admin_email=$ADMIN_EMAIL --skip-email --allow-root; else echo 'WP core already installed'; fi"
 
+# Re-assert the admin password on every run. On a long-lived container it can
+# drift from ADMIN_PASS, and the e2e specs hard-code these credentials — when
+# they stop matching, every logged-in test silently bounces back to
+# wp-login.php and fails on an unrelated-looking selector timeout.
+docker exec -i $WP bash -lc "wp user update 1 --user_pass=$ADMIN_PASS --allow-root >/dev/null"
+
 # activate Divi theme (references/Divi must be a valid theme)
 docker exec -i $WP bash -lc "if wp theme is-installed Divi --allow-root; then wp theme activate Divi --allow-root; else echo 'Divi theme not found in wp-content/themes/Divi'; fi"
 
@@ -34,7 +40,7 @@ if [ -f "$COMPOSE_DIR/references/elementor4.1.3.zip" ]; then
 fi
 
 # activate our converter plugin
-docker exec -i $WP bash -lc "wp plugin activate elementor-divi5-converter --allow-root || (echo 'Failed to activate plugin')"
+docker exec -i $WP bash -lc "wp plugin activate jhmg-converter-for-elementor-to-divi --allow-root || (echo 'Failed to activate plugin')"
 
 # Create a test page and insert Elementor fixture data
 TEST_PAGE_TITLE='Elementor Test Page'
@@ -49,7 +55,7 @@ docker exec -i $WP bash -lc "wp post meta update $PAGE_ID _elementor_data \"\$(c
 # The here-doc uses a quoted delimiter so PHP variables are preserved inside the file.
 docker exec -i $WP bash -lc "cat > /tmp/convert.php <<'PHP'
 <?php
-require_once ABSPATH . 'wp-content/plugins/elementor-divi5-converter/includes/helpers/class-autoloader.php';
+require_once ABSPATH . 'wp-content/plugins/jhmg-converter-for-elementor-to-divi/includes/helpers/class-autoloader.php';
 \$json = get_post_meta($PAGE_ID, '_elementor_data', true);
 \$payload = json_decode(\$json, true);
 \$engine = new \\ElementorDivi5Converter\\Converter\\ConverterEngine();

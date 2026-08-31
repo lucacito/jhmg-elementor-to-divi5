@@ -19,7 +19,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 // Point plugin constants so the plugin autoloader can resolve files without booting plugin.
 if ( ! defined( 'EDC_PLUGIN_DIR' ) ) {
-	define( 'EDC_PLUGIN_DIR', __DIR__ . '/../plugin/elementor-divi5-converter/' );
+	define( 'EDC_PLUGIN_DIR', __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/' );
 }
 
 // Load plugin autoloader (this file registers PSR-like autoloading for the plugin namespace).
