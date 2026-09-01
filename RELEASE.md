@@ -52,16 +52,20 @@ npm run i18n        # regenerates both .pot files
       `docker exec -i $(docker compose ps -q wordpress) wp core version --allow-root`
 - [ ] Changelog entry written for this version.
 - [ ] Upgrade Notice entry written — this is what existing users see in wp-admin.
-- [ ] Any counted claim in the description re-counted rather than reused. The
-      recognised-widget-type count is:
+- [ ] Any counted claim in the description re-counted rather than reused:
       ```bash
-      R=plugin/jhmg-converter-for-elementor-to-divi/includes/converter/registry/class-converter-registry.php
-      { grep -oE "registerWidget\( *'[a-z0-9_-]+'" $R | grep -oE "'[a-z0-9_-]+'" | tr -d "'";
-        grep -A6 "eael-nft-gallery" $R | grep -oE "'eael-[a-z-]+'" | tr -d "'"; } \
-        | grep -v '^e-' | sort -u | wc -l
+      php scripts/widget-coverage.php /path/to/elementor /path/to/elementor-pro
       ```
-      `e-*` slugs are excluded deliberately: they are legacy test-fixture aliases
-      that Elementor never emits, and counting them overstates coverage.
+      It prints how many widget types map to a real Divi module and how many
+      only emit a labelled placeholder — state **both**, never the sum. The
+      sum is the number that produced the old "140+ widget mappings" claim,
+      which also counted the `e-*` legacy fixture aliases Elementor never
+      emits. Given an Elementor tree it also lists that release's widgets the
+      converter does not handle.
+
+      Elementor Pro is a licensed download and is not in this repo; without a
+      path to it the Pro figure prints UNKNOWN rather than a guess. Get that
+      number before quoting coverage on the pricing page.
 
 ## 5. Sync the free plugin into the SVN working copy
 

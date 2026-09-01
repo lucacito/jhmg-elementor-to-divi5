@@ -30,7 +30,9 @@ Before you convert, click **Check this page** to see a conversion report: the st
 * Core Elementor widgets and most popular addons supported
 * No Elementor required on the destination site
 * Unlimited conversions — one page at a time
-* 129 recognised Elementor widget types — including Elementor's own nested accordion and nested tabs — and a detailed per-page conversion report
+* 117 Elementor widget types converted to a real Divi module, plus 12 more that import as a labelled placeholder you can find and replace
+* 31 of the 36 widget types in Elementor 3.28 are handled, including its nested accordion and nested tabs
+* A detailed per-page conversion report naming anything that could not be carried over
 
 **[Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5) — The full migration toolkit:**
 
