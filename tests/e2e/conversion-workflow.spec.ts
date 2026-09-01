@@ -148,9 +148,14 @@ test.describe.serial('Conversion workflow: Elementor → Divi 5', () => {
 
     await page.goto(`${base}/?page_id=${convertedPageId}`);
 
-    // Header / navigation menu.
-    await page.waitForSelector('nav.et-menu-nav, #main-nav, #top-header', { timeout: 10000 });
-    expect(await page.locator('nav.et-menu-nav, #main-nav, #top-header').count()).toBeGreaterThan(0);
+    // Header / navigation menu. Divi 5 renamed this markup: 4.x rendered
+    // #main-nav / nav.et-menu-nav / #top-header, 5.x renders #main-header and
+    // #top-menu-nav. Both are accepted, along with a Theme Builder header, which
+    // replaces the theme's own and is what Pro's header import legitimately
+    // installs.
+    const CHROME = '#main-header, #top-menu-nav, nav.et-menu-nav, #main-nav, #top-header, .et-l--header';
+    await page.waitForSelector(CHROME, { timeout: 10000 });
+    expect(await page.locator(CHROME).count()).toBeGreaterThan(0);
 
     // At least one Divi section must be rendered.
     await page.waitForSelector('.et_pb_section', { timeout: 15000 });
