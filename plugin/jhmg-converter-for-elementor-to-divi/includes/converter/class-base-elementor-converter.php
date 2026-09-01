@@ -214,6 +214,7 @@ abstract class BaseElementorConverter implements ConverterInterface {
      * @return array<int, array> Flat list of converted Divi module blocks.
      */
     protected function convertAbsoluteContainerChildren( array $element ): array {
+        $element  = $this->engine->prepareNestedElement( $element );
         $settings = $element['settings'] ?? [];
         $children = $element['elements'] ?? [];
         $blocks   = [];
@@ -281,6 +282,10 @@ abstract class BaseElementorConverter implements ConverterInterface {
      * Otherwise falls back to the original behaviour.
      */
     protected function convertInnerAsRow( array $element ): array {
+        // Reached directly from convertStructureChildren(), not via
+        // ConverterEngine::convertElement(), so the engine has to be told about
+        // this element explicitly or its globals and losses go unrecorded.
+        $element  = $this->engine->prepareNestedElement( $element );
         $id       = $element['id'] ?? uniqid( 'divi_row_' );
         $settings = $element['settings'] ?? [];
         $children = $element['elements'] ?? [];
@@ -429,6 +434,7 @@ abstract class BaseElementorConverter implements ConverterInterface {
      * - Nested flex-row containers with sub-containers are recursed as groups.
      */
     protected function convertContainerAsGroup( array $element ): array {
+        $element  = $this->engine->prepareNestedElement( $element );
         $id       = $element['id'] ?? uniqid( 'divi_group_' );
         $settings = $element['settings'] ?? [];
         $children = $element['elements'] ?? [];
@@ -703,6 +709,7 @@ abstract class BaseElementorConverter implements ConverterInterface {
      * column via the standard block flow).
      */
     protected function convertContainerAsColumn( array $element ): array {
+        $element  = $this->engine->prepareNestedElement( $element );
         $id       = $element['id'] ?? uniqid( 'divi_col_' );
         $settings = $element['settings'] ?? [];
         $children = $element['elements'] ?? [];
@@ -1122,6 +1129,7 @@ abstract class BaseElementorConverter implements ConverterInterface {
      * normally inside the column.
      */
     protected function convertContainerAsGridItem( array $element ): array {
+        $element  = $this->engine->prepareNestedElement( $element );
         $id       = $element['id'] ?? uniqid( 'divi_gi_' );
         $settings = $element['settings'] ?? [];
         $children = $element['elements'] ?? [];

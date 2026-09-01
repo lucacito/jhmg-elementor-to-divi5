@@ -39,6 +39,9 @@ class ConverterEngine {
      */
     private const NOT_CARRIED_PREFIXES = [
         'motion_fx_' => 'motion',
+        // Sections carry their parallax under this prefix rather than the plain
+        // one, and StyleMapper::markSectionKeys() silently absorbs it.
+        'background_motion_fx_' => 'motion',
         'sticky_'    => 'motion',
         '_animation' => 'animation',
         'animation'  => 'animation',
@@ -236,6 +239,26 @@ class ConverterEngine {
         return $this->nestingDepth;
     }
 
+    /**
+     * Runs the per-element bookkeeping that convertElement() would have done,
+     * for structural elements that never reach it.
+     *
+     * Nested sections and containers are routed straight to convertInnerAsRow()
+     * and friends by BaseElementorConverter::convertStructureChildren(), which
+     * bypasses convertElement() entirely. Without this they resolved no globals
+     * and reported no losses: a nested container with a global background colour
+     * dropped it in silence, and one with an entrance animation said nothing at
+     * all — on the containers most pages are actually built from.
+     *
+     * @return array The element with any resolvable globals substituted in.
+     */
+    public function prepareNestedElement( array $element ): array {
+        $element = $this->resolveElementGlobals( $element );
+        $this->recordNotCarriedOver( $element );
+
+        return $element;
+    }
+
     public function convertElement( array $element ): array {
         $element   = $this->resolveElementGlobals( $element );
         $this->recordNotCarriedOver( $element );
@@ -294,11 +317,11 @@ class ConverterEngine {
      * place they are visible. Detection lives here rather than in the handlers
      * because the element id and the raw settings are both in hand exactly once.
      */
-    private function recordNotCarriedOver( array $element ): void {
-        if ( ( $element['elType'] ?? '' ) !== 'widget' ) {
-            return;
-        }
-
+    public function recordNotCarriedOver( array $element ): void {
+        // Deliberately not limited to widgets. Sticky is almost always set on a
+        // section or container rather than a widget, and entrance animations are
+        // routinely set on sections and columns — restricting this to widgets
+        // meant the most common places these are used reported nothing at all.
         $settings   = $element['settings'] ?? [];
         $element_id = (string) ( $element['id'] ?? '' );
 

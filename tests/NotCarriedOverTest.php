@@ -247,4 +247,108 @@ final class NotCarriedOverTest extends TestCase {
         $this->assertStringContainsString( 'Dynamic content', $html );
         $this->assertStringNotContainsString( 'Form fields', $html );
     }
+
+    // -------------------------------------------------------------------------
+    // Structural elements, and the nested paths that bypass convertElement()
+    // -------------------------------------------------------------------------
+
+    private function convertTree( array $elements ): array {
+        return ( new ConverterEngine() )->convert( $elements );
+    }
+
+    /**
+     * Sticky is almost always set on a section or container, never a widget, and
+     * entrance animations are routinely set on sections and columns. Limiting
+     * this to widgets meant the most common places these are used reported
+     * nothing at all.
+     */
+    public function test_a_section_reports_its_animation_and_sticky(): void {
+        $result = $this->convertTree( [ [
+            'id'       => 'sec1',
+            'elType'   => 'section',
+            'settings' => [ '_animation' => 'fadeInUp', 'sticky' => 'top' ],
+            'elements' => [],
+        ] ] );
+
+        $this->assertCount( 1, $this->entriesOfKind( $result['report'], 'animation' ) );
+        $this->assertCount( 1, $this->entriesOfKind( $result['report'], 'motion' ) );
+    }
+
+    public function test_a_column_reports_its_animation(): void {
+        $result = $this->convertTree( [ [
+            'id' => 'sec', 'elType' => 'section', 'settings' => [], 'elements' => [ [
+                'id'       => 'col1',
+                'elType'   => 'column',
+                'settings' => [ '_animation' => 'fadeInUp' ],
+                'elements' => [],
+            ] ],
+        ] ] );
+
+        $animation = $this->entriesOfKind( $result['report'], 'animation' );
+
+        $this->assertCount( 1, $animation );
+        $this->assertSame( 'col1', $animation[0]['element_id'] );
+    }
+
+    public function test_section_parallax_is_reported_under_its_own_prefix(): void {
+        $result = $this->convertTree( [ [
+            'id'       => 'sec1',
+            'elType'   => 'section',
+            'settings' => [ 'background_motion_fx_motion_fx_scrolling' => 'yes' ],
+            'elements' => [],
+        ] ] );
+
+        $this->assertCount( 1, $this->entriesOfKind( $result['report'], 'motion' ) );
+    }
+
+    /**
+     * A nested section or container is routed straight to convertInnerAsRow() by
+     * convertStructureChildren(), never reaching ConverterEngine::convertElement().
+     * Until prepareNestedElement() existed, such an element resolved no globals
+     * and reported no losses — on the containers most pages are built from.
+     */
+    public function test_a_nested_container_reports_losses_and_resolves_globals(): void {
+        $result = $this->convertTree( [ [
+            'id' => 'outer', 'elType' => 'container', 'settings' => [], 'elements' => [ [
+                'id'       => 'inner',
+                'elType'   => 'container',
+                'settings' => [
+                    '_animation'  => 'fadeInUp',
+                    '__globals__' => [ 'background_color' => 'globals/colors?id=primary' ],
+                ],
+                'elements' => [],
+            ] ],
+        ] ] );
+
+        $animation = $this->entriesOfKind( $result['report'], 'animation' );
+        $this->assertCount( 1, $animation, 'A nested container must report its animation' );
+        $this->assertSame( 'inner', $animation[0]['element_id'] );
+
+        $this->assertCount(
+            1,
+            $result['report']['unresolved_globals'],
+            'A nested container must report a global it could not resolve'
+        );
+    }
+
+    public function test_a_nested_container_global_colour_resolves_when_a_kit_knows_it(): void {
+        add_filter( 'edc_kit_globals', fn( $v ) => [
+            'colors'     => [ 'primary' => '#123456' ],
+            'typography' => [],
+        ] );
+
+        $result = $this->convertTree( [ [
+            'id' => 'outer', 'elType' => 'container', 'settings' => [], 'elements' => [ [
+                'id'       => 'inner',
+                'elType'   => 'container',
+                'settings' => [ '__globals__' => [ 'background_color' => 'globals/colors?id=primary' ] ],
+                'elements' => [],
+            ] ],
+        ] ] );
+
+        $this->assertSame( [], $result['report']['unresolved_globals'] );
+
+        $json = json_encode( $result['divi'] );
+        $this->assertStringContainsString( '#123456', $json, 'The resolved colour must reach the output' );
+    }
 }
