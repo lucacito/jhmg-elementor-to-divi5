@@ -122,9 +122,16 @@ class ConversionCommitter {
 
         try {
             $divi_data = $this->diviDataFor( $item );
+
+            // The source travels with the content so the exporter can tell a
+            // re-import of the same header from a genuinely new one. Without it
+            // every import created another published layout and another default
+            // template, and Divi's pick among the defaults looked arbitrary.
+            $source_ref = $item['source_ref'] ?? [];
+
             $tb_result = $template_type === 'header'
-                ? $this->themeBuilderExporter->saveHeader( $title, $divi_data )
-                : $this->themeBuilderExporter->saveFooter( $title, $divi_data );
+                ? $this->themeBuilderExporter->saveHeader( $title, $divi_data, $source_ref )
+                : $this->themeBuilderExporter->saveFooter( $title, $divi_data, $source_ref );
 
             $post_id = (int) ( $tb_result['post_id'] ?? 0 );
             if ( $post_id > 0 ) {

@@ -190,6 +190,46 @@ if ( ! function_exists( 'wp_insert_post' ) ) {
         return $GLOBALS['__test_posts'][ $id ] ?? null;
     }
 
+    /**
+     * Enough of get_posts() for the Theme Builder exporter's lookup: filter the
+     * in-memory store by post_type and a single meta_key/meta_value pair, newest
+     * id first, and return ids.
+     *
+     * Real enough to make the dedupe behaviour observable — a stub that always
+     * returned nothing would let the exporter create a duplicate every time and
+     * still pass.
+     */
+    function get_posts( array $args = [] ) {
+        $types = (array) ( $args['post_type'] ?? 'post' );
+        $key   = $args['meta_key']   ?? '';
+        $value = $args['meta_value'] ?? '';
+        $limit = (int) ( $args['posts_per_page'] ?? -1 );
+
+        // 'any' means every type, as in WordPress. ElementorPageRepository
+        // relies on it, and a stub that treated it as a literal type name would
+        // silently report every page as not-yet-converted.
+        $any = in_array( 'any', $types, true );
+
+        $matches = [];
+        foreach ( $GLOBALS['__test_posts'] as $id => $post ) {
+            if ( ! $any && ! in_array( $post->post_type ?? '', $types, true ) ) {
+                continue;
+            }
+            if ( $key !== '' && (string) get_post_meta( $id, $key, true ) !== (string) $value ) {
+                continue;
+            }
+            $matches[] = (int) $id;
+        }
+
+        rsort( $matches );
+
+        if ( $limit > 0 ) {
+            $matches = array_slice( $matches, 0, $limit );
+        }
+
+        return $matches;
+    }
+
     function get_post_type( $post = null ) {
         if ( is_object( $post ) && isset( $post->post_type ) ) {
             return $post->post_type;
@@ -637,4 +677,13 @@ if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhm
 
 if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php' ) ) {
     require_once __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php';
+}
+
+if ( ! function_exists( 'sanitize_title' ) ) {
+    function sanitize_title( string $title ): string {
+        $slug = strtolower( trim( $title ) );
+        $slug = preg_replace( '/[^a-z0-9]+/', '-', $slug );
+
+        return trim( (string) $slug, '-' );
+    }
 }
