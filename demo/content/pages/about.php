@@ -7,7 +7,7 @@
  */
 
 use Ferncourt\Demo\Context;
-use function Ferncourt\Demo\{band, col, heading, icon, item, link, row, text, widget};
+use function Ferncourt\Demo\{band, col, color, heading, icon, item, link, row, text, widget};
 
 return static function ( Context $ctx ): array {
     $member = static fn ( string $id, string $photo, string $name, string $role, string $bio ): array => col( [
@@ -29,6 +29,8 @@ return static function ( Context $ctx ): array {
             'ending_number'   => $percent,
             'suffix'          => '%',
             'title'           => $who,
+            // Elementor defaults the counter title to the kit's secondary color, our cream background.
+            '__globals__'     => [ 'number_color' => color( 'primary' ), 'title_color' => color( 'text' ) ],
         ] ),
     ], 30 );
 

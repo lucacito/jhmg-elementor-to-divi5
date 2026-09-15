@@ -75,9 +75,12 @@ the key: Pro registers its Theme Builder exporter and batch limit without checki
 
 ### Must-use plugin
 
-`demo/mu-plugins/ferncourt-demo.php` is mounted into `wp-content/mu-plugins/`. It returns
-`false` from HFE's `enable_hfe_render_header` and `enable_hfe_render_footer` filters
-whenever the active theme is not Hello Elementor, so switching to Divi on camera never
+`demo/mu-plugins/ferncourt-demo.php` is mounted into `wp-content/mu-plugins/`. It leaves
+Header Footer Elementor out of the active plugins list on any request made while the active
+theme is not Hello Elementor (only the option read is filtered; HFE stays active in the
+database). Found during the build: with HFE loaded under Divi, HFE's theme compatibility and
+Divi's Theme Builder both take over `get_header`, and every page dies with a fatal error in
+`wp_head` (recorded in `docs/known-issues.md`). It also means switching to Divi on camera never
 shows HFE's header on top of Divi's Theme Builder header.
 
 ### Scripts
@@ -259,8 +262,10 @@ page content is changed to avoid it. It is not fixed as part of this work.
 
 ## Risks to verify during the build
 
-- **HFE filters.** If HFE 2.8.8 renders its header under Divi despite the must-use plugin,
-  the build's theme-switch check fails and the user decides the fallback.
+- **Pro Theme Builder templates.** Pro 1.2.0 saves the header and footer as two default
+  templates and leaves the body area hidden (recorded in `docs/known-issues.md`). The build
+  merges them into one template with the body enabled; the theme-switch check proves the page
+  body renders under Divi.
 - **Kit export.** If `wp elementor kit export` fails on this site, the build stops with the
   command's output rather than continuing without a kit ZIP.
 - **Divi activation side effects.** Activating Divi for the Theme Builder step may create

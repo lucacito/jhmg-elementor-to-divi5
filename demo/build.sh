@@ -29,4 +29,10 @@ install_components
 step "Seeding content"
 seed_content
 
+step "Exporting the Elementor kit"
+export_kit
+
+step "Creating the Divi Theme Builder header and footer"
+build_theme_builder
+
 "$DEMO_DIR/verify.sh"

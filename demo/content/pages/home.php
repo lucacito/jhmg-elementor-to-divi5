@@ -117,6 +117,8 @@ return static function ( Context $ctx ): array {
                     'eael_cta_type'      => 'cta-basic',
                     'eael_cta_title'     => 'Try Ferncourt for a day',
                     'eael_cta_sub_title' => 'Your first day pass is on us. Bring your laptop and see if it fits.',
+                    // Stored empty so EAEL does not render its placeholder paragraph.
+                    'eael_cta_content'   => '',
                     'eael_cta_btn_text'  => 'Claim a free day',
                     'eael_cta_btn_link'  => link( $ctx->url( '/contact/' ) ),
                 ] ),

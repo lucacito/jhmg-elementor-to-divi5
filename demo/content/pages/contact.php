@@ -4,7 +4,7 @@
  */
 
 use Ferncourt\Demo\Context;
-use function Ferncourt\Demo\{band, col, heading, icon, item, link, row, slider, text, widget};
+use function Ferncourt\Demo\{band, col, color, heading, icon, item, link, row, slider, text, widget};
 
 return static function ( Context $ctx ): array {
     $social = static fn ( string $id, string $icon_class, string $url ): array => item( $id, [
@@ -31,6 +31,8 @@ return static function ( Context $ctx ): array {
                                 item( 'il3', [ 'text' => 'Members: open 24/7', 'selected_icon' => icon( 'fas fa-key' ) ] ),
                                 item( 'il4', [ 'text' => 'hello@ferncourt.test', 'selected_icon' => icon( 'fas fa-envelope' ), 'link' => link( 'mailto:hello@ferncourt.test' ) ] ),
                             ],
+                            // Elementor defaults list text to the kit's secondary color, which is our cream background.
+                            '__globals__' => [ 'text_color' => color( 'text' ), 'icon_color' => color( 'primary' ) ],
                         ] ),
                         widget( 'google_maps', [
                             'address' => 'Downtown Portland, Oregon',
