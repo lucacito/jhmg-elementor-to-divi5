@@ -19,7 +19,8 @@ class EaelImageAccordionConverter extends BaseElementorConverter {
         $id       = $element['id'] ?? uniqid( 'divi_accordion_' );
         $settings = $element['settings'] ?? [];
 
-        $items    = $settings['eael_img_accordion_items'] ?? [];
+        $items    = $settings['eael_img_accordions'] ?? $settings['eael_img_accordion_items'] ?? [];
+        $items    = is_array( $items ) ? $items : [];
         $children = [];
 
         foreach ( $items as $idx => $item ) {
@@ -27,10 +28,13 @@ class EaelImageAccordionConverter extends BaseElementorConverter {
                 continue;
             }
 
-            $title   = is_string( $item['eael_img_accordion_title'] ?? '' ) ? ( $item['eael_img_accordion_title'] ?? '' ) : '';
-            $content = is_string( $item['eael_img_accordion_content'] ?? '' ) ? ( $item['eael_img_accordion_content'] ?? '' ) : '';
+            // `eael_accordion_tittle` is EAEL's own spelling.
+            $title   = $item['eael_accordion_tittle'] ?? $item['eael_img_accordion_title'] ?? '';
+            $title   = is_string( $title ) ? $title : '';
+            $content = $item['eael_accordion_content'] ?? $item['eael_img_accordion_content'] ?? '';
+            $content = is_string( $content ) ? $content : '';
 
-            $image_raw = $item['eael_img_accordion_image'] ?? [];
+            $image_raw = $item['eael_accordion_bg'] ?? $item['eael_img_accordion_image'] ?? [];
             $image_url = is_array( $image_raw ) ? ( is_string( $image_raw['url'] ?? '' ) ? ( $image_raw['url'] ?? '' ) : '' ) : '';
 
             $body_parts = array_filter( [
@@ -61,6 +65,7 @@ class EaelImageAccordionConverter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'accordion' );
         $this->logUnmappedSettings( $id, $settings, [
+            'eael_img_accordions', 'eael_img_accordion_type', 'eael_img_accordion_direction',
             'eael_img_accordion_items', 'eael_img_accordion_event',
             'eael_img_accordion_active_item',
         ] );

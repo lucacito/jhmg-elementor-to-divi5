@@ -13,19 +13,15 @@ class EaelLoginRegisterConverter extends BaseElementorConverter {
         $id       = $element['id'] ?? uniqid( 'divi_code_' );
         $settings = $element['settings'] ?? [];
 
-        $show_login    = ( $settings['eael_show_login_content'] ?? 'yes' ) === 'yes';
-        $show_register = ( $settings['eael_show_register_content'] ?? 'yes' ) === 'yes';
-
-        if ( $show_register ) {
-            $shortcode = '[woocommerce_my_account]';
-        } elseif ( $show_login ) {
-            $shortcode = '[woocommerce_my_account]';
-        } else {
-            $shortcode = '[woocommerce_my_account]';
-        }
+        // Every form type EAEL offers (`default_form_type`: login, register,
+        // lostpassword) becomes WooCommerce's account shortcode, which shows
+        // login and registration together.
+        $shortcode = '[woocommerce_my_account]';
 
         $this->engine->logConverted( 'code' );
         $this->logUnmappedSettings( $id, $settings, [
+            'default_form_type', 'show_login_link', 'show_register_link', 'show_lost_password',
+            'login_link_text', 'registration_link_text', 'hide_for_logged_in_user',
             'eael_show_login_content', 'eael_show_register_content',
             'eael_login_redirect_url', 'eael_registration_redirect_url',
             'eael_login_form_title', 'eael_register_form_title',
