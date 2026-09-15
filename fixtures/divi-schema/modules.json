@@ -5,25 +5,31 @@
             "childrenName": [
                 "divi/accordion-item"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "toggle",
                 "openToggle",
                 "toggleTitle",
                 "toggleIcon",
-                "toggleContent"
+                "toggleContent",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -84,11 +90,16 @@
         },
         "divi/accordion-item": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "openToggle",
                 "toggleTitle",
                 "toggleIcon",
-                "toggleContent"
+                "toggleContent",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm",
+                "toggle"
             ],
             "attributes": {
                 "module": {
@@ -98,7 +109,8 @@
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "open"
                     ],
                     "decoration": [
                         "animation",
@@ -121,6 +133,9 @@
                         "transform",
                         "transition",
                         "zIndex"
+                    ],
+                    "meta": [
+                        "adminLabel"
                     ]
                 },
                 "title": {
@@ -154,14 +169,15 @@
                     "elementType": "content",
                     "innerContent": [],
                     "decoration": [
-                        "bodyFont"
+                        "bodyFont",
+                        "inlineFont"
                     ]
                 }
             }
         },
         "divi/audio": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "audioCoverArt",
                 "audioContent",
                 "audioTitle",
@@ -169,20 +185,26 @@
                 "audioButtons",
                 "audioTimer",
                 "audioSliders",
-                "audioSlidersCurrent"
+                "audioSlidersCurrent",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -235,17 +257,27 @@
                 "image": {
                     "elementType": "image",
                     "innerContent": [
-                        "src"
+                        "src",
+                        "titleText",
+                        "alt"
                     ],
                     "decoration": [
-                        "image"
+                        "image",
+                        "border",
+                        "boxShadow",
+                        "filters"
                     ]
                 }
             }
         },
         "divi/before-after-image": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
@@ -329,25 +361,31 @@
         },
         "divi/blog": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "title",
                 "content",
                 "postMeta",
                 "pagenavi",
                 "featuredImage",
-                "readMore"
+                "readMore",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -394,7 +432,10 @@
                         "enable"
                     ],
                     "decoration": [
-                        "image"
+                        "image",
+                        "boxShadow",
+                        "border",
+                        "filters"
                     ]
                 },
                 "readMore": {
@@ -437,6 +478,9 @@
                     "elementType": "",
                     "decoration": [
                         "bodyFont"
+                    ],
+                    "advanced": [
+                        "enable"
                     ]
                 },
                 "overlay": {
@@ -458,12 +502,18 @@
                     "elementType": "",
                     "decoration": [
                         "border"
+                    ],
+                    "advanced": [
+                        "enable"
                     ]
                 },
                 "blogGrid": {
                     "elementType": "",
                     "decoration": [
                         "layout"
+                    ],
+                    "advanced": [
+                        "flexType"
                     ]
                 },
                 "masonry": {
@@ -476,10 +526,14 @@
         },
         "divi/blurb": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "blurbImage",
                 "blurbTitle",
-                "blurbContent"
+                "blurbContent",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "imageIcon": {
@@ -487,29 +541,38 @@
                     "innerContent": [
                         "useIcon",
                         "icon",
-                        "src"
+                        "src",
+                        "alt",
+                        "animation"
                     ],
                     "advanced": [
                         "color",
-                        "placement"
+                        "placement",
+                        "alignment",
+                        "width"
                     ],
                     "decoration": [
                         "background",
                         "spacing",
-                        "animation"
+                        "animation",
+                        "border",
+                        "boxShadow",
+                        "filters"
                     ]
                 },
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -536,7 +599,11 @@
                 },
                 "title": {
                     "elementType": "headingLink",
-                    "innerContent": [],
+                    "innerContent": [
+                        "target",
+                        "url",
+                        "text"
+                    ],
                     "decoration": [
                         "font"
                     ]
@@ -545,7 +612,8 @@
                     "elementType": "content",
                     "innerContent": [],
                     "decoration": [
-                        "bodyFont"
+                        "bodyFont",
+                        "inlineFont"
                     ]
                 },
                 "contentContainer": {
@@ -558,12 +626,16 @@
         },
         "divi/breadcrumbs": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "breadcrumbWrapper",
                 "breadcrumb",
                 "breadcrumbLink",
                 "homeLink",
-                "separator"
+                "separator",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -657,19 +729,26 @@
         },
         "divi/button": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "loop",
                         "text",
-                        "alignment"
+                        "alignment",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -695,7 +774,9 @@
                     "elementType": "button",
                     "innerContent": [
                         "text",
-                        "*"
+                        "*",
+                        "linkUrl",
+                        "linkTarget"
                     ],
                     "decoration": [
                         "background",
@@ -711,17 +792,25 @@
         },
         "divi/canvas-portal": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
-                        "link"
+                        "link",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "decoration": [
                         "animation",
@@ -763,23 +852,29 @@
         },
         "divi/circle-counter": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "percent",
                 "circleCounterTitle",
-                "percentText"
+                "percentText",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -807,7 +902,9 @@
                 "circle": {
                     "elementType": "",
                     "advanced": [
-                        "circle"
+                        "circle",
+                        "color",
+                        "background"
                     ]
                 },
                 "title": {
@@ -834,18 +931,25 @@
         },
         "divi/code": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -877,7 +981,12 @@
         },
         "divi/column": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
@@ -907,17 +1016,28 @@
                         "elements",
                         "html",
                         "loop",
-                        "link"
+                        "link",
+                        "savedSpecialtyColumnType",
+                        "specialtyColumns",
+                        "type",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ]
                 }
             }
         },
         "divi/column-inner": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
@@ -939,23 +1059,30 @@
                         "spacing",
                         "sticky",
                         "transform",
-                        "zIndex"
+                        "zIndex",
+                        "layout"
                     ],
                     "advanced": [
                         "elements",
                         "loop",
                         "link",
-                        "html"
+                        "html",
+                        "savedSpecialtyColumnType",
+                        "specialtyColumns",
+                        "type",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ]
                 }
             }
         },
         "divi/comments": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "mainHeader",
                 "commentBody",
                 "commentMeta",
@@ -967,13 +1094,18 @@
                 "nameField",
                 "emailField",
                 "websiteField",
-                "submitButton"
+                "submitButton",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
@@ -981,7 +1113,8 @@
                         "link",
                         "loop",
                         "text",
-                        "showReply"
+                        "showReply",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -1012,13 +1145,24 @@
                         "showAvatar"
                     ],
                     "decoration": [
-                        "image"
+                        "image",
+                        "boxShadow",
+                        "border",
+                        "filters"
                     ]
                 },
                 "field": {
                     "elementType": "field",
-                    "decoration": [],
-                    "advanced": []
+                    "decoration": [
+                        "background",
+                        "boxShadow",
+                        "border",
+                        "font"
+                    ],
+                    "advanced": [
+                        "useFocusBorderColor",
+                        "focus"
+                    ]
                 },
                 "button": {
                     "elementType": "button",
@@ -1066,19 +1210,26 @@
         },
         "divi/contact-field": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "element",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -1105,7 +1256,9 @@
                 },
                 "field": {
                     "elementType": "field",
-                    "decoration": [],
+                    "decoration": [
+                        "font"
+                    ],
                     "advanced": []
                 },
                 "checkbox": {
@@ -1135,7 +1288,10 @@
                         "checkboxOptions",
                         "radioOptions",
                         "selectOptions",
-                        "required"
+                        "required",
+                        "booleanCheckboxOptions",
+                        "checkboxChecked",
+                        "fullwidth"
                     ],
                     "innerContent": []
                 },
@@ -1153,19 +1309,24 @@
             "childrenName": [
                 "divi/contact-field"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "contactTitle",
                 "contactButton",
                 "contactFields",
                 "textField",
                 "captchaField",
-                "captchaLabel"
+                "captchaLabel",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "element",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
@@ -1173,7 +1334,10 @@
                         "link",
                         "loop",
                         "text",
-                        "successMessage"
+                        "successMessage",
+                        "uniqueId",
+                        "spamProtection",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -1213,8 +1377,13 @@
                 },
                 "field": {
                     "elementType": "field",
-                    "decoration": [],
-                    "advanced": []
+                    "decoration": [
+                        "spacing",
+                        "font"
+                    ],
+                    "advanced": [
+                        "focusUseBorder"
+                    ]
                 },
                 "checkbox": {
                     "elementType": "field",
@@ -1259,7 +1428,7 @@
         },
         "divi/contact-form-7": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "inputField",
                 "radioButton",
                 "checkbox",
@@ -1269,7 +1438,11 @@
                 "messageInvalid",
                 "messageAcceptance",
                 "messageSpam",
-                "messageFailure"
+                "messageFailure",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -1391,23 +1564,29 @@
         },
         "divi/countdown-timer": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "container",
                 "title",
-                "timerSection"
+                "timerSection",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -1467,15 +1646,21 @@
         },
         "divi/counter": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "counterTitle",
                 "counterContainer",
-                "counterAmount"
+                "counterAmount",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
-                    "meta": [],
+                    "meta": [
+                        "adminLabel"
+                    ],
                     "advanced": [
                         "elements",
                         "html",
@@ -1530,23 +1715,29 @@
             "childrenName": [
                 "divi/counter"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "counterTitle",
                 "counterContainer",
-                "counterAmount"
+                "counterAmount",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -1601,23 +1792,29 @@
         },
         "divi/cta": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "description",
                 "button",
-                "title"
+                "title",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -1653,14 +1850,17 @@
                     "elementType": "content",
                     "innerContent": [],
                     "decoration": [
-                        "bodyFont"
+                        "bodyFont",
+                        "inlineFont"
                     ]
                 },
                 "button": {
                     "elementType": "button",
                     "innerContent": [
                         "text",
-                        "*"
+                        "*",
+                        "linkUrl",
+                        "linkTarget"
                     ],
                     "decoration": [
                         "background",
@@ -1676,17 +1876,24 @@
         },
         "divi/divider": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "html",
                         "link",
-                        "loop"
+                        "loop",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -1720,7 +1927,12 @@
         },
         "divi/dropdown": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
@@ -1760,7 +1972,7 @@
         },
         "divi/filterable-portfolio": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "portfolioFilters",
                 "activePortfolioFilter",
                 "portfolioImage",
@@ -1769,19 +1981,25 @@
                 "portfolioTitle",
                 "portfolioPostMeta",
                 "portfolioPagination",
-                "portfolioPaginationActive"
+                "portfolioPaginationActive",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -1811,7 +2029,8 @@
                         "includedCategories",
                         "showTitle",
                         "showCategories",
-                        "showPagination"
+                        "showPagination",
+                        "layout"
                     ]
                 },
                 "portfolioGrid": {
@@ -1842,7 +2061,10 @@
                 "image": {
                     "elementType": "",
                     "decoration": [
-                        "image"
+                        "image",
+                        "border",
+                        "boxShadow",
+                        "filters"
                     ]
                 },
                 "filter": {
@@ -1867,18 +2089,25 @@
         },
         "divi/fullwidth-code": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -1910,7 +2139,7 @@
         },
         "divi/fullwidth-header": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "headerContainer",
                 "headerImage",
                 "logo",
@@ -1919,13 +2148,18 @@
                 "subtitle",
                 "button1",
                 "button2",
-                "scrollButton"
+                "scrollButton",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
@@ -1933,7 +2167,8 @@
                         "link",
                         "loop",
                         "text",
-                        "headerFullscreen"
+                        "headerFullscreen",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -1961,9 +2196,15 @@
                 "image": {
                     "elementType": "image",
                     "innerContent": [
-                        "src"
+                        "src",
+                        "alt",
+                        "title"
                     ],
-                    "decoration": [],
+                    "decoration": [
+                        "border",
+                        "boxShadow",
+                        "filters"
+                    ],
                     "advanced": [
                         "orientation"
                     ]
@@ -1971,7 +2212,9 @@
                 "logo": {
                     "elementType": "image",
                     "innerContent": [
-                        "src"
+                        "src",
+                        "alt",
+                        "title"
                     ]
                 },
                 "title": {
@@ -1996,7 +2239,8 @@
                         "maxWidth"
                     ],
                     "decoration": [
-                        "bodyFont"
+                        "bodyFont",
+                        "inlineFont"
                     ]
                 },
                 "buttonOne": {
@@ -2047,15 +2291,21 @@
         },
         "divi/fullwidth-image": {
             "childrenName": [],
-            "customCssFields": [
-                "image"
+            "cssFields": [
+                "image",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "advanced": [
                         "html",
-                        "loop"
+                        "loop",
+                        "spacing",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -2079,7 +2329,8 @@
                         "zIndex"
                     ],
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ]
                 },
                 "image": {
@@ -2087,7 +2338,9 @@
                     "innerContent": [
                         "src",
                         "linkUrl",
-                        "linkTarget"
+                        "linkTarget",
+                        "alt",
+                        "titleText"
                     ],
                     "advanced": [
                         "lightbox",
@@ -2101,24 +2354,36 @@
             "childrenName": [
                 "divi/map-pin"
             ],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "map": {
                     "elementType": "",
-                    "innerContent": [],
+                    "innerContent": [
+                        "address",
+                        "lat",
+                        "lng",
+                        "zoom"
+                    ],
                     "decoration": [
                         "filters"
                     ],
                     "advanced": [
                         "googleAPIKey",
                         "mouseWheel",
-                        "mobileDragging"
+                        "mobileDragging",
+                        "grayscaleFilter"
                     ]
                 },
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "innerContent": [],
                     "decoration": [
@@ -2145,31 +2410,39 @@
                     "advanced": [
                         "html",
                         "link",
-                        "loop"
+                        "loop",
+                        "htmlAttributes",
+                        "text"
                     ]
                 }
             }
         },
         "divi/fullwidth-menu": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "menuLink",
                 "activeMenuLink",
                 "dropdownContainer",
                 "dropdownLinks",
-                "menuLogo"
+                "menuLogo",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -2190,7 +2463,8 @@
                         "sticky",
                         "transform",
                         "transition",
-                        "zIndex"
+                        "zIndex",
+                        "font"
                     ]
                 },
                 "logo": {
@@ -2198,7 +2472,8 @@
                     "innerContent": [
                         "src",
                         "linkUrl",
-                        "linkTarget"
+                        "linkTarget",
+                        "alt"
                     ],
                     "decoration": [
                         "border",
@@ -2276,19 +2551,24 @@
         },
         "divi/fullwidth-portfolio": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "portfolioTitle",
                 "portfolioItem",
                 "portfolioOverlay",
                 "portfolioItemTitle",
                 "portfolioMeta",
-                "portfolioArrows"
+                "portfolioArrows",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
@@ -2296,7 +2576,8 @@
                         "link",
                         "text",
                         "autoRotate",
-                        "autoRotateSpeed"
+                        "autoRotateSpeed",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -2354,7 +2635,10 @@
                 "image": {
                     "elementType": "",
                     "decoration": [
-                        "image"
+                        "image",
+                        "border",
+                        "boxShadow",
+                        "filters"
                     ]
                 },
                 "meta": {
@@ -2374,15 +2658,23 @@
         },
         "divi/fullwidth-post-content": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
-                        "html"
+                        "html",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "decoration": [
                         "animation",
@@ -2404,7 +2696,9 @@
                         "spacing",
                         "sticky",
                         "transform",
-                        "zIndex"
+                        "zIndex",
+                        "inlineFont",
+                        "transition"
                     ]
                 },
                 "image": {
@@ -2418,7 +2712,7 @@
         },
         "divi/fullwidth-post-slider": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "slideDescription",
                 "slideTitle",
                 "slideMeta",
@@ -2426,7 +2720,11 @@
                 "slideControllers",
                 "slideActiveController",
                 "slideImage",
-                "slideArrows"
+                "slideArrows",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -2437,7 +2735,8 @@
                         "text",
                         "auto",
                         "autoSpeed",
-                        "autoIgnoreHover"
+                        "autoIgnoreHover",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -2461,7 +2760,8 @@
                         "interactions"
                     ],
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ]
                 },
                 "title": {
@@ -2531,7 +2831,8 @@
                         "contentSource",
                         "excerptManual",
                         "excerptLength",
-                        "offset"
+                        "offset",
+                        "currentLoop"
                     ]
                 },
                 "arrows": {
@@ -2573,22 +2874,28 @@
         },
         "divi/fullwidth-post-title": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "postTitle",
                 "postMeta",
-                "postImage"
+                "postImage",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -2661,14 +2968,18 @@
             "childrenName": [
                 "divi/slide"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "slideDescription",
                 "slideTitle",
                 "slideButton",
                 "slideControllers",
                 "slideActiveController",
                 "slideImage",
-                "slideArrows"
+                "slideArrows",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -2683,7 +2994,8 @@
                         "text",
                         "auto",
                         "autoSpeed",
-                        "autoIgnoreHover"
+                        "autoIgnoreHover",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -2729,7 +3041,8 @@
                 "button": {
                     "elementType": "",
                     "decoration": [
-                        "button"
+                        "button",
+                        ""
                     ]
                 },
                 "content": {
@@ -2772,14 +3085,18 @@
         },
         "divi/gallery": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "galleryItem",
                 "overlay",
                 "overlayIcon",
                 "galleryItemTitle",
                 "galleryItemCaption",
                 "galleryPagination",
-                "galleryPaginationActive"
+                "galleryPaginationActive",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -2793,7 +3110,8 @@
                         "postsNumber",
                         "showTitleAndCaption",
                         "auto",
-                        "autoSpeed"
+                        "autoSpeed",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -2816,7 +3134,8 @@
                         "interactions"
                     ],
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ]
                 },
                 "title": {
@@ -2851,10 +3170,14 @@
                     "advanced": [
                         "orientation",
                         "galleryIds",
-                        "galleryOrderby"
+                        "galleryOrderby",
+                        "galleryCaptions"
                     ],
                     "decoration": [
-                        "image"
+                        "image",
+                        "border",
+                        "boxShadow",
+                        "filters"
                     ]
                 },
                 "overlay": {
@@ -2877,12 +3200,22 @@
         },
         "divi/global-layout": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": []
         },
         "divi/group": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
@@ -2912,10 +3245,14 @@
                         "elements",
                         "html",
                         "loop",
-                        "link"
+                        "link",
+                        "type",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ]
                 }
             }
@@ -2924,13 +3261,17 @@
             "childrenName": [
                 "divi/group"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "carouselContainer",
                 "carouselTrack",
                 "carouselSlide",
                 "carouselActiveSlide",
                 "carouselArrows",
-                "carouselDots"
+                "carouselDots",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -3026,22 +3367,27 @@
         },
         "divi/heading": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "mainElement",
-                "headingContainer"
+                "headingContainer",
+                "before",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -3077,18 +3423,25 @@
         },
         "divi/icon": {
             "childrenName": [],
-            "customCssFields": [
-                "iconElement"
+            "cssFields": [
+                "iconElement",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
-                        "html"
+                        "html",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "decoration": [
                         "animation",
@@ -3116,7 +3469,10 @@
                 "icon": {
                     "elementType": "",
                     "innerContent": [
-                        "*"
+                        "*",
+                        "title",
+                        "url",
+                        "target"
                     ],
                     "advanced": [
                         "color",
@@ -3126,6 +3482,12 @@
                 },
                 "iconLink": {
                     "elementType": ""
+                },
+                "button": {
+                    "elementType": "",
+                    "decoration": [
+                        "boxShadow"
+                    ]
                 }
             }
         },
@@ -3133,9 +3495,13 @@
             "childrenName": [
                 "divi/icon-list-item"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "icon",
-                "text"
+                "text",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -3196,9 +3562,13 @@
         },
         "divi/icon-list-item": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "icon",
-                "text"
+                "text",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -3261,14 +3631,19 @@
         },
         "divi/image": {
             "childrenName": [],
-            "customCssFields": [
-                "image"
+            "cssFields": [
+                "image",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
@@ -3276,7 +3651,8 @@
                         "loop",
                         "align",
                         "sizing",
-                        "spacing"
+                        "spacing",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -3302,7 +3678,9 @@
                     "innerContent": [
                         "src",
                         "linkUrl",
-                        "linkTarget"
+                        "linkTarget",
+                        "alt",
+                        "titleText"
                     ],
                     "advanced": [
                         "lightbox",
@@ -3319,8 +3697,12 @@
         },
         "divi/instagram-feed": {
             "childrenName": [],
-            "customCssFields": [
-                "module"
+            "cssFields": [
+                "module",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -3411,8 +3793,12 @@
         },
         "divi/link": {
             "childrenName": [],
-            "customCssFields": [
-                "icon"
+            "cssFields": [
+                "icon",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -3476,18 +3862,23 @@
         },
         "divi/login": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "newsletterTitle",
                 "newsletterDescription",
                 "newsletterForm",
                 "newsletterFields",
-                "newsletterButton"
+                "newsletterButton",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
@@ -3495,7 +3886,8 @@
                         "link",
                         "loop",
                         "text",
-                        "currentPageRedirect"
+                        "currentPageRedirect",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -3531,13 +3923,22 @@
                     "elementType": "content",
                     "innerContent": [],
                     "decoration": [
-                        "bodyFont"
+                        "bodyFont",
+                        "inlineFont"
                     ]
                 },
                 "field": {
                     "elementType": "field",
-                    "decoration": [],
-                    "advanced": []
+                    "decoration": [
+                        "spacing",
+                        "border",
+                        "boxShadow",
+                        "font"
+                    ],
+                    "advanced": [
+                        "focusUseBorder",
+                        "focus"
+                    ]
                 },
                 "button": {
                     "elementType": "button",
@@ -3559,8 +3960,12 @@
         },
         "divi/lottie": {
             "childrenName": [],
-            "customCssFields": [
-                "lottieAnimation"
+            "cssFields": [
+                "lottieAnimation",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -3616,18 +4021,26 @@
             "childrenName": [
                 "divi/map-pin"
             ],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
-                        "loop"
+                        "loop",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "decoration": [
                         "animation",
@@ -3654,7 +4067,12 @@
                 },
                 "map": {
                     "elementType": "",
-                    "innerContent": [],
+                    "innerContent": [
+                        "address",
+                        "lat",
+                        "lng",
+                        "zoom"
+                    ],
                     "advanced": [
                         "warning",
                         "googleAPIKey",
@@ -3671,11 +4089,21 @@
         },
         "divi/map-pin": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "pin": {
                     "elementType": "",
-                    "innerContent": [],
+                    "innerContent": [
+                        "address",
+                        "lat",
+                        "lng",
+                        "zoom"
+                    ],
                     "meta": [
                         "meta"
                     ],
@@ -3690,31 +4118,40 @@
                 },
                 "content": {
                     "elementType": "content",
-                    "innerContent": []
+                    "innerContent": [],
+                    "decoration": [
+                        "inlineFont"
+                    ]
                 }
             }
         },
         "divi/menu": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "menuLink",
                 "activeMenuLink",
                 "dropdownContainer",
                 "dropdownLinks",
-                "menuLogo"
+                "menuLogo",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -3736,7 +4173,8 @@
                         "sticky",
                         "transform",
                         "transition",
-                        "zIndex"
+                        "zIndex",
+                        "font"
                     ]
                 },
                 "logo": {
@@ -3744,7 +4182,8 @@
                     "innerContent": [
                         "src",
                         "linkUrl",
-                        "linkTarget"
+                        "linkTarget",
+                        "alt"
                     ],
                     "decoration": [
                         "border",
@@ -3824,22 +4263,28 @@
         },
         "divi/number-counter": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "percent",
-                "numberCounterTitle"
+                "numberCounterTitle",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -3885,25 +4330,31 @@
         },
         "divi/portfolio": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "portfolioImage",
                 "overlay",
                 "overlayIcon",
                 "portfolioTitle",
                 "portfolioPostMeta",
-                "pagination"
+                "pagination",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -3936,7 +4387,8 @@
                     "advanced": [
                         "showTitle",
                         "showCategories",
-                        "showPagination"
+                        "showPagination",
+                        "layout"
                     ]
                 },
                 "portfolioGrid": {
@@ -3965,7 +4417,10 @@
                 "image": {
                     "elementType": "",
                     "decoration": [
-                        "image"
+                        "image",
+                        "border",
+                        "boxShadow",
+                        "filters"
                     ]
                 },
                 "meta": {
@@ -3984,15 +4439,23 @@
         },
         "divi/post-content": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
-                        "html"
+                        "html",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "decoration": [
                         "animation",
@@ -4014,38 +4477,49 @@
                         "spacing",
                         "sticky",
                         "transform",
-                        "zIndex"
+                        "zIndex",
+                        "inlineFont",
+                        "transition"
                     ]
                 },
                 "image": {
                     "elementType": "",
                     "decoration": [
-                        "image"
+                        "image",
+                        "border",
+                        "boxShadow"
                     ]
                 }
             }
         },
         "divi/post-nav": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "links",
                 "prevLink",
                 "prevLinkArrow",
                 "nextLink",
-                "nextLinkArrow"
+                "nextLinkArrow",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "inSameTerm",
                         "taxonomyName",
-                        "targetLoop"
+                        "targetLoop",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "decoration": [
                         "layout",
@@ -4086,7 +4560,7 @@
         },
         "divi/post-slider": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "slideDescription",
                 "slideTitle",
                 "slideMeta",
@@ -4094,7 +4568,11 @@
                 "slideControllers",
                 "slideActiveController",
                 "slideImage",
-                "slideArrows"
+                "slideArrows",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -4106,7 +4584,8 @@
                         "text",
                         "auto",
                         "autoSpeed",
-                        "autoIgnoreHover"
+                        "autoIgnoreHover",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -4131,7 +4610,8 @@
                         "interactions"
                     ],
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ]
                 },
                 "title": {
@@ -4167,7 +4647,10 @@
                         "showOnMobile"
                     ],
                     "decoration": [
-                        "image"
+                        "image",
+                        "boxShadow",
+                        "border",
+                        "filters"
                     ]
                 },
                 "button": {
@@ -4199,7 +4682,8 @@
                         "contentSource",
                         "excerptManual",
                         "excerptLength",
-                        "offset"
+                        "offset",
+                        "currentLoop"
                     ]
                 },
                 "arrows": {
@@ -4241,23 +4725,29 @@
         },
         "divi/post-title": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "postTitle",
                 "postMeta",
-                "postImage"
+                "postImage",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -4323,12 +4813,23 @@
                     "decoration": [
                         "image"
                     ]
+                },
+                "featuredImage": {
+                    "elementType": "",
+                    "advanced": [
+                        "enabled",
+                        "placement",
+                        "forceFullwidth"
+                    ],
+                    "decoration": [
+                        "sizing"
+                    ]
                 }
             }
         },
         "divi/pricing-table": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "pricingHeading",
                 "pricingTitle",
                 "pricingSubtitle",
@@ -4339,7 +4840,11 @@
                 "pricingContent",
                 "pricingItem",
                 "pricingItemExcluded",
-                "pricingButton"
+                "pricingButton",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -4412,7 +4917,9 @@
                     "elementType": "button",
                     "innerContent": [
                         "text",
-                        "*"
+                        "*",
+                        "linkUrl",
+                        "linkTarget"
                     ],
                     "decoration": [
                         "background",
@@ -4434,7 +4941,8 @@
                     "elementType": "content",
                     "innerContent": [],
                     "decoration": [
-                        "bodyFont"
+                        "bodyFont",
+                        "inlineFont"
                     ],
                     "advanced": [
                         "bulletColor"
@@ -4446,7 +4954,7 @@
             "childrenName": [
                 "divi/pricing-table"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "pricingHeading",
                 "pricingTitle",
                 "pricingSubtitle",
@@ -4458,7 +4966,11 @@
                 "pricingItem",
                 "pricingItemExcluded",
                 "pricingButton",
-                "featuredTable"
+                "featuredTable",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -4471,7 +4983,8 @@
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -4609,19 +5122,28 @@
         },
         "divi/row": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "loop",
                         "link",
-                        "gutter"
+                        "gutter",
+                        "columnStructure",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "decoration": [
                         "animation",
@@ -4645,24 +5167,55 @@
                         "transition",
                         "zIndex"
                     ]
+                },
+                "columns": {
+                    "elementType": ""
+                },
+                "button": {
+                    "elementType": "",
+                    "decoration": [
+                        "boxShadow",
+                        "button"
+                    ]
+                },
+                "content": {
+                    "elementType": "",
+                    "decoration": [
+                        "bodyFont"
+                    ]
+                },
+                "title": {
+                    "elementType": "",
+                    "decoration": [
+                        "font"
+                    ]
                 }
             }
         },
         "divi/row-inner": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "loop",
                         "link",
-                        "gutter"
+                        "gutter",
+                        "columnStructure",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "decoration": [
                         "animation",
@@ -4683,16 +5236,43 @@
                         "sticky",
                         "transform",
                         "transition",
-                        "zIndex"
+                        "zIndex",
+                        "layout"
+                    ]
+                },
+                "columns": {
+                    "elementType": ""
+                },
+                "button": {
+                    "elementType": "",
+                    "decoration": [
+                        "boxShadow",
+                        "button"
+                    ]
+                },
+                "content": {
+                    "elementType": "",
+                    "decoration": [
+                        "bodyFont"
+                    ]
+                },
+                "title": {
+                    "elementType": "",
+                    "decoration": [
+                        "font"
                     ]
                 }
             }
         },
         "divi/search": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "inputField",
-                "button"
+                "button",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "searchPlaceholder": {
@@ -4704,7 +5284,8 @@
                     "advanced": [
                         "showButton",
                         "excludePages",
-                        "excludePosts"
+                        "excludePosts",
+                        "includeCategories"
                     ]
                 },
                 "module": {
@@ -4736,17 +5317,20 @@
                         "link",
                         "text",
                         "html",
-                        "excludedCategories"
+                        "excludedCategories",
+                        "htmlAttributes"
                     ],
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ]
                 },
                 "field": {
                     "elementType": "field",
                     "decoration": [
                         "background",
-                        "font"
+                        "font",
+                        "spacing"
                     ],
                     "advanced": [
                         "focus",
@@ -4766,7 +5350,7 @@
             "childrenName": [
                 "divi/row"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "column_1_before",
                 "column_1_main",
                 "column_1_after",
@@ -4775,13 +5359,18 @@
                 "column_2_after",
                 "column_3_before",
                 "column_3_main",
-                "column_3_after"
+                "column_3_after",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
@@ -4790,7 +5379,10 @@
                         "link",
                         "innerShadow",
                         "dividers",
-                        "gutter"
+                        "gutter",
+                        "type",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "decoration": [
                         "animation",
@@ -4817,7 +5409,9 @@
                 },
                 "column1": {
                     "elementType": "",
-                    "advanced": [],
+                    "advanced": [
+                        "htmlAttributes"
+                    ],
                     "decoration": [
                         "background",
                         "spacing"
@@ -4825,7 +5419,9 @@
                 },
                 "column2": {
                     "elementType": "",
-                    "advanced": [],
+                    "advanced": [
+                        "htmlAttributes"
+                    ],
                     "decoration": [
                         "background",
                         "spacing"
@@ -4833,7 +5429,9 @@
                 },
                 "column3": {
                     "elementType": "",
-                    "advanced": [],
+                    "advanced": [
+                        "htmlAttributes"
+                    ],
                     "decoration": [
                         "background",
                         "spacing"
@@ -4849,22 +5447,28 @@
         },
         "divi/sidebar": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "widget",
-                "title"
+                "title",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -4917,25 +5521,34 @@
         },
         "divi/signup": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "newsletterTitle",
                 "newsletterDescription",
                 "newsletterForm",
                 "newsletterFields",
-                "newsletterButton"
+                "newsletterButton",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "element",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "spamProtection",
+                        "layout",
+                        "emailService",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -5010,9 +5623,16 @@
                         "firstNameFullwidth",
                         "lastNameFullwidth",
                         "emailFullwidth",
-                        "ipAddress"
+                        "ipAddress",
+                        "focusUseBorder",
+                        "focus"
                     ],
-                    "decoration": []
+                    "decoration": [
+                        "spacing",
+                        "font",
+                        "border",
+                        "boxShadow"
+                    ]
                 },
                 "checkbox": {
                     "elementType": "field",
@@ -5049,7 +5669,12 @@
         },
         "divi/signup-custom-field": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "element",
@@ -5057,7 +5682,8 @@
                         "html",
                         "loop",
                         "link",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -5076,10 +5702,12 @@
                         "zIndex",
                         "border",
                         "boxShadow",
-                        "filters"
+                        "filters",
+                        "sticky"
                     ],
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ]
                 },
                 "field": {
@@ -5114,9 +5742,15 @@
                         "radioOptions",
                         "selectOptions",
                         "required",
-                        "hidden"
+                        "hidden",
+                        "useFocusBorder",
+                        "booleanCheckboxOptions",
+                        "checkboxChecked"
                     ],
-                    "innerContent": []
+                    "innerContent": [],
+                    "decoration": [
+                        "border"
+                    ]
                 },
                 "conditionalLogic": {
                     "elementType": "",
@@ -5130,18 +5764,23 @@
         },
         "divi/slide": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "slideTitle",
                 "slideContainer",
                 "slideDescription",
                 "slideButton",
-                "slideImage"
+                "slideImage",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
@@ -5170,12 +5809,17 @@
                 "image": {
                     "elementType": "image",
                     "innerContent": [
-                        "src"
+                        "src",
+                        "alt"
                     ],
                     "advanced": [
                         "alignment"
                     ],
-                    "decoration": []
+                    "decoration": [
+                        "border",
+                        "boxShadow",
+                        "filters"
+                    ]
                 },
                 "title": {
                     "elementType": "",
@@ -5187,7 +5831,8 @@
                 "contentOverlay": {
                     "elementType": "",
                     "advanced": [
-                        "useTextOverlay"
+                        "useTextOverlay",
+                        "use"
                     ],
                     "decoration": [
                         "background",
@@ -5198,23 +5843,30 @@
                     "elementType": "button",
                     "innerContent": [
                         "text",
-                        "*"
+                        "*",
+                        "linkTarget",
+                        "linkUrl"
                     ],
                     "decoration": [
-                        "button"
+                        "button",
+                        "boxShadow"
                     ]
                 },
                 "content": {
                     "elementType": "content",
                     "innerContent": [],
                     "decoration": [
-                        "bodyFont"
+                        "bodyFont",
+                        "inlineFont",
+                        "spacing",
+                        "sizing"
                     ]
                 },
                 "slideOverlay": {
                     "elementType": "",
                     "advanced": [
-                        "useBackgroundOverlay"
+                        "useBackgroundOverlay",
+                        "use"
                     ],
                     "decoration": [
                         "background"
@@ -5230,6 +5882,9 @@
                     "elementType": "",
                     "advanced": [
                         "color"
+                    ],
+                    "decoration": [
+                        "background"
                     ]
                 },
                 "video": {
@@ -5242,14 +5897,18 @@
             "childrenName": [
                 "divi/slide"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "slideDescription",
                 "slideTitle",
                 "slideButton",
                 "slideControllers",
                 "slideActiveController",
                 "slideImage",
-                "slideArrows"
+                "slideArrows",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -5265,7 +5924,8 @@
                         "text",
                         "auto",
                         "autoSpeed",
-                        "autoIgnoreHover"
+                        "autoIgnoreHover",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -5311,7 +5971,8 @@
                 "button": {
                     "elementType": "",
                     "decoration": [
-                        "button"
+                        "button",
+                        ""
                     ]
                 },
                 "content": {
@@ -5340,7 +6001,9 @@
                         "showOnMobile"
                     ],
                     "decoration": [
-                        "image"
+                        "image",
+                        "border",
+                        "boxShadow"
                     ]
                 },
                 "dotNav": {
@@ -5355,17 +6018,21 @@
             "childrenName": [
                 "divi/social-media-follow-network"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "mainElement",
                 "socialFollow",
                 "socialIcon",
-                "followButton"
+                "followButton",
+                "before",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "innerContent": [],
                     "decoration": [
@@ -5394,7 +6061,8 @@
                         "elements",
                         "html",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ]
                 },
                 "icon": {
@@ -5412,18 +6080,25 @@
                 },
                 "button": {
                     "elementType": "button",
-                    "innerContent": [],
+                    "innerContent": [
+                        "linkTarget"
+                    ],
                     "decoration": [
-                        "button"
+                        "button",
+                        "boxShadow"
                     ]
                 }
             }
         },
         "divi/social-media-follow-network": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "socialIcon",
-                "followButton"
+                "followButton",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -5434,7 +6109,8 @@
                     "advanced": [
                         "elements",
                         "html",
-                        "loop"
+                        "loop",
+                        "text"
                     ],
                     "decoration": [
                         "layout",
@@ -5471,7 +6147,11 @@
                         "title",
                         "skypeUrl",
                         "skypeAction",
-                        "link"
+                        "link",
+                        "label"
+                    ],
+                    "advanced": [
+                        "followButton"
                     ]
                 },
                 "iconLink": {
@@ -5480,16 +6160,21 @@
                 "button": {
                     "elementType": "button",
                     "decoration": [
-                        "button"
+                        "button",
+                        "boxShadow"
                     ]
                 }
             }
         },
         "divi/svg": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "module",
-                "svg"
+                "svg",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -5547,7 +6232,12 @@
         },
         "divi/tab": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
@@ -5573,14 +6263,19 @@
                         "spacing",
                         "transform",
                         "transition",
-                        "zIndex"
+                        "zIndex",
+                        "boxShadow"
+                    ],
+                    "meta": [
+                        "adminLabel"
                     ]
                 },
                 "content": {
                     "elementType": "content",
                     "innerContent": [],
                     "decoration": [
-                        "bodyFont"
+                        "bodyFont",
+                        "inlineFont"
                     ]
                 },
                 "title": {
@@ -5594,12 +6289,16 @@
         },
         "divi/table-of-contents": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "title",
                 "list",
                 "link",
                 "marker",
-                "emptyState"
+                "emptyState",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -5711,23 +6410,29 @@
             "childrenName": [
                 "divi/tab"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "tabsControls",
                 "tab",
                 "activeTab",
-                "tabsContent"
+                "tabsContent",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
-                        "loop"
+                        "loop",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -5770,30 +6475,43 @@
                         "background",
                         "font"
                     ]
+                },
+                "inactiveTab": {
+                    "elementType": "",
+                    "decoration": [
+                        "background"
+                    ]
                 }
             }
         },
         "divi/team-member": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "memberImage",
                 "memberDescription",
                 "title",
                 "memberPosition",
-                "memberSocialLinks"
+                "memberSocialLinks",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm",
+                "name"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -5839,14 +6557,18 @@
                         "url"
                     ],
                     "decoration": [
-                        "image"
+                        "image",
+                        "border",
+                        "boxShadow",
+                        "filters"
                     ]
                 },
                 "content": {
                     "elementType": "content",
                     "innerContent": [],
                     "decoration": [
-                        "bodyFont"
+                        "bodyFont",
+                        "inlineFont"
                     ]
                 },
                 "social": {
@@ -5854,34 +6576,47 @@
                     "innerContent": [
                         "facebookUrl",
                         "twitterUrl",
-                        "linkedinUrl"
+                        "linkedinUrl",
+                        "googleUrl"
                     ],
                     "decoration": [
                         "icon"
+                    ]
+                },
+                "button": {
+                    "elementType": "",
+                    "decoration": [
+                        "button"
                     ]
                 }
             }
         },
         "divi/testimonial": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "testimonialPortrait",
                 "testimonialDescription",
                 "testimonialAuthor",
-                "testimonialMeta"
+                "testimonialMeta",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -5928,7 +6663,8 @@
                     "elementType": "content",
                     "innerContent": [],
                     "decoration": [
-                        "bodyFont"
+                        "bodyFont",
+                        "inlineFont"
                     ]
                 },
                 "author": {
@@ -5948,32 +6684,49 @@
                 "portrait": {
                     "elementType": "image",
                     "innerContent": [
-                        "src"
+                        "src",
+                        "url"
                     ],
                     "decoration": [
-                        "image"
+                        "image",
+                        "sizing",
+                        "border",
+                        "filters"
                     ]
                 },
                 "testimonialDescription": {
                     "elementType": "wrapper"
+                },
+                "image": {
+                    "elementType": "",
+                    "decoration": [
+                        "boxShadow"
+                    ]
                 }
             }
         },
         "divi/text": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
                         "html",
                         "link",
                         "loop",
-                        "text"
+                        "text",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "layout",
@@ -6003,7 +6756,8 @@
                     "innerContent": [],
                     "decoration": [
                         "headingFont",
-                        "bodyFont"
+                        "bodyFont",
+                        "inlineFont"
                     ]
                 }
             }
@@ -6012,7 +6766,7 @@
             "childrenName": [
                 "divi/timeline-item"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "track",
                 "item",
                 "spacer",
@@ -6021,7 +6775,11 @@
                 "card",
                 "date",
                 "title",
-                "content"
+                "content",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -6201,14 +6959,18 @@
         },
         "divi/timeline-item": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "spacer",
                 "connector",
                 "marker",
                 "card",
                 "date",
                 "title",
-                "content"
+                "content",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
@@ -6320,17 +7082,22 @@
         },
         "divi/toggle": {
             "childrenName": [],
-            "customCssFields": [
+            "cssFields": [
                 "openToggle",
                 "toggleTitle",
                 "toggleIcon",
-                "toggleContent"
+                "toggleContent",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
@@ -6338,7 +7105,8 @@
                         "link",
                         "loop",
                         "text",
-                        "open"
+                        "open",
+                        "htmlAttributes"
                     ],
                     "decoration": [
                         "animation",
@@ -6393,7 +7161,8 @@
                     "elementType": "content",
                     "innerContent": [],
                     "decoration": [
-                        "bodyFont"
+                        "bodyFont",
+                        "inlineFont"
                     ]
                 },
                 "openToggle": {
@@ -6413,18 +7182,25 @@
         },
         "divi/video": {
             "childrenName": [],
-            "customCssFields": [
-                "videoIcon"
+            "cssFields": [
+                "videoIcon",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
-                        "html"
+                        "html",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "decoration": [
                         "layout",
@@ -6470,6 +7246,12 @@
                     "decoration": [
                         "icon"
                     ]
+                },
+                "thumbnail": {
+                    "elementType": "",
+                    "innerContent": [
+                        "src"
+                    ]
                 }
             }
         },
@@ -6477,20 +7259,28 @@
             "childrenName": [
                 "divi/video-slider-item"
             ],
-            "customCssFields": [
+            "cssFields": [
                 "playButton",
                 "thumbnailItem",
-                "sliderArrows"
+                "sliderArrows",
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
             ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
                         "elements",
-                        "html"
+                        "html",
+                        "link",
+                        "htmlAttributes",
+                        "text"
                     ],
                     "decoration": [
                         "animation",
@@ -6517,12 +7307,19 @@
                     "decoration": [
                         "border",
                         "boxShadow"
+                    ],
+                    "innerContent": [
+                        "src",
+                        "webm"
                     ]
                 },
                 "overlay": {
                     "elementType": "",
                     "advanced": [
                         "showImageOverlay"
+                    ],
+                    "decoration": [
+                        "background"
                     ]
                 },
                 "playIcon": {
@@ -6539,20 +7336,40 @@
                         "useArrows",
                         "useThumbnails"
                     ]
+                },
+                "thumbnail": {
+                    "elementType": "",
+                    "innerContent": [
+                        "src"
+                    ]
+                },
+                "content": {
+                    "elementType": "",
+                    "decoration": [
+                        "bodyFont"
+                    ]
                 }
             }
         },
         "divi/video-slider-item": {
             "childrenName": [],
-            "customCssFields": [],
+            "cssFields": [
+                "before",
+                "mainElement",
+                "after",
+                "freeForm"
+            ],
             "attributes": {
                 "module": {
                     "elementType": "",
                     "meta": [
-                        "meta"
+                        "meta",
+                        "adminLabel"
                     ],
                     "advanced": [
-                        "html"
+                        "html",
+                        "link",
+                        "text"
                     ],
                     "decoration": [
                         "animation",
@@ -6567,7 +7384,12 @@
                         "sticky",
                         "transform",
                         "transition",
-                        "zIndex"
+                        "zIndex",
+                        "background",
+                        "border",
+                        "boxShadow",
+                        "sizing",
+                        "spacing"
                     ]
                 },
                 "overlay": {
@@ -6596,6 +7418,18 @@
                     "innerContent": [
                         "src",
                         "webm"
+                    ]
+                },
+                "thumbnail": {
+                    "elementType": "",
+                    "innerContent": [
+                        "src"
+                    ]
+                },
+                "content": {
+                    "elementType": "",
+                    "decoration": [
+                        "bodyFont"
                     ]
                 }
             }

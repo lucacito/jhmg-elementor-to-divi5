@@ -707,3 +707,5 @@ if ( ! function_exists( 'sanitize_title' ) ) {
         return trim( (string) $slug, '-' );
     }
 }
+
+require_once __DIR__ . '/support/DiviModuleSchema.php';

@@ -47,6 +47,18 @@ Found 2026-09-15 while planning the demo site, by reading the converter. Not yet
 
 **Suggested fix.** Build the Divi CTA body from the subtitle followed by `eael_cta_content`, and add `eael_cta_content` to the handled keys. Cover in `AddonSettingNamesTest`.
 
+## Attribute paths the schema test found that Divi 5.7.4 never reads
+
+Found 2026-09-15 by the first run of `tests/support/DiviModuleSchema.php` (every emitted block checked against `fixtures/divi-schema/modules.json`, extracted from Divi's module definitions and conversion outlines). None of these showed as a symptom in the demo because each hid behind a default or an accident:
+
+- Custom CSS was written to `css.*.main`; Divi reads `css.*.mainElement` (`CssStyleUtils.php:212`), so every rule the converter emitted there (boxed max-width on rows, `position:absolute` for unwrapped containers, `mix-blend-mode`, word spacing) was dropped. Fixed with the schema test.
+- Contact Form 7 wrote `module.advanced.formId`; Divi reads `form.advanced.formId` (`ContactForm7Module.php:378`). The demo has one form, so the module's fallback picked it. Fixed with the schema test.
+- Both menu converters wrote `menu.innerContent.menuId`; Divi reads `menu.advanced.menuId` (`MenuModule.php:904`); the primary menu location made it look right. Fixed with the schema test.
+- The video widget writes `module.advanced.videoUrl`; Divi reads `video.innerContent.*.src` (`VideoModule.php:153`). Plan Task 20.
+- Image margins and padding go to `module.decoration.spacing`; Divi's image module keeps spacing under `module.advanced.spacing` (`ImageModule.php:958`). Plan Task 21.
+- Icon list items (EAEL feature list, price list, content ticker) write `module.advanced.text` and a `link` attribute; Divi reads `content.innerContent`, `icon.innerContent` and `module.advanced.link` (`IconListItemModule.php:77,178,310`). Plan Task 22.
+- The blog module gets `post.innerContent.perPage` from four converters (EAEL post grid and timeline, HFE posts, core posts); Divi reads `post.advanced.number` and `post.advanced.type` (`blog/conversion-outline.json`). Plan Task 15.
+
 ## Converted modules that keep their content but render blank or wrong in Divi 5.7.4
 
 Found 2026-09-15 by the demo site's before/after screenshots (`demo/output/screenshots/` on branch `demo-site`). Every item below passes the demo's content check — the text or value is present in the converted blocks — so the attributes are written, but Divi does not render them where the converter put them. Causes not yet investigated; each needs a look at the block attributes the handler writes against Divi 5.7.4's module definition.

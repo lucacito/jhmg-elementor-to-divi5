@@ -263,9 +263,9 @@ abstract class BaseElementorConverter implements ConverterInterface {
             $block['settings'] = $this->deepMergeSettings( $container_attrs, $block['settings'] );
 
             // Append position: absolute after the merge so it always wins.
-            $existing = $block['settings']['css']['desktop']['value']['main'] ?? '';
+            $existing = $block['settings']['css']['desktop']['value']['mainElement'] ?? '';
             $rule     = 'position: absolute;';
-            $block['settings']['css']['desktop']['value']['main'] = $existing !== ''
+            $block['settings']['css']['desktop']['value']['mainElement'] = $existing !== ''
                 ? rtrim( $existing, '; ' ) . '; ' . $rule
                 : $rule;
         }
@@ -1251,12 +1251,12 @@ abstract class BaseElementorConverter implements ConverterInterface {
             $unit  = is_string( $raw['unit'] ?? '' ) ? ( $raw['unit'] ?? 'px' ) : 'px';
             $rule  = 'max-width: ' . (string) $raw['size'] . $unit . ';';
 
-            $existing = $row_settings['css'][ $divi_bp ]['value']['main'] ?? '';
+            $existing = $row_settings['css'][ $divi_bp ]['value']['mainElement'] ?? '';
             $merged   = ( is_string( $existing ) && $existing !== '' )
                 ? rtrim( $existing, '; ' ) . '; ' . $rule
                 : $rule;
 
-            $row_settings['css'][ $divi_bp ]['value']['main'] = $merged;
+            $row_settings['css'][ $divi_bp ]['value']['mainElement'] = $merged;
         }
 
         return $row_settings;

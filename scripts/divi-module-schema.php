@@ -8,6 +8,13 @@
  *   references/Divi/includes/builder-5/visual-builder/packages/module-library/src/components/<module>/module.json
  *   references/Divi/includes/builder/feature/icon-manager/full_icons_list.json
  *
+ *   references/Divi/includes/builder-5/visual-builder/packages/module-library/src/components/<module>/conversion-outline.json
+ *
+ * module.json's settings tree lists the attributes that have a UI field. The
+ * structural ones the server also reads (a column's module.advanced.type, a
+ * row's columnStructure, a social item's label) appear only in the module's
+ * conversion outline — Divi's own D4-to-D5 attribute map — so both are merged.
+ *
  * Outputs:
  *   fixtures/divi-schema/modules.json                                        (tests/support/DiviModuleSchema.php)
  *   plugin/jhmg-converter-for-elementor-to-divi/includes/data/fa-icons.php   (Helpers\FontAwesomeIcons)
@@ -44,11 +51,32 @@ function edc_divi_schema_build( string $components_dir, string $divi_style_css )
             $attributes[ $attr_name ] = $entry;
         }
 
+        // Custom CSS keys: the four every module has (CssStyleUtils.php handles
+        // before, mainElement, after and freeForm generically) plus the module's own.
+        $css_fields = array_values( array_map( 'strval', array_keys( $json['customCssFields'] ?? [] ) ) );
+        foreach ( [ 'before', 'mainElement', 'after', 'freeForm' ] as $field ) {
+            $css_fields[] = $field;
+        }
+
+        $outline = dirname( $file ) . '/conversion-outline.json';
+        if ( file_exists( $outline ) ) {
+            edc_divi_schema_merge_outline( json_decode( (string) file_get_contents( $outline ), true ) ?: [], $attributes, $css_fields );
+        }
+        foreach ( $attributes as &$entry ) {
+            foreach ( $entry as $group => &$list ) {
+                if ( is_array( $list ) ) {
+                    $list = array_values( array_unique( $list ) );
+                }
+            }
+            unset( $list );
+        }
+        unset( $entry );
+
         $children = $json['childrenName'] ?? [];
         $modules[ $json['name'] ] = [
-            'childrenName'    => is_array( $children ) ? array_values( $children ) : [],
-            'customCssFields' => array_values( array_map( 'strval', array_keys( $json['customCssFields'] ?? [] ) ) ),
-            'attributes'      => $attributes,
+            'childrenName' => is_array( $children ) ? array_values( $children ) : [],
+            'cssFields'    => array_values( array_unique( $css_fields ) ),
+            'attributes'   => $attributes,
         ];
     }
     ksort( $modules );
@@ -102,6 +130,63 @@ function edc_divi_schema_sub_names( array $config ): array {
         $names[] = '*';
     }
     return $names;
+}
+
+/**
+ * Adds every attribute path a conversion outline names to the module's
+ * attributes: "attr.group.sub…" (a `*` stands for the breakpoint/state
+ * envelope) and, under innerContent, the sub-key after the `*`.
+ *
+ * @param array    $outline    Decoded conversion-outline.json.
+ * @param array    $attributes The module's attributes, by reference.
+ * @param string[] $css_fields The module's custom CSS keys, by reference.
+ */
+function edc_divi_schema_merge_outline( array $outline, array &$attributes, array &$css_fields ): void {
+    $paths = [];
+    $walk  = static function ( $node ) use ( &$walk, &$paths ): void {
+        if ( is_string( $node ) ) {
+            $paths[] = $node;
+        } elseif ( is_array( $node ) ) {
+            foreach ( $node as $child ) {
+                $walk( $child );
+            }
+        }
+    };
+    $walk( $outline['module'] ?? [] );
+    $walk( $outline['advanced'] ?? [] );
+
+    foreach ( $paths as $path ) {
+        $segments = explode( '.', $path );
+        $star     = array_search( '*', $segments, true );
+        $before   = $star === false ? $segments : array_slice( $segments, 0, $star );
+        $after    = $star === false ? [] : array_slice( $segments, $star + 1 );
+
+        if ( count( $before ) < 2 ) {
+            continue; // A top-level attr with no group (row's backgroundHorizontalOffset1.*): nothing to declare.
+        }
+        [ $attr, $group ] = $before;
+        if ( ! isset( $attributes[ $attr ] ) ) {
+            $attributes[ $attr ] = [ 'elementType' => '' ];
+        }
+        if ( $group === 'innerContent' ) {
+            $attributes[ $attr ]['innerContent'] = $attributes[ $attr ]['innerContent'] ?? [];
+            if ( $after !== [] ) {
+                $attributes[ $attr ]['innerContent'][] = $after[0];
+            }
+            continue;
+        }
+        if ( ! in_array( $group, [ 'advanced', 'decoration', 'meta' ], true ) || ! isset( $before[2] ) ) {
+            continue;
+        }
+        $attributes[ $attr ][ $group ]   = $attributes[ $attr ][ $group ] ?? [];
+        $attributes[ $attr ][ $group ][] = $before[2];
+    }
+
+    foreach ( $outline['css'] ?? [] as $target ) {
+        if ( is_string( $target ) && preg_match( '/^css\.\*\.([A-Za-z0-9_]+)$/', $target, $m ) ) {
+            $css_fields[] = $m[1];
+        }
+    }
 }
 
 /** @return array<string, array{unicode: string, solid?: string, line?: string}> */

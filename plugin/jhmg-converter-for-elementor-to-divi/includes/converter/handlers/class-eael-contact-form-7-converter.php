@@ -19,7 +19,9 @@ class EaelContactForm7Converter extends BaseElementorConverter {
 
         $block_settings = [];
         if ( $form_id > 0 ) {
-            $block_settings['module'] = [
+            $block_settings[// contact-form-7/module.json declares the form ID on the `form` attribute; the
+            // renderer reads form.advanced.formId (ContactForm7Module.php:378).
+            'form'] = [
                 'advanced' => [
                     'formId' => [ 'desktop' => [ 'value' => $form_id ] ],
                 ],

@@ -61,6 +61,8 @@ final class DocumentConversionTest extends TestCase {
         $doc  = load_document( $file, demo_test_context() );
         $item = ( new ConversionPreflight() )->runUnlimited( new DocumentSource( [ $doc ] ) )->items()[0];
 
+        DiviModuleSchema::assertBlocksValid( $item['blocks']['elements'] ?? [], $name );
+
         $this->assertSame( [], conversion_problems( $item, $doc['survive'], $doc['survive_exact'] ) );
     }
 }

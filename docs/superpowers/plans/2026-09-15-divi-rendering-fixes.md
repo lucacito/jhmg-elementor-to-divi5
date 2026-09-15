@@ -4074,3 +4074,44 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
 
 Stop. Do not merge or release: report the branch state, the verify output, and the kit screenshot comparison, and ask the user about merging into `fix/correctness-pass-2026-08` and `main` and about the wordpress.org release (`RELEASE.md`).
+
+---
+
+## Tasks added by the schema harvest (Task 2, Step 3)
+
+The first schema run reported paths no task owned. Three were fixed inside Task 2 as one-line renames (Contact Form 7 `form.advanced.formId`, menu `menu.advanced.menuId` in both menu converters, custom CSS `css.*.mainElement` instead of the never-read `main`, no text alignment on dividers). These three need their own cycle.
+
+### Task 20: Video widget writes the source Divi reads
+
+**Files:**
+- Modify: `handlers/class-video-converter.php`, `tests/support/divi-schema-known-gaps.php`, `demo/tests/render.spec.ts`
+- Test: `tests/AddonSettingNamesTest.php` (the existing video cases read `videoSrc()`)
+
+- [ ] **Step 1: Failing test** — change the `videoSrc()` helper in `tests/AddonSettingNamesTest.php` to read `$block['settings']['video']['innerContent']['desktop']['value']['src']` (video/conversion-outline.json: `src → video.innerContent.*.src`, `src_webm → video.innerContent.*.webm`, `image_src → thumbnail.innerContent.*.src`; VideoModule.php:153 reads `['src']`). Run `vendor/bin/phpunit --filter video tests/AddonSettingNamesTest.php` → FAIL.
+- [ ] **Step 2: Fix** — in `VideoConverter::convert()`, write `$attrs['video']['innerContent']['desktop']['value'] = [ 'src' => $url ]` (add `'webm' => …` when Elementor's `hosted_url` is a `.webm`), the poster (`image_overlay.url` when `show_image_overlay` is `yes`) to `$attrs['thumbnail']['innerContent']['desktop']['value'] = [ 'src' => $poster ]`, and delete the `module.advanced.videoUrl` write. YouTube/Vimeo URLs go in `src` too: Divi's video module embeds oEmbed URLs (VideoModule.php, `get_video_embed`). Remove the `divi/video module.advanced.videoUrl` known gap. `vendor/bin/phpunit` → OK; regenerate `fixtures/divi/video.json` and review the diff.
+- [ ] **Step 3: Render** — add `widget( 'video', [ 'video_type' => 'youtube', 'youtube_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' ] )` to the probe band and assert `page.locator('.et_pb_video iframe, .et_pb_video video')` is visible with height > 200. `demo/verify.sh render && demo/verify.sh reset`.
+- [ ] **Step 4: Commit** — `fix(converter): video widgets write the source Divi's video module reads`.
+
+### Task 21: Image spacing and sizing live under `module.advanced` in Divi's image module
+
+**Files:**
+- Modify: `includes/stylemapper/class-style-mapper.php` (`mapSpacing`), `tests/support/divi-schema-known-gaps.php`, `fixtures/divi/image.json` (regenerated)
+- Test: `tests/StyleMapperTest.php`
+
+- [ ] **Step 1: Failing test** — add to `StyleMapperTest`: `map( 'image', [ '_margin' => [ 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '24', 'left' => '0', 'isLinked' => '' ] ] )` must write `module.advanced.spacing.desktop.value.margin.bottom === '24px'` and no `module.decoration.spacing` (image/conversion-outline.json `margin_padding → module.advanced.spacing`; ImageModule.php:958 reads `module.advanced.spacing`; image/module.json declares no `module.decoration.spacing`). Run → FAIL.
+- [ ] **Step 2: Fix** — in `mapSpacing()`, choose the path prefix: `$prefix = $widget_type === 'image' ? 'module.advanced.spacing' : 'module.decoration.spacing';` and use it in the `transformPath` call. Check `mapImageHeight`/`mapImageWidth` already use `module.advanced.sizing` (they do). Remove the known gap. Regenerate `fixtures/divi/image.json`, review, `vendor/bin/phpunit` → OK.
+- [ ] **Step 3: Render** — on the probe, the Ceramic-style hero has no image margin; add an `image` widget with `_margin` bottom 40px to the probe band and assert its `.et_pb_image` computed `margin-bottom` is `40px`.
+- [ ] **Step 4: Commit** — `fix(converter): image margins and padding reach Divi's image module`.
+
+### Task 22: Icon list items (feature list, price list, content ticker) write text, icon and link where Divi reads them
+
+**Files:**
+- Modify: `handlers/class-eael-feature-list-converter.php`, `handlers/class-price-list-converter.php`, `handlers/class-eael-content-ticker-converter.php`, `tests/support/divi-schema-known-gaps.php`
+- Test: `tests/AddonSettingNamesTest.php`
+
+- [ ] **Step 1: Failing tests** — for each of the three widgets, convert a two-item example and assert each `divi/icon-list-item` child has `content.innerContent.desktop.value` = the item text, `icon.innerContent.desktop.value` = a `{type, unicode, weight}` object (IconListItemModule.php:77, via `FontAwesomeIcons::fromControl()` from Task 11, star fallback), `module.advanced.link.desktop.value.url` when the item has a link (IconListItemModule.php:178), and no `link` attribute or `module.advanced.text`. Run → FAIL.
+- [ ] **Step 2: Fix** — rewrite the item-building code in the three converters to those paths; read EAEL 6.6.7 `Feature_List.php` (`eael_feature_list_title`, `eael_feature_list_content`, `eael_feature_list_icon_new`, `eael_feature_list_link`), `Content_Ticker.php` (`eael_ticker_custom_content`, `eael_ticker_custom_contents[].eael_ticker_custom_content_link`) and Elementor Pro's price list (`price_list[].title`, `price`, `item_description`, `link`) for the names, and add every name read to the handled list. Remove the two known gaps. `vendor/bin/phpunit` → OK.
+- [ ] **Step 3: Render** — the Ferncourt pages carry no icon lists; add a Spaces-style `eael-feature-list` with two items to the probe band and assert `.et_pb_icon_list_item` count is 2 and each has a visible `.et_pb_icon_list_icon`.
+- [ ] **Step 4: Commit** — `fix(converter): icon list items carry text, icon and link where Divi reads them`.
+
+Task 19 (docs, versions) runs after Task 22.

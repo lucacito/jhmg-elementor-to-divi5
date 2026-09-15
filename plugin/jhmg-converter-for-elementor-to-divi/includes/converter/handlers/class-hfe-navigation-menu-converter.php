@@ -26,9 +26,11 @@ class HfeNavigationMenuConverter extends BaseElementorConverter {
 
         $block_settings = [];
         if ( $menu_id !== '' && $menu_id !== 0 ) {
+            // menu/conversion-outline.json: menu_id → menu.advanced.menuId; the
+            // renderer reads that path (MenuModule.php:904). innerContent was never read.
             $block_settings['menu'] = [
-                'innerContent' => [
-                    'desktop' => [ 'value' => [ 'menuId' => (string) $menu_id ] ],
+                'advanced' => [
+                    'menuId' => [ 'desktop' => [ 'value' => (string) $menu_id ] ],
                 ],
             ];
         }

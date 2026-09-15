@@ -1053,8 +1053,8 @@ final class StyleMapperTest extends TestCase {
             'typography_word_spacing_tablet' => [ 'size' => 2, 'unit' => 'px' ],
             'typography_word_spacing_mobile' => [ 'size' => 1, 'unit' => 'px' ],
         ] );
-        $tablet_css = $result['divi_attrs']['css']['tablet']['value']['main'] ?? '';
-        $phone_css  = $result['divi_attrs']['css']['phone']['value']['main'] ?? '';
+        $tablet_css = $result['divi_attrs']['css']['tablet']['value']['mainElement'] ?? '';
+        $phone_css  = $result['divi_attrs']['css']['phone']['value']['mainElement'] ?? '';
         $this->assertStringContainsString( 'word-spacing: 2px', $tablet_css );
         $this->assertStringContainsString( 'word-spacing: 1px', $phone_css );
         $this->assertContains( 'typography_word_spacing_tablet', $result['handled_keys'] );

@@ -22,8 +22,10 @@ class EaelSimpleMenuConverter extends BaseElementorConverter {
         $block_settings = [];
         if ( $menu_id !== '' ) {
             $block_settings['menu'] = [
-                'innerContent' => [
-                    'desktop' => [ 'value' => [ 'menuId' => $menu_id ] ],
+                // menu/conversion-outline.json: menu_id → menu.advanced.menuId, the
+                // path MenuModule.php:904 reads. innerContent was never read.
+                'advanced' => [
+                    'menuId' => [ 'desktop' => [ 'value' => $menu_id ] ],
                 ],
             ];
         }

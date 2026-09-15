@@ -46,7 +46,8 @@ final class DiviModuleSchemaFixtureTest extends TestCase {
         $this->assertSame( [ 'currency', 'per' ], $m['divi/pricing-table']['attributes']['currencyFrequency']['innerContent'] );
         $this->assertContains( 'text', $m['divi/button']['attributes']['button']['innerContent'] );
         $this->assertContains( '*', $m['divi/button']['attributes']['button']['innerContent'] );
-        $this->assertSame( [ 'src' ], $m['divi/testimonial']['attributes']['portrait']['innerContent'] );
+        // module.json's subName plus the outline's portrait_url → portrait.innerContent.*.url.
+        $this->assertSame( [ 'src', 'url' ], $m['divi/testimonial']['attributes']['portrait']['innerContent'] );
         $this->assertSame( 'headingLink', $m['divi/blurb']['attributes']['title']['elementType'] );
         $this->assertSame( [ 'divi/pricing-table' ], $m['divi/pricing-tables']['childrenName'] );
         $this->assertSame( [ 'divi/social-media-follow-network' ], $m['divi/social-media-follow']['childrenName'] );

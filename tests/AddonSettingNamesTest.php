@@ -31,6 +31,8 @@ final class AddonSettingNamesTest extends TestCase {
             'elements'   => [],
         ] ] );
 
+        DiviModuleSchema::assertBlocksValid( $result['divi']['elements'], "widget {$type}" );
+
         return [ $result['divi']['elements'][0], $result ];
     }
 
@@ -64,13 +66,13 @@ final class AddonSettingNamesTest extends TestCase {
         [ $block ] = $this->convert( 'eael-contact-form-7', [ 'contact_form_list' => '42' ] );
 
         $this->assertSame( 'divi/contact-form-7', $block['name'] );
-        $this->assertSame( 42, $block['settings']['module']['advanced']['formId']['desktop']['value'] );
+        $this->assertSame( 42, $block['settings']['form']['advanced']['formId']['desktop']['value'] );
     }
 
     public function test_contact_form_7_legacy_form_id_still_converts(): void {
         [ $block ] = $this->convert( 'eael-contact-form-7', [ 'eael_contact_form_id' => '12' ] );
 
-        $this->assertSame( 12, $block['settings']['module']['advanced']['formId']['desktop']['value'] );
+        $this->assertSame( 12, $block['settings']['form']['advanced']['formId']['desktop']['value'] );
     }
 
     // -------------------------------------------------------------------------
@@ -188,13 +190,13 @@ final class AddonSettingNamesTest extends TestCase {
     public function test_simple_menu_reads_the_selected_menu_id(): void {
         [ $block ] = $this->convert( 'eael-simple-menu', [ 'eael_simple_menu_menu' => '7' ] );
 
-        $this->assertSame( '7', $block['settings']['menu']['innerContent']['desktop']['value']['menuId'] );
+        $this->assertSame( '7', $block['settings']['menu']['advanced']['menuId']['desktop']['value'] );
     }
 
     public function test_simple_menu_legacy_slug_still_converts(): void {
         [ $block ] = $this->convert( 'eael-simple-menu', [ 'eael_simple_menu_slug' => 'main' ] );
 
-        $this->assertSame( 'main', $block['settings']['menu']['innerContent']['desktop']['value']['menuId'] );
+        $this->assertSame( 'main', $block['settings']['menu']['advanced']['menuId']['desktop']['value'] );
     }
 
     public function test_sticky_video_defaults_to_youtube_link(): void {
@@ -445,7 +447,7 @@ final class AddonSettingNamesTest extends TestCase {
     // -------------------------------------------------------------------------
 
     private function menuId( array $block ): string {
-        return (string) $block['settings']['menu']['innerContent']['desktop']['value']['menuId'];
+        return (string) $block['settings']['menu']['advanced']['menuId']['desktop']['value'];
     }
 
     public function test_hfe_navigation_menu_resolves_the_stored_slug_to_a_menu_id(): void {

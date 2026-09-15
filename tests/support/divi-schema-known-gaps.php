@@ -1,0 +1,24 @@
+<?php
+// Converter output the schema test knows is wrong and a later task of
+// docs/superpowers/plans/2026-09-15-divi-rendering-fixes.md fixes.
+// Key: "<block name> <attribute path>" prefix of the reported problem. Value: the task.
+// Deleted when empty.
+return [
+    'divi/heading title.decoration.font.font.desktop.value.headingLevel' => 'Task 5',
+    'divi/gallery galleryGrid.innerContent'                            => 'Task 8',
+    'divi/blurb module.advanced.text'                                  => 'Task 11',
+    'divi/blurb title.innerContent'                                    => 'Task 11',
+    'divi/blurb imageIcon.innerContent'                                => 'Task 11',
+    'divi/icon icon.innerContent'                                      => 'Task 11',
+    'divi/pricing-table module.advanced'                               => 'Task 12',
+    'divi/team-member module.advanced'                                 => 'Task 13',
+    'divi/team-member image.innerContent'                              => 'Task 13',
+    'divi/testimonial company.innerContent'                            => 'Task 13',
+    'divi/testimonial module.advanced.portrait'                        => 'Task 13',
+    'divi/countdown-timer module.advanced.countdownDate'               => 'Task 14',
+    'divi/blog post.innerContent'                                      => 'Task 15',
+    'divi/video module.advanced.videoUrl'                              => 'Task 20',
+    'divi/image module.decoration.spacing'                             => 'Task 21',
+    'divi/icon-list-item module.advanced.text'                         => 'Task 22',
+    'divi/icon-list-item link'                                         => 'Task 22',
+];

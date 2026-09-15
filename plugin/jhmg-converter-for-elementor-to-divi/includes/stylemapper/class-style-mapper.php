@@ -221,9 +221,9 @@ class StyleMapper {
         $this->mapWordSpacing( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapCssMain( $widget_type, $settings, $divi_attrs, $handled_keys );
 
-        // css_main reflects the full css.desktop.value.main content, which may include
+        // css_main reflects the full css.desktop.value.mainElement content, which may include
         // contributions from mapBlendMode(), mapImageWidth(), and mapCssMain().
-        $css_main = $divi_attrs['css']['desktop']['value']['main'] ?? '';
+        $css_main = $divi_attrs['css']['desktop']['value']['mainElement'] ?? '';
 
         return [
             'divi_attrs'   => $divi_attrs,
@@ -672,6 +672,10 @@ class StyleMapper {
             } elseif ( $widget_type === 'icon' ) {
                 // Icon alignment lives on the icon sub-attr, not the module text path.
                 self::transformPath( $attrs, "icon.advanced.align.{$breakpoint}.value", $value );
+            } elseif ( $widget_type === 'divider' ) {
+                // divider/module.json declares no module.advanced.text: a divider has
+                // no text to orient. The key is handled (above) so it is not reported.
+                continue;
             } else {
                 $orientation = ( $value === 'justify' ) ? 'left' : $value;
                 self::transformPath( $attrs, "module.advanced.text.text.{$breakpoint}.value.orientation", $orientation );
@@ -1922,7 +1926,7 @@ class StyleMapper {
     }
 
     /**
-     * Maps Elementor `blend_mode` to `mix-blend-mode` via `css.desktop.value.main`.
+     * Maps Elementor `blend_mode` to `mix-blend-mode` via `css.desktop.value.mainElement`.
      * Divi 5 has no native block attr for blend mode; custom CSS is the only option.
      */
     private function mapBlendMode( array $settings, array &$attrs, array &$handled ): void {
@@ -1932,12 +1936,12 @@ class StyleMapper {
             return;
         }
 
-        $existing = $attrs['css']['desktop']['value']['main'] ?? '';
+        $existing = $attrs['css']['desktop']['value']['mainElement'] ?? '';
         $rule     = "mix-blend-mode: {$mode}";
         $merged   = ( is_string( $existing ) && $existing !== '' )
             ? rtrim( $existing, '; ' ) . '; ' . $rule . ';'
             : $rule . ';';
-        self::transformPath( $attrs, 'css.desktop.value.main', $merged );
+        self::transformPath( $attrs, 'css.desktop.value.mainElement', $merged );
     }
 
     /**
@@ -2019,17 +2023,17 @@ class StyleMapper {
             }
 
             $rule     = "word-spacing: {$value}";
-            $existing = $attrs['css'][ $breakpoint ]['value']['main'] ?? '';
+            $existing = $attrs['css'][ $breakpoint ]['value']['mainElement'] ?? '';
             $merged   = ( is_string( $existing ) && $existing !== '' )
                 ? rtrim( $existing, '; ' ) . '; ' . $rule . ';'
                 : $rule . ';';
-            self::transformPath( $attrs, "css.{$breakpoint}.value.main", $merged );
+            self::transformPath( $attrs, "css.{$breakpoint}.value.mainElement", $merged );
         }
     }
 
     /**
      * Collects CSS properties that have no native Divi 5 block attribute slot and
-     * emits them on `css.desktop.value.main` (the module's primary selector).
+     * emits them on `css.desktop.value.mainElement` (the module's primary selector).
      *
      * Properties handled here:
      *  - _element_custom_width → max-width (when _element_width = 'initial')
@@ -2070,12 +2074,12 @@ class StyleMapper {
         $css = implode( '; ', $rules ) . ';';
 
         // Merge with any CSS already written to this path (e.g. from mapBlendMode).
-        $existing = $attrs['css']['desktop']['value']['main'] ?? '';
+        $existing = $attrs['css']['desktop']['value']['mainElement'] ?? '';
         $merged   = ( is_string( $existing ) && $existing !== '' )
             ? rtrim( $existing, '; ' ) . '; ' . $css
             : $css;
 
-        self::transformPath( $attrs, 'css.desktop.value.main', $merged );
+        self::transformPath( $attrs, 'css.desktop.value.mainElement', $merged );
 
         return $css;
     }
