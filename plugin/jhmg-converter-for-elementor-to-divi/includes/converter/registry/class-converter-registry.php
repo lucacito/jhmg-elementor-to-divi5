@@ -161,7 +161,7 @@ class ConverterRegistry {
         $this->registerWidget( 'tabs', '\\ElementorDivi5Converter\\Converter\\Handlers\\TabsConverter' );
         $this->registerWidget( 'elementskit-testimonial', '\\ElementorDivi5Converter\\Converter\\Handlers\\ElementskitTestimonialConverter' );
         $this->registerWidget( 'elementskit-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\ElementskitHeadingConverter' );
-        $this->registerWidget( 'elementskit-video', '\\ElementorDivi5Converter\\Converter\\Handlers\\VideoConverter' );
+        $this->registerWidget( 'elementskit-video', '\\ElementorDivi5Converter\\Converter\\Handlers\\ElementskitVideoConverter' );
         $this->registerWidget( 'icon-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\IconBoxConverter' );
         $this->registerWidget( 'menu-anchor', '\\ElementorDivi5Converter\\Converter\\Handlers\\MenuAnchorConverter' );
         $this->registerWidget( 'icon-list', '\\ElementorDivi5Converter\\Converter\\Handlers\\IconListConverter' );

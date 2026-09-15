@@ -391,4 +391,52 @@ final class AddonSettingNamesTest extends TestCase {
         $this->assertCarries( $block, 'News', 'Open day', 'https://example.test/open' );
         $this->assertStringNotContainsString( 'not carried over', implode( "\n", $result['report']['warnings'] ) );
     }
+
+    // -------------------------------------------------------------------------
+    // ElementsKit — video
+    // -------------------------------------------------------------------------
+
+    private function videoSrc( array $block ): string {
+        return (string) ( $block['settings']['video']['innerContent']['desktop']['value']['src'] ?? '' );
+    }
+
+    public function test_elementskit_video_defaults_to_youtube_popup_url(): void {
+        [ $block, $result ] = $this->convert( 'elementskit-video', [ 'ekit_video_popup_url' => 'https://www.youtube.com/watch?v=VhBl3dHT5SY' ] );
+
+        $this->assertSame( 'divi/video', $block['name'] );
+        $this->assertSame( 'https://www.youtube.com/watch?v=VhBl3dHT5SY', $this->videoSrc( $block ) );
+        $this->assertStringNotContainsString( 'missing source URL', implode( "\n", $result['report']['warnings'] ) );
+    }
+
+    public function test_elementskit_video_reads_vimeo_popup_url(): void {
+        [ $block ] = $this->convert( 'elementskit-video', [ 'ekit_video_popup_video_type' => 'vimeo', 'ekit_video_popup_url' => 'https://vimeo.com/42' ] );
+
+        $this->assertSame( 'https://vimeo.com/42', $this->videoSrc( $block ) );
+    }
+
+    public function test_elementskit_video_reads_self_hosted_external_url(): void {
+        // The external-URL switch defaults to on, so it is absent here.
+        [ $block ] = $this->convert( 'elementskit-video', [
+            'ekit_video_popup_video_type'  => 'self',
+            'ekit_video_self_external_url' => 'https://cdn.example.test/tour.mp4',
+        ] );
+
+        $this->assertSame( 'https://cdn.example.test/tour.mp4', $this->videoSrc( $block ) );
+    }
+
+    public function test_elementskit_video_reads_self_hosted_media(): void {
+        [ $block ] = $this->convert( 'elementskit-video', [
+            'ekit_video_popup_video_type'   => 'self',
+            'ekit_video_self_url'           => '',
+            'ekit_video_player_self_hosted' => [ 'url' => 'https://example.test/tour.mp4', 'id' => 3 ],
+        ] );
+
+        $this->assertSame( 'https://example.test/tour.mp4', $this->videoSrc( $block ) );
+    }
+
+    public function test_core_video_is_unaffected(): void {
+        [ $block ] = $this->convert( 'video', [ 'video_type' => 'hosted', 'hosted_url' => [ 'url' => 'https://example.test/core.mp4' ] ] );
+
+        $this->assertSame( 'https://example.test/core.mp4', $this->videoSrc( $block ) );
+    }
 }
