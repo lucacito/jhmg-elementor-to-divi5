@@ -33,3 +33,36 @@ check_versions() {
 check_pages() {
     (cd "$DEMO_DIR/.." && npx playwright test -c demo/playwright.config.ts)
 }
+
+# Checks 3 and 6: every seeded document dry-runs with no error, unsupported widget or
+# warning, and keeps its must-survive content. Writes nothing.
+check_conversions() {
+    wp --user="$ADMIN_USER" eval-file /demo/lib/check-conversions.php
+}
+
+# Check 4: screenshots of every page before and after conversion, for review by eye.
+check_converted() {
+    rm -rf "$DEMO_DIR/output/screenshots" "$DEMO_DIR/output/converted.json"
+    (cd "$DEMO_DIR/.." && PW_STAGE=originals npx playwright test -c demo/playwright.config.ts screenshots)
+
+    wp theme activate Divi
+    wp --user="$ADMIN_USER" eval-file /demo/lib/commit-conversions.php
+    (cd "$DEMO_DIR/.." && PW_STAGE=converted npx playwright test -c demo/playwright.config.ts screenshots)
+
+    echo "ok  screenshots in demo/output/screenshots/ — review each <page>-elementor.png beside <page>-divi.png"
+}
+
+# Check 5: reset.sh returns a dirtied site to its starting state.
+check_reset() {
+    # Dirty the site the way a take does: a converted draft and Divi active.
+    wp post create --post_type=page --post_status=draft --post_title="Reset probe" \
+        --meta_input='{"_edc_import_source":"direct"}' --porcelain >/dev/null
+    wp theme activate Divi >/dev/null
+
+    "$DEMO_DIR/reset.sh"
+
+    wp --user="$ADMIN_USER" eval-file /demo/lib/starting-state.php
+    [[ $'\n'"$(unzip -Z1 "$DEMO_DIR/output/ferncourt-kit.zip")"$'\n' == *$'\n'site-settings.json$'\n'* ]] \
+        || fail "demo/output/ferncourt-kit.zip is missing"
+    echo "ok  reset"
+}

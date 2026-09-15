@@ -35,4 +35,7 @@ export_kit
 step "Creating the Divi Theme Builder header and footer"
 build_theme_builder
 
+step "Taking the first snapshot"
+"$DEMO_DIR/snapshot.sh"
+
 "$DEMO_DIR/verify.sh"
