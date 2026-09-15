@@ -15,7 +15,8 @@ class EaelInfoBoxConverter extends BaseElementorConverter {
 
         $title       = is_string( $settings['eael_infobox_title'] ?? '' ) ? ( $settings['eael_infobox_title'] ?? '' ) : '';
         $sub_title   = is_string( $settings['eael_infobox_sub_title'] ?? '' ) ? ( $settings['eael_infobox_sub_title'] ?? '' ) : '';
-        $description = is_string( $settings['eael_infobox_content'] ?? '' ) ? ( $settings['eael_infobox_content'] ?? '' ) : '';
+        $description = $settings['eael_infobox_text'] ?? $settings['eael_infobox_content'] ?? '';
+        $description = is_string( $description ) ? $description : '';
 
         // Combine title + optional subtitle as the blurb title.
         $full_title = $title;
@@ -61,7 +62,7 @@ class EaelInfoBoxConverter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'blurb' );
         $this->logUnmappedSettings( $id, $settings, [
-            'eael_infobox_title', 'eael_infobox_sub_title', 'eael_infobox_content',
+            'eael_infobox_title', 'eael_infobox_sub_title', 'eael_infobox_text', 'eael_infobox_content',
             'eael_infobox_icon_new', 'eael_infobox_image', 'eael_infobox_img_type',
             'eael_infobox_title_tag', 'eael_infobox_sub_title_tag',
             'eael_show_infobox_content', 'eael_show_infobox_clickable',

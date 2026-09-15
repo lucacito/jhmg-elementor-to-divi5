@@ -24,7 +24,10 @@ class Autoloader {
                 $directory .= implode( '/', array_map( 'strtolower', $parts ) ) . '/';
             }
 
-            $file_name = 'class-' . strtolower( preg_replace( '/([a-z])([A-Z])/', '$1-$2', $class_name ) ) . '.php';
+            // Split before capitals and around digits, so EaelContactForm7Converter
+            // maps to class-eael-contact-form-7-converter.php. The old rule ignored
+            // digits, and that class could never be loaded.
+            $file_name = 'class-' . strtolower( preg_replace( [ '/([a-z])([A-Z0-9])/', '/([0-9])([A-Za-z])/' ], '$1-$2', $class_name ) ) . '.php';
             $path = $directory . $file_name;
 
             if ( ! file_exists( $path ) && empty( $parts ) ) {

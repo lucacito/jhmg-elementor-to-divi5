@@ -16,10 +16,11 @@ class EaelPricingTableConverter extends BaseElementorConverter {
         $title    = is_string( $settings['eael_pricing_table_title'] ?? '' ) ? ( $settings['eael_pricing_table_title'] ?? '' ) : '';
         $price    = is_string( $settings['eael_pricing_table_price'] ?? '' ) ? ( $settings['eael_pricing_table_price'] ?? '' ) : '';
         $currency = is_string( $settings['eael_pricing_table_price_cur'] ?? '' ) ? ( $settings['eael_pricing_table_price_cur'] ?? '' ) : '';
-        $per      = is_string( $settings['eael_pricing_table_price_per'] ?? '' ) ? ( $settings['eael_pricing_table_price_per'] ?? '' ) : '';
+        $per      = $settings['eael_pricing_table_price_period'] ?? $settings['eael_pricing_table_price_per'] ?? '';
+        $per      = is_string( $per ) ? $per : '';
         $btn_text = is_string( $settings['eael_pricing_table_btn'] ?? '' ) ? ( $settings['eael_pricing_table_btn'] ?? '' ) : '';
         $btn_url  = '';
-        $btn_raw  = $settings['eael_pricing_table_btn_url'] ?? [];
+        $btn_raw  = $settings['eael_pricing_table_btn_link'] ?? $settings['eael_pricing_table_btn_url'] ?? [];
         if ( is_array( $btn_raw ) ) {
             $btn_url = is_string( $btn_raw['url'] ?? '' ) ? ( $btn_raw['url'] ?? '' ) : '';
         }
@@ -73,9 +74,9 @@ class EaelPricingTableConverter extends BaseElementorConverter {
         $this->engine->logConverted( 'pricing-tables' );
         $this->logUnmappedSettings( $id, $settings, [
             'eael_pricing_table_title', 'eael_pricing_table_price',
-            'eael_pricing_table_price_cur', 'eael_pricing_table_price_per',
+            'eael_pricing_table_price_cur', 'eael_pricing_table_price_period', 'eael_pricing_table_price_per',
             'eael_pricing_table_items', 'eael_pricing_table_btn',
-            'eael_pricing_table_btn_url', 'eael_pricing_table_onsale',
+            'eael_pricing_table_btn_link', 'eael_pricing_table_btn_url', 'eael_pricing_table_onsale',
             'eael_pricing_table_featured', 'eael_pricing_table_style',
         ] );
 

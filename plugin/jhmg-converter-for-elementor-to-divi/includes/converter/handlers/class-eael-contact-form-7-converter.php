@@ -13,8 +13,9 @@ class EaelContactForm7Converter extends BaseElementorConverter {
         $id       = $element['id'] ?? uniqid( 'divi_cf7_' );
         $settings = $element['settings'] ?? [];
 
-        // EAEL stores the CF7 form ID in `eael_contact_form_id`.
-        $form_id = (int) ( $settings['eael_contact_form_id'] ?? 0 );
+        // EAEL 6.x stores the CF7 form's post ID in `contact_form_list`;
+        // `eael_contact_form_id` is kept for older exports.
+        $form_id = (int) ( $settings['contact_form_list'] ?? $settings['eael_contact_form_id'] ?? 0 );
 
         $block_settings = [];
         if ( $form_id > 0 ) {
@@ -27,7 +28,8 @@ class EaelContactForm7Converter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'contact-form-7' );
         $this->logUnmappedSettings( $id, $settings, [
-            'eael_contact_form_id', 'eael_contact_form_title',
+            'contact_form_list', 'eael_contact_form_id', 'eael_contact_form_title',
+            'form_title', 'form_title_text', 'form_description', 'form_description_text',
         ] );
 
         return [

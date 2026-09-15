@@ -23,12 +23,13 @@ class EaelFancyTextConverter extends BaseElementorConverter {
         $prefix = is_string( $settings['eael_fancy_text_prefix'] ?? '' ) ? ( $settings['eael_fancy_text_prefix'] ?? '' ) : '';
         $suffix = is_string( $settings['eael_fancy_text_suffix'] ?? '' ) ? ( $settings['eael_fancy_text_suffix'] ?? '' ) : '';
 
-        $fancy_items = $settings['eael_fancy_strings'] ?? [];
+        $fancy_items = $settings['eael_fancy_text_strings'] ?? $settings['eael_fancy_strings'] ?? [];
         $first_word  = '';
         if ( is_array( $fancy_items ) && ! empty( $fancy_items ) ) {
-            $first_item = reset( $fancy_items );
-            if ( is_array( $first_item ) ) {
-                $first_word = is_string( $first_item['eael_fancy_string_text'] ?? '' ) ? ( $first_item['eael_fancy_string_text'] ?? '' ) : '';
+            $item = reset( $fancy_items );
+            if ( is_array( $item ) ) {
+                $text       = $item['eael_fancy_text_strings_text_field'] ?? $item['eael_fancy_string_text'] ?? '';
+                $first_word = is_string( $text ) ? $text : '';
             }
         }
 
@@ -44,7 +45,7 @@ class EaelFancyTextConverter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'heading' );
         $this->logUnmappedSettings( $id, $settings, [
-            'eael_fancy_text_prefix', 'eael_fancy_text_suffix', 'eael_fancy_strings',
+            'eael_fancy_text_prefix', 'eael_fancy_text_suffix', 'eael_fancy_text_strings', 'eael_fancy_strings',
             'eael_fancy_text_type', 'eael_fancy_text_speed', 'eael_fancy_text_loop',
         ] );
 
