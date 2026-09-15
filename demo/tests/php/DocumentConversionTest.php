@@ -14,6 +14,14 @@ final class DocumentConversionTest extends TestCase {
     /** Every document the site has, as paths under demo/content without ".php". */
     private const DOCUMENTS = [
         'pages/home',
+        'pages/spaces',
+        'pages/memberships',
+        'pages/about',
+        'pages/events',
+        'pages/blog',
+        'pages/contact',
+        'templates/header',
+        'templates/footer',
     ];
 
     protected function setUp(): void {
