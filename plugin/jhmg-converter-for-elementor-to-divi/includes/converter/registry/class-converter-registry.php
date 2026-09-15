@@ -288,7 +288,7 @@ class ConverterRegistry {
         $this->registerWidget( 'eael-fancy-text',         '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelFancyTextConverter' );
         $this->registerWidget( 'eael-content-ticker',     '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelContentTickerConverter' );
         $this->registerWidget( 'eael-data-table',         '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelDataTableConverter' );
-        $this->registerWidget( 'eael-advanced-data-table','\\ElementorDivi5Converter\\Converter\\Handlers\\EaelDataTableConverter' );
+        $this->registerWidget( 'eael-advanced-data-table','\\ElementorDivi5Converter\\Converter\\Handlers\\EaelAdvancedDataTableConverter' );
         $this->registerWidget( 'eael-tooltip',            '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelTooltipConverter' );
         $this->registerWidget( 'eael-image-accordion',    '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelImageAccordionConverter' );
         $this->registerWidget( 'eael-simple-menu',        '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelSimpleMenuConverter' );

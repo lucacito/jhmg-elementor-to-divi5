@@ -253,4 +253,95 @@ final class AddonSettingNamesTest extends TestCase {
 
         $this->assertSame( 'Hover me (Tip)', $block['settings']['content']['innerContent']['desktop']['value'] );
     }
+
+    // -------------------------------------------------------------------------
+    // Essential Addons — data table, advanced data table
+    // -------------------------------------------------------------------------
+
+    private function codeValue( array $block ): string {
+        return (string) $block['settings']['content']['innerContent']['desktop']['value'];
+    }
+
+    public function test_data_table_groups_flat_row_and_col_entries_into_rows(): void {
+        [ $block ] = $this->convert( 'eael-data-table', [
+            'eael_data_table_header_cols_data' => [
+                [ '_id' => 'h1', 'eael_data_table_header_col' => 'Plan' ],
+                [ '_id' => 'h2', 'eael_data_table_header_col' => 'Price' ],
+            ],
+            'eael_data_table_content_rows' => [
+                // 'row' is the default row type, so Elementor often omits it.
+                [ '_id' => 'r1' ],
+                [ '_id' => 'c1', 'eael_data_table_content_row_type' => 'col', 'eael_data_table_content_row_title' => 'Day pass' ],
+                [ '_id' => 'c2', 'eael_data_table_content_row_type' => 'col', 'eael_data_table_content_type' => 'editor', 'eael_data_table_content_row_content' => '<strong>$25</strong>' ],
+                [ '_id' => 'r2', 'eael_data_table_content_row_type' => 'row' ],
+                [ '_id' => 'c3', 'eael_data_table_content_row_type' => 'col', 'eael_data_table_content_row_title' => 'Private office', 'eael_data_table_content_row_colspan' => 2 ],
+            ],
+        ] );
+
+        $html = $this->codeValue( $block );
+        $this->assertStringContainsString( '>Plan</th>', $html );
+        $this->assertStringContainsString( '>Price</th>', $html );
+        $this->assertStringContainsString( '>Day pass</td>', $html );
+        $this->assertStringContainsString( '<strong>$25</strong>', $html );
+        $this->assertStringContainsString( ' colspan="2">Private office</td>', $html );
+        $this->assertSame( 3, substr_count( $html, '<tr>' ), 'One header row and two body rows.' );
+    }
+
+    public function test_data_table_template_cell_is_reported(): void {
+        [ , $result ] = $this->convert( 'eael-data-table', [
+            'eael_data_table_content_rows' => [
+                [ '_id' => 'r1' ],
+                [ '_id' => 'c1', 'eael_data_table_content_row_type' => 'col', 'eael_data_table_content_type' => 'template' ],
+            ],
+        ] );
+
+        $this->assertStringContainsString( 'template', implode( "\n", $result['report']['warnings'] ) );
+    }
+
+    public function test_data_table_legacy_nested_rows_still_convert(): void {
+        [ $block ] = $this->convert( 'eael-data-table', [
+            'eael_data_table_header_cols' => [ [ 'eael_dt_header_col' => 'H' ] ],
+            'eael_data_table_body_rows'   => [ [ 'eael_dt_body_col_rows' => [ [ 'eael_dt_body_col' => 'A' ] ] ] ],
+        ] );
+
+        $html = $this->codeValue( $block );
+        $this->assertStringContainsString( '>H</th>', $html );
+        $this->assertStringContainsString( '>A</td>', $html );
+    }
+
+    public function test_advanced_data_table_wraps_static_html_by_default(): void {
+        // 'static' is the default source, so it is absent here.
+        [ $block ] = $this->convert( 'eael-advanced-data-table', [
+            'ea_adv_data_table_static_html' => '<thead><tr><th>Room</th></tr></thead><tbody><tr><td>Studio</td></tr></tbody>',
+        ] );
+
+        $html = $this->codeValue( $block );
+        $this->assertSame( 'divi/code', $block['name'] );
+        $this->assertSame( 1, substr_count( $html, '<table' ) );
+        $this->assertStringContainsString( '<td>Studio</td>', $html );
+    }
+
+    public function test_advanced_data_table_does_not_double_wrap_a_full_table(): void {
+        [ $block ] = $this->convert( 'eael-advanced-data-table', [
+            'ea_adv_data_table_static_html' => '<table><tr><td>Studio</td></tr></table>',
+        ] );
+
+        $this->assertSame( 1, substr_count( $this->codeValue( $block ), '<table' ) );
+    }
+
+    public function test_advanced_data_table_reads_csv_html(): void {
+        [ $block ] = $this->convert( 'eael-advanced-data-table', [
+            'ea_adv_data_table_source'   => 'csv',
+            'ea_adv_data_table_csv_html' => '<tr><td>Meeting room</td></tr>',
+        ] );
+
+        $this->assertStringContainsString( '<td>Meeting room</td>', $this->codeValue( $block ) );
+    }
+
+    public function test_advanced_data_table_external_source_is_reported_not_invented(): void {
+        [ $block, $result ] = $this->convert( 'eael-advanced-data-table', [ 'ea_adv_data_table_source' => 'database' ] );
+
+        $this->assertSame( '', $this->codeValue( $block ) );
+        $this->assertStringContainsString( 'outside the page', implode( "\n", $result['report']['warnings'] ) );
+    }
 }
