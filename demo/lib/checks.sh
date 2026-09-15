@@ -27,3 +27,9 @@ check_versions() {
     expect_row "$plugins" jhmg-converter-for-elementor-to-divi-pro "$EDC_PRO_VERSION" active
     expect_row "$plugins" ferncourt-demo "" must-use
 }
+
+# Check 2: every page returns 200 with no console errors and no PHP warning, notice or
+# error logged. Runs every Playwright spec in demo/tests except the screenshots.
+check_pages() {
+    (cd "$DEMO_DIR/.." && npx playwright test -c demo/playwright.config.ts)
+}

@@ -3,6 +3,7 @@
 set -euo pipefail
 . "$(dirname "$0")/lib/common.sh"
 . "$DEMO_DIR/lib/install.sh"
+. "$DEMO_DIR/lib/stages.sh"
 
 step "Removing any previous demo site"
 dc --profile cli down --volumes --remove-orphans
@@ -24,5 +25,8 @@ install_core
 
 step "Installing themes and plugins"
 install_components
+
+step "Seeding content"
+seed_content
 
 "$DEMO_DIR/verify.sh"

@@ -143,6 +143,13 @@ recorded in `docs/known-issues.md` for a later fix; none is fixed in this work.
   carry over, so Spaces keeps the gallery: the converted page still shows every photo.
 - **EAEL post grid ignores its category filter.** The Events grid lists the latest posts
   instead of only Events posts, so both versions match.
+- **EAEL pricing table drops its subtitle.** Found by the offline harness. The Memberships
+  pricing tables have no subtitle.
+- **ElementsKit heading drops its subtitle.** Found by the offline harness. About's heading
+  has no subtitle.
+
+By design, not bugs: fancy text converts to a static heading with its first rotating phrase,
+and the Google Maps widget converts to an embed with the address URL-encoded.
 
 ### Posts
 

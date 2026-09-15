@@ -4,7 +4,7 @@ set -euo pipefail
 . "$(dirname "$0")/lib/common.sh"
 . "$DEMO_DIR/lib/checks.sh"
 
-ALL_CHECKS=(versions)
+ALL_CHECKS=(versions pages)
 
 checks=("$@")
 [ ${#checks[@]} -gt 0 ] || checks=("${ALL_CHECKS[@]}")
