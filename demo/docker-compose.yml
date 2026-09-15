@@ -22,6 +22,7 @@ x-wordpress-volumes: &wordpress-volumes
   - ../plugin/jhmg-converter-for-elementor-to-divi-pro:/var/www/html/wp-content/plugins/jhmg-converter-for-elementor-to-divi-pro
   - ../references/Divi:/var/www/html/wp-content/themes/Divi
   - ./mu-plugins:/var/www/html/wp-content/mu-plugins:ro
+  - ./php/ferncourt-demo.ini:/usr/local/etc/php/conf.d/zz-ferncourt-demo.ini:ro
   - ../references:/demo/references:ro
   - ./content:/demo/content:ro
   - ./lib:/demo/lib:ro
