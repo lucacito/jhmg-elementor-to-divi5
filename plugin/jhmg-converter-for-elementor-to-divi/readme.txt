@@ -3,7 +3,7 @@ Contributors: lucaslopvet
 Tags: divi migration, elementor export, page builder converter, elementor to divi, divi 5
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 3.0.0
+Stable tag: 3.0.1
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -202,6 +202,16 @@ commonly missing Elementor widgets get built first.
 
 == Changelog ==
 
+= 3.0.1 =
+* Fixed: pages containing an Essential Addons Contact Form 7 widget failed to convert at all. They now convert, and the form keeps the contact form you selected
+* Fixed: several Essential Addons widgets converted with their content missing. Fancy text now keeps its rotating words, info boxes their description, pricing tables their price period and button link, and code snippets, image accordions, simple menus, sticky videos and tooltips their code, panels, menu, video and tooltip text
+* Fixed: Essential Addons data tables converted as empty tables. Header, rows and cells now come through, including rich-text and merged cells
+* Changed: Essential Addons advanced data tables now convert when their data is stored in the page (static or CSV). Tables loaded from a database or another plugin are listed in the report instead of converting empty
+* Changed: the Essential Addons interactive circle now converts to Divi tabs, keeping each item's title and content
+* Changed: an Essential Addons content ticker showing your latest posts keeps its label, and the report notes that the live post feed was not carried over
+* Fixed: ElementsKit video widgets converted without a video. YouTube, Vimeo and self-hosted videos now come through
+* Fixed: Header Footer Elementor widgets lost their content. The navigation menu, copyright line, site title and tagline text, counter number and retina logo now convert, and the copyright shows the year and site name instead of HFE's shortcodes
+
 = 3.0.0 =
 * New: convert directly from your installed Elementor site — pick a page from a list, no export or upload
 * New: check any page before converting — see the converted structure and which widgets could not be converted, before anything is written to your site
@@ -261,6 +271,9 @@ commonly missing Elementor widgets get built first.
 * Detailed conversion logging
 
 == Upgrade Notice ==
+
+= 3.0.1 =
+Fixes Essential Addons, ElementsKit and Header Footer Elementor widgets that converted with their content missing — including pricing tables, data tables, fancy text and navigation menus — and pages with a Contact Form 7 widget that failed to convert at all.
 
 = 3.0.0 =
 The export-and-upload step is gone: pick an installed Elementor page from a list and convert it directly, with a "Check this page" report before anything is written. This release also fixes several silent losses: unresolved global colours are no longer replaced with a built-in palette, three common widgets that were being dropped now convert, unmapped widgets leave a visible placeholder instead of disappearing, and dropped animations, dynamic bindings and form fields are now listed in the report instead of going unmentioned. The converter also now requires Divi 5 and says so, rather than producing pages that render blank.
