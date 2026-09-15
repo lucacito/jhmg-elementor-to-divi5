@@ -3,6 +3,7 @@
 **Date:** 2026-09-15
 **Repo:** `jhmg-elementor-to-divi5` (branch `demo-site`, based on `2e1d0a9`: free 3.0.1, Pro 1.2.0)
 **Status:** approved in brainstorm; revised the same day after build research (see "Revisions")
+**Plan:** `docs/superpowers/plans/2026-09-15-demo-site.md`
 
 ## Goal
 
@@ -22,6 +23,7 @@ video shows no placeholders and no unsupported-widget warnings.
 | Elementor Pro | Not used; free plugins only | — |
 | Header/footer conversion | **Not shown on camera** | HFE templates cannot currently reach the Divi Theme Builder. Recorded in `docs/known-issues.md` on `fix/correctness-pass-2026-08`. |
 | Unsupported widgets on the site | **None** | The video shows clean conversions only. Coverage report and Undo are not demoed. |
+| Converter bugs found while building | **Recorded, not fixed; the content avoids them** | User decision, 2026-09-15: the video comes first. Each bug goes into `docs/known-issues.md` for a later fix. |
 | How the site is built | **Scripted, from files in the repo** | Rebuildable after Elementor or add-on updates; the user can still polish in the Elementor editor before the final snapshot. |
 | Page source format | **PHP files returning Elementor element trees** | Pages reference IDs that only exist after seeding (attachments, the CF7 form, categories). PHP resolves them directly; JSON would need a placeholder-substitution layer. |
 | Port | **8040** | 8080 and the sibling converters' ports (8010, 8020, 8030) are in use locally. |
@@ -82,7 +84,7 @@ shows HFE's header on top of Divi's Theme Builder header.
 
 | Script | Does |
 |---|---|
-| `demo/build.sh` | Checks port 8040 is free, tears down the `jhmg-demo` project's volumes, starts the stack, installs WordPress and every component above, seeds all content, exports the kit ZIP, creates the Divi Theme Builder header/footer, takes the first snapshot, then runs `verify.sh`. Re-running replaces the snapshot, so re-enter the license key and run `snapshot.sh` afterwards. |
+| `demo/build.sh` | Tears down the `jhmg-demo` project's volumes, checks port 8040 is free, starts the stack, installs WordPress and every component above, seeds all content, exports the kit ZIP, creates the Divi Theme Builder header/footer, takes the first snapshot, then runs `verify.sh`. Re-running replaces the snapshot, so re-enter the license key and run `snapshot.sh` afterwards. |
 | `demo/snapshot.sh` | Saves the database (`mysqldump`) and the uploads directory (tarball) to `demo/snapshots/`. Run after the license key is entered and after any polish in the editor. |
 | `demo/reset.sh` | Restores the latest snapshot, then clears Elementor's generated CSS and Divi's `et-cache`. Takes seconds. Run before every take. |
 | `demo/verify.sh` | The build checks below. Ends by running `reset.sh`, so it never leaves converted drafts behind. |
@@ -94,11 +96,12 @@ shows HFE's header on top of Divi's Theme Builder header.
 ### Brand
 
 - **Name:** Ferncourt Coworking — one coworking space for freelancers and small teams. No
-  real street address; the map shows a generic city-centre location.
+  real street address; the map shows a generic downtown location.
 - **Colors:** forest green `#2F4F3A`, warm cream `#F6F1E7`, terracotta `#C8643B`, ink
   `#1F2421` — Elementor system colors primary, secondary, accent, text
 - **Fonts:** Fraunces (headings) and Inter (body), Google Fonts — Elementor system typography
-- **Logo:** a text wordmark, authored as SVG
+- **Logo:** a text wordmark with a fern mark, authored as SVG and rendered to PNG for the
+  media library (WordPress does not accept SVG uploads, and the PNG keeps the real fonts)
 
 Global colors and fonts live in the Elementor kit, so both the free plugin's installed-kit
 fallback and Pro's kit upload have real values to carry over. Widgets reference them through
@@ -115,8 +118,8 @@ made of, and what the converter registry is built around.
 | **Home** | Hero: `eael-fancy-text` headline, `elementskit-dual-button` · Stats: 4 × `counter` · Amenities: 3 × `eael-info-box` · Spaces: `image-carousel` · Members: 3 × `eael-testimonial` · Close: `eael-cta-box` |
 | **Spaces** | `eael-filterable-gallery` (hot desks / private offices / meeting rooms / lounge) · Amenities: 6 × `eael-flip-box` · Space types: `tabs` beside an `image-box` |
 | **Memberships** | 3 × `eael-pricing-table` (day pass, flex desk, private office) · Plan comparison: `eael-data-table` · FAQ: `eael-adv-accordion` |
-| **About** | `elementskit-heading`, `text-editor`, `image` · Team: 4 × `eael-team-member` · Member mix: `eael-progress-bar` · `elementskit-testimonial` · Space tour: `elementskit-video` |
-| **Events** | Next event: `eael-countdown` · `eael-adv-tabs` (this week / this month) · `eael-post-grid` of Events posts |
+| **About** | `elementskit-heading`, `text-editor`, `image` · Team: 4 × `eael-team-member` · Member mix: 3 × `counter` · `elementskit-testimonial` · Space tour: `elementskit-video` |
+| **Events** | Next event: `eael-countdown` · `eael-adv-tabs` (this week / this month) · `eael-post-grid` of the latest posts |
 | **Blog** | `premium-addon-blog` listing |
 | **Contact** | `eael-contact-form-7` · `google_maps` · Address and hours: `icon-list` · Visitor FAQ: `elementskit-accordion` · `social-icons` |
 
@@ -125,14 +128,28 @@ No Elementor Pro widgets are used (its `flip-box`, `price-table`, `countdown`, `
 was checked against `ConverterRegistry` on 2026-09-15.
 
 Each page file also lists the strings that must survive conversion (headlines, prices, team
-names, table cells, the progress-bar percentages) for build check 6.
+names, table cells, counter values, the event date) for build check 6.
+
+### Converter bugs the content avoids
+
+Found 2026-09-15 by reproducing or reading the converters while writing the pages. All are
+recorded in `docs/known-issues.md` for a later fix; none is fixed in this work.
+
+- **EAEL progress bar converts its percentage to `Array`** (or `0` when left at the default).
+  Reproduced. About shows its member mix with core `counter` widgets instead.
+- **EAEL Call to Action drops its body text.** Home's CTA puts its sentence in the subtitle,
+  which both EAEL and the converter show.
+- **EAEL filterable gallery loses its filter buttons, item names and captions.** The images
+  carry over, so Spaces keeps the gallery: the converted page still shows every photo.
+- **EAEL post grid ignores its category filter.** The Events grid lists the latest posts
+  instead of only Events posts, so both versions match.
 
 ### Posts
 
 Six standard (non-Elementor) WordPress posts, each with a featured image, across three
-categories: News, Events, Member Stories. They feed the blog listing, post grid, and
-events tabs. Because they carry no Elementor data, the batch conversion list shows only
-the seven pages.
+categories: News, Events, Member Stories. They feed the blog listing and the events post
+grid. Because they carry no Elementor data, the batch conversion list shows only the seven
+pages.
 
 ### Header and footer
 
@@ -151,11 +168,11 @@ both.
 
 ### Media
 
-- **Photos:** about 30 free Unsplash photos, found through Unsplash's search and filtered to
+- **Photos:** 30 free Unsplash photos, found through Unsplash's search and filtered to
   non-premium results (`premium` and `plus` both false), so every one is under the Unsplash
-  License (commercial use, no attribution required). Resized to 1600px wide and committed
-  under `demo/content/images/` (target ≤ 8 MB). Pexels was ruled out: it rejects scripted
-  downloads.
+  License (commercial use, no attribution required). Cropped to 1600×1067 (spaces) or
+  800×800 (portraits) and committed under `demo/content/images/` (target ≤ 8 MB). Pexels was
+  ruled out: it rejects scripted downloads.
 - `demo/content/images/manifest.json` records each file's Unsplash page URL, photographer
   and license; `CREDITS.md` is generated from it.
 - **Tour video:** a 20-second 1280×720 WebM slideshow of our own photos, recorded once with
@@ -166,28 +183,26 @@ both.
 
 ```
 demo/
-  docker-compose.yml
-  versions.env
+  docker-compose.yml  versions.env  wp
   build.sh  snapshot.sh  reset.sh  verify.sh
   README.md                  how to build, reset, and record
   mu-plugins/ferncourt-demo.php
-  lib/                       PHP run through `wp eval-file`
-    elementor.php            element-tree builders (container, widget, image, link, global color)
-    seed.php                 media, categories, posts, CF7 form, menu, kit, pages, HFE templates
-    theme-builder.php        Divi Theme Builder header/footer
-    check-conversions.php    build checks 3 and 6
-    commit-conversions.php   build check 4
+  lib/
+    common.sh  install.sh  stages.sh  checks.sh
+    elementor.php            Context, element builders, document loader (pure PHP)
+    conversion-checks.php    checks 3 and 6 for one document (pure PHP)
+    site-context.php         Context from the seeded site
+    seed.php  theme-builder.php  check-conversions.php  commit-conversions.php  starting-state.php
   content/
-    pages/*.php              one Elementor page per file
-    templates/header.php  templates/footer.php
-    posts.php  kit.php  logo.svg
-    images/  manifest.json  CREDITS.md
+    pages/*.php  templates/header.php  templates/footer.php
+    posts.php  kit.php  logo.svg  logo.png
+    images/  shots.json  picks.json  manifest.json  CREDITS.md
     video/tour.webm  video/tour-poster.jpg
   tools/                     one-off media authoring, not run by build.sh
-    fetch-images.mjs  record-tour.mjs  tour.html
-  tests/                     Playwright specs for verify.sh
-  playwright.config.ts       separate from the root config, so `npm run test:browser` is unaffected
-  output/                    gitignored: screenshots, ferncourt-kit.zip
+    find-photos.mjs  download-photos.mjs  render-media.mjs  tour.html  check-media.mjs
+  phpunit.xml  tests/php/    offline harness: every document through the real converter
+  playwright.config.ts  tests/*.spec.ts
+  output/                    gitignored: screenshots, converted.json, ferncourt-kit.zip
   snapshots/                 gitignored
 ```
 
@@ -214,54 +229,55 @@ published; no Divi drafts; Divi Theme Builder header/footer present; Pro license
 The site is ready to record only when all of these pass:
 
 1. **Versions** — every theme and plugin matches `versions.env` and is active or inactive as specified.
-2. **Pages load** — all seven pages return 200 with no PHP notices, warnings, or browser console errors (Playwright).
+2. **Pages load** — all seven pages return 200 with no browser console errors, and no PHP
+   warning, notice or error is logged while they load (Playwright). Also confirms only one
+   header renders under each theme.
 3. **Every page converts cleanly** — `ConversionPreflight::runUnlimited()` (dry run, writes
-   nothing) over an `InstalledPostSource` of the seven pages. Fails if any plan item has a
-   non-empty `error`, `unsupported`, or `report['warnings']`.
+   nothing) over an `InstalledPostSource` of each page and template. Fails if any plan item
+   has a non-empty `error`, `unsupported`, or `report['warnings']`.
 4. **Converted pages look right** — Divi activated, all seven pages converted with
    `ConversionCommitter`, each converted draft screenshotted next to its original into
    `demo/output/screenshots/`. Reviewed by eye before recording.
-5. **Reset works** — after `reset.sh`: no Divi drafts exist, Hello Elementor is active, and Divi is inactive.
+5. **Reset works** — a dirtied site (a converted draft, Divi active) returns to the starting
+   state after `reset.sh`.
 6. **Content survived** — every string a page file lists as must-survive appears in that
-   page's converted `content` from check 3. This catches a widget that converts "cleanly"
+   page's converted blocks from check 3. This catches a widget that converts "cleanly"
    while silently dropping its text, the class of bug fixed in 3.0.1.
 
-Converter bugs surfaced by checks 3, 4 or 6 are raised with the user as their own task. They are not patched as part of this work.
+Checks 3 and 6 also run offline, without Docker: `vendor/bin/phpunit -c demo/phpunit.xml`
+feeds every page and template through the real converter.
 
-## Known blocker
-
-**EAEL progress bar converts to "Array" or "0".** Found 2026-09-15 and reproduced with the
-converter: EAEL stores `progress_bar_value` as a slider (`{unit, size}`), and
-`EaelProgressBarConverter` casts it straight to a string. A saved value becomes `"Array"`
-(with a PHP warning); an unsaved default becomes `"0"` although EAEL renders 50%. Recorded
-in `docs/known-issues.md`. The About page keeps its progress bar, so check 6 fails until
-the converter is fixed; recording waits for that fix.
+A converter bug surfaced by checks 3, 4 or 6 is recorded in `docs/known-issues.md` and the
+page content is changed to avoid it. It is not fixed as part of this work.
 
 ## Risks to verify during the build
 
-- **HFE filters.** If HFE 2.8.8 ignores `enable_hfe_render_header` / `enable_hfe_render_footer`
-  under Divi, the must-use plugin instead removes HFE's display rules while Divi is active.
+- **HFE filters.** If HFE 2.8.8 renders its header under Divi despite the must-use plugin,
+  the build's theme-switch check fails and the user decides the fallback.
 - **Kit export.** If `wp elementor kit export` fails on this site, the build stops with the
   command's output rather than continuing without a kit ZIP.
 - **Divi activation side effects.** Activating Divi for the Theme Builder step may create
   Divi's default options or onboarding redirects. The snapshot is taken after Hello Elementor
   is reactivated, and check 2 catches anything visible.
+- **Add-on PHP warnings.** An add-on may log warnings under PHP 8.2. Check 2 fails on them;
+  whether to accept one is the user's call.
 
 ## Revisions
 
-Changes since the brainstorm-approved version, all from research on 2026-09-15:
+Changes since the brainstorm-approved version, all on 2026-09-15:
 
 - Base moved to `2e1d0a9` (free 3.0.1), which fixed the ElementsKit video converter — that risk is gone.
 - Exact pins for every "pinned at first build" row and for the container images.
-- Pages are PHP files, not JSON.
-- Photos come from Unsplash's search; the tour video is recorded from our photos with Playwright.
-- HFE double-header risk resolved with a must-use plugin.
+- Pages are PHP files, not JSON, with an offline PHPUnit harness.
+- Photos come from Unsplash's search; the tour video is recorded from our photos with Playwright; the logo is rendered to PNG.
+- HFE double-header risk resolved with a must-use plugin, confirmed by a theme-switch check.
 - Kit export command confirmed; the Playwright admin-UI fallback was dropped.
-- Build check 6 (content survived) added; the progress bar blocker recorded.
+- Build check 6 (content survived) added.
+- Four converter bugs found and recorded in `docs/known-issues.md`. By the user's decision they are not fixed now: About uses counters instead of progress bars, Home's CTA text sits in its subtitle, and the Events grid shows the latest posts.
 
 ## Out of scope
 
-- Fixing the HFE → Theme Builder bug or the progress bar bug (`docs/known-issues.md`)
+- Fixing any converter bug, including those found while building (`docs/known-issues.md`)
 - Showing unsupported widgets, the coverage report, or Undo on camera
 - Elementor Pro and Elementor 4 atomic elements
 - Hosting the demo publicly
