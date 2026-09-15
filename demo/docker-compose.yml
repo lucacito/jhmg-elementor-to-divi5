@@ -1,0 +1,70 @@
+# Ferncourt Coworking demo site. Driven by demo/build.sh — see demo/README.md.
+name: jhmg-demo
+
+x-wordpress-env: &wordpress-env
+  WORDPRESS_DB_HOST: db:3306
+  WORDPRESS_DB_USER: wp
+  WORDPRESS_DB_PASSWORD: wp
+  WORDPRESS_DB_NAME: wordpress
+  # The image defines WP_DEBUG from this before WORDPRESS_CONFIG_EXTRA runs.
+  WORDPRESS_DEBUG: "1"
+  # No EDCP_API_BASE: Pro talks to the real license server.
+  # Errors go to wp-content/debug.log, never onto a page on camera.
+  WORDPRESS_CONFIG_EXTRA: |
+    define( 'WP_ENVIRONMENT_TYPE', 'local' );
+    define( 'WP_DEBUG_LOG', true );
+    define( 'WP_DEBUG_DISPLAY', false );
+    define( 'DISABLE_WP_CRON', true );
+
+x-wordpress-volumes: &wordpress-volumes
+  - wp_html:/var/www/html
+  - ../plugin/jhmg-converter-for-elementor-to-divi:/var/www/html/wp-content/plugins/jhmg-converter-for-elementor-to-divi
+  - ../plugin/jhmg-converter-for-elementor-to-divi-pro:/var/www/html/wp-content/plugins/jhmg-converter-for-elementor-to-divi-pro
+  - ../references/Divi:/var/www/html/wp-content/themes/Divi
+  - ./mu-plugins:/var/www/html/wp-content/mu-plugins:ro
+  - ../references:/demo/references:ro
+  - ./content:/demo/content:ro
+  - ./lib:/demo/lib:ro
+  - ./output:/demo/output
+
+services:
+  db:
+    image: ${DB_IMAGE}
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wp
+      MYSQL_PASSWORD: wp
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 2s
+      retries: 90
+
+  wordpress:
+    image: ${WP_IMAGE}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${DEMO_PORT}:80"
+    environment: *wordpress-env
+    volumes: *wordpress-volumes
+
+  cli:
+    image: ${CLI_IMAGE}
+    profiles: ["cli"]
+    # The CLI image is Alpine (www-data = 82); the Apache image is Debian (www-data = 33).
+    user: "33:33"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *wordpress-env
+      HOME: /tmp
+    volumes: *wordpress-volumes
+
+volumes:
+  db_data:
+  wp_html:

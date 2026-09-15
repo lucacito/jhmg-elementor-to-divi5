@@ -6,3 +6,8 @@ visual-diffs/*/
 
 # wp.org SVN working copy (recreated on demand, never part of the repo)
 wporg-svn/
+
+# Demo site (demo/README.md): snapshots, build output, photo candidates
+demo/snapshots/
+demo/output/
+demo/tools/.candidates/
