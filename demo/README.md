@@ -62,6 +62,25 @@ node demo/tools/render-media.mjs
 node demo/tools/check-media.mjs
 ```
 
+## Trying another kit
+
+Two free kits from Elementor's Kit Library are in `references/kits/` (core widgets only,
+built with Elementor 3.7.2). To convert one and compare it with the original:
+
+```bash
+demo/wp --user=admin elementor kit import /demo/references/kits/ceramic-studio.zip
+# list its pages, screenshot them, convert, screenshot the drafts:
+NODE_PATH=$PWD/node_modules node demo/tools/kit-shots.cjs elementor demo/output/kit-pages.json demo/output/kit-screenshots
+demo/wp theme activate Divi   # then commit conversions, then:
+NODE_PATH=$PWD/node_modules node demo/tools/kit-shots.cjs divi demo/output/kit-converted.json demo/output/kit-screenshots
+demo/reset.sh                 # back to Ferncourt
+```
+
+`kit-pages.json` is `[{ "id", "slug", "url" }]` and `kit-converted.json` is
+`[{ "slug", "source_id", "draft_id" }]`; the comment at the top of `kit-shots.cjs` shows
+how they were produced. Importing a kit replaces the global colours and fonts and hides
+nothing by itself; set the Ferncourt HFE templates to draft if you want the kit's header.
+
 ## Commands
 
 `demo/wp <args>` runs WP-CLI against the site, e.g. `demo/wp plugin list`.
