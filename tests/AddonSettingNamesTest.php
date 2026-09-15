@@ -344,4 +344,51 @@ final class AddonSettingNamesTest extends TestCase {
         $this->assertSame( '', $this->codeValue( $block ) );
         $this->assertStringContainsString( 'outside the page', implode( "\n", $result['report']['warnings'] ) );
     }
+
+    // -------------------------------------------------------------------------
+    // Essential Addons — interactive circle, content ticker
+    // -------------------------------------------------------------------------
+
+    public function test_interactive_circle_items_become_tabs(): void {
+        [ $block ] = $this->convert( 'eael-interactive-circle', [
+            'eael_interactive_circle_item' => [
+                [ '_id' => 'i1', 'eael_interactive_circle_btn_title' => 'Community', 'eael_interactive_circle_item_content' => '<p>Monthly socials</p>' ],
+                [ '_id' => 'i2', 'eael_interactive_circle_btn_title' => 'Focus', 'eael_interactive_circle_item_content' => '<p>Quiet zones</p>' ],
+            ],
+        ] );
+
+        $this->assertSame( 'divi/tabs', $block['name'] );
+        $this->assertCount( 2, $block['elements'] );
+        $this->assertSame( 'divi/tab', $block['elements'][0]['name'] );
+        $this->assertSame( 'Community', $block['elements'][0]['settings']['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( '<p>Monthly socials</p>', $block['elements'][0]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'Focus', $block['elements'][1]['settings']['title']['innerContent']['desktop']['value'] );
+    }
+
+    public function test_interactive_circle_legacy_title_still_converts(): void {
+        [ $block ] = $this->convert( 'eael-interactive-circle', [
+            'eael_interactive_circle_item' => [ [ 'eael_ic_title' => 'Old title' ] ],
+        ] );
+
+        $this->assertSame( 'Old title', $block['elements'][0]['settings']['title']['innerContent']['desktop']['value'] );
+    }
+
+    public function test_content_ticker_dynamic_feed_keeps_its_label_and_is_reported(): void {
+        // 'dynamic' is EAEL's default ticker type, so it is absent here.
+        [ $block, $result ] = $this->convert( 'eael-content-ticker', [ 'eael_ticker_tag_text' => 'Latest news' ] );
+
+        $this->assertSame( 'divi/icon-list', $block['name'] );
+        $this->assertCarries( $block, 'Latest news' );
+        $this->assertStringContainsString( 'not carried over', implode( "\n", $result['report']['warnings'] ) );
+    }
+
+    public function test_content_ticker_legacy_items_still_convert_without_a_warning(): void {
+        [ $block, $result ] = $this->convert( 'eael-content-ticker', [
+            'eael_ticker_heading' => 'News',
+            'eael_ticker_items'   => [ [ 'eael_ct_title' => 'Open day', 'eael_ct_link' => [ 'url' => 'https://example.test/open' ] ] ],
+        ] );
+
+        $this->assertCarries( $block, 'News', 'Open day', 'https://example.test/open' );
+        $this->assertStringNotContainsString( 'not carried over', implode( "\n", $result['report']['warnings'] ) );
+    }
 }

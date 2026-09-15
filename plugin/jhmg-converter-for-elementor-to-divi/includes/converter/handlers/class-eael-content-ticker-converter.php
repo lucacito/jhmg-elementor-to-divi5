@@ -19,8 +19,15 @@ class EaelContentTickerConverter extends BaseElementorConverter {
         $id       = $element['id'] ?? uniqid( 'divi_icon_list_' );
         $settings = $element['settings'] ?? [];
 
-        $heading  = is_string( $settings['eael_ticker_heading'] ?? '' ) ? ( $settings['eael_ticker_heading'] ?? '' ) : '';
-        $items    = $settings['eael_ticker_items'] ?? [];
+        // EAEL 6.x: the label is `eael_ticker_tag_text`. Lite only offers the
+        // 'dynamic' ticker (the default), which renders the latest posts live and
+        // stores no items. Custom items (`eael_ticker_custom_contents`) are an
+        // EAEL Pro feature; their per-item names below are unverified.
+        $type     = $settings['eael_ticker_type'] ?? 'dynamic';
+        $heading  = $settings['eael_ticker_tag_text'] ?? $settings['eael_ticker_heading'] ?? '';
+        $heading  = is_string( $heading ) ? $heading : '';
+        $items    = $settings['eael_ticker_custom_contents'] ?? $settings['eael_ticker_items'] ?? [];
+        $items    = is_array( $items ) ? $items : [];
         $children = [];
 
         if ( $heading !== '' ) {
@@ -64,8 +71,13 @@ class EaelContentTickerConverter extends BaseElementorConverter {
             ];
         }
 
+        if ( empty( $items ) && $type === 'dynamic' ) {
+            $this->engine->logWarning( "Content ticker {$id} shows your latest posts live; the post feed was not carried over, only its label." );
+        }
+
         $this->engine->logConverted( 'icon-list' );
         $this->logUnmappedSettings( $id, $settings, [
+            'eael_ticker_tag_text', 'eael_ticker_custom_contents',
             'eael_ticker_heading', 'eael_ticker_items', 'eael_ticker_type',
             'eael_ticker_navigation', 'eael_ticker_autoplay',
         ] );

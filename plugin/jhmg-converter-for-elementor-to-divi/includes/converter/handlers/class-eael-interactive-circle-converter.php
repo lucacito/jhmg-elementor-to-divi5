@@ -9,55 +9,58 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Converts EAEL Interactive Circle → divi/number-counter.
+ * Converts EAEL Interactive Circle → divi/tabs.
  *
- * The circular progress display maps naturally to a counter module. The
- * animation and circular layout are lost but the numerical content is kept.
+ * Each item in `eael_interactive_circle_item` is a button title
+ * (`eael_interactive_circle_btn_title`) that reveals rich content
+ * (`eael_interactive_circle_item_content`) — tabs arranged around a circle.
+ * Divi has no circular layout, so the items become ordinary tabs. The circular
+ * arrangement, icons and autoplay are not carried over.
  */
 class EaelInteractiveCircleConverter extends BaseElementorConverter {
-    public function convert( array $element ): array {
-        $id       = $element['id'] ?? uniqid( 'divi_counter_' );
-        $settings = $element['settings'] ?? [];
 
+    public function convert( array $element ): array {
+        $id       = $element['id'] ?? uniqid( 'divi_tabs_' );
+        $settings = $element['settings'] ?? [];
         $items    = $settings['eael_interactive_circle_item'] ?? [];
         $children = [];
 
-        foreach ( $items as $idx => $item ) {
+        foreach ( is_array( $items ) ? $items : [] as $idx => $item ) {
             if ( ! is_array( $item ) ) {
                 continue;
             }
 
-            $title  = is_string( $item['eael_ic_title'] ?? '' ) ? ( $item['eael_ic_title'] ?? '' ) : '';
-            $number = (string) ( $item['eael_ic_progress'] ?? $item['eael_ic_count'] ?? '0' );
+            $title   = $item['eael_interactive_circle_btn_title'] ?? $item['eael_ic_title'] ?? '';
+            $title   = is_string( $title ) ? $title : '';
+            $content = $item['eael_interactive_circle_item_content'] ?? '';
+            $content = is_string( $content ) ? $content : '';
 
-            $child_settings = [
-                'number' => [ 'innerContent' => [ 'desktop' => [ 'value' => $number ] ] ],
-            ];
+            $child_attrs = [];
             if ( $title !== '' ) {
-                $child_settings['title'] = [ 'innerContent' => [ 'desktop' => [ 'value' => $title ] ] ];
+                $child_attrs['title'] = [ 'innerContent' => [ 'desktop' => [ 'value' => $title ] ] ];
+            }
+            if ( $content !== '' ) {
+                $child_attrs['content'] = [ 'innerContent' => [ 'desktop' => [ 'value' => $content ] ] ];
             }
 
             $children[] = [
-                'id'       => $id . '-item-' . ( $idx + 1 ),
-                'name'     => 'divi/number-counter',
-                'settings' => $child_settings,
+                'id'       => $id . '-tab-' . ( $idx + 1 ),
+                'name'     => 'divi/tab',
+                'settings' => $child_attrs,
                 'elements' => [],
             ];
         }
 
-        // If there are multiple counter items, wrap them in a group.
-        if ( count( $children ) === 1 ) {
-            $this->engine->logConverted( 'number-counter' );
-            $this->logUnmappedSettings( $id, $settings, [ 'eael_interactive_circle_item' ] );
-            return array_merge( [ 'id' => $id ], $children[0] );
-        }
-
-        $this->engine->logConverted( 'number-counter' );
-        $this->logUnmappedSettings( $id, $settings, [ 'eael_interactive_circle_item' ] );
+        $this->engine->logConverted( 'tabs' );
+        $this->logUnmappedSettings( $id, $settings, [
+            'eael_interactive_circle_item', 'eael_interactive_circle_preset',
+            'eael_interactive_circle_event', 'eael_interactive_circle_autoplay',
+            'eael_interactive_circle_autoplay_interval', 'eael_interactive_circle_rotation',
+        ] );
 
         return [
             'id'       => $id,
-            'name'     => 'divi/group',
+            'name'     => 'divi/tabs',
             'settings' => [],
             'elements' => $children,
         ];
