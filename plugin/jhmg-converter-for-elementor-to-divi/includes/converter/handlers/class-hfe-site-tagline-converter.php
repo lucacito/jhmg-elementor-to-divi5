@@ -13,13 +13,15 @@ class HfeSiteTaglineConverter extends BaseElementorConverter {
         $id       = $element['id'] ?? uniqid( 'divi_text_' );
         $settings = $element['settings'] ?? [];
 
-        $before = is_string( $settings['before_title_text'] ?? '' ) ? ( $settings['before_title_text'] ?? '' ) : '';
-        $after  = is_string( $settings['after_title_text'] ?? '' ) ? ( $settings['after_title_text'] ?? '' ) : '';
+        $before = $settings['before'] ?? $settings['before_title_text'] ?? '';
+        $before = is_string( $before ) ? $before : '';
+        $after  = $settings['after'] ?? $settings['after_title_text'] ?? '';
+        $after  = is_string( $after ) ? $after : '';
         $text   = trim( $before . ' ' . get_bloginfo( 'description' ) . ' ' . $after );
 
         $this->engine->logConverted( 'text' );
         $this->logUnmappedSettings( $id, $settings, [
-            'before_title_text', 'after_title_text', 'heading_alignment',
+            'before', 'after', 'icon', 'before_title_text', 'after_title_text', 'heading_alignment',
             'new_icon', 'icon_spacing', 'link_select', 'custom_link',
         ] );
 

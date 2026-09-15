@@ -28,7 +28,7 @@ class HfeSiteLogoConverter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'image' );
         $this->logUnmappedSettings( $id, $settings, [
-            'custom_image', 'custom_image_url',
+            'custom_image', 'custom_image_url', 'retina_image', 'real_retina',
             'site_logo_size', 'alignment', 'caption', 'custom_caption',
             'link_select', 'custom_link', 'open_lightbox',
         ] );
@@ -57,8 +57,9 @@ class HfeSiteLogoConverter extends BaseElementorConverter {
             }
         }
 
-        // Retina widget uses a plain 'logo' media field.
-        $logo = $settings['logo'] ?? null;
+        // HFE's retina widget stores its image in `retina_image`; `logo` is kept
+        // for older exports.
+        $logo = $settings['retina_image'] ?? $settings['logo'] ?? null;
         if ( is_array( $logo ) ) {
             $url = $logo['url'] ?? '';
             if ( is_string( $url ) && $url !== '' ) {

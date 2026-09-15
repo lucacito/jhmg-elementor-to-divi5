@@ -439,4 +439,90 @@ final class AddonSettingNamesTest extends TestCase {
 
         $this->assertSame( 'https://example.test/core.mp4', $this->videoSrc( $block ) );
     }
+
+    // -------------------------------------------------------------------------
+    // Header Footer Elementor
+    // -------------------------------------------------------------------------
+
+    private function menuId( array $block ): string {
+        return (string) $block['settings']['menu']['innerContent']['desktop']['value']['menuId'];
+    }
+
+    public function test_hfe_navigation_menu_resolves_the_stored_slug_to_a_menu_id(): void {
+        $GLOBALS['__test_nav_menus'] = [ 'primary' => 7 ];
+
+        [ $block ] = $this->convert( 'navigation-menu', [ 'menu' => 'primary' ] );
+
+        $this->assertSame( '7', $this->menuId( $block ) );
+    }
+
+    public function test_hfe_navigation_menu_keeps_a_numeric_menu_id(): void {
+        $GLOBALS['__test_nav_menus'] = [];
+
+        [ $block ] = $this->convert( 'navigation-menu', [ 'menu' => '12' ] );
+
+        $this->assertSame( '12', $this->menuId( $block ) );
+    }
+
+    public function test_hfe_navigation_menu_legacy_nav_menu_still_converts(): void {
+        $GLOBALS['__test_nav_menus'] = [];
+
+        [ $block ] = $this->convert( 'navigation-menu', [ 'nav_menu' => '5' ] );
+
+        $this->assertSame( '5', $this->menuId( $block ) );
+    }
+
+    public function test_hfe_copyright_reads_shortcode_and_fills_in_hfe_shortcodes(): void {
+        [ $block ] = $this->convert( 'copyright', [ 'shortcode' => 'Copyright © [hfe_current_year] [hfe_site_title]' ] );
+
+        $this->assertSame(
+            'Copyright © ' . gmdate( 'Y' ) . ' Ferncourt Test',
+            $block['settings']['content']['innerContent']['desktop']['value']
+        );
+    }
+
+    public function test_hfe_copyright_legacy_text_still_converts(): void {
+        [ $block ] = $this->convert( 'copyright', [ 'copyright_text' => 'Old ©' ] );
+
+        $this->assertSame( 'Old ©', $block['settings']['content']['innerContent']['desktop']['value'] );
+    }
+
+    public function test_hfe_site_title_reads_before_after_and_heading_tag(): void {
+        [ $block ] = $this->convert( 'hfe-site-title', [ 'before' => 'Welcome to', 'after' => '!', 'heading_tag' => 'h1' ] );
+
+        $this->assertSame( 'Welcome to Ferncourt Test !', $block['settings']['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'h1', $block['settings']['title']['decoration']['font']['font']['desktop']['value']['headingLevel'] );
+    }
+
+    public function test_hfe_site_title_legacy_names_still_convert(): void {
+        [ $block ] = $this->convert( 'hfe-site-title', [ 'before_title_text' => 'Hi', 'title_html_tag' => 'h3' ] );
+
+        $this->assertSame( 'Hi Ferncourt Test', $block['settings']['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'h3', $block['settings']['title']['decoration']['font']['font']['desktop']['value']['headingLevel'] );
+    }
+
+    public function test_hfe_site_tagline_reads_before_and_after(): void {
+        [ $block ] = $this->convert( 'hfe-site-tagline', [ 'before' => 'Ferncourt:', 'after' => '(est. 2019)' ] );
+
+        $this->assertSame( 'Ferncourt: Coworking for freelancers (est. 2019)', $block['settings']['content']['innerContent']['desktop']['value'] );
+    }
+
+    public function test_hfe_counter_reads_end_number(): void {
+        [ $block ] = $this->convert( 'hfe-counter', [ 'start_number' => 0, 'end_number' => 120, 'suffix' => '+', 'title' => 'Members' ] );
+
+        $this->assertSame( '120+', $block['settings']['number']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'Members', $block['settings']['title']['innerContent']['desktop']['value'] );
+    }
+
+    public function test_core_counter_is_unaffected(): void {
+        [ $block ] = $this->convert( 'counter', [ 'ending_number' => 42 ] );
+
+        $this->assertSame( '42', $block['settings']['number']['innerContent']['desktop']['value'] );
+    }
+
+    public function test_hfe_retina_logo_reads_retina_image(): void {
+        [ $block ] = $this->convert( 'retina', [ 'retina_image' => [ 'url' => 'https://example.test/logo@2x.png', 'id' => 4 ] ] );
+
+        $this->assertSame( 'https://example.test/logo@2x.png', $block['settings']['image']['innerContent']['desktop']['value']['src'] );
+    }
 }

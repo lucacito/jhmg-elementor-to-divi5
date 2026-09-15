@@ -671,6 +671,26 @@ if ( ! function_exists( 'selected' ) ) {
     }
 }
 
+// --- site identity and nav menus (HFE converters) ---
+if ( ! function_exists( 'get_bloginfo' ) ) {
+    $GLOBALS['__test_bloginfo'] = [ 'name' => 'Ferncourt Test', 'description' => 'Coworking for freelancers' ];
+
+    function get_bloginfo( string $show = '' ): string {
+        return (string) ( $GLOBALS['__test_bloginfo'][ $show ] ?? '' );
+    }
+}
+
+if ( ! function_exists( 'wp_get_nav_menu_object' ) ) {
+    // slug => term ID. Tests add the menus they need.
+    $GLOBALS['__test_nav_menus'] = [];
+
+    function wp_get_nav_menu_object( $menu ) {
+        $term_id = $GLOBALS['__test_nav_menus'][ (string) $menu ] ?? null;
+
+        return $term_id === null ? false : (object) [ 'term_id' => (int) $term_id, 'slug' => (string) $menu ];
+    }
+}
+
 if ( file_exists( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php' ) ) {
     require_once __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi/jhmg-converter-for-elementor-to-divi.php';
 }

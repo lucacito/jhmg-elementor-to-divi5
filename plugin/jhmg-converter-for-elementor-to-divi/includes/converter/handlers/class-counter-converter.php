@@ -20,7 +20,8 @@ class CounterConverter extends BaseElementorConverter {
         $id       = $element['id'] ?? uniqid( 'divi_counter_' );
         $settings = $element['settings'] ?? [];
 
-        $number = (string) ( $settings['ending_number'] ?? $settings['number'] ?? '0' );
+        // Elementor's counter: ending_number. HFE's counter: end_number.
+        $number = (string) ( $settings['ending_number'] ?? $settings['end_number'] ?? $settings['number'] ?? '0' );
         $title  = is_string( $settings['title'] ?? '' ) ? ( $settings['title'] ?? '' ) : '';
         $prefix = is_string( $settings['prefix'] ?? '' ) ? ( $settings['prefix'] ?? '' ) : '';
         $suffix = is_string( $settings['suffix'] ?? '' ) ? ( $settings['suffix'] ?? '' ) : '';
@@ -38,7 +39,7 @@ class CounterConverter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'number-counter' );
         $this->logUnmappedSettings( $id, $settings, array_merge( [
-            'starting_number', 'ending_number', 'number',
+            'starting_number', 'ending_number', 'start_number', 'end_number', 'number',
             'prefix', 'suffix', 'title',
             'duration', 'separator', 'separator_char',
         ], $style['handled_keys'] ) );

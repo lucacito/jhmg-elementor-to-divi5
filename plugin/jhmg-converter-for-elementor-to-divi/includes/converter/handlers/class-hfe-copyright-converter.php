@@ -13,16 +13,21 @@ class HfeCopyrightConverter extends BaseElementorConverter {
         $id       = $element['id'] ?? uniqid( 'divi_text_' );
         $settings = $element['settings'] ?? [];
 
-        $text = is_string( $settings['copyright_text'] ?? '' ) ? ( $settings['copyright_text'] ?? '' ) : '';
+        $text = $settings['shortcode'] ?? $settings['copyright_text'] ?? '';
+        $text = is_string( $text ) ? $text : '';
 
-        // Resolve the [hfe_current_year] shortcode when running inside WordPress.
+        // HFE's own shortcodes are filled in here: a migrated site may no longer
+        // run HFE, and they would otherwise print as literal text.
+        $site_title = function_exists( 'get_bloginfo' ) ? (string) get_bloginfo( 'name' ) : '';
+        $text       = str_replace( [ '[hfe_current_year]', '[hfe_site_title]' ], [ gmdate( 'Y' ), $site_title ], $text );
+
         if ( function_exists( 'do_shortcode' ) ) {
             $text = do_shortcode( $text );
         }
 
         $this->engine->logConverted( 'text' );
         $this->logUnmappedSettings( $id, $settings, [
-            'copyright_text', 'link', 'alignment', 'text_color', 'caption_typography',
+            'shortcode', 'copyright_text', 'link', 'alignment', 'text_color', 'caption_typography',
         ] );
 
         return [
