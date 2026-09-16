@@ -1,48 +1,58 @@
 {
-  "divi": {
-    "elements": [
-      {
-        "id": "section-ic",
-        "name": "divi/section",
-        "settings": {},
+    "divi": {
         "elements": [
-          {
-            "id": "section-ic-row",
-            "name": "divi/row",
-            "settings": {},
-            "elements": [
-              {
-                "id": "column-ic",
-                "name": "divi/column",
-                "settings": {},
+            {
+                "id": "section-ic",
+                "name": "divi/section",
+                "settings": [],
                 "elements": [
-                  {
-                    "id": "ic001",
-                    "name": "divi/icon",
-                    "settings": {
-                      "icon": {
-                        "innerContent": {
-                          "desktop": { "value": "fa-star" }
-                        },
-                        "advanced": {
-                          "size": {
-                            "desktop": { "value": "40px" }
-                          },
-                          "color": {
-                            "desktop": { "value": "#ff6600" }
-                          }
-                        }
-                      }
-                    },
-                    "elements": []
-                  }
+                    {
+                        "id": "section-ic-row",
+                        "name": "divi/row",
+                        "settings": [],
+                        "elements": [
+                            {
+                                "id": "column-ic",
+                                "name": "divi/column",
+                                "settings": [],
+                                "elements": [
+                                    {
+                                        "id": "ic001",
+                                        "name": "divi/icon",
+                                        "settings": {
+                                            "icon": {
+                                                "innerContent": {
+                                                    "desktop": {
+                                                        "value": {
+                                                            "type": "fa",
+                                                            "unicode": "&#xf005;",
+                                                            "weight": "900"
+                                                        }
+                                                    }
+                                                },
+                                                "advanced": {
+                                                    "size": {
+                                                        "desktop": {
+                                                            "value": "40px"
+                                                        }
+                                                    },
+                                                    "color": {
+                                                        "desktop": {
+                                                            "value": "#ff6600"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "elements": []
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 ]
-              }
-            ]
-          }
+            }
         ]
-      }
-    ]
-  },
-  "unsupported": []
+    },
+    "unsupported": []
 }

@@ -28,6 +28,9 @@ class DiviThemeBuilderExporter {
     /** Records which import a layout or template came from, so a re-import updates it. */
     const SOURCE_META = '_edc_tb_source';
 
+    /** The source key of the one default et_template the header and footer share. */
+    const DEFAULT_TEMPLATE_KEY = 'template:default';
+
     private DiviExporter $exporter;
 
     public function __construct( ?DiviExporter $exporter = null ) {
@@ -262,43 +265,69 @@ class DiviThemeBuilderExporter {
     }
 
     /**
-     * The et_template rule-set post, reused the same way. Creating a second one
-     * marked _et_default is what made Divi's choice of global header look
-     * arbitrary.
+     * The site's one default template. Divi applies a single et_template per
+     * request, so the header and footer must share it, and every area it does
+     * not set must be told to fall through to the theme (layout id 0, enabled)
+     * — a missing pair reads as "override and hide" in
+     * et_theme_builder_get_template(). Two default templates, one per area, hid
+     * the other area and the page body on a real site (docs/known-issues.md).
+     * The template is keyed by its own source so re-imports find it; a default
+     * template made in Divi's UI is reused too.
      *
      * @param string $slot 'header' or 'footer'.
      */
     private function upsertTemplatePost( string $title, string $source_key, string $slot, int $layout_id ): int {
-        $existing = $this->findBySourceKey( 'et_template', $source_key );
+        $template_id = $this->findBySourceKey( 'et_template', self::DEFAULT_TEMPLATE_KEY );
+        if ( $template_id === 0 ) {
+            $template_id = $this->findLiveDefaultTemplate();
+        }
 
-        if ( $existing > 0 ) {
-            $template_id = $existing;
-            wp_update_post( [
-                'ID'          => $template_id,
-                'post_title'  => $title ?: ( $slot === 'header' ? 'Global Header' : 'Global Footer' ),
-                'post_status' => 'publish',
-            ] );
-        } else {
+        if ( $template_id === 0 ) {
             $template_id = wp_insert_post( [
                 'post_type'   => 'et_template',
-                'post_title'  => $title ?: ( $slot === 'header' ? 'Global Header' : 'Global Footer' ),
+                'post_title'  => 'Default Website Template',
                 'post_status' => 'publish',
             ] );
-
             if ( is_wp_error( $template_id ) || (int) $template_id === 0 ) {
                 return 0;
             }
-
             $template_id = (int) $template_id;
-            update_post_meta( $template_id, self::SOURCE_META, $source_key );
         }
 
+        update_post_meta( $template_id, self::SOURCE_META, self::DEFAULT_TEMPLATE_KEY );
         update_post_meta( $template_id, '_et_default', '1' );
         update_post_meta( $template_id, '_et_enabled', '1' );
         update_post_meta( $template_id, "_et_{$slot}_layout_id", $layout_id );
         update_post_meta( $template_id, "_et_{$slot}_layout_enabled", '1' );
 
+        foreach ( [ 'header', 'body', 'footer' ] as $area ) {
+            if ( $area === $slot ) {
+                continue;
+            }
+            if ( get_post_meta( $template_id, "_et_{$area}_layout_id", true ) === '' ) {
+                update_post_meta( $template_id, "_et_{$area}_layout_id", 0 );
+            }
+            if ( get_post_meta( $template_id, "_et_{$area}_layout_enabled", true ) === '' ) {
+                update_post_meta( $template_id, "_et_{$area}_layout_enabled", '1' );
+            }
+        }
+
         return $template_id;
+    }
+
+    /** A published default template already attached to the live Theme Builder post, or 0. */
+    private function findLiveDefaultTemplate(): int {
+        $theme_builder_id = $this->getOrCreateThemeBuilderPost();
+        if ( $theme_builder_id === 0 ) {
+            return 0;
+        }
+        foreach ( get_post_meta( $theme_builder_id, '_et_template', false ) as $candidate ) {
+            $candidate = (int) $candidate;
+            if ( $candidate > 0 && get_post_meta( $candidate, '_et_default', true ) === '1' && get_post_status( $candidate ) === 'publish' ) {
+                return $candidate;
+            }
+        }
+        return 0;
     }
 
     /**

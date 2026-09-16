@@ -47,8 +47,41 @@ class SocialIconsConverter extends BaseElementorConverter {
         'telegram'   => 'telegram',
         'spotify'    => 'spotify',
         'google'     => 'google',
-        'flickr'     => 'flickr',
+        'flickr'     => 'flikr',   // Divi's spelling
         'mixcloud'   => 'mixcloud',
+        // FontAwesome 5/6 brand variants Elementor offers for the same networks.
+        'facebook-f'       => 'facebook',
+        'square-facebook'  => 'facebook',
+        'facebook-square'  => 'facebook',
+        'linkedin-in'      => 'linkedin',
+        'square-instagram' => 'instagram',
+        'instagram-square' => 'instagram',
+        'square-x-twitter' => 'twitter',
+        'twitter-square'   => 'twitter',
+        'square-youtube'   => 'youtube',
+        'youtube-square'   => 'youtube',
+        'pinterest-p'      => 'pinterest',
+        'square-pinterest' => 'pinterest',
+        'pinterest-square' => 'pinterest',
+        'google-plus'      => 'google',
+        'google-plus-g'    => 'google',
+        'vk'               => 'vk',
+        'xing'             => 'xing',
+        'yelp'             => 'yelp',
+        'meetup'           => 'meetup',
+        'quora'            => 'quora',
+        'amazon'           => 'amazon',
+        'flipboard'        => 'flipboard',
+    ];
+
+    /** Every network divi/social-media-follow-network renders (SocialMediaFollowItemModule::get_social_networks()). */
+    private const DIVI_NETWORKS = [
+        'amazon', 'bandcamp', 'behance', 'bitbucket', 'buffer', 'codepen', 'deviantart', 'dribbble', 'facebook',
+        'flikr', 'flipboard', 'foursquare', 'github', 'goodreads', 'google', 'houzz', 'instagram', 'itunes',
+        'last_fm', 'line', 'linkedin', 'medium', 'meetup', 'myspace', 'odnoklassniki', 'patreon', 'periscope',
+        'pinterest', 'quora', 'reddit', 'researchgate', 'rss', 'skype', 'snapchat', 'soundcloud', 'spotify',
+        'steam', 'telegram', 'tiktok', 'tripadvisor', 'tumblr', 'twitch', 'twitter', 'vimeo', 'vk', 'weibo',
+        'whatsapp', 'xing', 'yelp', 'youtube',
     ];
 
     public function convert( array $element ): array {
@@ -64,6 +97,11 @@ class SocialIconsConverter extends BaseElementorConverter {
             }
 
             $network = $this->resolveNetwork( $item );
+            if ( $network === null ) {
+                $raw = $item['social_icon']['value'] ?? $item['social'] ?? '';
+                $this->engine->logNotCarriedOver( 'social_network', (string) $id, 'no Divi network for ' . ( is_string( $raw ) && $raw !== '' ? $raw : 'this icon' ) );
+                continue;
+            }
 
             $link_raw = $item['link'] ?? [];
             $url      = '';
@@ -109,28 +147,35 @@ class SocialIconsConverter extends BaseElementorConverter {
         ];
     }
 
-    private function resolveNetwork( array $item ): string {
-        // Elementor stores the icon as either a `social_icon` string (FA class) or
-        // a `selected_icon` composite `{library: 'fa', value: 'fab fa-facebook'}`.
-        $icon_raw = $item['social_icon'] ?? '';
-        if ( ! is_string( $icon_raw ) ) {
-            $selected = $item['selected_icon'] ?? [];
-            if ( is_array( $selected ) ) {
-                $icon_raw = is_string( $selected['value'] ?? '' ) ? ( $selected['value'] ?? '' ) : '';
-            }
+    /**
+     * Elementor 4.1.3 social-icons.php: `social_icon` is an ICONS value
+     * {value: "fab fa-instagram", library}; `social` is the pre-FA5 string
+     * ("fa fa-facebook"). Returns the Divi network slug, or null when Divi has
+     * no such network. Reading `social_icon` as a string found nothing and made
+     * every icon Facebook.
+     */
+    private function resolveNetwork( array $item ): ?string {
+        $raw  = '';
+        $icon = $item['social_icon'] ?? null;
+        if ( is_array( $icon ) && is_string( $icon['value'] ?? null ) ) {
+            $raw = $icon['value'];
+        } elseif ( is_string( $icon ) ) {
+            $raw = $icon;
+        }
+        if ( $raw === '' && is_string( $item['social'] ?? null ) ) {
+            $raw = $item['social'];
         }
 
-        // Normalize: strip 'fab ', 'fas ', 'fa ' prefixes and extract the slug.
-        $icon_raw = preg_replace( '/^(fab?|fas?)\s+/i', '', (string) $icon_raw );
-        $icon_raw = ltrim( $icon_raw, 'f' ); // strip leading 'f' from 'fa-facebook' → 'a-facebook'
-        // Actually just extract after 'fa-' pattern.
-        if ( preg_match( '/fa-([a-z0-9_-]+)/i', (string) $icon_raw, $matches ) ) {
-            $slug = strtolower( $matches[1] );
-            return self::NETWORK_MAP[ $slug ] ?? $slug;
+        if ( preg_match( '/fa-([a-z0-9_-]+)/i', $raw, $m ) ) {
+            $slug = strtolower( $m[1] );
+        } else {
+            $slug = strtolower( trim( (string) preg_replace( '/^(fab?|fas?|far)\s+/i', '', $raw ), " \t\n-_" ) );
         }
+        if ( $slug === '' ) {
+            return null;
+        }
+        $network = self::NETWORK_MAP[ $slug ] ?? $slug;
 
-        // Try direct lookup on the raw value.
-        $slug = strtolower( trim( $icon_raw, " \t\n-_" ) );
-        return self::NETWORK_MAP[ $slug ] ?? 'facebook';
+        return in_array( $network, self::DIVI_NETWORKS, true ) ? $network : null;
     }
 }

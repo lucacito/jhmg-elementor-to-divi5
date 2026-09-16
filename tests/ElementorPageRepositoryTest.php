@@ -171,4 +171,8 @@ class ElementorPageRepositoryTest extends TestCase {
         $this->assertCount( 1, $rows );
         $this->assertSame( 5, $rows[0]['id'] );
     }
+
+    public function test_it_lists_header_footer_elementor_templates(): void {
+        $this->assertContains( 'elementor-hf', ( new ElementorPageRepository() )->query_args()['post_type'] );
+    }
 }

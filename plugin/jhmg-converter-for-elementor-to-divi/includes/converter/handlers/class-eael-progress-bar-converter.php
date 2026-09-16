@@ -20,7 +20,17 @@ class EaelProgressBarConverter extends BaseElementorConverter {
         $settings = $element['settings'] ?? [];
 
         $title   = is_string( $settings['progress_bar_title'] ?? '' ) ? ( $settings['progress_bar_title'] ?? '' ) : '';
-        $percent = (string) ( $settings['progress_bar_value'] ?? $settings['progress_bar_value_dynamic'] ?? '0' );
+        // EAEL 6.6.7 Progress_Bar.php: progress_bar_value is a SLIDER {unit, size}
+        // (default size 50); progress_bar_value_dynamic applies only when
+        // progress_bar_value_type is "dynamic". Casting the slider array to a
+        // string printed "Array".
+        $type = $settings['progress_bar_value_type'] ?? 'static';
+        if ( $type === 'dynamic' ) {
+            $percent = (string) ( $settings['progress_bar_value_dynamic'] ?? '50' );
+        } else {
+            $raw     = $settings['progress_bar_value'] ?? null;
+            $percent = is_array( $raw ) ? (string) ( $raw['size'] ?? '50' ) : ( is_scalar( $raw ) && (string) $raw !== '' ? (string) $raw : '50' );
+        }
 
         $bar_attrs = [];
         if ( $title !== '' ) {

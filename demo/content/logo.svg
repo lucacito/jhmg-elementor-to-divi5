@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="120" viewBox="0 0 520 120">
+  <path d="M60 106 V14" stroke="#2F4F3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <g fill="#2F4F3A">
+    <path d="M60 30 C44 26 34 18 28 8 C44 10 54 18 60 30Z"/>
+    <path d="M60 30 C76 26 86 18 92 8 C76 10 66 18 60 30Z"/>
+    <path d="M60 54 C40 50 26 40 18 26 C38 28 52 38 60 54Z"/>
+    <path d="M60 54 C80 50 94 40 102 26 C82 28 68 38 60 54Z"/>
+    <path d="M60 80 C38 76 22 64 12 48 C34 50 50 62 60 80Z"/>
+    <path d="M60 80 C82 76 98 64 108 48 C86 50 70 62 60 80Z"/>
+  </g>
+  <text x="132" y="70" font-family="Fraunces, Georgia, serif" font-size="52" font-weight="600" fill="#2F4F3A">Ferncourt</text>
+  <text x="135" y="100" font-family="Inter, Arial, sans-serif" font-size="17" letter-spacing="5" fill="#C8643B">COWORKING</text>
+</svg>

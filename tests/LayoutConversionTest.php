@@ -332,7 +332,13 @@ final class LayoutConversionTest extends TestCase {
      * This mirrors the Elementor DOM structure where the inner widget-wrap div —
      * not the outer column div — carries the visual background and padding.
      */
-    public function test_column_with_background_image_wraps_children_in_group(): void {
+    /**
+     * The background stays on the column: Divi 5 rows are flex with
+     * align-items: stretch, so the column fills the row and a cover image has a
+     * box to cover. The old divi/group wrapper only ever had its content's height
+     * (docs/known-issues.md, Ceramic Studio hero).
+     */
+    public function test_column_with_background_image_keeps_it_on_the_column(): void {
         $result = $this->convert([
             $this->section( 's1', [
                 $this->column( 'c1', [
@@ -347,26 +353,10 @@ final class LayoutConversionTest extends TestCase {
 
         $col = $result[0]['elements'][0]['elements'][0];
         $this->assertSame( 'divi/column', $col['name'] );
+        $this->assertSame( 'https://example.com/photo.jpg', $col['settings']['module']['decoration']['background']['desktop']['value']['image']['url'] );
 
-        // Column must NOT carry background decoration itself.
-        $col_bg = $col['settings']['module']['decoration']['background'] ?? null;
-        $this->assertNull( $col_bg, 'Column settings must not contain background decoration' );
-
-        // Column must contain exactly one group.
-        $this->assertCount( 1, $col['elements'], 'Column wraps children in a single group' );
-        $group = $col['elements'][0];
-        $this->assertSame( 'divi/group', $group['name'], 'Wrapper is a divi/group' );
-        $this->assertStringEndsWith( '-group', $group['id'] );
-
-        // Group carries the background decoration.
-        $group_bg = $group['settings']['module']['decoration']['background'] ?? null;
-        $this->assertNotNull( $group_bg, 'Group must carry the background decoration' );
-        $this->assertSame( 'https://example.com/photo.jpg', $group_bg['desktop']['value']['image']['url'] );
-
-        // Original widgets are children of the group.
-        $this->assertCount( 2, $group['elements'] );
-        $this->assertSame( 'divi/heading', $group['elements'][0]['name'] );
-        $this->assertSame( 'divi/text',   $group['elements'][1]['name'] );
+        // The widgets are the column's direct children; nothing wraps them.
+        $this->assertSame( [ 'divi/heading', 'divi/text' ], array_column( $col['elements'], 'name' ) );
     }
 
     /**

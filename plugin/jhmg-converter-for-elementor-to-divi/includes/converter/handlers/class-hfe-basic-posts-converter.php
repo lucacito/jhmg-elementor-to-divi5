@@ -16,9 +16,12 @@ class HfeBasicPostsConverter extends BaseElementorConverter {
         $per_page = (int) ( $settings['posts_per_page'] ?? 6 );
 
         $block_settings = [
+            // blog/conversion-outline.json: posts_number → post.advanced.number,
+            // post_type → post.advanced.type. post.innerContent.perPage was never read.
             'post' => [
-                'innerContent' => [
-                    'desktop' => [ 'value' => [ 'perPage' => $per_page ] ],
+                'advanced' => [
+                    'number' => [ 'desktop' => [ 'value' => (string) $per_page ] ],
+                    'type'   => [ 'desktop' => [ 'value' => 'post' ] ],
                 ],
             ],
         ];

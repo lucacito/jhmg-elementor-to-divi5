@@ -90,6 +90,9 @@ class KitGlobalsParser {
         return [
             'colors'     => $colors,
             'typography' => $typography,
+            // Theme Style → Buttons, read by the same code the free plugin uses for
+            // the installed kit, so an uploaded kit styles buttons identically.
+            'buttons'    => \ElementorDivi5Converter\Conversion\ConversionPreflight::buttonsFromKitSettings( $settings ),
             'name'       => (string) $kit_name,
         ];
     }

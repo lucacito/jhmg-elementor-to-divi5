@@ -74,17 +74,22 @@ class StyleMapper {
      * / body text typography controls.
      */
     private const WIDGET_SECONDARY_FONT_PATH = [
-        'blurb' => 'content.decoration.bodyFont.body.font',
+        'blurb'   => 'content.decoration.bodyFont.body.font',
+        // Counter title (number-counter/module.json title.decoration.font); without
+        // this the title kept Divi's default colour, invisible on a dark section.
+        'counter' => 'title.decoration.font.font',
     ];
 
     /** Elementor control-group prefix for secondary typography (description). */
     private const WIDGET_SECONDARY_TYPOGRAPHY_PREFIX = [
-        'blurb' => 'description_typography_',
+        'blurb'   => 'description_typography_',
+        'counter' => 'title_typography_',
     ];
 
     /** Elementor settings key for the secondary text/font color. */
     private const WIDGET_SECONDARY_COLOR_KEY = [
-        'blurb' => 'description_color',
+        'blurb'   => 'description_color',
+        'counter' => 'title_color',
     ];
 
     /**
@@ -159,7 +164,12 @@ class StyleMapper {
     /** Elementor border control keys whose values we map (base names without breakpoint suffix). */
     private const BORDER_KEYS = [ 'border_border', 'border_width', 'border_color', 'border_radius' ];
 
-    public function map( string $widget_type, array $settings ): array {
+    /**
+     * @param array $options `elementor_defaults` (bool): apply Elementor's own
+     *                       button look for what the widget left unset — the
+     *                       standalone button widget only. See applyButtonDefaults().
+     */
+    public function map( string $widget_type, array $settings, array $options = [] ): array {
         $divi_attrs   = [];
         $handled_keys = [];
 
@@ -203,6 +213,9 @@ class StyleMapper {
             $this->mapButtonPadding( $settings, $divi_attrs, $handled_keys );
             $this->mapButtonBackground( $settings, $divi_attrs, $handled_keys );
             $this->mapButtonBorder( $settings, $divi_attrs, $handled_keys );
+            if ( ! empty( $options['elementor_defaults'] ) ) {
+                $this->applyButtonDefaults( $divi_attrs );
+            }
         }
 
         $this->mapCustomCssClass( $settings, $divi_attrs, $handled_keys );
@@ -221,9 +234,9 @@ class StyleMapper {
         $this->mapWordSpacing( $widget_type, $settings, $divi_attrs, $handled_keys );
         $this->mapCssMain( $widget_type, $settings, $divi_attrs, $handled_keys );
 
-        // css_main reflects the full css.desktop.value.main content, which may include
+        // css_main reflects the full css.desktop.value.mainElement content, which may include
         // contributions from mapBlendMode(), mapImageWidth(), and mapCssMain().
-        $css_main = $divi_attrs['css']['desktop']['value']['main'] ?? '';
+        $css_main = $divi_attrs['css']['desktop']['value']['mainElement'] ?? '';
 
         return [
             'divi_attrs'   => $divi_attrs,
@@ -276,7 +289,11 @@ class StyleMapper {
                     continue;
                 }
 
-                self::transformPath( $attrs, "module.decoration.spacing.{$breakpoint}.value.{$prop}", $normalized );
+                // The image module keeps its spacing under module.advanced
+                // (image/conversion-outline.json margin_padding, ImageModule.php:958);
+                // every other module declares module.decoration.spacing.
+                $group = $widget_type === 'image' ? 'advanced' : 'decoration';
+                self::transformPath( $attrs, "module.{$group}.spacing.{$breakpoint}.value.{$prop}", $normalized );
             }
         }
     }
@@ -672,6 +689,10 @@ class StyleMapper {
             } elseif ( $widget_type === 'icon' ) {
                 // Icon alignment lives on the icon sub-attr, not the module text path.
                 self::transformPath( $attrs, "icon.advanced.align.{$breakpoint}.value", $value );
+            } elseif ( $widget_type === 'divider' ) {
+                // divider/module.json declares no module.advanced.text: a divider has
+                // no text to orient. The key is handled (above) so it is not reported.
+                continue;
             } else {
                 $orientation = ( $value === 'justify' ) ? 'left' : $value;
                 self::transformPath( $attrs, "module.advanced.text.text.{$breakpoint}.value.orientation", $orientation );
@@ -1128,8 +1149,16 @@ class StyleMapper {
         }
 
         // section / container / row — desktop-only (responsive variants rarely set).
+        // column_position is Elementor's "Column Position" (align-items on the
+        // row: stretch|top|middle|bottom, default stretch); content_position is
+        // "Vertical Align" for the widgets inside each column. When only
+        // content_position is set the old behaviour is kept: the row centres
+        // its columns, which is the closest single-property approximation.
+        $handled[] = 'column_position';
         $handled[] = 'content_position';
-        $pos = $settings['content_position'] ?? '';
+        $column_pos  = $settings['column_position'] ?? '';
+        $content_pos = $settings['content_position'] ?? '';
+        $pos         = is_string( $column_pos ) && $column_pos !== '' ? $column_pos : $content_pos;
         if ( is_string( $pos ) && $pos !== '' ) {
             self::transformPath(
                 $attrs,
@@ -1657,6 +1686,59 @@ class StyleMapper {
     }
 
     /**
+     * Elementor's own button look, for properties the widget left unset.
+     *
+     * Cascade, most specific first: the widget's controls (already mapped),
+     * the kit's Theme Style → Buttons (GlobalsResolver::resolveButtons()),
+     * then Elementor's built-ins: the global accent colour as background
+     * (button-trait.php, Group_Control_Background default COLOR_ACCENT) and
+     * the accent typography, over .elementor-button's base rule
+     * (assets/css/frontend.css: #69727d, #fff, 15px, 12px 24px, 3px).
+     * Divi's default is a transparent outline in its accent blue, so without
+     * this a button that set nothing looked nothing like the original.
+     */
+    private function applyButtonDefaults( array &$attrs ): void {
+        $kit = GlobalsResolver::resolveButtons();
+
+        $background = $kit['background_color'] ?? GlobalsResolver::resolveColor( 'accent' ) ?? '#69727d';
+        $this->setIfUnset( $attrs, 'button.decoration.background.desktop.value.color', $background );
+        $this->setIfUnset( $attrs, 'button.decoration.font.font.desktop.value.color', $kit['text_color'] ?? '#ffffff' );
+
+        $typography = $kit['typography'] ?? GlobalsResolver::resolveTypography( 'accent' ) ?? [];
+        foreach ( [ 'family', 'weight', 'size', 'lineHeight', 'letterSpacing' ] as $prop ) {
+            if ( isset( $typography[ $prop ] ) && $typography[ $prop ] !== '' ) {
+                $this->setIfUnset( $attrs, "button.decoration.font.font.desktop.value.{$prop}", (string) $typography[ $prop ] );
+            }
+        }
+        $this->setIfUnset( $attrs, 'button.decoration.font.font.desktop.value.size', '15px' );
+
+        $this->setIfUnset( $attrs, 'button.decoration.spacing.desktop.value.padding', $kit['padding'] ?? [ 'top' => '12px', 'right' => '24px', 'bottom' => '12px', 'left' => '24px' ] );
+        $this->setIfUnset( $attrs, 'button.decoration.border.desktop.value.radius', $kit['border_radius'] ?? [ 'topLeft' => '3px', 'topRight' => '3px', 'bottomRight' => '3px', 'bottomLeft' => '3px' ] );
+
+        if ( ! empty( $kit['border'] ) ) {
+            $this->setIfUnset( $attrs, 'button.decoration.border.desktop.value.styles.all.style', $kit['border']['style'] );
+            if ( isset( $kit['border']['width'] ) ) {
+                $this->setIfUnset( $attrs, 'button.decoration.border.desktop.value.styles.all.width', $kit['border']['width'] );
+            }
+            if ( isset( $kit['border']['color'] ) ) {
+                $this->setIfUnset( $attrs, 'button.decoration.border.desktop.value.styles.all.color', $kit['border']['color'] );
+            }
+        }
+    }
+
+    /** Writes a value only where the widget's own controls left nothing. */
+    private function setIfUnset( array &$attrs, string $dot_path, mixed $value ): void {
+        $current = $attrs;
+        foreach ( explode( '.', $dot_path ) as $key ) {
+            if ( ! is_array( $current ) || ! array_key_exists( $key, $current ) ) {
+                self::transformPath( $attrs, $dot_path, $value );
+                return;
+            }
+            $current = $current[ $key ];
+        }
+    }
+
+    /**
      * Maps Elementor button border controls to `button.decoration.border.{bp}.value.*`
      * in Divi 5.
      *
@@ -1922,7 +2004,7 @@ class StyleMapper {
     }
 
     /**
-     * Maps Elementor `blend_mode` to `mix-blend-mode` via `css.desktop.value.main`.
+     * Maps Elementor `blend_mode` to `mix-blend-mode` via `css.desktop.value.mainElement`.
      * Divi 5 has no native block attr for blend mode; custom CSS is the only option.
      */
     private function mapBlendMode( array $settings, array &$attrs, array &$handled ): void {
@@ -1932,12 +2014,12 @@ class StyleMapper {
             return;
         }
 
-        $existing = $attrs['css']['desktop']['value']['main'] ?? '';
+        $existing = $attrs['css']['desktop']['value']['mainElement'] ?? '';
         $rule     = "mix-blend-mode: {$mode}";
         $merged   = ( is_string( $existing ) && $existing !== '' )
             ? rtrim( $existing, '; ' ) . '; ' . $rule . ';'
             : $rule . ';';
-        self::transformPath( $attrs, 'css.desktop.value.main', $merged );
+        self::transformPath( $attrs, 'css.desktop.value.mainElement', $merged );
     }
 
     /**
@@ -2019,17 +2101,17 @@ class StyleMapper {
             }
 
             $rule     = "word-spacing: {$value}";
-            $existing = $attrs['css'][ $breakpoint ]['value']['main'] ?? '';
+            $existing = $attrs['css'][ $breakpoint ]['value']['mainElement'] ?? '';
             $merged   = ( is_string( $existing ) && $existing !== '' )
                 ? rtrim( $existing, '; ' ) . '; ' . $rule . ';'
                 : $rule . ';';
-            self::transformPath( $attrs, "css.{$breakpoint}.value.main", $merged );
+            self::transformPath( $attrs, "css.{$breakpoint}.value.mainElement", $merged );
         }
     }
 
     /**
      * Collects CSS properties that have no native Divi 5 block attribute slot and
-     * emits them on `css.desktop.value.main` (the module's primary selector).
+     * emits them on `css.desktop.value.mainElement` (the module's primary selector).
      *
      * Properties handled here:
      *  - _element_custom_width → max-width (when _element_width = 'initial')
@@ -2070,12 +2152,12 @@ class StyleMapper {
         $css = implode( '; ', $rules ) . ';';
 
         // Merge with any CSS already written to this path (e.g. from mapBlendMode).
-        $existing = $attrs['css']['desktop']['value']['main'] ?? '';
+        $existing = $attrs['css']['desktop']['value']['mainElement'] ?? '';
         $merged   = ( is_string( $existing ) && $existing !== '' )
             ? rtrim( $existing, '; ' ) . '; ' . $css
             : $css;
 
-        self::transformPath( $attrs, 'css.desktop.value.main', $merged );
+        self::transformPath( $attrs, 'css.desktop.value.mainElement', $merged );
 
         return $css;
     }

@@ -36,7 +36,9 @@ class ButtonConverter extends BaseElementorConverter {
             $button_value['rel'] = [ 'nofollow' ];
         }
 
-        $style = ( new StyleMapper() )->map( 'button', $settings );
+        // The standalone button widget gets Elementor's default look and the kit's
+        // button theme style for whatever it left unset (StyleMapper::applyButtonDefaults()).
+        $style = ( new StyleMapper() )->map( 'button', $settings, [ 'elementor_defaults' => true ] );
         // Inject innerContent alongside any button.decoration from StyleMapper.
         // array_merge would clobber the entire 'button' key.
         $attrs = $style['divi_attrs'];

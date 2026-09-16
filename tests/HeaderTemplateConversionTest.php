@@ -33,6 +33,17 @@ final class HeaderTemplateConversionTest extends TestCase {
     // Parser: header template detection
     // -------------------------------------------------------------------------
 
+    public function test_detects_hfe_post_types_by_their_ehf_template_type(): void {
+        // header-footer-elementor 2.8.8 stores templates as elementor-hf posts with
+        // ehf_template_type type_header | type_footer; "hfe-template" was never a real value.
+        $this->assertSame( 'header', $this->parser->templateTypeFor( 'elementor-hf', [ 'ehf_template_type' => 'type_header' ] ) );
+        $this->assertSame( 'footer', $this->parser->templateTypeFor( 'elementor-hf', [ 'ehf_template_type' => 'type_footer' ] ) );
+        $this->assertSame( '', $this->parser->templateTypeFor( 'elementor-hf', [] ) );
+        $this->assertSame( 'header', $this->parser->templateTypeFor( 'et_header_layout', [] ) );
+        $this->assertSame( 'footer', $this->parser->templateTypeFor( 'footer', [] ) );
+        $this->assertSame( '', $this->parser->templateTypeFor( 'hfe-template', [] ) );
+    }
+
     public function test_detects_header_type_from_elementor_template_export(): void {
         $json = json_encode( [
             'version' => '0.4',

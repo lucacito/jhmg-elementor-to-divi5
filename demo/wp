@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# WP-CLI against the demo site, e.g. `demo/wp plugin list`.
+set -euo pipefail
+. "$(dirname "$0")/lib/common.sh"
+
+dc run --rm -T cli wp "$@"

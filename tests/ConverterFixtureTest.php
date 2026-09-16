@@ -64,6 +64,8 @@ final class ConverterFixtureTest extends TestCase {
 
         $result = $engine->convert( $elementorPayload );
 
+        DiviModuleSchema::assertBlocksValid( $result['divi']['elements'], "fixture {$fixture}" );
+
         // Compare only the structural output. The `report` key contains conversion
         // metrics that are not part of the expected fixture files.
         $structural = [

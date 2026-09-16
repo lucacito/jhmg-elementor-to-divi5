@@ -25,43 +25,48 @@ class EaelPricingTableConverter extends BaseElementorConverter {
             $btn_url = is_string( $btn_raw['url'] ?? '' ) ? ( $btn_raw['url'] ?? '' ) : '';
         }
 
-        // Build features list from repeater.
-        $feature_items = $settings['eael_pricing_table_items'] ?? [];
-        $features      = [];
-        foreach ( $feature_items as $item ) {
+        $sub_title = is_string( $settings['eael_pricing_table_sub_title'] ?? '' ) ? ( $settings['eael_pricing_table_sub_title'] ?? '' ) : '';
+
+        // divi/pricing-table (pricing-table/module.json, PricingTablesItemModule.php):
+        // every text is its own attribute's innerContent; the feature list is one
+        // line per item, a leading "-" marking an excluded item
+        // (render_pricing_list); featured is module.advanced.featured. The old
+        // module.advanced.title/priceText/… paths were never read: empty boxes.
+        $features = [];
+        foreach ( is_array( $settings['eael_pricing_table_items'] ?? null ) ? $settings['eael_pricing_table_items'] : [] as $item ) {
             if ( ! is_array( $item ) ) {
                 continue;
             }
-            $text = is_string( $item['eael_pricing_table_item'] ?? '' ) ? ( $item['eael_pricing_table_item'] ?? '' ) : '';
-            if ( $text !== '' ) {
-                $features[] = $text;
+            $text = is_string( $item['eael_pricing_table_item'] ?? '' ) ? trim( $item['eael_pricing_table_item'] ?? '' ) : '';
+            if ( $text === '' ) {
+                continue;
             }
+            // EAEL 6.6.7 Pricing_Table.php: eael_pricing_table_icon_mood "Item Active?", default yes.
+            $active     = ( $item['eael_pricing_table_icon_mood'] ?? 'yes' ) === 'yes';
+            $features[] = ( $active ? '' : '-' ) . $text;
         }
 
         $child_settings = [];
-
         if ( $title !== '' ) {
-            $child_settings['module'] = [
-                'advanced' => [
-                    'title' => [ 'desktop' => [ 'value' => $title ] ],
-                ],
-            ];
+            $child_settings['title']['innerContent']['desktop']['value'] = $title;
         }
-
-        if ( $price !== '' || $currency !== '' ) {
-            $child_settings['module']['advanced']['priceText']    = [ 'desktop' => [ 'value' => $currency . $price ] ];
-            $child_settings['module']['advanced']['perText']      = [ 'desktop' => [ 'value' => $per ] ];
+        if ( $sub_title !== '' ) {
+            $child_settings['subtitle']['innerContent']['desktop']['value'] = $sub_title;
         }
-
-        if ( ! empty( $features ) ) {
-            $child_settings['module']['advanced']['bulletItems'] = [
-                'desktop' => [ 'value' => implode( "\n", $features ) ],
-            ];
+        if ( $currency !== '' || $per !== '' ) {
+            $child_settings['currencyFrequency']['innerContent']['desktop']['value'] = array_filter( [ 'currency' => $currency, 'per' => $per ], static fn( string $v ): bool => $v !== '' );
         }
-
+        if ( $price !== '' ) {
+            $child_settings['price']['innerContent']['desktop']['value'] = $price;
+        }
+        if ( $features !== [] ) {
+            $child_settings['content']['innerContent']['desktop']['value'] = implode( "\n", $features );
+        }
         if ( $btn_text !== '' || $btn_url !== '' ) {
-            $child_settings['module']['advanced']['buttonText'] = [ 'desktop' => [ 'value' => $btn_text ] ];
-            $child_settings['module']['advanced']['buttonUrl']  = [ 'desktop' => [ 'value' => $btn_url ] ];
+            $child_settings['button']['innerContent']['desktop']['value'] = array_filter( [ 'text' => $btn_text, 'linkUrl' => $btn_url ], static fn( string $v ): bool => $v !== '' );
+        }
+        if ( ( $settings['eael_pricing_table_featured'] ?? '' ) === 'yes' ) {
+            $child_settings['module']['advanced']['featured']['desktop']['value'] = 'on';
         }
 
         $child = [
@@ -73,7 +78,7 @@ class EaelPricingTableConverter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'pricing-tables' );
         $this->logUnmappedSettings( $id, $settings, [
-            'eael_pricing_table_title', 'eael_pricing_table_price',
+            'eael_pricing_table_title', 'eael_pricing_table_sub_title', 'eael_pricing_table_price',
             'eael_pricing_table_price_cur', 'eael_pricing_table_price_period', 'eael_pricing_table_price_per',
             'eael_pricing_table_items', 'eael_pricing_table_btn',
             'eael_pricing_table_btn_link', 'eael_pricing_table_btn_url', 'eael_pricing_table_onsale',

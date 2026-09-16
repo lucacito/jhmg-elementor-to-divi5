@@ -139,4 +139,20 @@ class InstalledPostSourceTest extends TestCase {
         $this->assertSame( $before_post, (array) $GLOBALS['__test_posts'][ $id ] );
         $this->assertSame( $before_meta, $GLOBALS['__test_postmeta'] );
     }
+
+    public function test_hfe_templates_carry_their_slot_as_template_type(): void {
+        $this->seed_elementor_post( 61, 'Site header', 'elementor-hf' );
+        update_post_meta( 61, 'ehf_template_type', 'type_header' );
+        $this->seed_elementor_post( 62, 'Site footer', 'elementor-hf' );
+        update_post_meta( 62, 'ehf_template_type', 'type_footer' );
+        $this->seed_elementor_post( 63, 'Before footer', 'elementor-hf' );
+        update_post_meta( 63, 'ehf_template_type', 'type_before_footer' );
+
+        $items = ( new InstalledPostSource( [ 61, 62, 63 ] ) )->items();
+
+        $this->assertSame( 'header', $items[0]['template_type'] );
+        $this->assertSame( 'footer', $items[1]['template_type'] );
+        $this->assertSame( '', $items[2]['template_type'], 'HFE "before footer" has no Divi area' );
+        $this->assertSame( 'page', $items[0]['post_type'] );
+    }
 }

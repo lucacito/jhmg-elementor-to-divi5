@@ -65,6 +65,12 @@ class InstalledPostSource implements ConversionSource {
         if ( $post_type === 'elementor_library' ) {
             $template_type = $this->templateType( $post_id );
             $post_type     = 'page';
+        } elseif ( $post_type === 'elementor-hf' ) {
+            // Header Footer Elementor stores its templates as elementor-hf posts
+            // with ehf_template_type type_header | type_footer | type_before_footer
+            // (header-footer-elementor 2.8.8). Only the first two have a Divi area.
+            $template_type = self::hfeTemplateType( (string) get_post_meta( $post_id, 'ehf_template_type', true ) );
+            $post_type     = 'page';
         } elseif ( $post_type !== 'page' ) {
             $post_type = 'post';
         }
@@ -89,6 +95,15 @@ class InstalledPostSource implements ConversionSource {
         $type = (string) get_post_meta( $post_id, '_elementor_template_type', true );
 
         return in_array( $type, [ 'header', 'footer' ], true ) ? $type : '';
+    }
+
+    /** Header Footer Elementor's ehf_template_type → the Divi Theme Builder area, or ''. */
+    public static function hfeTemplateType( string $ehf_type ): string {
+        return match ( $ehf_type ) {
+            'type_header' => 'header',
+            'type_footer' => 'footer',
+            default       => '',
+        };
     }
 
     private function failed( int $post_id, string $error, string $title = '' ): array {

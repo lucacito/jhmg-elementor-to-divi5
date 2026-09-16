@@ -63,6 +63,18 @@ class GlobalsResolver {
     }
 
     /**
+     * The kit's Theme Style → Buttons settings, in the shape
+     * ConversionPreflight::elementorKitButtons() produces. Empty when no kit
+     * provides one.
+     */
+    public static function resolveButtons(): array {
+        $kit     = self::kitGlobals();
+        $buttons = $kit['buttons'] ?? null;
+
+        return is_array( $buttons ) ? $buttons : [];
+    }
+
+    /**
      * Extract a color ID from a globals reference string.
      * Input:  "globals/colors?id=accent"
      * Output: "accent"  (or null if the string does not match the pattern)

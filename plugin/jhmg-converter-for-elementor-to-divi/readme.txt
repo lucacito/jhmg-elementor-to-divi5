@@ -3,7 +3,7 @@ Contributors: lucaslopvet
 Tags: divi migration, elementor export, page builder converter, elementor to divi, divi 5
 Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 3.0.1
+Stable tag: 3.0.2
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -202,6 +202,16 @@ commonly missing Elementor widgets get built first.
 
 == Changelog ==
 
+= 3.0.2 =
+* Fixed: converted pages now render as designed in Divi 5.7.4. Column background images fill their column instead of a thin strip, oversized display headings (Elementor's span, p and div heading tags) keep their size, weight and colour, buttons keep Elementor's default look and your kit's button style instead of Divi's blue outline, counters show the right number with a percent sign only where you had one, image carousels and galleries show their own images instead of the whole media library, social icons keep their network, and Header Footer Elementor menus no longer sit on a white bar
+* Fixed: Essential Addons info boxes, flip boxes, pricing tables, team members, testimonials, countdowns, progress bars and feature lists rendered empty or partly empty in Divi. They now render with all their content, and FontAwesome icons are carried into Divi's icon font
+* Fixed: content that was silently dropped is carried over: Call to Action body text, pricing table subtitles, ElementsKit heading subtitles, post grid category filters, image margins, video sources for the sticky video widget, and custom CSS (which Divi never read before)
+* Fixed: Contact Form 7 and menu modules pointed at the selected form and menu by accident only; they now use the attributes Divi reads
+* New: Header Footer Elementor templates appear in the page picker and convert as Divi Theme Builder headers and footers (with Pro)
+* New: an admin notice warns when Header Footer Elementor is still active under a Divi Theme Builder header, which makes every page fail to load
+* Changed: what Divi cannot express is listed in the conversion report instead of dropped: counter prefixes and suffixes, gallery filter buttons and captions, unsupported social networks, post grid post types and taxonomies
+* Dev: every converted block is checked against Divi 5.7.4's module definitions in the test suite; the demo site gained a render check
+
 = 3.0.1 =
 * Fixed: pages containing an Essential Addons Contact Form 7 widget failed to convert at all. They now convert, and the form keeps the contact form you selected
 * Fixed: several Essential Addons widgets converted with their content missing. Fancy text now keeps its rotating words, info boxes their description, pricing tables their price period and button link, and code snippets, image accordions, simple menus, sticky videos and tooltips their code, panels, menu, video and tooltip text
@@ -271,6 +281,9 @@ commonly missing Elementor widgets get built first.
 * Detailed conversion logging
 
 == Upgrade Notice ==
+
+= 3.0.2 =
+Converted pages now render as designed in Divi 5.7.4: column backgrounds, display headings, buttons, counters, galleries, social icons and the Essential Addons widgets that came through empty. Reconvert any page that looked wrong in Divi.
 
 = 3.0.1 =
 Fixes Essential Addons, ElementsKit and Header Footer Elementor widgets that converted with their content missing — including pricing tables, data tables, fancy text and navigation menus — and pages with a Contact Form 7 widget that failed to convert at all.

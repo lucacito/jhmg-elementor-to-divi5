@@ -111,7 +111,8 @@ class ConverterEngine {
     /**
      * Records something the conversion could not carry over at all.
      *
-     * @param string $kind One of 'dynamic', 'animation', 'motion', 'form_fields'.
+     * @param string $kind One of 'dynamic', 'animation', 'motion', 'form_fields',
+     *                     'counter_affix', 'gallery_extras', 'social_network', 'query_filter'.
      */
     public function logNotCarriedOver( string $kind, string $element_id, string $detail ): void {
         $entry = [

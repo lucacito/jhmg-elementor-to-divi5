@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ferncourt tour</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&display=block">
+<style>
+  html, body { margin: 0; width: 1280px; height: 720px; overflow: hidden; background: #1F2421; }
+  .slide { position: absolute; inset: 0; opacity: 0; }
+  .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .slide p {
+    position: absolute; left: 64px; bottom: 48px; margin: 0;
+    font: 600 46px Fraunces, Georgia, serif; color: #F6F1E7;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.55);
+  }
+  /* Six slides over 20 seconds; each fades in over the one before and drifts slowly. */
+  .play .slide { animation: slide 4s linear both; }
+  .play .slide:nth-child(1) { animation-delay: 0s; }
+  .play .slide:nth-child(2) { animation-delay: 3.3s; }
+  .play .slide:nth-child(3) { animation-delay: 6.6s; }
+  .play .slide:nth-child(4) { animation-delay: 9.9s; }
+  .play .slide:nth-child(5) { animation-delay: 13.2s; }
+  .play .slide:nth-child(6) { animation-delay: 16.5s; }
+  @keyframes slide {
+    0%   { opacity: 0; transform: scale(1); }
+    15%  { opacity: 1; }
+    100% { opacity: 1; transform: scale(1.06); }
+  }
+</style>
+<body>
+  <div class="slide"><img src="../content/images/hero-lounge.jpg" alt=""><p>Ferncourt Coworking</p></div>
+  <div class="slide"><img src="../content/images/desks-open-plan.jpg" alt=""><p>Desks with daylight</p></div>
+  <div class="slide"><img src="../content/images/meeting-room-large.jpg" alt=""><p>Rooms that close</p></div>
+  <div class="slide"><img src="../content/images/phone-booth.jpg" alt=""><p>Somewhere to take the call</p></div>
+  <div class="slide"><img src="../content/images/lounge-kitchen.jpg" alt=""><p>A kitchen to meet in</p></div>
+  <div class="slide"><img src="../content/images/coffee-bar.jpg" alt=""><p>Good coffee, all day</p></div>
+</body>

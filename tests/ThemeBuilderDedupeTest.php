@@ -120,21 +120,58 @@ final class ThemeBuilderDedupeTest extends TestCase {
     // Genuinely different imports still get their own posts
     // -------------------------------------------------------------------------
 
-    public function test_two_different_headers_remain_two_layouts(): void {
+    public function test_two_different_headers_remain_two_layouts_on_the_one_default_template(): void {
         $this->exporter()->saveHeader( 'Main header', $this->diviData(), [ 'kind' => 'installed', 'post_id' => 55 ] );
-        $this->exporter()->saveHeader( 'Campaign header', $this->diviData(), [ 'kind' => 'installed', 'post_id' => 99 ] );
+        $second = $this->exporter()->saveHeader( 'Campaign header', $this->diviData(), [ 'kind' => 'installed', 'post_id' => 99 ] );
 
+        // Both layouts stay in the library; the site's one global header is the latest import.
         $this->assertCount( 2, $this->idsOfType( 'et_header_layout' ) );
-        $this->assertCount( 2, $this->idsOfType( 'et_template' ) );
+        $this->assertCount( 1, $this->idsOfType( 'et_template' ) );
+        $this->assertSame( $second['post_id'], (int) get_post_meta( (int) $second['template_id'], '_et_header_layout_id', true ) );
     }
 
-    public function test_a_header_and_a_footer_do_not_collide(): void {
-        $this->exporter()->saveHeader( 'Site chrome', $this->diviData(), [ 'kind' => 'installed', 'post_id' => 7 ] );
-        $this->exporter()->saveFooter( 'Site chrome', $this->diviData(), [ 'kind' => 'installed', 'post_id' => 7 ] );
+    /**
+     * Divi applies one et_template per request and treats an area with no
+     * `_et_<area>_layout_id` and no `_et_<area>_layout_enabled` as "override and
+     * hide" (theme-builder.php et_theme_builder_get_template()). Two default
+     * templates, each carrying only its own area, therefore hid the footer or
+     * the header — and the page body — on a real site (docs/known-issues.md).
+     */
+    public function test_a_header_and_a_footer_share_one_default_template_with_the_body_enabled(): void {
+        $header = $this->exporter()->saveHeader( 'Site chrome', $this->diviData(), [ 'kind' => 'installed', 'post_id' => 7 ] );
+        $footer = $this->exporter()->saveFooter( 'Site chrome', $this->diviData(), [ 'kind' => 'installed', 'post_id' => 8 ] );
 
         $this->assertCount( 1, $this->idsOfType( 'et_header_layout' ) );
         $this->assertCount( 1, $this->idsOfType( 'et_footer_layout' ) );
-        $this->assertCount( 2, $this->idsOfType( 'et_template' ), 'Header and footer are separate rule sets' );
+        $this->assertCount( 1, $this->idsOfType( 'et_template' ), 'one default template carries both areas' );
+        $this->assertSame( $header['template_id'], $footer['template_id'] );
+
+        $template = (int) $header['template_id'];
+        $this->assertSame( $header['post_id'], (int) get_post_meta( $template, '_et_header_layout_id', true ) );
+        $this->assertSame( $footer['post_id'], (int) get_post_meta( $template, '_et_footer_layout_id', true ) );
+        $this->assertSame( '1', get_post_meta( $template, '_et_header_layout_enabled', true ) );
+        $this->assertSame( '1', get_post_meta( $template, '_et_footer_layout_enabled', true ) );
+        $this->assertSame( 0, (int) get_post_meta( $template, '_et_body_layout_id', true ) );
+        $this->assertSame( '1', get_post_meta( $template, '_et_body_layout_enabled', true ) );
+    }
+
+    public function test_a_header_alone_leaves_the_footer_and_body_to_the_theme(): void {
+        $header   = $this->exporter()->saveHeader( 'Header', $this->diviData(), [ 'kind' => 'installed', 'post_id' => 7 ] );
+        $template = (int) $header['template_id'];
+
+        $this->assertSame( 0, (int) get_post_meta( $template, '_et_footer_layout_id', true ) );
+        $this->assertSame( '1', get_post_meta( $template, '_et_footer_layout_enabled', true ) );
+        $this->assertSame( 0, (int) get_post_meta( $template, '_et_body_layout_id', true ) );
+        $this->assertSame( '1', get_post_meta( $template, '_et_body_layout_enabled', true ) );
+    }
+
+    public function test_reimporting_the_header_keeps_the_footer_on_the_template(): void {
+        $this->exporter()->saveHeader( 'Header', $this->diviData(), [ 'kind' => 'installed', 'post_id' => 7 ] );
+        $footer = $this->exporter()->saveFooter( 'Footer', $this->diviData(), [ 'kind' => 'installed', 'post_id' => 8 ] );
+        $header = $this->exporter()->saveHeader( 'Header', $this->diviData(), [ 'kind' => 'installed', 'post_id' => 7 ] );
+
+        $this->assertSame( $footer['post_id'], (int) get_post_meta( (int) $header['template_id'], '_et_footer_layout_id', true ) );
+        $this->assertSame( 1, $this->defaultTemplateCount() );
     }
 
     /**

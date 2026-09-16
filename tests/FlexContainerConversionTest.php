@@ -582,8 +582,8 @@ final class FlexContainerConversionTest extends TestCase {
         $this->assertSame( 'divi/row',     $row['name'] );
 
         // max-width must be on the row, not the section.
-        $row_css     = $row['settings']['css']['desktop']['value']['main'] ?? '';
-        $section_css = $section['settings']['css']['desktop']['value']['main'] ?? '';
+        $row_css     = $row['settings']['css']['desktop']['value']['mainElement'] ?? '';
+        $section_css = $section['settings']['css']['desktop']['value']['mainElement'] ?? '';
 
         $this->assertStringContainsString( 'max-width: 1140px', $row_css,
             'boxed_width must emit max-width CSS on the row' );
@@ -602,7 +602,7 @@ final class FlexContainerConversionTest extends TestCase {
         ] );
 
         $row     = $result[0]['elements'][0];
-        $row_css = $row['settings']['css']['desktop']['value']['main'] ?? '';
+        $row_css = $row['settings']['css']['desktop']['value']['mainElement'] ?? '';
 
         $this->assertStringNotContainsString( 'max-width', $row_css,
             'boxed_width must be ignored when content_width is not boxed' );
@@ -621,7 +621,7 @@ final class FlexContainerConversionTest extends TestCase {
         ] );
 
         $row     = $result[0]['elements'][0];
-        $row_css = $row['settings']['css']['desktop']['value']['main'] ?? '';
+        $row_css = $row['settings']['css']['desktop']['value']['mainElement'] ?? '';
         $this->assertStringContainsString( 'max-width: 960px', $row_css );
     }
 
@@ -782,7 +782,7 @@ final class FlexContainerConversionTest extends TestCase {
             'Explicit image width must go to module.advanced.sizing' );
         $this->assertStringNotContainsString(
             'width',
-            $img_settings['css']['desktop']['value']['main'] ?? '',
+            $img_settings['css']['desktop']['value']['mainElement'] ?? '',
             'Width must not appear in CSS when using native sizing'
         );
     }
@@ -876,7 +876,7 @@ final class FlexContainerConversionTest extends TestCase {
             }
         }
         $this->assertNotNull( $icon_block, 'Icon block must exist' );
-        $css = $icon_block['settings']['css']['desktop']['value']['main'] ?? '';
+        $css = $icon_block['settings']['css']['desktop']['value']['mainElement'] ?? '';
         $this->assertStringContainsString( 'position: absolute', $css,
             'Icon module must have position:absolute CSS from its container wrapper' );
     }
@@ -919,7 +919,7 @@ final class FlexContainerConversionTest extends TestCase {
         }
         $this->assertNotNull( $icon_block );
 
-        $css    = $icon_block['settings']['css']['desktop']['value']['main'] ?? '';
+        $css    = $icon_block['settings']['css']['desktop']['value']['mainElement'] ?? '';
         $color  = $icon_block['settings']['module']['decoration']['background']['desktop']['value']['color'] ?? null;
         $radius = $icon_block['settings']['module']['decoration']['border']['desktop']['value']['radius']['topLeft'] ?? null;
 

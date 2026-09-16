@@ -30,6 +30,9 @@ const ASN_UNVERIFIABLE = [
     'eael-embedpress'     => [
         'eael_embedpress_url' => "EAEL's element is only an 'install EmbedPress' prompt; embeds live in EmbedPress's own widgets.",
     ],
+    'eael-post-grid'      => [
+        'category_ids' => "EAEL Traits/Controls.php:134 registers one '{\$taxonomy}_ids' control per taxonomy; category is the post taxonomy.",
+    ],
     'eael-content-ticker' => [
         'eael_ticker_custom_contents' => 'Custom ticker items are an EAEL Pro control.',
         'eael_ct_title'               => 'Per-item name of the EAEL Pro custom ticker; Pro source unavailable.',

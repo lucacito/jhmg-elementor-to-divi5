@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\Converter\TextHeading;
 use ElementorDivi5Converter\StyleMapper\StyleMapper;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -57,7 +58,7 @@ class ElementskitHeadingConverter extends BaseElementorConverter {
 
         $handled = array_merge(
             [
-                'ekit_heading_title', 'ekit_heading_title_tag', 'ekit_heading_sub_title',
+                'ekit_heading_title', 'ekit_heading_title_tag', 'ekit_heading_sub_title', 'ekit_heading_sub_title_show',
                 'ekit_heading_extra_title', 'ekit_heading_title_align',
                 'ekit_heading_title_align_mobile', 'ekit_heading_title_align_tablet',
                 'ekit_heading_section_extra_title_show', 'shadow_text_content',
@@ -92,37 +93,54 @@ class ElementskitHeadingConverter extends BaseElementorConverter {
             $style['handled_keys']
         );
 
-        $this->engine->logConverted( 'heading' );
         $this->logUnmappedSettings( $id, $settings, $handled );
 
-        $heading_block = [
-            'id'       => $id,
-            'name'     => 'divi/heading',
-            'settings' => $attrs,
-            'elements' => [],
-        ];
+        // span, p and div: Divi's heading module styles h1-h6 only (see TextHeading).
+        if ( ! TextHeading::isHeadingTag( $tag ) ) {
+            $this->engine->logConverted( 'text' );
+            $heading_block = TextHeading::block( $id, $tag, esc_html( $title_text ), $attrs );
+        } else {
+            $this->engine->logConverted( 'heading' );
+            $heading_block = [
+                'id'       => $id,
+                'name'     => 'divi/heading',
+                'settings' => $attrs,
+                'elements' => [],
+            ];
+        }
+
+        // ElementsKit Lite 4.0.5 heading.php renders the subtitle above the title
+        // when ekit_heading_sub_title_show is "yes"; it was read but never written.
+        $blocks = [];
+        if ( ( $settings['ekit_heading_sub_title_show'] ?? '' ) === 'yes' && trim( wp_strip_all_tags( $sub_title ) ) !== '' ) {
+            $this->engine->logConverted( 'text' );
+            $blocks[] = [
+                'id'       => $id . '-sub',
+                'name'     => 'divi/text',
+                'settings' => [ 'content' => [ 'innerContent' => [ 'desktop' => [ 'value' => '<p>' . $sub_title . '</p>' ] ] ] ],
+                'elements' => [],
+            ];
+        }
+        $blocks[] = $heading_block;
 
         // When there is extra description content, emit it as a sibling text block.
         $extra_stripped = trim( wp_strip_all_tags( $extra ) );
         if ( $extra_stripped !== '' ) {
             $this->engine->logConverted( 'text' );
-            return [
-                $heading_block,
-                [
-                    'id'       => $id . '-desc',
-                    'name'     => 'divi/text',
-                    'settings' => [
-                        'content' => [
-                            'innerContent' => [
-                                'desktop' => [ 'value' => $extra ],
-                            ],
+            $blocks[] = [
+                'id'       => $id . '-desc',
+                'name'     => 'divi/text',
+                'settings' => [
+                    'content' => [
+                        'innerContent' => [
+                            'desktop' => [ 'value' => $extra ],
                         ],
                     ],
-                    'elements' => [],
                 ],
+                'elements' => [],
             ];
         }
 
-        return $heading_block;
+        return count( $blocks ) === 1 ? $blocks[0] : $blocks;
     }
 }

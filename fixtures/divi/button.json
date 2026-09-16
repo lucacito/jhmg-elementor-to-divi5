@@ -1,52 +1,97 @@
 {
-  "divi": {
-    "elements": [
-      {
-        "id": "section-1",
-        "name": "divi/section",
-        "settings": {},
+    "divi": {
         "elements": [
-          {
-            "id": "section-1-row",
-            "name": "divi/row",
-            "settings": {},
-            "elements": [
-              {
-                "id": "column-1",
-                "name": "divi/column",
-                "settings": {},
+            {
+                "id": "section-1",
+                "name": "divi/section",
+                "settings": [],
                 "elements": [
-                  {
-                    "id": "button-1",
-                    "name": "divi/button",
-                    "settings": {
-                      "module": {
-                        "advanced": {
-                          "alignment": {
-                            "desktop": { "value": "center" }
-                          }
-                        }
-                      },
-                      "button": {
-                        "innerContent": {
-                          "desktop": {
-                            "value": {
-                              "text": "Click Here",
-                              "linkUrl": "https://example.com"
+                    {
+                        "id": "section-1-row",
+                        "name": "divi/row",
+                        "settings": [],
+                        "elements": [
+                            {
+                                "id": "column-1",
+                                "name": "divi/column",
+                                "settings": [],
+                                "elements": [
+                                    {
+                                        "id": "button-1",
+                                        "name": "divi/button",
+                                        "settings": {
+                                            "module": {
+                                                "advanced": {
+                                                    "alignment": {
+                                                        "desktop": {
+                                                            "value": "center"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "button": {
+                                                "decoration": {
+                                                    "background": {
+                                                        "desktop": {
+                                                            "value": {
+                                                                "color": "#69727d"
+                                                            }
+                                                        }
+                                                    },
+                                                    "font": {
+                                                        "font": {
+                                                            "desktop": {
+                                                                "value": {
+                                                                    "color": "#ffffff",
+                                                                    "size": "15px"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "spacing": {
+                                                        "desktop": {
+                                                            "value": {
+                                                                "padding": {
+                                                                    "top": "12px",
+                                                                    "right": "24px",
+                                                                    "bottom": "12px",
+                                                                    "left": "24px"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "border": {
+                                                        "desktop": {
+                                                            "value": {
+                                                                "radius": {
+                                                                    "topLeft": "3px",
+                                                                    "topRight": "3px",
+                                                                    "bottomRight": "3px",
+                                                                    "bottomLeft": "3px"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "innerContent": {
+                                                    "desktop": {
+                                                        "value": {
+                                                            "text": "Click Here",
+                                                            "linkUrl": "https://example.com"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "elements": []
+                                    }
+                                ]
                             }
-                          }
-                        }
-                      }
-                    },
-                    "elements": []
-                  }
+                        ]
+                    }
                 ]
-              }
-            ]
-          }
+            }
         ]
-      }
-    ]
-  },
-  "unsupported": []
+    },
+    "unsupported": []
 }

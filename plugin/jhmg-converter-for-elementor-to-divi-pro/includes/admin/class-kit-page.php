@@ -392,6 +392,13 @@ class KitPage {
                 exit;
             }
 
+            // The user chose the slot on the upload form; a free-Elementor "Save as
+            // template" export is typed page, so the JSON's own type cannot decide.
+            foreach ( $items as &$item ) {
+                $item['template_type'] = $upload_type;
+            }
+            unset( $item );
+
             $importer = new \ElementorDivi5Converter\Admin\BatchImporter();
             $results  = $importer->import( $items, [
                 'post_type'       => 'page',
@@ -1063,6 +1070,15 @@ class KitPage {
         ?>
         <div class="wrap edcp-wrap">
             <h1><?php esc_html_e( 'Batch Import Results', 'jhmg-converter-for-elementor-to-divi-pro' ); ?></h1>
+            <?php
+            // A converted header or footer plus Header Footer Elementor still active
+            // fatals every front-end page under Divi; say so where the import lands.
+            $has_template = (bool) array_filter( $results, static fn( $r ) => ( $r['template_type'] ?? '' ) !== '' );
+            $hfe_notice   = new \ElementorDivi5Converter\Admin\HfeConflictNotice();
+            if ( $has_template && $hfe_notice->applies() ) :
+                ?>
+                <div class="notice notice-warning inline"><p><?php echo esc_html( $hfe_notice->message() ); ?></p></div>
+            <?php endif; ?>
 
             <div class="edc-result-actions">
                 <a href="<?php echo esc_url( admin_url( 'tools.php?page=' . self::MENU_SLUG ) ); ?>" class="button">

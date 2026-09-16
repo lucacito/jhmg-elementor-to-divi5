@@ -23,29 +23,23 @@ class TestimonialConverter extends BaseElementorConverter {
             $image_url = is_string( $image_raw['url'] ?? '' ) ? ( $image_raw['url'] ?? '' ) : '';
         }
 
+        // divi/testimonial (testimonial/module.json, TestimonialModule.php): content,
+        // author and jobTitle are each an innerContent; the photo is
+        // portrait.innerContent {src} (line 98). The old company.innerContent
+        // {author, company} and module.advanced.portrait were never read, so only
+        // the quote showed (found on the Painting Company kit by the schema test).
         $block_settings = [];
-
         if ( $content !== '' ) {
-            $block_settings['content'] = [
-                'innerContent' => [ 'desktop' => [ 'value' => $content ] ],
-            ];
+            $block_settings['content']['innerContent']['desktop']['value'] = $content;
         }
-
-        if ( $name !== '' || $job !== '' ) {
-            $block_settings['company'] = [
-                'innerContent' => [ 'desktop' => [ 'value' => array_filter( [
-                    'author'  => $name,
-                    'company' => $job,
-                ] ) ] ],
-            ];
+        if ( $name !== '' ) {
+            $block_settings['author']['innerContent']['desktop']['value'] = $name;
         }
-
+        if ( $job !== '' ) {
+            $block_settings['jobTitle']['innerContent']['desktop']['value'] = $job;
+        }
         if ( $image_url !== '' ) {
-            $block_settings['module'] = [
-                'advanced' => [
-                    'portrait' => [ 'desktop' => [ 'value' => [ 'src' => $image_url ] ] ],
-                ],
-            ];
+            $block_settings['portrait']['innerContent']['desktop']['value'] = [ 'src' => $image_url ];
         }
 
         $this->engine->logConverted( 'testimonial' );
