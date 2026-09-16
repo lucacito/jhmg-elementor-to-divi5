@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\Helpers\FontAwesomeIcons;
 use ElementorDivi5Converter\StyleMapper\StyleMapper;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,15 +19,22 @@ class IconConverter extends BaseElementorConverter {
         $color      = $this->firstString( $settings, [ 'primary_color', 'icon_color' ] );
         $size       = $this->sizeString( $settings['size'] ?? null );
 
-        if ( $icon_value === '' ) {
-            $icon_value = 'fa-star';
-        }
         if ( $size === '' ) {
             $size = '30px';
         }
 
+        // divi/icon reads icon.innerContent as {type, unicode, weight}
+        // (IconModule.php:197,344-350); a FontAwesome class string rendered nothing.
+        $divi_icon = $icon_value === '' ? null : FontAwesomeIcons::diviIcon( $icon_value );
+        if ( $divi_icon === null ) {
+            if ( $icon_value !== '' ) {
+                $this->engine->logWarning( "Icon {$id}: '{$icon_value}' has no FontAwesome equivalent in Divi; a star was used." );
+            }
+            $divi_icon = FontAwesomeIcons::STAR;
+        }
+
         $icon_attrs = [
-            'innerContent' => [ 'desktop' => [ 'value' => $icon_value ] ],
+            'innerContent' => [ 'desktop' => [ 'value' => $divi_icon ] ],
         ];
 
         $advanced = [

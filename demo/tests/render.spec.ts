@@ -90,11 +90,19 @@ test.describe('probe: core widgets', () => {
     for (const img of await images.all()) {
       expect((await img.boundingBox())?.width ?? 0).toBeGreaterThan(200);
     }
-    await expect(page.locator('.et_pb_gallery').first().locator('.et_pb_gallery_pagination')).toHaveCount(0);
+    // Divi always prints the pagination container; only its page links would mean a second page.
+    await expect(page.locator('.et_pb_gallery').first().locator('.et_pb_gallery_pagination a')).toHaveCount(0);
   });
 
   test('image gallery: three items', async ({ page }) => {
     await expect(page.locator('.et_pb_gallery').nth(1).locator('.et_pb_gallery_item')).toHaveCount(3);
+  });
+
+  test('social-icons: Instagram and LinkedIn, nothing else', async ({ page }) => {
+    const items = page.locator('.et_pb_social_media_follow li');
+    await expect(items).toHaveCount(2);
+    await expect(items.nth(0)).toHaveClass(/et-social-instagram/);
+    await expect(items.nth(1)).toHaveClass(/et-social-linkedin/);
   });
 });
 
@@ -106,7 +114,14 @@ test.describe('spaces', () => {
 
   test('filterable gallery (EAEL): exactly its own images, not the media library', async ({ page }) => {
     await expect(page.locator('.et_pb_gallery .et_pb_gallery_item')).toHaveCount(SPACES_GALLERY_IMAGES);
-    await expect(page.locator('.et_pb_gallery_pagination')).toHaveCount(0);
+    await expect(page.locator('.et_pb_gallery_pagination a')).toHaveCount(0);
+  });
+
+  test('flip boxes (EAEL): titles and text render as blurbs', async ({ page }) => {
+    const blurbs = page.locator('.et_pb_blurb');
+    expect(await blurbs.count()).toBeGreaterThanOrEqual(3);
+    await expect(blurbs.first().locator('.et_pb_module_header')).not.toBeEmpty();
+    await expect(blurbs.first().locator('.et_pb_blurb_description')).not.toBeEmpty();
   });
 });
 
@@ -121,5 +136,33 @@ test.describe('Theme Builder header and footer (HFE templates)', () => {
     await expect(button).toBeVisible();
     expect(await css(button, 'background-color')).toBe('rgb(200, 100, 59)');
     expect(await css(button, 'color')).toBe('rgb(255, 255, 255)');
+  });
+
+  test('navigation-menu (HFE): no white bar behind the menu', async ({ page }) => {
+    const menu = page.locator('.et_pb_menu').first();
+    await expect(menu).toBeVisible();
+    expect(await css(menu, 'background-color')).toBe('rgba(0, 0, 0, 0)');
+  });
+
+  test('footer social-icons (HFE footer): Instagram and LinkedIn', async ({ page }) => {
+    const items = page.locator('.et-l--footer .et_pb_social_media_follow li, footer .et_pb_social_media_follow li');
+    await expect(items).toHaveCount(2);
+    await expect(items.nth(0)).toHaveClass(/et-social-instagram/);
+    await expect(items.nth(1)).toHaveClass(/et-social-linkedin/);
+  });
+});
+
+test.describe('home', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(draft('home'));
+    await settle(page);
+  });
+
+  test('info boxes (EAEL): title, body and icon render', async ({ page }) => {
+    const blurbs = page.locator('.et_pb_blurb');
+    expect(await blurbs.count()).toBeGreaterThanOrEqual(3);
+    await expect(blurbs.first().locator('.et_pb_module_header')).not.toBeEmpty();
+    await expect(blurbs.first().locator('.et_pb_blurb_description')).not.toBeEmpty();
+    await expect(blurbs.first().locator('.et_pb_main_blurb_image .et-pb-icon')).toBeVisible();
   });
 });

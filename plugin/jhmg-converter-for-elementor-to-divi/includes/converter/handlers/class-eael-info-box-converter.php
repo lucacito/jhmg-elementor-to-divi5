@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\Helpers\FontAwesomeIcons;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -24,13 +25,6 @@ class EaelInfoBoxConverter extends BaseElementorConverter {
             $full_title = $title !== '' ? $title . ' — ' . $sub_title : $sub_title;
         }
 
-        // Resolve icon.
-        $icon_raw = $settings['eael_infobox_icon_new'] ?? null;
-        $icon     = '';
-        if ( is_array( $icon_raw ) ) {
-            $icon = is_string( $icon_raw['value'] ?? '' ) ? ( $icon_raw['value'] ?? '' ) : '';
-        }
-
         // Resolve image.
         $image_raw = $settings['eael_infobox_image'] ?? [];
         $image_url = '';
@@ -38,26 +32,31 @@ class EaelInfoBoxConverter extends BaseElementorConverter {
             $image_url = is_string( $image_raw['url'] ?? '' ) ? ( $image_raw['url'] ?? '' ) : '';
         }
 
+        // divi/blurb (blurb/module.json, BlurbModule.php): title is a
+        // headingLink whose value is {text}; the body is content.innerContent;
+        // the picture is imageIcon.innerContent {useIcon, icon, src}. Writing
+        // module.advanced.text and a FontAwesome class rendered nothing at all.
         $block_settings = [];
-
         if ( $full_title !== '' ) {
-            $block_settings['title'] = [ 'innerContent' => [ 'desktop' => [ 'value' => $full_title ] ] ];
+            $block_settings['title']['innerContent']['desktop']['value'] = [ 'text' => $full_title ];
         }
-
-        if ( $icon !== '' ) {
-            $block_settings['imageIcon'] = [
-                'innerContent' => [ 'desktop' => [ 'value' => [ 'icon' => $icon ] ] ],
-            ];
-        } elseif ( $image_url !== '' ) {
-            $block_settings['imageIcon'] = [
-                'innerContent' => [ 'desktop' => [ 'value' => [ 'src' => $image_url ] ] ],
-            ];
-        }
-
         if ( $description !== '' ) {
-            $block_settings['module'] = [
-                'advanced' => [ 'text' => [ 'desktop' => [ 'value' => $description ] ] ],
-            ];
+            $block_settings['content']['innerContent']['desktop']['value'] = $description;
+        }
+
+        // EAEL 6.6.7 Info_Box.php: eael_infobox_img_or_icon is icon (default), img or number.
+        $mode     = $settings['eael_infobox_img_or_icon'] ?? 'icon';
+        $icon_raw = $settings['eael_infobox_icon_new'] ?? null;
+        if ( $mode === 'img' && $image_url !== '' ) {
+            $block_settings['imageIcon']['innerContent']['desktop']['value'] = [ 'src' => $image_url ];
+        } elseif ( $mode === 'icon' && is_array( $icon_raw ) && ( $icon_raw['value'] ?? '' ) !== '' ) {
+            $divi_icon = FontAwesomeIcons::fromControl( $icon_raw );
+            if ( $divi_icon === null ) {
+                $label = is_string( $icon_raw['value'] ) ? $icon_raw['value'] : 'svg';
+                $this->engine->logWarning( "Info box {$id}: icon '{$label}' has no FontAwesome equivalent in Divi; a star was used." );
+                $divi_icon = FontAwesomeIcons::STAR;
+            }
+            $block_settings['imageIcon']['innerContent']['desktop']['value'] = [ 'useIcon' => 'on', 'icon' => $divi_icon ];
         }
 
         $this->engine->logConverted( 'blurb' );

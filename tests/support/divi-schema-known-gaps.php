@@ -4,10 +4,6 @@
 // Key: "<block name> <attribute path>" prefix of the reported problem. Value: the task.
 // Deleted when empty.
 return [
-    'divi/blurb module.advanced.text'                                  => 'Task 11',
-    'divi/blurb title.innerContent'                                    => 'Task 11',
-    'divi/blurb imageIcon.innerContent'                                => 'Task 11',
-    'divi/icon icon.innerContent'                                      => 'Task 11',
     'divi/pricing-table module.advanced'                               => 'Task 12',
     'divi/team-member module.advanced'                                 => 'Task 13',
     'divi/team-member image.innerContent'                              => 'Task 13',

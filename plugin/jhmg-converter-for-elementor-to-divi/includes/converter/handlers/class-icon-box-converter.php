@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\Helpers\FontAwesomeIcons;
 use ElementorDivi5Converter\StyleMapper\StyleMapper;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,18 +25,21 @@ class IconBoxConverter extends BaseElementorConverter {
         $attrs        = $style_result['divi_attrs'];
 
         if ( $has_icon ) {
-            // Elementor uses FontAwesome icons; Divi 5 has a different icon library.
-            // Always fall back to a default Divi star icon rather than trying to map FA classes.
+            // Divi 5 ships FontAwesome; the icon becomes {type, unicode, weight}
+            // through the map generated from Divi's own icon list.
+            $icon_control = $settings['selected_icon'] ?? $settings['icon'] ?? null;
+            $divi_icon    = FontAwesomeIcons::fromControl( $icon_control );
+            if ( $divi_icon === null ) {
+                $label = is_array( $icon_control ) ? (string) ( is_string( $icon_control['value'] ?? null ) ? $icon_control['value'] : 'svg' ) : (string) $icon_control;
+                $this->engine->logWarning( "Icon box {$id}: icon '{$label}' has no FontAwesome equivalent in Divi; a star was used." );
+                $divi_icon = FontAwesomeIcons::STAR;
+            }
             $icon_content = [
                 'innerContent' => [
                     'desktop' => [
                         'value' => [
                             'useIcon' => 'on',
-                            'icon'    => [
-                                'type'    => 'fa',
-                                'unicode' => '&#xf005;',
-                                'weight'  => '900',
-                            ],
+                            'icon'    => $divi_icon,
                         ],
                     ],
                 ],

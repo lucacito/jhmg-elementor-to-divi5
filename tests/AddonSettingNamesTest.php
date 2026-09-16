@@ -106,13 +106,13 @@ final class AddonSettingNamesTest extends TestCase {
             'eael_infobox_text'  => '<p>Gigabit fibre on every desk.</p>',
         ] );
 
-        $this->assertSame( '<p>Gigabit fibre on every desk.</p>', $block['settings']['module']['advanced']['text']['desktop']['value'] );
+        $this->assertSame( '<p>Gigabit fibre on every desk.</p>', $block['settings']['content']['innerContent']['desktop']['value'] );
     }
 
     public function test_info_box_legacy_content_still_converts(): void {
         [ $block ] = $this->convert( 'eael-info-box', [ 'eael_infobox_content' => 'Old body' ] );
 
-        $this->assertSame( 'Old body', $block['settings']['module']['advanced']['text']['desktop']['value'] );
+        $this->assertSame( 'Old body', $block['settings']['content']['innerContent']['desktop']['value'] );
     }
 
     public function test_pricing_table_reads_period_and_button_link(): void {
@@ -443,11 +443,94 @@ final class AddonSettingNamesTest extends TestCase {
     }
 
     // -------------------------------------------------------------------------
+    // Essential Addons — blurbs and icons rendered by Divi (Task 11)
+    // -------------------------------------------------------------------------
+
+    public function test_info_box_becomes_a_blurb_divi_renders(): void {
+        [ $block, $result ] = $this->convert( 'eael-info-box', [
+            'eael_infobox_img_or_icon' => 'icon',
+            'eael_infobox_icon_new'    => [ 'value' => 'fas fa-wifi', 'library' => 'fa-solid' ],
+            'eael_infobox_title'       => 'Fast wifi',
+            'eael_infobox_text'        => '<p>Gigabit fibre.</p>',
+        ] );
+
+        $this->assertSame( 'divi/blurb', $block['name'] );
+        // BlurbModule.php: title is a headingLink ({text}), body is content.innerContent,
+        // the icon is imageIcon.innerContent {useIcon, icon{type,unicode,weight}}.
+        $this->assertSame( [ 'text' => 'Fast wifi' ], $block['settings']['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( '<p>Gigabit fibre.</p>', $block['settings']['content']['innerContent']['desktop']['value'] );
+        $icon = $block['settings']['imageIcon']['innerContent']['desktop']['value'];
+        $this->assertSame( 'on', $icon['useIcon'] );
+        $this->assertSame( [ 'type' => 'fa', 'unicode' => '&#xf1eb;', 'weight' => '900' ], $icon['icon'] );
+        $this->assertArrayNotHasKey( 'module', $block['settings'] );
+        $this->assertSame( [], $result['report']['warnings'] );
+    }
+
+    public function test_info_box_with_an_image_uses_src(): void {
+        [ $block ] = $this->convert( 'eael-info-box', [
+            'eael_infobox_img_or_icon' => 'img',
+            'eael_infobox_image'       => [ 'url' => 'https://x.test/i.jpg', 'id' => 3 ],
+            'eael_infobox_title'       => 'T',
+        ] );
+        $this->assertSame( [ 'src' => 'https://x.test/i.jpg' ], $block['settings']['imageIcon']['innerContent']['desktop']['value'] );
+    }
+
+    public function test_info_box_unknown_icon_falls_back_to_a_star_with_a_warning(): void {
+        [ $block, $result ] = $this->convert( 'eael-info-box', [
+            'eael_infobox_img_or_icon' => 'icon',
+            'eael_infobox_icon_new'    => [ 'value' => 'fas fa-no-such-icon', 'library' => 'fa-solid' ],
+            'eael_infobox_title'       => 'T',
+        ] );
+        $this->assertSame( '&#xf005;', $block['settings']['imageIcon']['innerContent']['desktop']['value']['icon']['unicode'] );
+        $this->assertStringContainsString( 'no-such-icon', $result['report']['warnings'][0] );
+    }
+
+    public function test_flip_box_becomes_a_blurb_with_front_and_back_text(): void {
+        [ $block ] = $this->convert( 'eael-flip-box', [
+            'eael_flipbox_img_or_icon' => 'icon',
+            'eael_flipbox_icon_new'    => [ 'value' => 'fas fa-door-open', 'library' => 'fa-solid' ],
+            'eael_flipbox_front_title' => 'Private offices',
+            'eael_flipbox_front_text'  => 'Two to twelve desks.',
+            'eael_flipbox_back_title'  => 'Private offices',
+            'eael_flipbox_back_text'   => 'From $900 a month.',
+        ] );
+        $this->assertSame( [ 'text' => 'Private offices' ], $block['settings']['title']['innerContent']['desktop']['value'] );
+        $this->assertStringContainsString( 'Two to twelve desks.', $block['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertStringContainsString( 'From $900 a month.', $block['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'on', $block['settings']['imageIcon']['innerContent']['desktop']['value']['useIcon'] );
+    }
+
+    public function test_icon_widget_emits_an_icon_object(): void {
+        [ $block ] = $this->convert( 'icon', [ 'selected_icon' => [ 'value' => 'fas fa-star', 'library' => 'fa-solid' ] ] );
+        $this->assertSame( [ 'type' => 'fa', 'unicode' => '&#xf005;', 'weight' => '900' ], $block['settings']['icon']['innerContent']['desktop']['value'] );
+    }
+
+    public function test_icon_box_maps_its_icon_instead_of_always_a_star(): void {
+        [ $block ] = $this->convert( 'icon-box', [ 'selected_icon' => [ 'value' => 'fas fa-wifi', 'library' => 'fa-solid' ], 'title_text' => 'T' ] );
+        $this->assertSame( '&#xf1eb;', $block['settings']['imageIcon']['innerContent']['desktop']['value']['icon']['unicode'] );
+    }
+
+    // -------------------------------------------------------------------------
     // Header Footer Elementor
     // -------------------------------------------------------------------------
 
     private function menuId( array $block ): string {
         return (string) $block['settings']['menu']['advanced']['menuId']['desktop']['value'];
+    }
+
+    public function test_navigation_menu_sits_on_a_transparent_background(): void {
+        [ $block ] = $this->convert( 'navigation-menu', [ 'menu' => 'primary', 'layout' => 'horizontal' ] );
+
+        $this->assertSame( 'divi/menu', $block['name'] );
+        // menu/module-default-render-attributes.json paints #ffffff behind the menu; the header
+        // container's background is what the page shows through in Elementor.
+        $this->assertSame( 'rgba(255,255,255,0)', $block['settings']['module']['decoration']['background']['desktop']['value']['color'] );
+    }
+
+    public function test_navigation_menu_item_background_becomes_the_menu_background(): void {
+        [ $block ] = $this->convert( 'navigation-menu', [ 'menu' => 'primary', 'bg_color_menu_item' => '#2F4F3A' ] );
+
+        $this->assertSame( '#2F4F3A', $block['settings']['module']['decoration']['background']['desktop']['value']['color'] );
     }
 
     public function test_hfe_navigation_menu_resolves_the_stored_slug_to_a_menu_id(): void {
