@@ -104,6 +104,25 @@ test.describe('probe: core widgets', () => {
     await expect(page.frameLocator('iframe[src*="maps.google.com"]').locator('body')).toContainText('Google', { timeout: 20_000 });
   });
 
+  test('video (YouTube): the player is visible', async ({ page }) => {
+    const player = page.locator('.et_pb_video iframe, .et_pb_video video, .et_pb_video .et_pb_video_box').first();
+    await expect(player).toBeVisible();
+    expect((await player.boundingBox())?.height ?? 0).toBeGreaterThan(200);
+  });
+
+  test('image with a bottom margin: the margin reaches the image module', async ({ page }) => {
+    const image = page.locator('.et_pb_image').filter({ has: page.locator('img[src*="desks-window"]') }).first();
+    await expect(image).toBeVisible();
+    expect(await css(image, 'margin-bottom')).toBe('40px');
+  });
+
+  test('feature list (EAEL): two icon list items with icons', async ({ page }) => {
+    const items = page.locator('.et_pb_icon_list_item');
+    await expect(items).toHaveCount(2);
+    await expect(items.first()).toContainText('Fast wifi');
+    await expect(items.first().locator('.et_pb_icon_list_icon, .et-pb-icon').first()).toBeVisible();
+  });
+
   test('social-icons: Instagram and LinkedIn, nothing else', async ({ page }) => {
     // The probe's second section; the Theme Builder footer has its own social list.
     const items = page.locator('.et_pb_section_1 .et_pb_social_media_follow li');

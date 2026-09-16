@@ -7,7 +7,7 @@
  */
 
 use Ferncourt\Demo\Context;
-use function Ferncourt\Demo\{band, button, column, heading, icon, item, link, section, slider, widget};
+use function Ferncourt\Demo\{band, box, button, column, heading, icon, item, link, section, slider, widget};
 
 return static function ( Context $ctx ): array {
     $social = static fn ( string $id, string $class, string $url ): array => item( $id, [
@@ -74,8 +74,16 @@ return static function ( Context $ctx ): array {
                     ],
                 ] ),
                 widget( 'google_maps', [ 'address' => 'Downtown Portland, Oregon', 'zoom' => slider( 14 ), 'height' => slider( 360 ) ] ),
+                widget( 'video', [ 'video_type' => 'youtube', 'youtube_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' ] ),
+                widget( 'image', [ 'image' => $ctx->image( 'desks-window.jpg' ), 'image_size' => 'large', '_margin' => box( 0, 0 ) + [ 'bottom' => '40' ] ] ),
+                widget( 'eael-feature-list', [
+                    'eael_feature_list' => [
+                        item( 'pf1', [ 'eael_feature_list_title' => 'Fast wifi', 'eael_feature_list_content' => 'Gigabit fibre on every desk.', 'eael_feature_list_icon_new' => icon( 'fas fa-wifi' ) ] ),
+                        item( 'pf2', [ 'eael_feature_list_title' => 'Coffee', 'eael_feature_list_content' => 'Bottomless, roasted nearby.', 'eael_feature_list_icon_new' => icon( 'fas fa-mug-hot' ) ] ),
+                    ],
+                ] ),
             ] ),
         ],
-        'survive'  => [ 'Probe hero heading', 'eramic', 'Probe button', 'Percent probe', 'Plus probe' ],
+        'survive'  => [ 'Probe hero heading', 'eramic', 'Probe button', 'Percent probe', 'Plus probe', 'dQw4w9WgXcQ', 'Fast wifi', 'Bottomless' ],
     ];
 };
