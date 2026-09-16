@@ -35,8 +35,6 @@ async function css(locator: Locator, property: string): Promise<string> {
   return locator.evaluate((el, prop) => getComputedStyle(el).getPropertyValue(prop), property);
 }
 
-test.describe.configure({ mode: 'serial' });
-
 test.beforeEach(async ({ page }) => {
   await login(page);
 });
@@ -107,7 +105,8 @@ test.describe('probe: core widgets', () => {
   });
 
   test('social-icons: Instagram and LinkedIn, nothing else', async ({ page }) => {
-    const items = page.locator('.et_pb_social_media_follow li');
+    // The probe's second section; the Theme Builder footer has its own social list.
+    const items = page.locator('.et_pb_section_1 .et_pb_social_media_follow li');
     await expect(items).toHaveCount(2);
     await expect(items.nth(0)).toHaveClass(/et-social-instagram/);
     await expect(items.nth(1)).toHaveClass(/et-social-linkedin/);
@@ -172,5 +171,60 @@ test.describe('home', () => {
     await expect(blurbs.first().locator('.et_pb_module_header')).not.toBeEmpty();
     await expect(blurbs.first().locator('.et_pb_blurb_description')).not.toBeEmpty();
     await expect(blurbs.first().locator('.et_pb_main_blurb_image .et-pb-icon')).toBeVisible();
+  });
+
+  test('testimonials (EAEL): portrait, author and position', async ({ page }) => {
+    const first = page.locator('.et_pb_testimonial').first();
+    await expect(first.locator('.et_pb_testimonial_author')).toHaveText('Priya Raman');
+    await expect(first.locator('.et_pb_testimonial_position')).toHaveText('Brand designer');
+    await expect(first.locator('.et_pb_testimonial_portrait')).toBeVisible();
+    expect(await css(first.locator('.et_pb_testimonial_portrait'), 'background-image')).toContain('member-1');
+  });
+});
+
+test.describe('memberships', () => {
+  test('pricing tables (EAEL): title, price, period, features, button', async ({ page }) => {
+    await page.goto(draft('memberships'));
+    await settle(page);
+    const tables = page.locator('.et_pb_pricing_table');
+    await expect(tables).toHaveCount(3);
+    const first = tables.first();
+    await expect(first.locator('.et_pb_pricing_title')).not.toBeEmpty();
+    await expect(first.locator('.et_pb_sum')).not.toBeEmpty();
+    await expect(first.locator('.et_pb_frequency')).not.toBeEmpty();
+    expect(await first.locator('ul.et_pb_pricing li').count()).toBeGreaterThan(0);
+    await expect(first.locator('a.et_pb_button')).toBeVisible();
+  });
+
+  test.fixme('pricing tables (EAEL): subtitle (needs the reseeded site, Task 15)', async ({ page }) => {
+    await page.goto(draft('memberships'));
+    await expect(page.locator('.et_pb_pricing_table').first().locator('.et_pb_best_value')).not.toBeEmpty();
+  });
+});
+
+test.describe('about', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(draft('about'));
+    await settle(page);
+  });
+
+  test('team members (EAEL): photo, position and description', async ({ page }) => {
+    const members = page.locator('.et_pb_team_member');
+    await expect(members).toHaveCount(4);
+    await expect(members.first().locator('.et_pb_team_member_image img')).toBeVisible();
+    await expect(members.first().locator('.et_pb_member_position')).toHaveText('Founder');
+    await expect(members.first().locator('.et_pb_team_member_description_content')).toContainText('design studio');
+    await expect(members.first().locator('.et_pb_linkedin_icon')).toHaveCount(1);
+  });
+});
+
+test.describe('events', () => {
+  test('countdown (EAEL): counts down to a future date', async ({ page }) => {
+    await page.goto(draft('events'));
+    await settle(page);
+    const timer = page.locator('.et_pb_countdown_timer').first();
+    const end = Number(await timer.locator('[data-end-timestamp]').first().getAttribute('data-end-timestamp'));
+    expect(end).toBeGreaterThan(Date.now() / 1000);
+    await expect(timer.locator('.days .value')).not.toHaveText('000');
   });
 });

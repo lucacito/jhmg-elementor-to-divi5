@@ -4,7 +4,6 @@
 // Key: "<block name> <attribute path>" prefix of the reported problem. Value: the task.
 // Deleted when empty.
 return [
-    'divi/countdown-timer module.advanced.countdownDate'               => 'Task 14',
     'divi/blog post.innerContent'                                      => 'Task 15',
     'divi/video module.advanced.videoUrl'                              => 'Task 20',
     'divi/image module.decoration.spacing'                             => 'Task 21',

@@ -598,6 +598,25 @@ final class AddonSettingNamesTest extends TestCase {
         $this->assertArrayNotHasKey( 'company', $s );
     }
 
+    public function test_countdown_due_date_lands_in_content_advanced_date_time(): void {
+        [ $block, $result ] = $this->convert( 'eael-countdown', [ 'eael_countdown_type' => 'due_date', 'eael_countdown_due_time' => '2026-10-06 18:00' ] );
+
+        // countdown-timer/module.json + CountdownTimerModule.php:361: content.advanced.dateTime,
+        // parsed with strtotime; the VB timepicker stores "Y-m-d H:i".
+        $this->assertSame( '2026-10-06 18:00', $block['settings']['content']['advanced']['dateTime']['desktop']['value'] );
+        $this->assertArrayNotHasKey( 'module', $block['settings'] );
+        $this->assertSame( [], $result['report']['warnings'] );
+    }
+
+    public function test_countdown_date_only_and_unparsable_dates(): void {
+        [ $block ] = $this->convert( 'eael-countdown', [ 'eael_countdown_due_time' => '2026-10-06' ] );
+        $this->assertSame( '2026-10-06 00:00', $block['settings']['content']['advanced']['dateTime']['desktop']['value'] );
+
+        [ $block, $result ] = $this->convert( 'eael-countdown', [ 'eael_countdown_due_time' => 'next tuesday-ish' ] );
+        $this->assertArrayNotHasKey( 'content', $block['settings'] );
+        $this->assertStringContainsString( 'next tuesday-ish', $result['report']['warnings'][0] );
+    }
+
     // -------------------------------------------------------------------------
     // Header Footer Elementor
     // -------------------------------------------------------------------------

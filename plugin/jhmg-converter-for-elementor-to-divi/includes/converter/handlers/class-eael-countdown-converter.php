@@ -18,15 +18,19 @@ class EaelCountdownConverter extends BaseElementorConverter {
             ? ( $settings['eael_countdown_due_time'] ?? '' )
             : '';
 
+        // divi/countdown-timer reads content.advanced.dateTime
+        // (countdown-timer/module.json, CountdownTimerModule.php:361) through
+        // strtotime(); its own picker stores "Y-m-d H:i". EAEL 6.6.7 Countdown.php
+        // stores a DATE_TIME control the same way, so normalise rather than copy.
+        // module.advanced.countdownDate was never read: the timer sat at zero.
         $block_settings = [];
         if ( $due_date !== '' ) {
-            $block_settings['module'] = [
-                'advanced' => [
-                    'countdownDate' => [
-                        'desktop' => [ 'value' => $due_date ],
-                    ],
-                ],
-            ];
+            $timestamp = strtotime( $due_date );
+            if ( $timestamp === false ) {
+                $this->engine->logWarning( "Countdown {$id}: could not read the due date '{$due_date}'; set it in the Divi module." );
+            } else {
+                $block_settings['content']['advanced']['dateTime']['desktop']['value'] = gmdate( 'Y-m-d H:i', $timestamp );
+            }
         }
 
         $this->engine->logConverted( 'countdown-timer' );
