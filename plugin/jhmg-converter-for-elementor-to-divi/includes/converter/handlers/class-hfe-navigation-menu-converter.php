@@ -35,9 +35,17 @@ class HfeNavigationMenuConverter extends BaseElementorConverter {
             ];
         }
 
+        // Divi paints #ffffff behind the menu by default
+        // (menu/module-default-render-attributes.json), a white bar over the
+        // header's background. HFE's menu has no bar background of its own; its
+        // per-item bg_color_menu_item (navigation-menu.php) is the nearest thing.
+        $item_bg = $settings['bg_color_menu_item'] ?? '';
+        $block_settings['module']['decoration']['background']['desktop']['value']['color'] =
+            is_string( $item_bg ) && $item_bg !== '' ? $item_bg : 'rgba(255,255,255,0)';
+
         $this->engine->logConverted( 'menu' );
         $this->logUnmappedSettings( $id, $settings, [
-            'menu', 'nav_menu', 'layout', 'submenu_icon', 'submenu_animation',
+            'menu', 'nav_menu', 'bg_color_menu_item', 'layout', 'submenu_icon', 'submenu_animation',
             'dropdown_animation', 'flyout_orientation', 'appear_effect',
             'menu_last_item', 'schema_support', 'hide_plus_minus',
             'menu_items_align', 'hamburger_align',
