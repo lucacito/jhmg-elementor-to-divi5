@@ -32,6 +32,20 @@
                                                     "value": "1_2"
                                                 }
                                             }
+                                        },
+                                        "decoration": {
+                                            "sizing": {
+                                                "desktop": {
+                                                    "value": {
+                                                        "flexType": "12_24"
+                                                    }
+                                                },
+                                                "phone": {
+                                                    "value": {
+                                                        "flexType": "24_24"
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 },
@@ -87,6 +101,20 @@
                                             "type": {
                                                 "desktop": {
                                                     "value": "1_2"
+                                                }
+                                            }
+                                        },
+                                        "decoration": {
+                                            "sizing": {
+                                                "desktop": {
+                                                    "value": {
+                                                        "flexType": "12_24"
+                                                    }
+                                                },
+                                                "phone": {
+                                                    "value": {
+                                                        "flexType": "24_24"
+                                                    }
                                                 }
                                             }
                                         }

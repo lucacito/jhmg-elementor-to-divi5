@@ -1324,29 +1324,90 @@ abstract class BaseElementorConverter implements ConverterInterface {
     }
 
     /**
-     * Build row `settings` from an array of already-converted divi/column children.
+     * Divi 5's column structures: the equal splits and the offsets listed in
+     * RowModuleTraits/GetColumnClassnameTrait.php, as offered by the row structure
+     * picker (visual-builder/build/constant-library.js). Divi renders a row whose
+     * columnStructure is not one of these with every column at full width.
+     */
+    protected const DIVI_COLUMN_STRUCTURES = [
+        '4_4',
+        '1_2,1_2', '1_3,2_3', '2_3,1_3', '1_4,3_4', '3_4,1_4', '2_5,3_5', '3_5,2_5',
+        '1_3,1_3,1_3', '1_4,1_2,1_4', '1_4,1_4,1_2', '1_2,1_4,1_4', '1_5,3_5,1_5', '1_5,1_5,3_5', '3_5,1_5,1_5',
+        '1_4,1_4,1_4,1_4', '1_6,1_6,1_6,1_2', '1_2,1_6,1_6,1_6',
+        '1_5,1_5,1_5,1_5,1_5',
+        '1_6,1_6,1_6,1_6,1_6,1_6',
+    ];
+
+    /**
+     * Column fraction → the flexType Divi's structure picker writes for it
+     * (constant-library.js, flexTypeAttr), each a `.et_flex_column_*` width in
+     * style-static.min.css.
+     */
+    protected const COLUMN_FLEX_TYPE = [
+        '4_4' => '24_24',
+        '1_2' => '12_24',
+        '1_3' => '8_24',
+        '2_3' => '16_24',
+        '1_4' => '6_24',
+        '3_4' => '18_24',
+        '1_5' => '1_5',
+        '2_5' => '2_5',
+        '3_5' => '3_5',
+        '4_5' => '4_5',
+        '1_6' => '4_24',
+    ];
+
+    /**
+     * Build row `settings` from the converted divi/column children and give each
+     * column the width Divi 5 reads.
      *
-     * Reads the `module.advanced.type.desktop.value` fraction from each column
-     * and assembles the `module.advanced.columnStructure.desktop.value` string
-     * (e.g. "1_2,1_2") that Divi uses to render multi-column rows.
+     * Divi sizes a flex row's columns from module.decoration.sizing.*.flexType
+     * (Module.php:333-387 adds `et_flex_column_{flexType}`); the row's columnStructure
+     * and the column's type only pick classnames for the legacy block layout. A column
+     * without flexType is 24_24, full width, so a wrapping row stacks its columns.
+     *
+     * When the fractions the columns rounded to one by one do not form a Divi
+     * structure (60% + 35% → "3_5,1_3"), the row snaps to the nearest one and the
+     * column types follow, so the Visual Builder shows a structure it knows.
      *
      * Returns an empty array when no column has a type set (no `_column_size`).
+     *
+     * @param array $children The row's children; the columns' settings are updated in place.
      */
-    protected function rowSettingsFromColumns( array $children ): array {
+    protected function rowSettingsFromColumns( array &$children ): array {
         $fractions = [];
+        $columns   = 0;
 
-        foreach ( $children as $child ) {
+        foreach ( $children as $index => $child ) {
             if ( ( $child['name'] ?? '' ) !== 'divi/column' ) {
                 continue;
             }
+            $columns++;
             $fraction = $child['settings']['module']['advanced']['type']['desktop']['value'] ?? null;
-            if ( $fraction !== null ) {
-                $fractions[] = $fraction;
+            if ( is_string( $fraction ) && $fraction !== '' ) {
+                $fractions[ $index ] = $fraction;
             }
         }
 
         if ( empty( $fractions ) ) {
             return [];
+        }
+
+        if ( $columns > 1 && count( $fractions ) === $columns ) {
+            $structure = implode( ',', $fractions );
+            if ( ! in_array( $structure, self::DIVI_COLUMN_STRUCTURES, true ) ) {
+                $snapped = $this->nearestDiviColumnStructure( array_values( $fractions ) );
+                if ( $snapped !== null ) {
+                    $fractions = array_combine( array_keys( $fractions ), explode( ',', $snapped ) );
+                }
+            }
+            foreach ( $fractions as $index => $fraction ) {
+                $children[ $index ]['settings']['module']['advanced']['type']['desktop']['value'] = $fraction;
+                $children[ $index ]['settings'] = $this->deepMergeSettings(
+                    $children[ $index ]['settings'],
+                    $this->columnFlexSizing( $fraction, $columns )
+                );
+            }
         }
 
         return [
@@ -1358,6 +1419,74 @@ abstract class BaseElementorConverter implements ConverterInterface {
                 ],
             ],
         ];
+    }
+
+    /**
+     * The Divi structure with this many columns whose widths differ least from these
+     * fractions, in total. On a tie the structure that keeps the earlier columns'
+     * fractions wins: "3_5,1_3" becomes "3_5,2_5", not "2_3,1_3".
+     */
+    private function nearestDiviColumnStructure( array $fractions ): ?string {
+        $count      = count( $fractions );
+        $best       = null;
+        $best_score = null;
+
+        foreach ( self::DIVI_COLUMN_STRUCTURES as $structure ) {
+            $parts = explode( ',', $structure );
+            if ( count( $parts ) !== $count ) {
+                continue;
+            }
+            $distance = 0.0;
+            $changed  = 0;
+            foreach ( $parts as $i => $part ) {
+                $distance += abs( self::fractionValue( $part ) - self::fractionValue( $fractions[ $i ] ) );
+                if ( $part !== $fractions[ $i ] ) {
+                    $changed |= 1 << ( $count - 1 - $i );
+                }
+            }
+            $score = [ round( $distance, 4 ), $changed ];
+            if ( $best_score === null || $score < $best_score ) {
+                $best_score = $score;
+                $best       = $structure;
+            }
+        }
+
+        return $best;
+    }
+
+    /** "3_5" → 0.6 */
+    private static function fractionValue( string $fraction ): float {
+        $parts       = explode( '_', $fraction );
+        $numerator   = (int) ( $parts[0] ?? 1 );
+        $denominator = (int) ( $parts[1] ?? 1 );
+
+        return $denominator > 0 ? $numerator / $denominator : 1.0;
+    }
+
+    /**
+     * module.decoration.sizing for a column of $fraction in a row of $columns, the way
+     * Divi's structure picker writes it (constant-library.js): two and three columns
+     * stack on phones, four and five go two per row on tablets, six go three per row
+     * on tablets and two on phones.
+     */
+    private function columnFlexSizing( string $fraction, int $columns ): array {
+        $flex_type = self::COLUMN_FLEX_TYPE[ $fraction ] ?? null;
+        if ( $flex_type === null ) {
+            return [];
+        }
+
+        $sizing = [ 'desktop' => [ 'value' => [ 'flexType' => $flex_type ] ] ];
+        if ( $columns >= 6 ) {
+            $sizing['tablet'] = [ 'value' => [ 'flexType' => '8_24' ] ];
+            $sizing['phone']  = [ 'value' => [ 'flexType' => '12_24' ] ];
+        } elseif ( $columns >= 4 ) {
+            $sizing['tablet'] = [ 'value' => [ 'flexType' => '12_24' ] ];
+            $sizing['phone']  = [ 'value' => [ 'flexType' => '24_24' ] ];
+        } else {
+            $sizing['phone'] = [ 'value' => [ 'flexType' => '24_24' ] ];
+        }
+
+        return [ 'module' => [ 'decoration' => [ 'sizing' => $sizing ] ] ];
     }
 
     /**

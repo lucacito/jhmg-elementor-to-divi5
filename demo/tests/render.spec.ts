@@ -189,6 +189,18 @@ test.describe('home', () => {
     expect(await blurbs.count()).toBeGreaterThanOrEqual(3);
     await expect(blurbs.first().locator('.et_pb_module_header')).not.toBeEmpty();
     await expect(blurbs.first().locator('.et_pb_blurb_description')).not.toBeEmpty();
+  test('footer (HFE, 60% + 35% columns): the menu and the social icons share a line', async ({ page }) => {
+    const column = (selector: string) =>
+      page.locator(selector).first().evaluate((el) => {
+        const box = (el.closest('.et_pb_column') as HTMLElement).getBoundingClientRect();
+        return { x: box.x, width: box.width, y: box.y, height: box.height };
+      });
+    const menu = await column('.et-l--footer .et_pb_menu, footer .et_pb_menu');
+    const social = await column('.et-l--footer .et_pb_social_media_follow, footer .et_pb_social_media_follow');
+    expect(social.x).toBeGreaterThanOrEqual(menu.x + menu.width);
+    expect(social.y).toBeLessThan(menu.y + menu.height);
+  });
+
     await expect(blurbs.first().locator('.et_pb_main_blurb_image .et-pb-icon')).toBeVisible();
   });
 
@@ -203,6 +215,17 @@ test.describe('home', () => {
 });
 
 test.describe('memberships', () => {
+  test('hero (container row, 55% + 40%): the text and image columns share a line', async ({ page }) => {
+    // Divi sizes flex-row columns from module.decoration.sizing.flexType; without it they stack.
+    const row = page.locator('#et-main-area .et_pb_row').first();
+    const columns = row.locator(':scope > .et_pb_column');
+    await expect(columns).toHaveCount(2);
+    const [rowBox, text, image] = await Promise.all([row.boundingBox(), columns.nth(0).boundingBox(), columns.nth(1).boundingBox()]);
+    expect(image?.x ?? 0).toBeGreaterThanOrEqual((text?.x ?? 0) + (text?.width ?? 1e9));
+    expect(text?.width ?? 1e9).toBeLessThan((rowBox?.width ?? 0) * 0.65);
+    expect(image?.width ?? 1e9).toBeLessThan((rowBox?.width ?? 0) * 0.45);
+  });
+
   test('pricing tables (EAEL): title, price, period, features, button', async ({ page }) => {
     await page.goto(draft('memberships'));
     await settle(page);

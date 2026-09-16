@@ -38,7 +38,7 @@ class StyleMapper {
         65  => '2_3',
         63  => '2_3',
         60  => '3_5',
-        55  => '1_2',   // between 1/2 and 3/5; round to 1/2
+        55  => '3_5',   // as close to 3/5 as to 1/2; 3/5 pairs with the 2/5 that 40–45 become, a structure Divi has
         52  => '1_2',
         50  => '1_2',
         48  => '1_2',
