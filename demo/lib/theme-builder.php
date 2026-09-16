@@ -4,9 +4,8 @@
  * Footer Elementor templates. Run with Divi active: the exporter calls Divi's own
  * Theme Builder functions.
  *
- * Uses DiviThemeBuilderExporter directly, not ConversionCommitter: the committer
- * only sends elementor_library templates to the Theme Builder, and HFE templates
- * are elementor-hf posts (docs/known-issues.md).
+ * Uses DiviThemeBuilderExporter directly so it can name the layouts; since Pro
+ * 1.2.1 ConversionCommitter would route these elementor-hf posts the same way.
  *
  * Run: demo/wp --user=admin eval-file /demo/lib/theme-builder.php
  */
@@ -50,25 +49,6 @@ foreach ( [ 'header' => 'Ferncourt Header', 'footer' => 'Ferncourt Footer' ] as 
 
     $results[ $slot ] = $result;
     WP_CLI::log( "{$title}: layout {$result['post_id']}, template {$result['template_id']}, theme builder {$result['theme_builder_id']}" );
-}
-
-// Pro 1.2.0 saves the header and the footer as two separate default templates, and leaves
-// every area it does not set with no layout and not enabled, which Divi reads as "hide this
-// area" — including the page body (docs/known-issues.md). Divi applies one template per page,
-// so put both layouts on the header's template, keep the body enabled, and drop the other.
-$template_id        = (int) $results['header']['template_id'];
-$footer_template_id = (int) $results['footer']['template_id'];
-$theme_builder_id   = (int) $results['header']['theme_builder_id'];
-
-update_post_meta( $template_id, '_et_body_layout_id', 0 );
-update_post_meta( $template_id, '_et_body_layout_enabled', '1' );
-update_post_meta( $template_id, '_et_footer_layout_id', (int) $results['footer']['post_id'] );
-update_post_meta( $template_id, '_et_footer_layout_enabled', '1' );
-
-if ( $footer_template_id > 0 && $footer_template_id !== $template_id ) {
-    delete_post_meta( $theme_builder_id, '_et_template', (string) $footer_template_id );
-    wp_delete_post( $footer_template_id, true );
-    WP_CLI::log( "Merged the footer into template {$template_id} and removed template {$footer_template_id}." );
 }
 
 WP_CLI::success( 'Divi Theme Builder header and footer created.' );

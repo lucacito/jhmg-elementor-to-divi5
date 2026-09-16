@@ -427,7 +427,14 @@ if ( ! function_exists( 'wp_get_theme' ) ) {
 
 if ( ! function_exists( 'get_template' ) ) {
     function get_template() {
-        return 'Divi';
+        return $GLOBALS['__test_template'] ?? 'Divi';
+    }
+}
+
+if ( ! function_exists( 'get_post_status' ) ) {
+    function get_post_status( $post_id ) {
+        $post = $GLOBALS['__test_posts'][ (int) $post_id ] ?? null;
+        return $post ? ( $post->post_status ?? 'publish' ) : false;
     }
 }
 
