@@ -618,6 +618,51 @@ final class AddonSettingNamesTest extends TestCase {
     }
 
     // -------------------------------------------------------------------------
+    // Converters that dropped content (Task 15)
+    // -------------------------------------------------------------------------
+
+    public function test_progress_bar_reads_the_slider_value(): void {
+        [ $block ] = $this->convert( 'eael-progress-bar', [ 'progress_bar_title' => 'Freelancers', 'progress_bar_value' => [ 'unit' => '%', 'size' => 58, 'sizes' => [] ] ] );
+        $this->assertSame( '58', $block['elements'][0]['settings']['barProgress']['innerContent']['desktop']['value'] );
+    }
+
+    public function test_progress_bar_defaults_to_50_and_keeps_legacy_scalars_and_dynamic_values(): void {
+        [ $block ] = $this->convert( 'eael-progress-bar', [ 'progress_bar_title' => 'x' ] );
+        $this->assertSame( '50', $block['elements'][0]['settings']['barProgress']['innerContent']['desktop']['value'] );
+        [ $block ] = $this->convert( 'eael-progress-bar', [ 'progress_bar_value' => '72' ] );
+        $this->assertSame( '72', $block['elements'][0]['settings']['barProgress']['innerContent']['desktop']['value'] );
+        [ $block ] = $this->convert( 'eael-progress-bar', [ 'progress_bar_value_type' => 'dynamic', 'progress_bar_value_dynamic' => '33', 'progress_bar_value' => [ 'size' => 50 ] ] );
+        $this->assertSame( '33', $block['elements'][0]['settings']['barProgress']['innerContent']['desktop']['value'] );
+    }
+
+    public function test_cta_box_keeps_its_body_text_after_the_subtitle(): void {
+        [ $block ] = $this->convert( 'eael-cta-box', [ 'eael_cta_title' => 'Try us', 'eael_cta_sub_title' => 'A day is free.', 'eael_cta_content' => '<p>Bring a laptop.</p>', 'eael_cta_btn_text' => 'Go' ] );
+        $this->assertSame( "<p>A day is free.</p>\n<p>Bring a laptop.</p>", $block['settings']['content']['innerContent']['desktop']['value'] );
+    }
+
+    public function test_elementskit_heading_subtitle_becomes_a_text_block_before_the_heading(): void {
+        [ $first, $result ] = $this->convert( 'elementskit-heading', [ 'ekit_heading_title' => 'Built by freelancers', 'ekit_heading_title_tag' => 'h1', 'ekit_heading_sub_title_show' => 'yes', 'ekit_heading_sub_title' => 'Since 2019' ] );
+        $blocks = $result['divi']['elements'];
+        $this->assertSame( 'divi/text', $blocks[0]['name'] );
+        $this->assertSame( '<p>Since 2019</p>', $blocks[0]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'divi/heading', $blocks[1]['name'] );
+    }
+
+    public function test_post_grid_carries_its_category_filter_and_reports_other_filters(): void {
+        [ $block, $result ] = $this->convert( 'eael-post-grid', [ 'post_type' => 'post', 'posts_per_page' => 3, 'category_ids' => [ '4', '7' ], 'post_tag_ids' => [ '9' ] ] );
+        // blog/conversion-outline.json + BlogModule.php:769: post.advanced.number, .type and .categories.
+        $this->assertSame( '3', $block['settings']['post']['advanced']['number']['desktop']['value'] );
+        $this->assertSame( 'post', $block['settings']['post']['advanced']['type']['desktop']['value'] );
+        $this->assertSame( [ '4', '7' ], $block['settings']['post']['advanced']['categories']['desktop']['value'] );
+        $this->assertArrayNotHasKey( 'innerContent', $block['settings']['post'] );
+        $this->assertSame( 'query_filter', $result['report']['not_carried_over'][0]['kind'] );
+        $this->assertStringContainsString( 'post_tag_ids', $result['report']['not_carried_over'][0]['detail'] );
+
+        [ $block, $result ] = $this->convert( 'eael-post-grid', [ 'post_type' => 'product', 'posts_per_page' => 6 ] );
+        $this->assertStringContainsString( 'product', $result['report']['not_carried_over'][0]['detail'] );
+    }
+
+    // -------------------------------------------------------------------------
     // Header Footer Elementor
     // -------------------------------------------------------------------------
 

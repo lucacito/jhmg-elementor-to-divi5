@@ -1,13 +1,10 @@
 <?php
 /**
  * About: the story, the team, who works here, a member testimonial, and the space tour video.
- * Two converter bugs shape it (docs/known-issues.md): the member mix uses counters because
- * EAEL's progress bar loses its percentage, and the ElementsKit heading has no subtitle
- * because the converter drops it.
  */
 
 use Ferncourt\Demo\Context;
-use function Ferncourt\Demo\{band, col, color, heading, icon, item, link, row, text, widget};
+use function Ferncourt\Demo\{band, col, heading, icon, item, link, row, slider, text, widget};
 
 return static function ( Context $ctx ): array {
     $member = static fn ( string $id, string $photo, string $name, string $role, string $bio ): array => col( [
@@ -24,13 +21,9 @@ return static function ( Context $ctx ): array {
     ], 22 );
 
     $share = static fn ( int $percent, string $who ): array => col( [
-        widget( 'counter', [
-            'starting_number' => 0,
-            'ending_number'   => $percent,
-            'suffix'          => '%',
-            'title'           => $who,
-            // Elementor defaults the counter title to the kit's secondary color, our cream background.
-            '__globals__'     => [ 'number_color' => color( 'primary' ), 'title_color' => color( 'text' ) ],
+        widget( 'eael-progress-bar', [
+            'progress_bar_title' => $who,
+            'progress_bar_value' => slider( $percent, '%' ),
         ] ),
     ], 30 );
 
@@ -44,7 +37,8 @@ return static function ( Context $ctx ): array {
                         widget( 'elementskit-heading', [
                             'ekit_heading_title'                    => 'Built by freelancers, for freelancers',
                             'ekit_heading_title_tag'                => 'h1',
-                            'ekit_heading_sub_title_show'           => '',
+                            'ekit_heading_sub_title_show'           => 'yes',
+                            'ekit_heading_sub_title'                => 'Our story',
                             'ekit_heading_section_extra_title_show' => 'yes',
                             'ekit_heading_extra_title'              => 'Opened in 2019 in a former print works.',
                         ] ),
@@ -105,6 +99,7 @@ return static function ( Context $ctx ): array {
             ] ),
         ],
         'survive'       => [
+            'Our story',
             'Built by freelancers, for freelancers', 'Opened in 2019 in a former print works',
             'kitchen tables and noisy cafes', 'more than 240 members', 'about-story.jpg',
             'The team', 'Hannah Moore', 'Founder', 'Ran a design studio for ten years',

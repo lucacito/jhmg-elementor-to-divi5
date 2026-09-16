@@ -1,18 +1,17 @@
 <?php
 /**
- * Memberships: three pricing tables, a plan comparison table, and an FAQ.
- * The pricing tables have no subtitle: the converter drops eael_pricing_table_sub_title
- * (docs/known-issues.md).
+ * Memberships: three pricing tables with subtitles, a plan comparison table, and an FAQ.
  */
 
 use Ferncourt\Demo\Context;
 use function Ferncourt\Demo\{band, col, heading, item, link, row, text, widget};
 
 return static function ( Context $ctx ): array {
-    $plan = static fn ( string $id, string $title, string $price, string $period, array $features, string $cta, bool $featured = false ): array => col( [
+    $plan = static fn ( string $id, string $title, string $subtitle, string $price, string $period, array $features, string $cta, bool $featured = false ): array => col( [
         widget( 'eael-pricing-table', [
             'eael_pricing_table_style'        => 'style-1',
             'eael_pricing_table_title'        => $title,
+            'eael_pricing_table_sub_title'    => $subtitle,
             'eael_pricing_table_price'        => $price,
             'eael_pricing_table_price_cur'    => '$',
             'eael_pricing_table_price_period' => $period,
@@ -54,13 +53,13 @@ return static function ( Context $ctx ): array {
                 heading( 'Pick the membership that fits', 'h1', 'primary', 'center' ),
                 text( '<p style="text-align:center">No joining fees. Change or cancel with a month of notice.</p>' ),
                 row( [
-                    $plan( 'pd', 'Day Pass', '29', 'day',
+                    $plan( 'pd', 'Day Pass', 'For the occasional day', '29', 'day',
                         [ 'Any hot desk, 8am to 6pm', 'Tea and coffee included', 'Guest wifi' ],
                         'Buy a day pass' ),
-                    $plan( 'pf', 'Flex Desk', '189', 'month',
+                    $plan( 'pf', 'Flex Desk', 'Most popular', '189', 'month',
                         [ 'Any hot desk, 24/7 access', '4 meeting room hours a month', 'Mail handling', 'Member events' ],
                         'Join Flex Desk', true ),
-                    $plan( 'po', 'Private Office', '549', 'month',
+                    $plan( 'po', 'Private Office', 'Your own room', '549', 'month',
                         [ 'Lockable office for up to 4 people', '10 meeting room hours a month', 'Business address', 'Member events' ],
                         'Ask about offices' ),
                 ], 24, [ 'flex_align_items' => 'stretch' ] ),
@@ -100,7 +99,7 @@ return static function ( Context $ctx ): array {
         ],
         'survive'       => [
             'Pick the membership that fits', 'No joining fees',
-            'Day Pass', 'Flex Desk', 'Private Office',
+            'Day Pass', 'Flex Desk', 'Private Office', 'For the occasional day', 'Most popular', 'Your own room',
             'Any hot desk, 8am to 6pm', '24/7 access', 'Business address',
             'Buy a day pass', 'Join Flex Desk', 'Ask about offices',
             'Compare the plans', 'Meeting room hours', 'Pay as you go', '10 a month', 'Lockable storage', 'Your own office',

@@ -1,9 +1,7 @@
 <?php
 /**
  * Events: a countdown to the next event, this week and this month as tabs, and the
- * latest posts. The converter carries the post grid's post count but not a category
- * filter (docs/known-issues.md), so the grid lists the latest posts and both versions
- * of the page match.
+ * posts in the events category.
  */
 
 use Ferncourt\Demo\Context;
@@ -55,6 +53,7 @@ return static function ( Context $ctx ): array {
                 widget( 'eael-post-grid', [
                     'post_type'              => 'post',
                     'posts_per_page'         => 3,
+                    'category_ids'           => [ (string) $ctx->categoryId( 'events' ) ],
                     'eael_post_grid_columns' => 'eael-col-3',
                     'eael_show_excerpt'      => 'yes',
                 ] ),
