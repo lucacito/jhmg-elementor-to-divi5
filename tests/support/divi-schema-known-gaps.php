@@ -4,7 +4,6 @@
 // Key: "<block name> <attribute path>" prefix of the reported problem. Value: the task.
 // Deleted when empty.
 return [
-    'divi/gallery galleryGrid.innerContent'                            => 'Task 8',
     'divi/blurb module.advanced.text'                                  => 'Task 11',
     'divi/blurb title.innerContent'                                    => 'Task 11',
     'divi/blurb imageIcon.innerContent'                                => 'Task 11',

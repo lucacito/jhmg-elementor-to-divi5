@@ -71,6 +71,7 @@ class NotCarriedOverRenderer {
             'motion' => __( 'Motion and sticky effects — removed', 'jhmg-converter-for-elementor-to-divi' ),
             'form_fields' => __( 'Form fields — discarded; the Divi form is created with its default name, email and message fields', 'jhmg-converter-for-elementor-to-divi' ),
             'counter_affix' => __( 'Counter prefixes and suffixes — dropped; Divi\'s number counter offers only a percent sign', 'jhmg-converter-for-elementor-to-divi' ),
+            'gallery_extras' => __( 'Gallery filters, item names and captions — Divi\'s gallery has no filter bar and shows media library titles and captions', 'jhmg-converter-for-elementor-to-divi' ),
         ];
     }
 

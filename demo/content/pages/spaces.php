@@ -93,7 +93,7 @@ return static function ( Context $ctx ): array {
         ],
         'survive'  => [
             'Find your kind of space', 'converted print works',
-            'desks-open-plan.jpg', 'office-private-1.jpg', 'meeting-room-small.jpg', 'lounge-kitchen.jpg',
+            // The gallery's images travel as attachment IDs, not URLs; demo/tests/render.spec.ts counts them.
             'Included with every membership',
             'Print and scan', '200 free pages a month', 'Phone booths', 'Four soundproof booths',
             'Bike storage', 'Covered racks for 40 bikes', 'Kitchen', 'Lockers', 'Personal lockers for Flex Desk members',

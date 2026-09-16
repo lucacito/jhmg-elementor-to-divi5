@@ -708,4 +708,10 @@ if ( ! function_exists( 'sanitize_title' ) ) {
     }
 }
 
+if ( ! function_exists( 'wp_strip_all_tags' ) ) {
+    function wp_strip_all_tags( $text ) {
+        return trim( strip_tags( (string) $text ) );
+    }
+}
+
 require_once __DIR__ . '/support/DiviModuleSchema.php';

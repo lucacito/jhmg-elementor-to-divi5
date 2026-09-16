@@ -130,7 +130,8 @@ return static function ( Context $ctx ): array {
             'bright desks, quiet rooms, good coffee', 'See memberships', 'Book a tour',
             'Ferncourt in numbers', 'Members', 'Desks', 'Meeting rooms', 'Events a year',
             'Everything you need to focus', 'Fast, reliable wifi', 'Gigabit fibre on every floor', 'Rooms that close', 'Good coffee, all day',
-            'Spaces to suit the day', 'hero-lounge.jpg', 'coffee-bar.jpg', 'Explore the spaces',
+            // Gallery and carousel images travel as attachment IDs, not URLs, so they are checked by the render test.
+            'Spaces to suit the day', 'hero-lounge.jpg', 'Explore the spaces',
             'What members say', 'Priya Raman', 'Brand designer', 'The quiet rooms alone paid for the membership', 'Tomasz Nowak', 'Amara Okafor', 'Eighteen months later',
             'Try Ferncourt for a day', 'Your first day pass is on us', 'Claim a free day',
         ],

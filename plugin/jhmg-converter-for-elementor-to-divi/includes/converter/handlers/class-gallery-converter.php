@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\Helpers\AttachmentResolver;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -22,22 +23,7 @@ class GalleryConverter extends BaseElementorConverter {
         $settings = $element['settings'] ?? [];
 
         $raw_images = $settings['gallery'] ?? $settings['wp_gallery'] ?? [];
-        $ids        = [];
-        $urls       = [];
-
-        foreach ( $raw_images as $img ) {
-            if ( ! is_array( $img ) ) {
-                continue;
-            }
-            $img_id = (int) ( $img['id'] ?? 0 );
-            if ( $img_id > 0 ) {
-                $ids[] = $img_id;
-            }
-            $url = is_string( $img['url'] ?? '' ) ? ( $img['url'] ?? '' ) : '';
-            if ( $url !== '' ) {
-                $urls[] = $url;
-            }
-        }
+        $ids        = AttachmentResolver::ids( is_array( $raw_images ) ? $raw_images : [] );
 
         $this->engine->logConverted( 'gallery' );
         $this->logUnmappedSettings( $id, $settings, [
@@ -49,7 +35,13 @@ class GalleryConverter extends BaseElementorConverter {
         $block_settings = [];
 
         if ( ! empty( $ids ) ) {
+            $columns = (int) ( $settings['gallery_columns'] ?? 4 );
             $block_settings['image']['advanced']['galleryIds']['desktop']['value'] = $ids;
+            // Divi paginates at postsNumber (default 4); list everything, as Elementor does.
+            $block_settings['module']['advanced']['postsNumber']['desktop']['value'] = (string) count( $ids );
+            if ( $columns > 0 ) {
+                $block_settings['galleryGrid']['decoration']['layout']['desktop']['value'] = [ 'display' => 'grid', 'gridColumnCount' => (string) $columns ];
+            }
         }
 
         return [

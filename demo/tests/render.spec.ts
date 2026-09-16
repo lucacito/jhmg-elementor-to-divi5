@@ -5,6 +5,9 @@ import { login } from './support';
 
 // Build check 7 (demo/verify.sh render). Each test names the Elementor widget it stands
 // for and asserts what a viewer of the Divi draft sees, not what the converter wrote.
+// The number of $photo() items in demo/content/pages/spaces.php's filterable gallery.
+const SPACES_GALLERY_IMAGES = 8;
+
 const OUTPUT = join(process.cwd(), 'demo', 'output');
 const converted: { slug: string; kind: string; draft_id: number }[] = JSON.parse(
   readFileSync(join(OUTPUT, 'converted.json'), 'utf8'),
@@ -79,6 +82,31 @@ test.describe('probe: core widgets', () => {
     await expect(numbers).toHaveCount(2);
     await expect(numbers.nth(0)).toHaveText('58%');
     await expect(numbers.nth(1)).toHaveText('240');
+  });
+
+  test('image carousel (4 slides): a four-column gallery of full-size images', async ({ page }) => {
+    const images = page.locator('.et_pb_gallery').first().locator('.et_pb_gallery_image img');
+    await expect(images).toHaveCount(4);
+    for (const img of await images.all()) {
+      expect((await img.boundingBox())?.width ?? 0).toBeGreaterThan(200);
+    }
+    await expect(page.locator('.et_pb_gallery').first().locator('.et_pb_gallery_pagination')).toHaveCount(0);
+  });
+
+  test('image gallery: three items', async ({ page }) => {
+    await expect(page.locator('.et_pb_gallery').nth(1).locator('.et_pb_gallery_item')).toHaveCount(3);
+  });
+});
+
+test.describe('spaces', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(draft('spaces'));
+    await settle(page);
+  });
+
+  test('filterable gallery (EAEL): exactly its own images, not the media library', async ({ page }) => {
+    await expect(page.locator('.et_pb_gallery .et_pb_gallery_item')).toHaveCount(SPACES_GALLERY_IMAGES);
+    await expect(page.locator('.et_pb_gallery_pagination')).toHaveCount(0);
   });
 });
 
