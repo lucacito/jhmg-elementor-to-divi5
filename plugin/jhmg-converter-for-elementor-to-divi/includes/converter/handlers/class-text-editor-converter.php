@@ -16,7 +16,8 @@ class TextEditorConverter extends BaseElementorConverter {
         // 'paragraph' is used in our fixtures; real Elementor text-editor uses 'editor'.
         $content = $this->getSettingValue( $settings, 'paragraph', $this->getSettingValue( $settings, 'editor', '' ) );
 
-        $style = ( new StyleMapper() )->map( 'text-editor', $settings );
+        // Elementor's text editor falls back to the kit's Text typography (text-editor.php).
+        $style = ( new StyleMapper() )->map( 'text-editor', $settings, [ 'elementor_defaults' => true ] );
         // Start from StyleMapper attrs (may include content.decoration) then inject
         // innerContent alongside it — array_merge would clobber the whole content key.
         $attrs = $style['divi_attrs'];

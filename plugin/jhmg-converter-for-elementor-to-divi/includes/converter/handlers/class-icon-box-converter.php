@@ -21,7 +21,9 @@ class IconBoxConverter extends BaseElementorConverter {
         $icon_size   = $this->sizeString( $settings['icon_size'] ?? null );
         $icon_color  = is_string( $settings['icon_color'] ?? '' ) ? ( $settings['icon_color'] ?? '' ) : '';
 
-        $style_result = ( new StyleMapper() )->map( 'blurb', $settings );
+        // Elementor's icon box falls back to the kit's Primary typography for the title
+        // and Text for the description (icon-box.php).
+        $style_result = ( new StyleMapper() )->map( 'blurb', $settings, [ 'elementor_defaults' => true ] );
         $attrs        = $style_result['divi_attrs'];
 
         if ( $has_icon ) {

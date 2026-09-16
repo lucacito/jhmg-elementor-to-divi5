@@ -156,6 +156,12 @@ test.describe('spaces', () => {
     await expect(page.locator('.et_pb_gallery_pagination a')).toHaveCount(0);
   });
 
+  test("image box: the title in the kit's heading font (Elementor's Primary default)", async ({ page }) => {
+    const title = page.locator('.et_pb_blurb', { hasText: 'Every desk, a window seat' }).locator('.et_pb_module_header').first();
+    await expect(title).toBeVisible();
+    expect(await css(title, 'font-family')).toContain('Fraunces');
+  });
+
   test('flip boxes (EAEL): titles and text render as blurbs', async ({ page }) => {
     const blurbs = page.locator('.et_pb_blurb');
     expect(await blurbs.count()).toBeGreaterThanOrEqual(3);
@@ -228,6 +234,12 @@ test.describe('home', () => {
 });
 
 test.describe('memberships', () => {
+  test("counter: the number in the kit's heading font (Elementor's Primary default)", async ({ page }) => {
+    const number = page.locator('.et_pb_number_counter .percent-value').first();
+    await expect(number).toBeVisible();
+    expect(await css(number, 'font-family')).toContain('Fraunces');
+  });
+
   test('hero (container row, 55% + 40%): the text and image columns share a line', async ({ page }) => {
     // Divi sizes flex-row columns from module.decoration.sizing.flexType; without it they stack.
     const row = page.locator('#et-main-area .et_pb_row').first();

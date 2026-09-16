@@ -21,7 +21,9 @@ class ImageBoxConverter extends BaseElementorConverter {
         $src   = is_array( $image ) ? ( is_string( $image['url'] ?? '' ) ? ( $image['url'] ?? '' ) : '' ) : ( is_string( $image ) ? $image : '' );
         $alt   = is_array( $image ) ? ( is_string( $image['alt'] ?? '' ) ? ( $image['alt'] ?? '' ) : '' ) : '';
 
-        $style_result = ( new StyleMapper() )->map( 'blurb', $settings );
+        // Elementor's image box falls back to the kit's Primary typography for the title
+        // and Text for the description (image-box.php).
+        $style_result = ( new StyleMapper() )->map( 'blurb', $settings, [ 'elementor_defaults' => true ] );
         $attrs        = $style_result['divi_attrs'];
 
         if ( $src !== '' ) {

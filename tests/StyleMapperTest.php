@@ -18,6 +18,62 @@ final class StyleMapperTest extends TestCase {
         add_filter( 'edc_kit_globals', fn( $v ) => [ 'colors' => $colors, 'typography' => [] ] );
     }
 
+    /** Registers a kit supplying the given typography presets through `edc_kit_globals`. */
+    private function registerKitTypography( array $typography ): void {
+        add_filter( 'edc_kit_globals', fn( $v ) => [ 'colors' => [], 'typography' => $typography ] );
+    }
+
+    /**
+     * Elementor's heading control falls back to the kit's Primary typography
+     * (heading.php: `'global' => ['default' => Global_Typography::TYPOGRAPHY_PRIMARY]`)
+     * and Elementor stores no control defaults, so an untouched heading has no
+     * typography keys yet renders in that preset.
+     */
+    public function test_elementor_defaults_give_an_untouched_heading_the_kits_primary_typography(): void {
+        $this->registerKitTypography( [ 'primary' => [ 'family' => 'Fraunces', 'weight' => '600' ] ] );
+
+        $font = $this->mapper->map( 'heading', [ 'title' => 'Hello' ], [ 'elementor_defaults' => true ] )['divi_attrs']['title']['decoration']['font']['font']['desktop']['value'];
+
+        $this->assertSame( 'Fraunces', $font['family'] );
+        $this->assertSame( '600', $font['weight'] );
+    }
+
+    public function test_without_elementor_defaults_an_untouched_heading_gets_no_font(): void {
+        $this->registerKitTypography( [ 'primary' => [ 'family' => 'Fraunces', 'weight' => '600' ] ] );
+
+        $this->assertArrayNotHasKey( 'title', $this->mapper->map( 'heading', [ 'title' => 'Hello' ] )['divi_attrs'] );
+    }
+
+    public function test_elementor_defaults_leave_a_widgets_own_typography_alone(): void {
+        $this->registerKitTypography( [ 'primary' => [ 'family' => 'Fraunces', 'weight' => '600' ], 'secondary' => [ 'family' => 'Fraunces', 'weight' => '400' ] ] );
+
+        $custom = $this->mapper->map( 'heading', [ 'typography_typography' => 'custom', 'typography_font_family' => 'Inter' ], [ 'elementor_defaults' => true ] );
+        $this->assertSame( 'Inter', $custom['divi_attrs']['title']['decoration']['font']['font']['desktop']['value']['family'] );
+
+        $preset = $this->mapper->map( 'heading', [ '__globals__' => [ 'typography_typography' => 'globals/typography?id=secondary' ] ], [ 'elementor_defaults' => true ] );
+        $this->assertSame( '400', $preset['divi_attrs']['title']['decoration']['font']['font']['desktop']['value']['weight'] );
+    }
+
+    /** counter.php: typography_number → Primary, typography_title → Secondary. */
+    public function test_elementor_defaults_for_the_counter_number_and_title(): void {
+        $this->registerKitTypography( [ 'primary' => [ 'family' => 'Fraunces', 'weight' => '600' ], 'secondary' => [ 'family' => 'Fraunces', 'weight' => '400' ] ] );
+
+        $attrs = $this->mapper->map( 'counter', [], [ 'elementor_defaults' => true ] )['divi_attrs'];
+
+        $this->assertSame( '600', $attrs['number']['decoration']['font']['font']['desktop']['value']['weight'] );
+        $this->assertSame( '400', $attrs['title']['decoration']['font']['font']['desktop']['value']['weight'] );
+    }
+
+    /** icon-box.php and image-box.php: title_typography → Primary, description_typography → Text. */
+    public function test_elementor_defaults_for_the_blurb_title_and_description(): void {
+        $this->registerKitTypography( [ 'primary' => [ 'family' => 'Fraunces', 'weight' => '600' ], 'text' => [ 'family' => 'Inter', 'weight' => '400' ] ] );
+
+        $attrs = $this->mapper->map( 'blurb', [], [ 'elementor_defaults' => true ] )['divi_attrs'];
+
+        $this->assertSame( 'Fraunces', $attrs['title']['decoration']['font']['font']['desktop']['value']['family'] );
+        $this->assertSame( 'Inter', $attrs['content']['decoration']['bodyFont']['body']['font']['desktop']['value']['family'] );
+    }
+
     public function test_returns_empty_attrs_for_empty_settings(): void {
         $result = $this->mapper->map( 'heading', [] );
 

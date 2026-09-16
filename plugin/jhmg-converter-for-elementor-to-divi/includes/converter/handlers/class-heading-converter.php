@@ -19,7 +19,8 @@ class HeadingConverter extends BaseElementorConverter {
         $tag_raw  = $this->getSettingValue( $settings, 'tag', '' );
         $tag      = $tag_raw !== '' ? $tag_raw : $this->getSettingValue( $settings, 'header_size', 'h2' );
 
-        $style = ( new StyleMapper() )->map( 'heading', $settings );
+        // Elementor's heading falls back to the kit's Primary typography (heading.php).
+        $style = ( new StyleMapper() )->map( 'heading', $settings, [ 'elementor_defaults' => true ] );
 
         // Build title attrs with a stable key order: innerContent → decoration.
         $text        = html_entity_decode( (string) $title, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
