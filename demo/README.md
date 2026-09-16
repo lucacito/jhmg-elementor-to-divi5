@@ -80,9 +80,9 @@ NODE_PATH=$PWD/node_modules node demo/tools/kit-shots.cjs divi demo/output/kit-c
 demo/reset.sh                 # back to Ferncourt
 ```
 
-`kit-pages.json` is `[{ "id", "slug", "url" }]` and `kit-converted.json` is
-`[{ "slug", "source_id", "draft_id" }]`; the comment at the top of `kit-shots.cjs` shows
-how they were produced. Importing a kit replaces the global colours and fonts and hides
+`demo/tools/kit-compare.sh references/kits/ceramic-studio.zip` runs all of that in one go
+and resets the site at the end. `kit-pages.json` is `[{ "id", "slug", "url" }]` and
+`kit-converted.json` is `[{ "slug", "source_id", "draft_id" }]`. Importing a kit replaces the global colours and fonts and hides
 nothing by itself; set the Ferncourt HFE templates to draft if you want the kit's header.
 
 ## Commands

@@ -167,7 +167,7 @@ test.describe('Theme Builder header and footer (HFE templates)', () => {
   test('navigation-menu (HFE): no white bar behind the menu', async ({ page }) => {
     const menu = page.locator('.et_pb_menu').first();
     await expect(menu).toBeVisible();
-    expect(await css(menu, 'background-color')).toBe('rgba(0, 0, 0, 0)');
+    expect(await css(menu, 'background-color')).toMatch(/rgba\(\d+, \d+, \d+, 0\)/); // fully transparent
   });
 
   test('footer social-icons (HFE footer): Instagram and LinkedIn', async ({ page }) => {
@@ -196,8 +196,9 @@ test.describe('home', () => {
     const first = page.locator('.et_pb_testimonial').first();
     await expect(first.locator('.et_pb_testimonial_author')).toHaveText('Priya Raman');
     await expect(first.locator('.et_pb_testimonial_position')).toHaveText('Brand designer');
-    await expect(first.locator('.et_pb_testimonial_portrait')).toBeVisible();
-    expect(await css(first.locator('.et_pb_testimonial_portrait'), 'background-image')).toContain('member-1');
+    const portrait = first.locator('.et_pb_testimonial_portrait img');
+    await expect(portrait).toBeVisible();
+    expect(await portrait.getAttribute('src')).toContain('member-1');
   });
 });
 
@@ -215,7 +216,7 @@ test.describe('memberships', () => {
     await expect(first.locator('a.et_pb_button')).toBeVisible();
   });
 
-  test.fixme('pricing tables (EAEL): subtitle (needs the reseeded site, Task 15)', async ({ page }) => {
+  test('pricing tables (EAEL): subtitle', async ({ page }) => {
     await page.goto(draft('memberships'));
     await expect(page.locator('.et_pb_pricing_table').first().locator('.et_pb_best_value')).not.toBeEmpty();
   });
@@ -242,7 +243,7 @@ test.describe('events', () => {
     await page.goto(draft('events'));
     await settle(page);
     const timer = page.locator('.et_pb_countdown_timer').first();
-    const end = Number(await timer.locator('[data-end-timestamp]').first().getAttribute('data-end-timestamp'));
+    const end = Number(await timer.getAttribute('data-end-timestamp')); // CountdownTimerModule.php:467
     expect(end).toBeGreaterThan(Date.now() / 1000);
     await expect(timer.locator('.days .value')).not.toHaveText('000');
   });

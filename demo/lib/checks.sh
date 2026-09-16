@@ -58,6 +58,10 @@ check_render() {
     wp --user="$ADMIN_USER" eval-file /demo/lib/seed-probes.php
     wp theme activate Divi
     wp --user="$ADMIN_USER" eval-file /demo/lib/commit-conversions.php probes
+    # Committing clears Divi's static CSS for every draft; the next request rebuilds it and
+    # can outlast a test's timeout, so take that hit here rather than in the first test.
+    curl -s -o /dev/null --max-time 300 "http://localhost:8040/" || true
+    curl -s -o /dev/null --max-time 300 "http://localhost:8040/wp-login.php" || true
     (cd "$DEMO_DIR/.." && PW_STAGE=render npx playwright test -c demo/playwright.config.ts render)
     echo "ok  render assertions"
 }

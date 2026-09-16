@@ -1,5 +1,38 @@
 # Known issues
 
+## Fixed in free 3.0.2 and Pro 1.2.1
+
+Branch `fix/divi-rendering-2026-09`. Every fix has a PHPUnit test against Divi 5.7.4's module definitions (`tests/support/DiviModuleSchema.php`, run on every fixture, add-on probe, both Kit Library kits and the demo pages) and, where the demo stack shows it, a render assertion in `demo/tests/render.spec.ts`.
+
+| Item (section below) | Commit | Outcome |
+|---|---|---|
+| Column with a background image renders as a strip | `16e72db` | The background stays on the column, which stretches to the row |
+| Heading with `header_size: span`/`p`/`div` loses its typography | `f85fd38` | Converts to a text module keeping the tag, typography on the body font |
+| Button renders as Divi's outline button, text in default blue | `9bdb356` | Elementor's default button look and the kit's button theme style are applied to whatever the widget left unset |
+| Counter shows `233%` / `58%%` | `5ca4a5d` | Bare number, percent sign only for `%`; other affixes reported |
+| Image carousel renders thumbnails | `73932b7` | A gallery grid of the carousel's attachments (Divi's slider for one slide at a time) |
+| Filterable gallery shows the whole media library | `73932b7` | Attachments by ID, every image on one page; filters, item names and captions reported |
+| Social icons all Facebook | `ced0c18` | Networks resolved from the FontAwesome class |
+| HFE menu on a white bar | `ced0c18` | Transparent background |
+| Info box, flip box render nothing | `0945d3c` | Blurb title/body/icon on the paths Divi reads; FontAwesome icons mapped from Divi's own icon list |
+| Pricing table empty | `094d9d1` | Title, subtitle, currency/period, price, features, button, featured |
+| Team member: name only; testimonial: quote only | `82f91a1` | Position, description, photo, social links; author, job title, portrait (core Elementor testimonial too) |
+| Countdown at zero | `84d1796` | `content.advanced.dateTime` |
+| Progress bar "Array"; CTA body, pricing subtitle, ElementsKit subtitle, post grid categories dropped | `0d8a399` | All carried; other post-grid filters reported |
+| Custom CSS, Contact Form 7 form ID, menu ID on paths Divi never reads | `603d529` | `css.*.mainElement`, `form.advanced.formId`, `menu.advanced.menuId` |
+| Video source, image spacing, icon list items on paths Divi never reads | `3f3bd07`, `95e1bd8`, `ce1e08b` | Fixed |
+| Pro saves header and footer as two default templates; page body hidden | `1258c16` | One default template, untouched areas fall through to the theme |
+| HFE templates never reach the Theme Builder | `4cf1e41` | `elementor-hf` posts listed and routed by `ehf_template_type`; Pro upload applies the chosen slot |
+| Google Maps blank | `d17e2e8` | Not a bug: the lazy iframe loads after the screenshot; the render check waits for it |
+
+## Still open
+
+- **Header Footer Elementor active under Divi crashes every page once a Theme Builder header exists.** Not a converter bug (see the section below). Since `080b8d1` the plugin shows an admin notice, repeated on Pro's import result screen, telling the user to deactivate HFE.
+- **Things Divi 5.7.4 cannot express**, reported in the conversion report's "not carried over" list rather than dropped: counter prefixes and suffixes other than `%`; filterable gallery filter buttons, item names and captions (Divi's gallery has no filter bar and shows media library titles); team member social networks other than Facebook, Twitter, Google and LinkedIn; social networks Divi does not offer; post grid post types other than `post` and taxonomies other than category.
+- **Images that are not attachments on this site** (an export from another site whose media was not imported) cannot go into a Divi gallery; the carousel falls back to a row of inline images with a warning, the filterable gallery is left empty with a warning.
+
+## Details, as found on 2026-09-15
+
 ## Header Footer Elementor templates never reach the Divi Theme Builder
 
 Found 2026-09-15 by reading the code while planning the demo site. Not yet reproduced in a running WordPress.
@@ -21,6 +54,7 @@ Found 2026-09-15 by reading the code while planning the demo site. Not yet repro
 
 Cover with `InstalledPostSourceTest` and `HeaderTemplateConversionTest`.
 
+
 ## Essential Addons progress bar converts to "Array" or "0"
 
 Found 2026-09-15 while planning the demo site. Reproduced against the converter with a scratch PHPUnit test.
@@ -37,6 +71,7 @@ Found 2026-09-15 while planning the demo site. Reproduced against the converter 
 
 Cover in `AddonSettingNamesTest` next to the other EAEL cases: a saved slider, an absent key, and a legacy scalar.
 
+
 ## Essential Addons Call to Action loses its body text
 
 Found 2026-09-15 while planning the demo site, by reading the converter. Not yet reproduced in a running WordPress.
@@ -46,6 +81,7 @@ Found 2026-09-15 while planning the demo site, by reading the converter. Not yet
 **Why.** EAEL 6.6.7 defines and renders both `eael_cta_sub_title` and `eael_cta_content` (`includes/Elements/Cta_Box.php`, controls at lines 443 and 538). `EaelCtaBoxConverter::convert()` (`includes/converter/handlers/class-eael-cta-box-converter.php`) reads only `eael_cta_sub_title` into the Divi CTA's `content`. `eael_cta_content` is never read, so it only surfaces in the report's skipped settings, not as a warning.
 
 **Suggested fix.** Build the Divi CTA body from the subtitle followed by `eael_cta_content`, and add `eael_cta_content` to the handled keys. Cover in `AddonSettingNamesTest`.
+
 
 ## Attribute paths the schema test found that Divi 5.7.4 never reads
 
@@ -58,6 +94,7 @@ Found 2026-09-15 by the first run of `tests/support/DiviModuleSchema.php` (every
 - Image margins and padding go to `module.decoration.spacing`; Divi's image module keeps spacing under `module.advanced.spacing` (`ImageModule.php:958`). Plan Task 21.
 - Icon list items (EAEL feature list, price list, content ticker) write `module.advanced.text` and a `link` attribute; Divi reads `content.innerContent`, `icon.innerContent` and `module.advanced.link` (`IconListItemModule.php:77,178,310`). Plan Task 22.
 - The blog module gets `post.innerContent.perPage` from four converters (EAEL post grid and timeline, HFE posts, core posts); Divi reads `post.advanced.number` and `post.advanced.type` (`blog/conversion-outline.json`). Plan Task 15.
+
 
 ## Converted modules that keep their content but render blank or wrong in Divi 5.7.4
 
@@ -92,6 +129,7 @@ Rendered correctly in the same run: core heading, text editor, image, tabs, imag
 
 **Suggested next step.** Add a render-level check next to the content check — convert a fixture per widget, render it through Divi, and assert the text appears in the HTML — then fix the handlers it flags.
 
+
 ## Pro saves the header and footer as two default Theme Builder templates
 
 Found 2026-09-15 while building the demo site. Reproduced in WordPress with Divi 5.7.4.
@@ -104,6 +142,7 @@ Worse, each template leaves the areas it does not set with no meta at all. Divi 
 
 **Suggested fix.** Keep one default template: the second save should find the existing default template (by `_edc_tb_source` or `_et_default`) and add its layout to it instead of creating a new one. Write `_et_body_layout_id = 0` and `_et_body_layout_enabled = '1'` (and the same for whichever of header or footer is not set) so untouched areas keep rendering. Cover with a Theme Builder exporter test that saves a header then a footer and asserts one template carries both layout IDs with the body enabled.
 
+
 ## Header Footer Elementor still active under Divi crashes every page once a Theme Builder header exists
 
 Found 2026-09-15 while building the demo site. Reproduced in WordPress 6.9 with Divi 5.7.4 and HFE 2.8.8; not a converter bug, but converter users hit it.
@@ -113,6 +152,7 @@ Found 2026-09-15 while building the demo site. Reproduced in WordPress 6.9 with 
 **Why.** Divi's `et_theme_builder_frontend_override_partial()` (`theme-builder/frontend.php`) takes `$wp_filter['wp_head']` out, buffers the theme's header, then puts it back. HFE's compatibility layer for unsupported themes also hooks `get_header` and calls `remove_all_actions( 'wp_head' )` inside that window, so Divi restores an empty array instead of a `WP_Hook` and `do_action( 'wp_head' )` fatals. With HFE deactivated the pages render.
 
 **Suggested fix.** In the converter's post-conversion guidance (and in Pro's header import screen), tell users to deactivate Header Footer Elementor once their Divi Theme Builder header is in place, or detect HFE active with a Theme Builder header and show an admin notice.
+
 
 ## Essential Addons pricing table drops its subtitle
 
@@ -124,6 +164,7 @@ Found 2026-09-15 while building the demo site: the demo's offline conversion har
 
 **Suggested fix.** Carry the subtitle into the Divi pricing table (its subheading field, or prepended to the body if there is none), add it to the handled keys, and cover it in `AddonSettingNamesTest`.
 
+
 ## ElementsKit heading drops its subtitle
 
 Found 2026-09-15 while building the demo site: the demo's offline conversion harness reported the subtitle as lost.
@@ -134,6 +175,7 @@ Found 2026-09-15 while building the demo site: the demo's offline conversion har
 
 **Suggested fix.** When `ekit_heading_sub_title_show` is `yes`, emit the subtitle as its own block above the heading (ElementsKit renders it above the title by default), or include it in the extra-title text block. Cover in `AddonSettingNamesTest`.
 
+
 ## Essential Addons filterable gallery loses its filters, names and captions
 
 Found 2026-09-15 while planning the demo site, by reading the converter. Not yet reproduced in a running WordPress.
@@ -143,6 +185,7 @@ Found 2026-09-15 while planning the demo site, by reading the converter. Not yet
 **Why.** `EaelFilterableGalleryConverter::convert()` (`includes/converter/handlers/class-eael-filterable-gallery-converter.php`) reads only `eael_fg_gallery_img` from each `eael_fg_gallery_items` entry. `eael_fg_controls[].eael_fg_control`, `eael_fg_gallery_item_name`, `fg_item_cat` and `eael_fg_gallery_item_content` are never read.
 
 **Suggested fix.** Carry each item's name and caption onto its Divi gallery image (title and caption). Divi 5's gallery has no filter bar, so add a report warning or approximate-match entry saying the filter buttons were not carried, rather than dropping them silently.
+
 
 ## Essential Addons post grid ignores its query filters
 
