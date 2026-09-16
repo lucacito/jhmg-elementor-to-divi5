@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\Converter\TextHeading;
 use ElementorDivi5Converter\StyleMapper\StyleMapper;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -92,15 +93,21 @@ class ElementskitHeadingConverter extends BaseElementorConverter {
             $style['handled_keys']
         );
 
-        $this->engine->logConverted( 'heading' );
         $this->logUnmappedSettings( $id, $settings, $handled );
 
-        $heading_block = [
-            'id'       => $id,
-            'name'     => 'divi/heading',
-            'settings' => $attrs,
-            'elements' => [],
-        ];
+        // span, p and div: Divi's heading module styles h1-h6 only (see TextHeading).
+        if ( ! TextHeading::isHeadingTag( $tag ) ) {
+            $this->engine->logConverted( 'text' );
+            $heading_block = TextHeading::block( $id, $tag, esc_html( $title_text ), $attrs );
+        } else {
+            $this->engine->logConverted( 'heading' );
+            $heading_block = [
+                'id'       => $id,
+                'name'     => 'divi/heading',
+                'settings' => $attrs,
+                'elements' => [],
+            ];
+        }
 
         // When there is extra description content, emit it as a sibling text block.
         $extra_stripped = trim( wp_strip_all_tags( $extra ) );

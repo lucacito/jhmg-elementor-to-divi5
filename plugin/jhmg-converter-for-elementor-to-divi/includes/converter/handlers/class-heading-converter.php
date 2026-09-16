@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\Converter\TextHeading;
 use ElementorDivi5Converter\StyleMapper\StyleMapper;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -57,11 +58,19 @@ class HeadingConverter extends BaseElementorConverter {
             $attrs['module']['advanced']['link']['desktop']['value'] = $link_value;
         }
 
-        $this->engine->logConverted( 'heading' );
         $this->logUnmappedSettings( $id, $settings, array_merge(
             [ 'title', 'tag', 'header_size', 'title_tag', 'size', 'link' ],
             $style['handled_keys']
         ) );
+
+        // span, p and div: Divi's heading module styles h1-h6 only, so the
+        // typography would be lost. TextHeading keeps the tag on a text module.
+        if ( ! TextHeading::isHeadingTag( (string) $tag ) ) {
+            $this->engine->logConverted( 'text' );
+            return TextHeading::block( $id, (string) $tag, esc_html( $text ), $attrs );
+        }
+
+        $this->engine->logConverted( 'heading' );
 
         return [
             'id'       => $id,

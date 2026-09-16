@@ -56,4 +56,12 @@ test.describe('probe: core widgets', () => {
     expect(await css(column, 'background-image')).toContain('hero-lounge');
     expect(await css(column, 'background-size')).toBe('cover');
   });
+
+  test('heading (header_size span): keeps its 12vw typography and colour', async ({ page }) => {
+    const word = page.locator('.et_pb_text span', { hasText: 'eramic' }).first();
+    await expect(word).toBeVisible();
+    expect(parseFloat(await css(word, 'font-size'))).toBeGreaterThan(100); // 12vw at 1440px = 172.8px
+    expect(await css(word, 'color')).toBe('rgb(200, 100, 59)');
+    await expect(page.locator('.et_pb_heading', { hasText: 'eramic' })).toHaveCount(0);
+  });
 });
