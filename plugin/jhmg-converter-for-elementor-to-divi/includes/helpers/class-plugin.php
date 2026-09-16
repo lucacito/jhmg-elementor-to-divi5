@@ -34,6 +34,7 @@ class Plugin {
             ( new \ElementorDivi5Converter\Admin\DirectConversionPage() )->init();
             ( new \ElementorDivi5Converter\Admin\PriceDropNotice() )->init();
             ( new \ElementorDivi5Converter\Admin\ReviewPrompt() )->init();
+            ( new \ElementorDivi5Converter\Admin\HfeConflictNotice() )->init();
             ( new \ElementorDivi5Converter\History\ImportRollback() )->init();
             ( new \ElementorDivi5Converter\Telemetry\CoverageTelemetry() )->init();
         }
