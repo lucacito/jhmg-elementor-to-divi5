@@ -170,10 +170,8 @@ class ElementorImportParser {
 
                 $raw_post_type = $entry['post_type'] ?? $meta['post_type'] ?? 'page';
                 $template_type = $meta['template_type'] ?? '';
-                if ( $template_type === '' && $this->isHeaderTemplateType( $raw_post_type ) ) {
-                    $template_type = 'header';
-                } elseif ( $template_type === '' && $this->isFooterTemplateType( $raw_post_type ) ) {
-                    $template_type = 'footer';
+                if ( $template_type === '' ) {
+                    $template_type = $this->templateTypeFor( (string) $raw_post_type, array_merge( is_array( $meta ) ? $meta : [], is_array( $entry ) ? $entry : [] ) );
                 }
                 $items[] = $this->makeItem(
                     $entry['post_title'] ?? $meta['title'] ?? (string) $key,
@@ -274,11 +272,9 @@ class ElementorImportParser {
         }
 
         // Detect Elementor Theme Builder template types (header, footer, etc.).
-        $raw_type = $meta['post_type'] ?? '';
-        if ( $this->isHeaderTemplateType( $raw_type ) ) {
-            $meta['template_type'] = 'header';
-        } elseif ( $this->isFooterTemplateType( $raw_type ) ) {
-            $meta['template_type'] = 'footer';
+        $detected = $this->templateTypeFor( (string) ( $meta['post_type'] ?? '' ), $meta );
+        if ( $detected !== '' ) {
+            $meta['template_type'] = $detected;
         }
 
         // Format 2: Elementor template export — {version, title, type, content: [...]}.
@@ -312,25 +308,27 @@ class ElementorImportParser {
     }
 
     /**
-     * Elementor Theme Builder headers export with type='header' (or legacy variants).
-     * Also covers HFE (Header Footer Elementor) templates.
+     * The Divi Theme Builder area an exported post maps to: Elementor's own
+     * header/footer template types, Divi's layout post types, and Header
+     * Footer Elementor's elementor-hf posts (2.8.8: ehf_template_type
+     * type_header | type_footer). '' for everything else.
+     *
+     * @param array $meta The post's meta/settings as exported, for ehf_template_type.
      */
-    private function isHeaderTemplateType( string $type ): bool {
-        return in_array( strtolower( $type ), [
-            'header',
-            'et_header_layout',
-            'hfe-template',   // HFE plugin template post type
-        ], true );
-    }
+    public function templateTypeFor( string $post_type, array $meta ): string {
+        $type = strtolower( $post_type );
 
-    /**
-     * Elementor Theme Builder footers export with type='footer' (or legacy variants).
-     */
-    private function isFooterTemplateType( string $type ): bool {
-        return in_array( strtolower( $type ), [
-            'footer',
-            'et_footer_layout',
-        ], true );
+        if ( in_array( $type, [ 'header', 'et_header_layout' ], true ) ) {
+            return 'header';
+        }
+        if ( in_array( $type, [ 'footer', 'et_footer_layout' ], true ) ) {
+            return 'footer';
+        }
+        if ( $type === 'elementor-hf' ) {
+            return \ElementorDivi5Converter\Conversion\InstalledPostSource::hfeTemplateType( (string) ( $meta['ehf_template_type'] ?? '' ) );
+        }
+
+        return '';
     }
 
     private function titleFromFileName( string $file_name ): string {

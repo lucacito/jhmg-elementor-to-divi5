@@ -34,7 +34,8 @@ class ElementorPageRepository {
         $search   = trim( (string) ( $args['search'] ?? '' ) );
 
         $query = [
-            'post_type'      => [ 'page', 'post', 'elementor_library' ],
+            // elementor-hf: Header Footer Elementor's templates, converted as Theme Builder areas.
+            'post_type'      => [ 'page', 'post', 'elementor_library', 'elementor-hf' ],
             'post_status'    => [ 'publish', 'draft', 'pending', 'private', 'future' ],
             'meta_key'       => self::EDIT_MODE_META,
             'meta_value'     => 'builder',

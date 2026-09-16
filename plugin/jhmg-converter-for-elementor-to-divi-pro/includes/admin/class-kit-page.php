@@ -392,6 +392,13 @@ class KitPage {
                 exit;
             }
 
+            // The user chose the slot on the upload form; a free-Elementor "Save as
+            // template" export is typed page, so the JSON's own type cannot decide.
+            foreach ( $items as &$item ) {
+                $item['template_type'] = $upload_type;
+            }
+            unset( $item );
+
             $importer = new \ElementorDivi5Converter\Admin\BatchImporter();
             $results  = $importer->import( $items, [
                 'post_type'       => 'page',
