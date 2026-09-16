@@ -189,6 +189,18 @@ test.describe('Theme Builder header and footer (HFE templates)', () => {
     expect(await css(menu, 'background-color')).toMatch(/rgba\(\d+, \d+, \d+, 0\)/); // fully transparent
   });
 
+  test('footer (HFE, 60% + 35% columns): the menu and the social icons share a line', async ({ page }) => {
+    const column = (selector: string) =>
+      page.locator(selector).first().evaluate((el) => {
+        const box = (el.closest('.et_pb_column') as HTMLElement).getBoundingClientRect();
+        return { x: box.x, width: box.width, y: box.y, height: box.height };
+      });
+    const menu = await column('.et-l--footer .et_pb_menu, footer .et_pb_menu');
+    const social = await column('.et-l--footer .et_pb_social_media_follow, footer .et_pb_social_media_follow');
+    expect(social.x).toBeGreaterThanOrEqual(menu.x + menu.width);
+    expect(social.y).toBeLessThan(menu.y + menu.height);
+  });
+
   test('footer social-icons (HFE footer): Instagram and LinkedIn', async ({ page }) => {
     const items = page.locator('.et-l--footer .et_pb_social_media_follow li, footer .et_pb_social_media_follow li');
     await expect(items).toHaveCount(2);
@@ -203,62 +215,6 @@ test.describe('home', () => {
     await settle(page);
   });
 
-  test('info boxes (EAEL): title, body and icon render', async ({ page }) => {
-    const blurbs = page.locator('.et_pb_blurb');
-    expect(await blurbs.count()).toBeGreaterThanOrEqual(3);
-    await expect(blurbs.first().locator('.et_pb_module_header')).not.toBeEmpty();
-    await expect(blurbs.first().locator('.et_pb_blurb_description')).not.toBeEmpty();
-  test('footer (HFE, 60% + 35% columns): the menu and the social icons share a line', async ({ page }) => {
-    const column = (selector: string) =>
-      page.locator(selector).first().evaluate((el) => {
-        const box = (el.closest('.et_pb_column') as HTMLElement).getBoundingClientRect();
-        return { x: box.x, width: box.width, y: box.y, height: box.height };
-      });
-    const menu = await column('.et-l--footer .et_pb_menu, footer .et_pb_menu');
-    const social = await column('.et-l--footer .et_pb_social_media_follow, footer .et_pb_social_media_follow');
-    expect(social.x).toBeGreaterThanOrEqual(menu.x + menu.width);
-    expect(social.y).toBeLessThan(menu.y + menu.height);
-  });
-
-    await expect(blurbs.first().locator('.et_pb_main_blurb_image .et-pb-icon')).toBeVisible();
-  });
-
-  test('testimonials (EAEL): portrait, author and position', async ({ page }) => {
-    const first = page.locator('.et_pb_testimonial').first();
-    await expect(first.locator('.et_pb_testimonial_author')).toHaveText('Priya Raman');
-  test("fancy text (EAEL): the kit's heading font at EAEL's default size and weight", async ({ page }) => {
-    const heading = page.locator('#et-main-area .et_pb_heading').first().locator('h1, h2, h3, h4, h5, h6');
-    await expect(heading).toContainText('A calmer place to do your best work');
-    expect(await css(heading, 'font-family')).toContain('Fraunces');
-    expect(await css(heading, 'font-weight')).toBe('600');
-    expect(await css(heading, 'font-size')).toBe('22px');
-  });
-
-    await expect(first.locator('.et_pb_testimonial_position')).toHaveText('Brand designer');
-    const portrait = first.locator('.et_pb_testimonial_portrait img');
-    await expect(portrait).toBeVisible();
-    expect(await portrait.getAttribute('src')).toContain('member-1');
-  });
-});
-  test('dual button (ElementsKit): its default colours, side by side', async ({ page }) => {
-    const one = page.locator('#et-main-area a.et_pb_button', { hasText: 'See memberships' }).first();
-    const two = page.locator('#et-main-area a.et_pb_button', { hasText: 'Book a tour' }).first();
-    expect(await css(one, 'background-color')).toBe('rgb(37, 117, 252)');
-    expect(await css(two, 'background-color')).toBe('rgb(59, 59, 59)');
-    expect(await css(one, 'color')).toBe('rgb(255, 255, 255)');
-    const [a, b] = await Promise.all([one.boundingBox(), two.boundingBox()]);
-    expect(Math.abs((a?.y ?? -1) - (b?.y ?? 1))).toBeLessThan(2);
-    expect(b?.x ?? 0).toBeGreaterThan((a?.x ?? 0) + (a?.width ?? 1e9) - 1);
-  });
-
-
-test.describe('memberships', () => {
-  test("counter: the number in the kit's heading font (Elementor's Primary default)", async ({ page }) => {
-    const number = page.locator('.et_pb_number_counter .percent-value').first();
-    await expect(number).toBeVisible();
-    expect(await css(number, 'font-family')).toContain('Fraunces');
-  });
-
   test('hero (container row, 55% + 40%): the text and image columns share a line', async ({ page }) => {
     // Divi sizes flex-row columns from module.decoration.sizing.flexType; without it they stack.
     const row = page.locator('#et-main-area .et_pb_row').first();
@@ -270,6 +226,50 @@ test.describe('memberships', () => {
     expect(image?.width ?? 1e9).toBeLessThan((rowBox?.width ?? 0) * 0.45);
   });
 
+  test("fancy text (EAEL): the kit's heading font at EAEL's default size and weight", async ({ page }) => {
+    const heading = page.locator('#et-main-area .et_pb_heading').first().locator('h1, h2, h3, h4, h5, h6');
+    await expect(heading).toContainText('A calmer place to do your best work');
+    expect(await css(heading, 'font-family')).toContain('Fraunces');
+    expect(await css(heading, 'font-weight')).toBe('600');
+    expect(await css(heading, 'font-size')).toBe('22px');
+  });
+
+  test("counter: the number in the kit's heading font (Elementor's Primary default)", async ({ page }) => {
+    const number = page.locator('.et_pb_number_counter .percent-value').first();
+    await expect(number).toBeVisible();
+    expect(await css(number, 'font-family')).toContain('Fraunces');
+  });
+
+  test('dual button (ElementsKit): its default colours, side by side', async ({ page }) => {
+    const one = page.locator('#et-main-area a.et_pb_button', { hasText: 'See memberships' }).first();
+    const two = page.locator('#et-main-area a.et_pb_button', { hasText: 'Book a tour' }).first();
+    expect(await css(one, 'background-color')).toBe('rgb(37, 117, 252)');
+    expect(await css(two, 'background-color')).toBe('rgb(59, 59, 59)');
+    expect(await css(one, 'color')).toBe('rgb(255, 255, 255)');
+    const [a, b] = await Promise.all([one.boundingBox(), two.boundingBox()]);
+    expect(Math.abs((a?.y ?? -1) - (b?.y ?? 1))).toBeLessThan(2);
+    expect(b?.x ?? 0).toBeGreaterThan((a?.x ?? 0) + (a?.width ?? 1e9) - 1);
+  });
+
+  test('info boxes (EAEL): title, body and icon render', async ({ page }) => {
+    const blurbs = page.locator('.et_pb_blurb');
+    expect(await blurbs.count()).toBeGreaterThanOrEqual(3);
+    await expect(blurbs.first().locator('.et_pb_module_header')).not.toBeEmpty();
+    await expect(blurbs.first().locator('.et_pb_blurb_description')).not.toBeEmpty();
+    await expect(blurbs.first().locator('.et_pb_main_blurb_image .et-pb-icon')).toBeVisible();
+  });
+
+  test('testimonials (EAEL): portrait, author and position', async ({ page }) => {
+    const first = page.locator('.et_pb_testimonial').first();
+    await expect(first.locator('.et_pb_testimonial_author')).toHaveText('Priya Raman');
+    await expect(first.locator('.et_pb_testimonial_position')).toHaveText('Brand designer');
+    const portrait = first.locator('.et_pb_testimonial_portrait img');
+    await expect(portrait).toBeVisible();
+    expect(await portrait.getAttribute('src')).toContain('member-1');
+  });
+});
+
+test.describe('memberships', () => {
   test('pricing tables (EAEL): title, price, period, features, button', async ({ page }) => {
     await page.goto(draft('memberships'));
     await settle(page);
@@ -313,5 +313,22 @@ test.describe('events', () => {
     const end = Number(await timer.getAttribute('data-end-timestamp')); // CountdownTimerModule.php:467
     expect(end).toBeGreaterThan(Date.now() / 1000);
     await expect(timer.locator('.days .value')).not.toHaveText('000');
+  });
+});
+
+test.describe('contact', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(draft('contact'));
+    await settle(page);
+  });
+
+  test("social-icons: each network's colour behind a white icon, so they show on a light section", async ({ page }) => {
+    // The page body's layout only: the Theme Builder footer has its own list.
+    const icons = page.locator('.et-l--post .et_pb_social_media_follow li a.icon');
+    await expect(icons).toHaveCount(3);
+    expect(await css(icons.nth(0), 'background-color')).toBe('rgb(234, 44, 89)'); // Instagram
+    expect(await css(icons.nth(1), 'background-color')).toBe('rgb(0, 123, 182)'); // LinkedIn
+    // Divi draws the glyph with a.icon::before and colours only that pseudo-element.
+    expect(await icons.nth(0).evaluate((el) => getComputedStyle(el, '::before').color)).toBe('rgb(255, 255, 255)');
   });
 });

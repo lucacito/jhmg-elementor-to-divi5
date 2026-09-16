@@ -4,6 +4,10 @@ use PHPUnit\Framework\TestCase;
 use ElementorDivi5Converter\Converter\ConverterEngine;
 
 final class ConverterEngineTest extends TestCase {
+    protected function setUp(): void {
+        edc_test_reset_hooks();
+    }
+
     public function test_can_convert_elementor_section_tree_to_divi_structure(): void {
         $engine = new ConverterEngine();
 
@@ -253,10 +257,6 @@ final class ConverterEngineTest extends TestCase {
         $this->assertSame( '85', $block['elements'][0]['settings']['barProgress']['innerContent']['desktop']['value'] );
     }
 
-    public function test_social_icons_converter_produces_follow_network_children(): void {
-        $engine = new ConverterEngine();
-        $result = $engine->convert( [
-            [ 'id' => 'w1', 'elType' => 'widget', 'widgetType' => 'social-icons',
     /**
      * ElementsKit styles the dual button itself (widget-styles.css .ekit-double-btn):
      * white 14px bold text on #2575fc and rgb(23%,23%,23%), 5px apart on one line.
@@ -286,6 +286,10 @@ final class ConverterEngineTest extends TestCase {
         DiviModuleSchema::assertBlocksValid( $result['divi']['elements'], 'dual button' );
     }
 
+    public function test_social_icons_converter_produces_follow_network_children(): void {
+        $engine = new ConverterEngine();
+        $result = $engine->convert( [
+            [ 'id' => 'w1', 'elType' => 'widget', 'widgetType' => 'social-icons',
               'settings' => [
                   'social_icon_list' => [
                       [ 'social_icon' => 'fa fa-facebook', 'link' => [ 'url' => 'https://facebook.com/test' ] ],
@@ -299,6 +303,46 @@ final class ConverterEngineTest extends TestCase {
         $net = $block['elements'][0]['settings']['socialNetwork']['innerContent']['desktop']['value'];
         $this->assertSame( 'facebook', $net['title'] );
         $this->assertSame( 'https://facebook.com/test', $net['link'] );
+    }
+
+    /**
+     * Elementor's Social Icons default to each network's official colour behind a white
+     * glyph (social-icons.php:356, icon_color 'default'). divi/social-media-follow-network
+     * has no background unless the block sets one, and the parent's icons default to
+     * light, so without a colour the icons are white on nothing.
+     */
+    public function test_social_icons_get_divis_colour_for_each_network(): void {
+        $result = ( new ConverterEngine() )->convert( [
+            [ 'id' => 'w1', 'elType' => 'widget', 'widgetType' => 'social-icons', 'settings' => [
+                'social_icon_list' => [
+                    [ 'social_icon' => [ 'value' => 'fab fa-instagram', 'library' => 'fa-brands' ], 'link' => [ 'url' => 'https://www.instagram.com/' ] ],
+                    [ 'social_icon' => [ 'value' => 'fab fa-linkedin', 'library' => 'fa-brands' ], 'link' => [ 'url' => 'https://www.linkedin.com/' ] ],
+                ],
+            ], 'elements' => [] ],
+        ] );
+        $items = $result['divi']['elements'][0]['elements'];
+        $this->assertSame( '#ea2c59', $items[0]['settings']['module']['decoration']['background']['desktop']['value']['color'] );
+        $this->assertSame( '#007bb6', $items[1]['settings']['module']['decoration']['background']['desktop']['value']['color'] );
+        $this->assertSame( '#ffffff', $items[0]['settings']['icon']['advanced']['color']['desktop']['value'], 'a white glyph, as Elementor renders it' );
+        DiviModuleSchema::assertBlocksValid( $result['divi']['elements'], 'social icons' );
+    }
+
+    public function test_social_icons_custom_colours_go_behind_and_on_the_icon(): void {
+        add_filter( 'edc_kit_globals', static fn() => [ 'colors' => [ 'accent' => '#C8643B' ] ] );
+        $result = ( new ConverterEngine() )->convert( [
+            [ 'id' => 'w1', 'elType' => 'widget', 'widgetType' => 'social-icons', 'settings' => [
+                'icon_color'           => 'custom',
+                'icon_secondary_color' => '#1F2421',
+                '__globals__'          => [ 'icon_primary_color' => 'globals/colors?id=accent' ],
+                'social_icon_list'     => [
+                    [ 'social_icon' => [ 'value' => 'fab fa-facebook', 'library' => 'fa-brands' ], 'link' => [ 'url' => 'https://www.facebook.com/' ] ],
+                ],
+            ], 'elements' => [] ],
+        ] );
+        $item = $result['divi']['elements'][0]['elements'][0]['settings'];
+        $this->assertSame( '#C8643B', $item['module']['decoration']['background']['desktop']['value']['color'] );
+        $this->assertSame( '#1F2421', $item['icon']['advanced']['color']['desktop']['value'] );
+        DiviModuleSchema::assertBlocksValid( $result['divi']['elements'], 'custom social icons' );
     }
 
     public function test_gallery_converter_extracts_attachment_ids(): void {
