@@ -235,6 +235,15 @@ final class StyleMapperTest extends TestCase {
         $this->assertSame( '#555555', $color );
     }
 
+    public function test_image_spacing_lives_under_module_advanced(): void {
+        // image/conversion-outline.json: margin_padding → module.advanced.spacing;
+        // ImageModule.php:958 reads it there; image/module.json declares no
+        // module.decoration.spacing, so margins written there were dropped.
+        $result = $this->mapper->map( 'image', [ '_margin' => [ 'unit' => 'px', 'top' => '0', 'right' => '0', 'bottom' => '24', 'left' => '0', 'isLinked' => '' ] ] );
+        $this->assertSame( '24px', $result['divi_attrs']['module']['advanced']['spacing']['desktop']['value']['margin']['bottom'] );
+        $this->assertArrayNotHasKey( 'spacing', $result['divi_attrs']['module']['decoration'] ?? [] );
+    }
+
     public function test_maps_button_text_color(): void {
         $result = $this->mapper->map( 'button', [ 'button_text_color' => '#ffffff' ] );
         // Button font color lives at button.decoration.font.font.*.value.color (standard font path).

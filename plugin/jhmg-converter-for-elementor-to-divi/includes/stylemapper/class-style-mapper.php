@@ -289,7 +289,11 @@ class StyleMapper {
                     continue;
                 }
 
-                self::transformPath( $attrs, "module.decoration.spacing.{$breakpoint}.value.{$prop}", $normalized );
+                // The image module keeps its spacing under module.advanced
+                // (image/conversion-outline.json margin_padding, ImageModule.php:958);
+                // every other module declares module.decoration.spacing.
+                $group = $widget_type === 'image' ? 'advanced' : 'decoration';
+                self::transformPath( $attrs, "module.{$group}.spacing.{$breakpoint}.value.{$prop}", $normalized );
             }
         }
     }
