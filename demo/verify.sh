@@ -5,7 +5,7 @@ set -euo pipefail
 . "$DEMO_DIR/lib/checks.sh"
 
 # reset must stay last: it removes the drafts `converted` creates.
-ALL_CHECKS=(versions pages conversions converted reset)
+ALL_CHECKS=(versions pages conversions converted render reset)
 
 checks=("$@")
 [ ${#checks[@]} -gt 0 ] || checks=("${ALL_CHECKS[@]}")

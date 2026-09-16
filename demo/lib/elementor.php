@@ -125,6 +125,16 @@ function col( array $children, int $width, array $settings = [] ): array {
     ], $settings ) );
 }
 
+/** A legacy Elementor section (the pre-container layout the Kit Library kits use). */
+function section( array $columns, array $settings = [] ): array {
+    return [ 'elType' => 'section', 'settings' => $settings, 'elements' => array_values( $columns ) ];
+}
+
+/** A legacy Elementor column; $size is the percentage width. */
+function column( array $children, int $size, array $settings = [] ): array {
+    return [ 'elType' => 'column', 'settings' => array_replace( [ '_column_size' => $size ], $settings ), 'elements' => array_values( $children ) ];
+}
+
 function heading( string $text, string $tag = 'h2', string $color = 'primary', string $align = '' ): array {
     $settings = [
         'title'       => $text,

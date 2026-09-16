@@ -1,0 +1,50 @@
+import { expect, test, type Locator, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { login } from './support';
+
+// Build check 7 (demo/verify.sh render). Each test names the Elementor widget it stands
+// for and asserts what a viewer of the Divi draft sees, not what the converter wrote.
+const OUTPUT = join(process.cwd(), 'demo', 'output');
+const converted: { slug: string; kind: string; draft_id: number }[] = JSON.parse(
+  readFileSync(join(OUTPUT, 'converted.json'), 'utf8'),
+);
+
+function draft(slug: string): string {
+  const entry = converted.find((c) => c.slug === slug);
+  if (!entry) throw new Error(`${slug} is not in converted.json; run demo/verify.sh render`);
+  return `/?page_id=${entry.draft_id}&preview=true`;
+}
+
+/** Scroll through the page so lazy images load and counters, countdowns and animations run. */
+async function settle(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    for (let y = 0; y < document.body.scrollHeight; y += 600) {
+      window.scrollTo(0, y);
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    }
+    window.scrollTo(0, 0);
+  });
+  await page.waitForTimeout(2500);
+}
+
+async function css(locator: Locator, property: string): Promise<string> {
+  return locator.evaluate((el, prop) => getComputedStyle(el).getPropertyValue(prop), property);
+}
+
+test.describe.configure({ mode: 'serial' });
+
+test.beforeEach(async ({ page }) => {
+  await login(page);
+});
+
+test.describe('probe: core widgets', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(draft('core-widgets'));
+    await settle(page);
+  });
+
+  test('heading (h1): renders as a styled heading', async ({ page }) => {
+    await expect(page.locator('.et_pb_heading h1', { hasText: 'Probe hero heading' })).toBeVisible();
+  });
+});

@@ -52,6 +52,16 @@ check_converted() {
     echo "ok  screenshots in demo/output/screenshots/ — review each <page>-elementor.png beside <page>-divi.png"
 }
 
+# Check 7: what a viewer sees on the converted drafts. Seeds the probe page, converts it
+# with the seven pages under Divi, and asserts sizes, colours and text in the DOM.
+check_render() {
+    wp --user="$ADMIN_USER" eval-file /demo/lib/seed-probes.php
+    wp theme activate Divi
+    wp --user="$ADMIN_USER" eval-file /demo/lib/commit-conversions.php probes
+    (cd "$DEMO_DIR/.." && PW_STAGE=render npx playwright test -c demo/playwright.config.ts render)
+    echo "ok  render assertions"
+}
+
 # Check 5: reset.sh returns a dirtied site to its starting state.
 check_reset() {
     # Dirty the site the way a take does: a converted draft and Divi active.

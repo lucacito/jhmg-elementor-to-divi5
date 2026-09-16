@@ -47,7 +47,11 @@ demo/reset.sh
 
 ## Checks
 
-`demo/verify.sh [versions|pages|conversions|converted|reset]` — no argument runs all five.
+`demo/verify.sh [versions|pages|conversions|converted|render|reset]` — no argument runs all six.
+`render` seeds the probe page in `demo/content/probes/`, converts it and the seven pages
+under Divi, and runs `demo/tests/render.spec.ts`: sizes, colours and text a viewer sees on
+each draft, one test per Elementor widget. Add a probe file to cover a widget the site does
+not use; add a test for every rendering bug you fix.
 `vendor/bin/phpunit -c demo/phpunit.xml` runs the page conversions offline, without Docker.
 
 ## Rebuilding media

@@ -1112,7 +1112,7 @@ foreach ( $documents as $name => $kind ) {
 }
 ```
 
-and in the results loop record the kind: `$converted[] = [ 'slug' => $slugs[ $index ], 'kind' => $kinds[ $index ], 'source_id' => $post_ids[ $index ], 'draft_id' => $result['post_id'] ];`. `$args` is WP-CLI's positional-argument array for `eval-file`; declare `$args = $args ?? [];` at the top (WP-CLI passes extra arguments to eval-file scripts as `$args`).
+and in the results loop record the kind: `$converted[] = [ 'slug' => $slugs[ $index ], 'kind' => $kinds[ $index ], 'source_id' => $post_ids[ $index ], 'draft_id' => $result['post_id'] ];`. `$args` is WP-CLI's positional-argument array for `eval-file` (unknown `--flags` are rejected, so the argument is the bare word `probes`).
 
 - [ ] **Step 6: The verify stage and the Playwright config**
 
@@ -1124,7 +1124,7 @@ In `demo/lib/checks.sh`, after `check_converted`, add:
 check_render() {
     wp --user="$ADMIN_USER" eval-file /demo/lib/seed-probes.php
     wp theme activate Divi
-    wp --user="$ADMIN_USER" eval-file /demo/lib/commit-conversions.php --probes
+    wp --user="$ADMIN_USER" eval-file /demo/lib/commit-conversions.php probes
     (cd "$DEMO_DIR/.." && PW_STAGE=render npx playwright test -c demo/playwright.config.ts render)
     echo "ok  render assertions"
 }

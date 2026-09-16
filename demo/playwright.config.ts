@@ -4,8 +4,11 @@ import { defineConfig, devices } from '@playwright/test';
 // root playwright.config.ts so `npm run test:browser` is unaffected.
 export default defineConfig({
   testDir: './tests',
-  // Screenshots only run when the `converted` check sets PW_STAGE.
-  testIgnore: process.env.PW_STAGE ? [] : ['**/screenshots.spec.ts'],
+  // Screenshots run only under PW_STAGE=originals|converted; render assertions only under PW_STAGE=render.
+  testIgnore: [
+    ...(process.env.PW_STAGE === 'originals' || process.env.PW_STAGE === 'converted' ? [] : ['**/screenshots.spec.ts']),
+    ...(process.env.PW_STAGE === 'render' ? [] : ['**/render.spec.ts']),
+  ],
   outputDir: './output/test-results',
   workers: 1,
   timeout: 120_000,
