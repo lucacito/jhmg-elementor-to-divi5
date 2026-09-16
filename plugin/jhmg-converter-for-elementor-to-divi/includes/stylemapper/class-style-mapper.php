@@ -159,7 +159,12 @@ class StyleMapper {
     /** Elementor border control keys whose values we map (base names without breakpoint suffix). */
     private const BORDER_KEYS = [ 'border_border', 'border_width', 'border_color', 'border_radius' ];
 
-    public function map( string $widget_type, array $settings ): array {
+    /**
+     * @param array $options `elementor_defaults` (bool): apply Elementor's own
+     *                       button look for what the widget left unset — the
+     *                       standalone button widget only. See applyButtonDefaults().
+     */
+    public function map( string $widget_type, array $settings, array $options = [] ): array {
         $divi_attrs   = [];
         $handled_keys = [];
 
@@ -203,6 +208,9 @@ class StyleMapper {
             $this->mapButtonPadding( $settings, $divi_attrs, $handled_keys );
             $this->mapButtonBackground( $settings, $divi_attrs, $handled_keys );
             $this->mapButtonBorder( $settings, $divi_attrs, $handled_keys );
+            if ( ! empty( $options['elementor_defaults'] ) ) {
+                $this->applyButtonDefaults( $divi_attrs );
+            }
         }
 
         $this->mapCustomCssClass( $settings, $divi_attrs, $handled_keys );
@@ -1665,6 +1673,59 @@ class StyleMapper {
 
         foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
             self::transformPath( $attrs, "button.decoration.background.{$breakpoint}.value.color", $color );
+        }
+    }
+
+    /**
+     * Elementor's own button look, for properties the widget left unset.
+     *
+     * Cascade, most specific first: the widget's controls (already mapped),
+     * the kit's Theme Style → Buttons (GlobalsResolver::resolveButtons()),
+     * then Elementor's built-ins: the global accent colour as background
+     * (button-trait.php, Group_Control_Background default COLOR_ACCENT) and
+     * the accent typography, over .elementor-button's base rule
+     * (assets/css/frontend.css: #69727d, #fff, 15px, 12px 24px, 3px).
+     * Divi's default is a transparent outline in its accent blue, so without
+     * this a button that set nothing looked nothing like the original.
+     */
+    private function applyButtonDefaults( array &$attrs ): void {
+        $kit = GlobalsResolver::resolveButtons();
+
+        $background = $kit['background_color'] ?? GlobalsResolver::resolveColor( 'accent' ) ?? '#69727d';
+        $this->setIfUnset( $attrs, 'button.decoration.background.desktop.value.color', $background );
+        $this->setIfUnset( $attrs, 'button.decoration.font.font.desktop.value.color', $kit['text_color'] ?? '#ffffff' );
+
+        $typography = $kit['typography'] ?? GlobalsResolver::resolveTypography( 'accent' ) ?? [];
+        foreach ( [ 'family', 'weight', 'size', 'lineHeight', 'letterSpacing' ] as $prop ) {
+            if ( isset( $typography[ $prop ] ) && $typography[ $prop ] !== '' ) {
+                $this->setIfUnset( $attrs, "button.decoration.font.font.desktop.value.{$prop}", (string) $typography[ $prop ] );
+            }
+        }
+        $this->setIfUnset( $attrs, 'button.decoration.font.font.desktop.value.size', '15px' );
+
+        $this->setIfUnset( $attrs, 'button.decoration.spacing.desktop.value.padding', $kit['padding'] ?? [ 'top' => '12px', 'right' => '24px', 'bottom' => '12px', 'left' => '24px' ] );
+        $this->setIfUnset( $attrs, 'button.decoration.border.desktop.value.radius', $kit['border_radius'] ?? [ 'topLeft' => '3px', 'topRight' => '3px', 'bottomRight' => '3px', 'bottomLeft' => '3px' ] );
+
+        if ( ! empty( $kit['border'] ) ) {
+            $this->setIfUnset( $attrs, 'button.decoration.border.desktop.value.styles.all.style', $kit['border']['style'] );
+            if ( isset( $kit['border']['width'] ) ) {
+                $this->setIfUnset( $attrs, 'button.decoration.border.desktop.value.styles.all.width', $kit['border']['width'] );
+            }
+            if ( isset( $kit['border']['color'] ) ) {
+                $this->setIfUnset( $attrs, 'button.decoration.border.desktop.value.styles.all.color', $kit['border']['color'] );
+            }
+        }
+    }
+
+    /** Writes a value only where the widget's own controls left nothing. */
+    private function setIfUnset( array &$attrs, string $dot_path, mixed $value ): void {
+        $current = $attrs;
+        foreach ( explode( '.', $dot_path ) as $key ) {
+            if ( ! is_array( $current ) || ! array_key_exists( $key, $current ) ) {
+                self::transformPath( $attrs, $dot_path, $value );
+                return;
+            }
+            $current = $current[ $key ];
         }
     }
 

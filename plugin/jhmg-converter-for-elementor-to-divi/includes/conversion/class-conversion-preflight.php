@@ -236,16 +236,102 @@ class ConversionPreflight {
     }
 
     /**
-     * Both global groups on this site, in the `edc_kit_globals` shape. Registered
+     * The installed Kit's Theme Style → Buttons (Elementor
+     * core/kits/documents/tabs/theme-style-buttons.php: button_typography_*,
+     * button_text_color, button_background_color, button_border_*,
+     * button_border_radius, button_padding). Pro's kit parser reads the same
+     * keys from an uploaded kit through buttonsFromKitSettings().
+     *
+     * @return array{background_color?: string, text_color?: string, typography?: array<string,string>, border_radius?: array<string,string>, padding?: array<string,string>, border?: array<string,string>}
+     */
+    public static function elementorKitButtons(): array {
+        $kit_settings = self::activeKitSettings();
+        return $kit_settings === null ? [] : self::buttonsFromKitSettings( $kit_settings );
+    }
+
+    /** Shared with Pro's kit parser through the same settings array shape. */
+    public static function buttonsFromKitSettings( array $settings ): array {
+        $buttons = [];
+
+        foreach ( [ 'button_background_color' => 'background_color', 'button_text_color' => 'text_color' ] as $key => $out ) {
+            $value = $settings[ $key ] ?? '';
+            if ( is_string( $value ) && $value !== '' ) {
+                $buttons[ $out ] = $value;
+            }
+        }
+
+        $typography = [];
+        if ( ! empty( $settings['button_typography_font_family'] ) ) {
+            $typography['family'] = (string) $settings['button_typography_font_family'];
+        }
+        if ( ! empty( $settings['button_typography_font_weight'] ) ) {
+            $typography['weight'] = (string) $settings['button_typography_font_weight'];
+        }
+        foreach ( [ 'button_typography_font_size' => [ 'size', 'px' ], 'button_typography_line_height' => [ 'lineHeight', 'em' ], 'button_typography_letter_spacing' => [ 'letterSpacing', 'px' ] ] as $key => [ $prop, $unit ] ) {
+            $value = self::sizeWithUnit( $settings[ $key ] ?? null, $unit );
+            if ( $value !== '' ) {
+                $typography[ $prop ] = $value;
+            }
+        }
+        if ( ! empty( $typography ) ) {
+            $buttons['typography'] = $typography;
+        }
+
+        $radius = self::dimensions( $settings['button_border_radius'] ?? null );
+        if ( $radius !== null ) {
+            $buttons['border_radius'] = [ 'topLeft' => $radius['top'], 'topRight' => $radius['right'], 'bottomRight' => $radius['bottom'], 'bottomLeft' => $radius['left'] ];
+        }
+        $padding = self::dimensions( $settings['button_padding'] ?? null );
+        if ( $padding !== null ) {
+            $buttons['padding'] = $padding;
+        }
+
+        $border_style = $settings['button_border_border'] ?? '';
+        if ( is_string( $border_style ) && $border_style !== '' && $border_style !== 'none' ) {
+            $border = [ 'style' => $border_style ];
+            $width  = self::dimensions( $settings['button_border_width'] ?? null );
+            if ( $width !== null ) {
+                $border['width'] = $width['top'];
+            }
+            $color = $settings['button_border_color'] ?? '';
+            if ( is_string( $color ) && $color !== '' ) {
+                $border['color'] = $color;
+            }
+            $buttons['border'] = $border;
+        }
+
+        return $buttons;
+    }
+
+    /** Elementor DIMENSIONS control {top,right,bottom,left,unit} → four CSS lengths, or null. */
+    private static function dimensions( mixed $raw ): ?array {
+        if ( ! is_array( $raw ) ) {
+            return null;
+        }
+        $unit = is_string( $raw['unit'] ?? '' ) && $raw['unit'] !== '' ? $raw['unit'] : 'px';
+        $out  = [];
+        foreach ( [ 'top', 'right', 'bottom', 'left' ] as $side ) {
+            $v = $raw[ $side ] ?? '';
+            if ( $v === '' || $v === null ) {
+                return null;
+            }
+            $out[ $side ] = (string) $v . $unit;
+        }
+        return $out;
+    }
+
+    /**
+     * Every global group on this site, in the `edc_kit_globals` shape. Registered
      * by the free plugin as the gap-filling half of that filter — see
      * Plugin::register_hooks().
      *
-     * @return array{colors: array<string,string>, typography: array<string,array>}
+     * @return array{colors: array<string,string>, typography: array<string,array>, buttons: array}
      */
     public static function installedKitGlobals(): array {
         return [
             'colors'     => self::elementorGlobalColors(),
             'typography' => self::elementorGlobalTypography(),
+            'buttons'    => self::elementorKitButtons(),
         ];
     }
 

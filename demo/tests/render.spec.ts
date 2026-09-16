@@ -64,4 +64,26 @@ test.describe('probe: core widgets', () => {
     expect(await css(word, 'color')).toBe('rgb(200, 100, 59)');
     await expect(page.locator('.et_pb_heading', { hasText: 'eramic' })).toHaveCount(0);
   });
+
+  test('button with only a global background: accent background, white text', async ({ page }) => {
+    const button = page.locator('a.et_pb_button', { hasText: 'Probe button' });
+    await expect(button).toBeVisible();
+    expect(await css(button, 'background-color')).toBe('rgb(200, 100, 59)');
+    expect(await css(button, 'color')).toBe('rgb(255, 255, 255)');
+    expect(await css(button, 'border-top-left-radius')).toBe('3px');
+  });
+});
+
+test.describe('Theme Builder header and footer (HFE templates)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(draft('home'));
+    await settle(page);
+  });
+
+  test('button (HFE header): background colour and white text', async ({ page }) => {
+    const button = page.locator('.et-l--header a.et_pb_button, header a.et_pb_button', { hasText: 'Book a tour' }).first();
+    await expect(button).toBeVisible();
+    expect(await css(button, 'background-color')).toBe('rgb(200, 100, 59)');
+    expect(await css(button, 'color')).toBe('rgb(255, 255, 255)');
+  });
 });

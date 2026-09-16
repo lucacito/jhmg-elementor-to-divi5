@@ -66,7 +66,7 @@ class Plugin {
     public function fill_kit_globals_from_installed_kit( $kit ) {
         $installed = \ElementorDivi5Converter\Conversion\ConversionPreflight::installedKitGlobals();
 
-        if ( empty( $installed['colors'] ) && empty( $installed['typography'] ) ) {
+        if ( empty( $installed['colors'] ) && empty( $installed['typography'] ) && empty( $installed['buttons'] ) ) {
             return $kit;
         }
 
@@ -77,6 +77,7 @@ class Plugin {
         return array_merge( $kit, [
             'colors'     => ( $kit['colors'] ?? [] ) + $installed['colors'],
             'typography' => ( $kit['typography'] ?? [] ) + $installed['typography'],
+            'buttons'    => ( $kit['buttons'] ?? [] ) + $installed['buttons'],
         ] );
     }
 
