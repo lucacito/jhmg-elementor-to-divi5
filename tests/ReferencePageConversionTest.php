@@ -156,14 +156,18 @@ final class ReferencePageConversionTest extends TestCase {
         $this->assertSame( '#E9F6FF', $color );
     }
 
-    public function test_offers_section_has_icon_boxes_with_overlay(): void {
+    public function test_offers_section_icon_box_columns_carry_their_overlay(): void {
         $section = self::$result['divi']['elements'][2];
-        $groups  = $this->findAll( $section, 'divi/group' );
-        $this->assertNotEmpty( $groups, 'Icon-box columns should be wrapped in divi/group with overlay bg' );
+        $columns = array_filter(
+            $this->findAll( $section, 'divi/column' ),
+            fn( $c ) => isset( $c['settings']['module']['decoration']['background']['desktop']['value']['color'] )
+        );
+        $this->assertNotEmpty( $columns, 'Icon-box columns carry their overlay colour themselves' );
 
         // Overlay is an rgba color mapped from background_overlay_color.
-        $color = $groups[0]['settings']['module']['decoration']['background']['desktop']['value']['color'] ?? '';
-        $this->assertStringStartsWith( 'rgba(', $color, 'Group should carry the overlay rgba background color' );
+        $color = array_values( $columns )[0]['settings']['module']['decoration']['background']['desktop']['value']['color'];
+        $this->assertStringStartsWith( 'rgba(', $color, 'Column should carry the overlay rgba background color' );
+        $this->assertSame( [], $this->findAll( $section, 'divi/group' ), 'no group wrapper is added for a background' );
     }
 
     public function test_offers_section_explore_button_has_correct_text(): void {
@@ -222,17 +226,16 @@ final class ReferencePageConversionTest extends TestCase {
         $this->assertStringContainsString( 'id="insights"', $code['settings']['content']['innerContent']['desktop']['value'] );
     }
 
-    public function test_newsletter_groups_have_background_images(): void {
+    public function test_newsletter_columns_have_background_images(): void {
         $section = self::$result['divi']['elements'][5];
-        $groups  = $this->findAll( $section, 'divi/group' );
-        $this->assertNotEmpty( $groups );
+        $columns = $this->findAll( $section, 'divi/column' );
+        $this->assertNotEmpty( $columns );
 
-        // At least half of the groups should carry a background image.
-        $with_bg = array_filter( $groups, function ( $g ) {
-            $url = $g['settings']['module']['decoration']['background']['desktop']['value']['image']['url'] ?? '';
+        $with_bg = array_filter( $columns, function ( $c ) {
+            $url = $c['settings']['module']['decoration']['background']['desktop']['value']['image']['url'] ?? '';
             return $url !== '';
         } );
-        $this->assertGreaterThanOrEqual( 2, count( $with_bg ), 'Newsletter groups should have background images' );
+        $this->assertGreaterThanOrEqual( 2, count( $with_bg ), 'Newsletter columns should carry their background images' );
     }
 
     // -------------------------------------------------------------------------

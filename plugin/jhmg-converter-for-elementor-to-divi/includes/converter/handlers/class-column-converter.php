@@ -27,18 +27,14 @@ class ColumnConverter extends BaseElementorConverter {
             $this->engine->logWarning( "Empty column after conversion: {$id}" );
         }
 
-        // When the Elementor column has background/overlay styling AND contains
-        // widget children, replicate the "widget-wrap background" pattern using a
-        // divi/group.  In Elementor, background + padding are applied to the inner
-        // widget-wrap div (not the column outer div); divi/group is the direct Divi 5
-        // equivalent — it is a module wrapper that supports background, spacing, and
-        // border while containing other modules.
-        //
-        // Visually: divi/column (width only) → divi/group (bg + padding) → modules.
-        if ( $this->hasBackgroundStyling( $settings ) && ! empty( $children ) ) {
-            $children   = [ $this->wrapInGroup( $id, $divi_attrs, $children ) ];
-            $divi_attrs = $this->stripDecorationFromAttrs( $divi_attrs );
-        }
+        // Background, overlay and padding stay on the column. Divi 5 rows are
+        // display:flex with the default align-items: stretch (.et_flex_row in
+        // Divi's module CSS), so the column already fills the row's min-height and
+        // a cover image has something to cover. Wrapping the children in a
+        // divi/group carrying the background (the old "widget-wrap" mirror) gave
+        // the image a box only as tall as the group's content — 12 px when the
+        // column held a spacer. column/module.json declares
+        // module.decoration.background and .spacing on the column itself.
 
         return [
             'id'       => $id,
@@ -46,77 +42,5 @@ class ColumnConverter extends BaseElementorConverter {
             'settings' => $divi_attrs,
             'elements' => $children,
         ];
-    }
-
-    /**
-     * Returns true when the Elementor column settings carry image-based background
-     * or an overlay (color or image).  Plain background_color alone is handled
-     * adequately as a column background and does not warrant a group wrapper.
-     */
-    private function hasBackgroundStyling( array $settings ): bool {
-        if ( ( $settings['background_background'] ?? '' ) !== 'classic' ) {
-            return false;
-        }
-
-        $bg_image = $settings['background_image'] ?? null;
-        if ( is_array( $bg_image ) && ! empty( $bg_image['url'] ) ) {
-            return true;
-        }
-
-        $overlay_image = $settings['background_overlay_image'] ?? null;
-        if ( is_array( $overlay_image ) && ! empty( $overlay_image['url'] ) ) {
-            return true;
-        }
-
-        $overlay_color = $settings['background_overlay_color'] ?? '';
-        return is_string( $overlay_color ) && $overlay_color !== '';
-    }
-
-    /**
-     * Builds a divi/group block that carries the background and padding attrs
-     * extracted from the column's mapped Divi attributes.
-     *
-     * The group gets `module.decoration.background` and `module.decoration.spacing`
-     * (padding) because in Elementor both are applied at the widget-wrap level —
-     * the background visually encompasses the padded content area.
-     */
-    private function wrapInGroup( string $col_id, array $divi_attrs, array $children ): array {
-        $group_decoration = [];
-
-        foreach ( [ 'background', 'spacing' ] as $key ) {
-            if ( isset( $divi_attrs['module']['decoration'][ $key ] ) ) {
-                $group_decoration[ $key ] = $divi_attrs['module']['decoration'][ $key ];
-            }
-        }
-
-        $group_attrs = empty( $group_decoration )
-            ? []
-            : [ 'module' => [ 'decoration' => $group_decoration ] ];
-
-        return [
-            'id'       => $col_id . '-group',
-            'name'     => 'divi/group',
-            'settings' => $group_attrs,
-            'elements' => $children,
-        ];
-    }
-
-    /**
-     * Returns $divi_attrs with background and spacing removed from
-     * `module.decoration`, leaving only structural settings (width, alignment,
-     * border, etc.) on the column itself.
-     */
-    private function stripDecorationFromAttrs( array $divi_attrs ): array {
-        unset( $divi_attrs['module']['decoration']['background'] );
-        unset( $divi_attrs['module']['decoration']['spacing'] );
-
-        if ( isset( $divi_attrs['module']['decoration'] ) && empty( $divi_attrs['module']['decoration'] ) ) {
-            unset( $divi_attrs['module']['decoration'] );
-        }
-        if ( isset( $divi_attrs['module'] ) && empty( $divi_attrs['module'] ) ) {
-            unset( $divi_attrs['module'] );
-        }
-
-        return $divi_attrs;
     }
 }

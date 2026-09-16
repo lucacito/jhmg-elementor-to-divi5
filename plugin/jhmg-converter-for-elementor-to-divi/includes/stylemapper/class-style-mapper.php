@@ -1132,8 +1132,16 @@ class StyleMapper {
         }
 
         // section / container / row — desktop-only (responsive variants rarely set).
+        // column_position is Elementor's "Column Position" (align-items on the
+        // row: stretch|top|middle|bottom, default stretch); content_position is
+        // "Vertical Align" for the widgets inside each column. When only
+        // content_position is set the old behaviour is kept: the row centres
+        // its columns, which is the closest single-property approximation.
+        $handled[] = 'column_position';
         $handled[] = 'content_position';
-        $pos = $settings['content_position'] ?? '';
+        $column_pos  = $settings['column_position'] ?? '';
+        $content_pos = $settings['content_position'] ?? '';
+        $pos         = is_string( $column_pos ) && $column_pos !== '' ? $column_pos : $content_pos;
         if ( is_string( $pos ) && $pos !== '' ) {
             self::transformPath(
                 $attrs,

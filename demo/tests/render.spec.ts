@@ -47,4 +47,13 @@ test.describe('probe: core widgets', () => {
   test('heading (h1): renders as a styled heading', async ({ page }) => {
     await expect(page.locator('.et_pb_heading h1', { hasText: 'Probe hero heading' })).toBeVisible();
   });
+
+  test('column with a cover background image: fills the row, not a strip', async ({ page }) => {
+    // The hero's left column: Divi numbers columns per page, header/footer ones get a _tb_ suffix.
+    const column = page.locator('.et_pb_column_0');
+    const box = await column.boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThan(400);
+    expect(await css(column, 'background-image')).toContain('hero-lounge');
+    expect(await css(column, 'background-size')).toBe('cover');
+  });
 });
