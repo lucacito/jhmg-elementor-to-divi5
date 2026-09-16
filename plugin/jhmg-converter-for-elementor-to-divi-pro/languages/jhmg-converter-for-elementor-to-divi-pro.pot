@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: JHMG Converter For Elementor to Divi 5 — Pro 1.2.0\n"
+"Project-Id-Version: JHMG Converter For Elementor to Divi 5 — Pro 1.2.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/jhmg-converter-for-elementor-to-divi-pro\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-01T00:40:39+00:00\n"
+"POT-Creation-Date: 2026-09-16T11:25:24+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: jhmg-converter-for-elementor-to-divi-pro\n"
@@ -70,8 +70,8 @@ msgstr ""
 #: includes/admin/class-kit-page.php:247
 #: includes/admin/class-kit-page.php:315
 #: includes/admin/class-kit-page.php:351
-#: includes/admin/class-kit-page.php:490
-#: includes/admin/class-kit-page.php:592
+#: includes/admin/class-kit-page.php:497
+#: includes/admin/class-kit-page.php:599
 #: includes/licensing/class-license-page.php:62
 #: includes/licensing/class-license-page.php:77
 #: includes/licensing/class-license-page.php:88
@@ -99,329 +99,329 @@ msgstr ""
 msgid "No templates found in the uploaded JSON file."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:446
+#: includes/admin/class-kit-page.php:453
 msgid "Failed to save the uploaded file. Check directory permissions."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:497
+#: includes/admin/class-kit-page.php:504
 msgid "No Global Kit loaded."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:504
+#: includes/admin/class-kit-page.php:511
 msgid "Kit ZIP file is not available. Please re-upload the kit."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:515
+#: includes/admin/class-kit-page.php:522
 msgid "No pages were selected."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:533
+#: includes/admin/class-kit-page.php:540
 msgid "Could not open kit ZIP file."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:563
+#: includes/admin/class-kit-page.php:570
 msgid "No convertible pages were found in the selected entries."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:626
+#: includes/admin/class-kit-page.php:633
 msgid "File exceeds server upload limit."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:627
+#: includes/admin/class-kit-page.php:634
 msgid "File exceeds form upload limit."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:628
+#: includes/admin/class-kit-page.php:635
 msgid "File was only partially uploaded."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:629
+#: includes/admin/class-kit-page.php:636
 msgid "No file was selected."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:630
+#: includes/admin/class-kit-page.php:637
 msgid "Server is missing a temporary folder."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:631
+#: includes/admin/class-kit-page.php:638
 msgid "Failed to write file to server."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:632
+#: includes/admin/class-kit-page.php:639
 msgid "Upload stopped by server extension."
 msgstr ""
 
 #. translators: %d is the numeric upload error code
-#: includes/admin/class-kit-page.php:636
+#: includes/admin/class-kit-page.php:643
 #, php-format
 msgid "Unknown upload error (code %d)."
 msgstr ""
 
 #. translators: 1: kit name, 2: number of colors
-#: includes/admin/class-kit-page.php:656
+#: includes/admin/class-kit-page.php:663
 #, php-format
 msgid "Global Kit \"%1$s\" loaded — %2$d colors imported."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:663
+#: includes/admin/class-kit-page.php:670
 msgid "Global Kit removed."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:726
+#: includes/admin/class-kit-page.php:733
 msgid "Active Kit"
 msgstr ""
 
 #. translators: %s is the date the kit was loaded
-#: includes/admin/class-kit-page.php:732
+#: includes/admin/class-kit-page.php:739
 #, php-format
 msgid "Loaded on %s"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:736
+#: includes/admin/class-kit-page.php:743
 msgid "Remove the active Global Kit?"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:737
+#: includes/admin/class-kit-page.php:744
 msgid "Remove Kit"
 msgstr ""
 
 #. translators: %d is the number of colors in the kit
-#: includes/admin/class-kit-page.php:745
+#: includes/admin/class-kit-page.php:752
 #, php-format
 msgid "Colors (%d)"
 msgstr ""
 
 #. translators: %d is the number of typography styles in the kit
-#: includes/admin/class-kit-page.php:762
+#: includes/admin/class-kit-page.php:769
 #, php-format
 msgid "Typography (%d)"
 msgstr ""
 
 #. translators: %d is the number of pages in the kit
-#: includes/admin/class-kit-page.php:792
+#: includes/admin/class-kit-page.php:799
 #, php-format
 msgid "Pages in Kit (%d)"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:801
+#: includes/admin/class-kit-page.php:808
 msgid "Select all / Deselect all"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:809
-#: includes/admin/class-kit-page.php:1101
+#: includes/admin/class-kit-page.php:816
+#: includes/admin/class-kit-page.php:1117
 msgid "Title"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:810
+#: includes/admin/class-kit-page.php:817
 msgid "Type"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:834
-#: includes/admin/class-kit-page.php:991
+#: includes/admin/class-kit-page.php:841
+#: includes/admin/class-kit-page.php:998
 msgid "Create as"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:837
-#: includes/admin/class-kit-page.php:994
+#: includes/admin/class-kit-page.php:844
+#: includes/admin/class-kit-page.php:1001
 msgid "Page"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:838
-#: includes/admin/class-kit-page.php:995
+#: includes/admin/class-kit-page.php:845
+#: includes/admin/class-kit-page.php:1002
 msgid "Post"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:843
-#: includes/admin/class-kit-page.php:1001
-#: includes/admin/class-kit-page.php:1102
+#: includes/admin/class-kit-page.php:850
+#: includes/admin/class-kit-page.php:1008
+#: includes/admin/class-kit-page.php:1118
 #: includes/licensing/class-license-page.php:182
 msgid "Status"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:846
-#: includes/admin/class-kit-page.php:1004
+#: includes/admin/class-kit-page.php:853
+#: includes/admin/class-kit-page.php:1011
 msgid "Draft (recommended)"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:847
-#: includes/admin/class-kit-page.php:1005
-#: includes/admin/class-kit-page.php:1185
+#: includes/admin/class-kit-page.php:854
+#: includes/admin/class-kit-page.php:1012
+#: includes/admin/class-kit-page.php:1201
 msgid "Published"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:855
-#: includes/admin/class-kit-page.php:1014
+#: includes/admin/class-kit-page.php:862
+#: includes/admin/class-kit-page.php:1021
 msgid "Convert header templates as Divi Theme Builder headers"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:862
-#: includes/admin/class-kit-page.php:1024
+#: includes/admin/class-kit-page.php:869
+#: includes/admin/class-kit-page.php:1031
 msgid "Convert footer templates as Divi Theme Builder footers"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:868
+#: includes/admin/class-kit-page.php:875
 msgid "Convert Selected"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:896
+#: includes/admin/class-kit-page.php:903
 msgid "Replace Kit or Import Template"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:898
+#: includes/admin/class-kit-page.php:905
 msgid "Upload Elementor Export Kit or Template"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:899
+#: includes/admin/class-kit-page.php:906
 msgid "Upload your full Elementor Export Kit to extract global styles and pages, or import a single header/footer template JSON directly into Divi Theme Builder."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:906
+#: includes/admin/class-kit-page.php:913
 msgid "Full Kit (ZIP)"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:907
+#: includes/admin/class-kit-page.php:914
 msgid "Import your entire Elementor Export Kit — pages, templates, global colors and typography."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:917
+#: includes/admin/class-kit-page.php:924
 msgid "Replace Kit"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:918
+#: includes/admin/class-kit-page.php:925
 msgid "Upload Kit"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:925
+#: includes/admin/class-kit-page.php:932
 msgid "Header Template (JSON)"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:926
+#: includes/admin/class-kit-page.php:933
 msgid "Import a single Elementor header template and register it as a Divi Theme Builder global header."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:935
+#: includes/admin/class-kit-page.php:942
 msgid "Set as Global Header"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:942
+#: includes/admin/class-kit-page.php:949
 msgid "Footer Template (JSON)"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:943
+#: includes/admin/class-kit-page.php:950
 msgid "Import a single Elementor footer template and register it as a Divi Theme Builder global footer."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:952
+#: includes/admin/class-kit-page.php:959
 msgid "Set as Global Footer"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:970
+#: includes/admin/class-kit-page.php:977
 msgid "Import from Elementor JSON / ZIP"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:972
+#: includes/admin/class-kit-page.php:979
 msgid "Upload an Elementor JSON export or a full-site Kit ZIP. No Elementor plugin required — this converts the exported file directly. Pages will be created in this Divi site."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:983
+#: includes/admin/class-kit-page.php:990
 msgid "File"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:986
+#: includes/admin/class-kit-page.php:993
 msgid "Accepted: .json (single page or template) or .zip (Elementor Kit export)"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1017
+#: includes/admin/class-kit-page.php:1024
 msgid "When checked, Elementor header templates are imported as Divi Theme Builder global headers. Uncheck to import them as regular draft pages instead."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1027
+#: includes/admin/class-kit-page.php:1034
 msgid "When checked, Elementor footer templates are imported as Divi Theme Builder global footers. Uncheck to import them as regular draft pages instead."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1033
+#: includes/admin/class-kit-page.php:1040
 msgid "Import and Convert"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1051
+#: includes/admin/class-kit-page.php:1058
 msgid "No import ID provided."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1057
+#: includes/admin/class-kit-page.php:1064
 msgid "Import results not found or expired. Results are kept for one hour."
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1065
+#: includes/admin/class-kit-page.php:1072
 msgid "Batch Import Results"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1069
+#: includes/admin/class-kit-page.php:1085
 msgid "Back to converter"
 msgstr ""
 
 #. translators: %d is the number of pages processed
-#: includes/admin/class-kit-page.php:1077
+#: includes/admin/class-kit-page.php:1093
 #, php-format
 msgid "%d page(s) processed"
 msgstr ""
 
 #. translators: %d is the number of successfully converted pages
-#: includes/admin/class-kit-page.php:1084
+#: includes/admin/class-kit-page.php:1100
 #, php-format
 msgid "%d converted"
 msgstr ""
 
 #. translators: %d is the number of pages that failed to convert
-#: includes/admin/class-kit-page.php:1092
+#: includes/admin/class-kit-page.php:1108
 #, php-format
 msgid "%d failed"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1103
+#: includes/admin/class-kit-page.php:1119
 msgid "Issues"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1104
+#: includes/admin/class-kit-page.php:1120
 msgid "Actions"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1115
+#: includes/admin/class-kit-page.php:1131
 msgid "(no title)"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1119
+#: includes/admin/class-kit-page.php:1135
 msgid "Converted"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1121
+#: includes/admin/class-kit-page.php:1137
 msgid "Failed"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1132
+#: includes/admin/class-kit-page.php:1148
 msgid "issues"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1140
+#: includes/admin/class-kit-page.php:1156
 msgid "Unsupported:"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1146
+#: includes/admin/class-kit-page.php:1162
 msgid "Skipped:"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1153
+#: includes/admin/class-kit-page.php:1169
 msgid "Clean"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1161
+#: includes/admin/class-kit-page.php:1177
 msgid "Edit"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1164
+#: includes/admin/class-kit-page.php:1180
 msgid "View"
 msgstr ""
 
-#: includes/admin/class-kit-page.php:1182
+#: includes/admin/class-kit-page.php:1198
 msgid "Publish"
 msgstr ""
 
