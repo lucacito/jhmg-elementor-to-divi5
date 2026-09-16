@@ -4,10 +4,6 @@
 // Key: "<block name> <attribute path>" prefix of the reported problem. Value: the task.
 // Deleted when empty.
 return [
-    'divi/team-member module.advanced'                                 => 'Task 13',
-    'divi/team-member image.innerContent'                              => 'Task 13',
-    'divi/testimonial company.innerContent'                            => 'Task 13',
-    'divi/testimonial module.advanced.portrait'                        => 'Task 13',
     'divi/countdown-timer module.advanced.countdownDate'               => 'Task 14',
     'divi/blog post.innerContent'                                      => 'Task 15',
     'divi/video module.advanced.videoUrl'                              => 'Task 20',

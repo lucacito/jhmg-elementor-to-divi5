@@ -540,6 +540,64 @@ final class AddonSettingNamesTest extends TestCase {
         $this->assertArrayNotHasKey( 'title', $table['module']['advanced'] ?? [] );
     }
 
+    public function test_team_member_writes_position_description_image_and_social_links(): void {
+        [ $block, $result ] = $this->convert( 'eael-team-member', [
+            'eael_team_member_image'                  => [ 'url' => 'https://x.test/h.jpg', 'id' => 9, 'alt' => 'Hannah' ],
+            'eael_team_member_name'                   => 'Hannah Moore',
+            'eael_team_member_job_title'              => 'Founder',
+            'eael_team_member_description'            => 'Ran a design studio.',
+            'eael_team_member_enable_social_profiles' => 'yes',
+            'eael_team_member_social_profile_links'   => [
+                [ 'social_new' => [ 'value' => 'fab fa-linkedin', 'library' => 'fa-brands' ], 'link' => [ 'url' => 'https://www.linkedin.com/in/h' ] ],
+                [ 'social_new' => [ 'value' => 'fab fa-instagram', 'library' => 'fa-brands' ], 'link' => [ 'url' => 'https://www.instagram.com/h' ] ],
+            ],
+        ] );
+
+        $s = $block['settings'];
+        // TeamMemberModule.php: name, position, content innerContent; image.innerContent.url (line 98);
+        // social.innerContent {facebookUrl, twitterUrl, googleUrl, linkedinUrl} (line 775).
+        $this->assertSame( 'Hannah Moore', $s['name']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'Founder', $s['position']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'Ran a design studio.', $s['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( [ 'url' => 'https://x.test/h.jpg', 'alt' => 'Hannah' ], $s['image']['innerContent']['desktop']['value'] );
+        $this->assertSame( [ 'linkedinUrl' => 'https://www.linkedin.com/in/h' ], $s['social']['innerContent']['desktop']['value'] );
+        $this->assertArrayNotHasKey( 'module', $s );
+        $this->assertSame( 'social_network', $result['report']['not_carried_over'][0]['kind'] );
+    }
+
+    public function test_testimonial_writes_author_job_title_and_portrait(): void {
+        [ $block ] = $this->convert( 'eael-testimonial', [
+            'image'                          => [ 'url' => 'https://x.test/p.jpg', 'id' => 4 ],
+            'eael_testimonial_name'          => 'Priya Raman',
+            'eael_testimonial_company_title' => 'Brand designer',
+            'eael_testimonial_description'   => 'The quiet rooms alone paid for it.',
+        ] );
+
+        $s = $block['settings'];
+        // TestimonialModule.php: content, author, jobTitle innerContent; portrait.innerContent.src (line 98).
+        $this->assertSame( 'The quiet rooms alone paid for it.', $s['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'Priya Raman', $s['author']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'Brand designer', $s['jobTitle']['innerContent']['desktop']['value'] );
+        $this->assertSame( [ 'src' => 'https://x.test/p.jpg' ], $s['portrait']['innerContent']['desktop']['value'] );
+        $this->assertArrayNotHasKey( 'company', $s );
+        $this->assertArrayNotHasKey( 'module', $s );
+    }
+
+    public function test_core_testimonial_writes_author_job_and_portrait(): void {
+        [ $block ] = $this->convert( 'testimonial', [
+            'testimonial_content' => 'Great crew.',
+            'testimonial_name'    => 'Sam Ortiz',
+            'testimonial_job'     => 'Homeowner',
+            'testimonial_image'   => [ 'url' => 'https://x.test/s.jpg', 'id' => 2 ],
+        ] );
+
+        $s = $block['settings'];
+        $this->assertSame( 'Sam Ortiz', $s['author']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'Homeowner', $s['jobTitle']['innerContent']['desktop']['value'] );
+        $this->assertSame( [ 'src' => 'https://x.test/s.jpg' ], $s['portrait']['innerContent']['desktop']['value'] );
+        $this->assertArrayNotHasKey( 'company', $s );
+    }
+
     // -------------------------------------------------------------------------
     // Header Footer Elementor
     // -------------------------------------------------------------------------

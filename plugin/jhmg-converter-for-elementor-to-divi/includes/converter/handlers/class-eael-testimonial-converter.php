@@ -23,29 +23,23 @@ class EaelTestimonialConverter extends BaseElementorConverter {
             $image_url = is_string( $image_raw['url'] ?? '' ) ? ( $image_raw['url'] ?? '' ) : '';
         }
 
+        // divi/testimonial (testimonial/module.json, TestimonialModule.php):
+        // content, author and jobTitle are each an innerContent; the photo is
+        // portrait.innerContent {src} (line 98). EAEL's "company / position"
+        // field is a job title; Divi's company is a separate linked field. The old
+        // company.innerContent {author, company} and module.advanced.portrait were never read.
         $block_settings = [];
-
         if ( $content !== '' ) {
-            $block_settings['content'] = [
-                'innerContent' => [ 'desktop' => [ 'value' => $content ] ],
-            ];
+            $block_settings['content']['innerContent']['desktop']['value'] = $content;
         }
-
-        if ( $name !== '' || $company !== '' ) {
-            $block_settings['company'] = [
-                'innerContent' => [ 'desktop' => [ 'value' => array_filter( [
-                    'author'  => $name,
-                    'company' => $company,
-                ] ) ] ],
-            ];
+        if ( $name !== '' ) {
+            $block_settings['author']['innerContent']['desktop']['value'] = $name;
         }
-
+        if ( $company !== '' ) {
+            $block_settings['jobTitle']['innerContent']['desktop']['value'] = $company;
+        }
         if ( $image_url !== '' ) {
-            $block_settings['module'] = [
-                'advanced' => [
-                    'portrait' => [ 'desktop' => [ 'value' => [ 'src' => $image_url ] ] ],
-                ],
-            ];
+            $block_settings['portrait']['innerContent']['desktop']['value'] = [ 'src' => $image_url ];
         }
 
         $this->engine->logConverted( 'testimonial' );
