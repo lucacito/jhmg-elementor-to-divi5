@@ -135,6 +135,7 @@ return static function ( Context $ctx ): array {
             'Try Ferncourt for a day', 'Your first day pass is on us', 'Claim a free day',
         ],
         // Counters convert to prefix . number . suffix.
-        'survive_exact' => [ '240+', '86', '9', '48' ],
+        // Divi's number counter has no suffix: 240+ converts to 240 and reports the '+'.
+        'survive_exact' => [ '240', '86', '9', '48' ],
     ];
 };

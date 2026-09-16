@@ -74,17 +74,22 @@ class StyleMapper {
      * / body text typography controls.
      */
     private const WIDGET_SECONDARY_FONT_PATH = [
-        'blurb' => 'content.decoration.bodyFont.body.font',
+        'blurb'   => 'content.decoration.bodyFont.body.font',
+        // Counter title (number-counter/module.json title.decoration.font); without
+        // this the title kept Divi's default colour, invisible on a dark section.
+        'counter' => 'title.decoration.font.font',
     ];
 
     /** Elementor control-group prefix for secondary typography (description). */
     private const WIDGET_SECONDARY_TYPOGRAPHY_PREFIX = [
-        'blurb' => 'description_typography_',
+        'blurb'   => 'description_typography_',
+        'counter' => 'title_typography_',
     ];
 
     /** Elementor settings key for the secondary text/font color. */
     private const WIDGET_SECONDARY_COLOR_KEY = [
-        'blurb' => 'description_color',
+        'blurb'   => 'description_color',
+        'counter' => 'title_color',
     ];
 
     /**

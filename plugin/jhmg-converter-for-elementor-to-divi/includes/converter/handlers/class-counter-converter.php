@@ -26,12 +26,29 @@ class CounterConverter extends BaseElementorConverter {
         $prefix = is_string( $settings['prefix'] ?? '' ) ? ( $settings['prefix'] ?? '' ) : '';
         $suffix = is_string( $settings['suffix'] ?? '' ) ? ( $settings['suffix'] ?? '' ) : '';
 
-        $display_number = $prefix . $number . $suffix;
+        // number.innerContent must be the bare number: Divi animates it and adds
+        // its own sign while number.advanced.enablePercentSign is on, the
+        // default (number-counter/module.json). Only a '%' suffix maps; any other
+        // prefix or suffix has no home in the module and is reported.
+        $numeric = preg_replace( '/[^0-9.\-]/', '', $number );
+        $numeric = $numeric === '' || $numeric === '-' ? '0' : $numeric;
 
-        $style        = ( new StyleMapper() )->map( 'counter', $settings );
+        $style          = ( new StyleMapper() )->map( 'counter', $settings );
         $block_settings = $style['divi_attrs'];
 
-        $block_settings['number']['innerContent']['desktop']['value'] = $display_number;
+        $block_settings['number']['innerContent']['desktop']['value']                 = $numeric;
+        $block_settings['number']['advanced']['enablePercentSign']['desktop']['value'] = trim( $suffix ) === '%' ? 'on' : 'off';
+
+        $dropped = [];
+        if ( trim( $prefix ) !== '' ) {
+            $dropped[] = "prefix '" . trim( $prefix ) . "'";
+        }
+        if ( trim( $suffix ) !== '' && trim( $suffix ) !== '%' ) {
+            $dropped[] = "suffix '" . trim( $suffix ) . "'";
+        }
+        if ( $dropped !== [] ) {
+            $this->engine->logNotCarriedOver( 'counter_affix', (string) $id, implode( ', ', $dropped ) );
+        }
 
         if ( $title !== '' ) {
             $block_settings['title']['innerContent']['desktop']['value'] = $title;

@@ -72,6 +72,14 @@ test.describe('probe: core widgets', () => {
     expect(await css(button, 'color')).toBe('rgb(255, 255, 255)');
     expect(await css(button, 'border-top-left-radius')).toBe('3px');
   });
+
+  test('counter: bare number, percent sign only for %', async ({ page }) => {
+    await page.waitForTimeout(3000); // the count-up animation
+    const numbers = page.locator('.et_pb_number_counter .percent p');
+    await expect(numbers).toHaveCount(2);
+    await expect(numbers.nth(0)).toHaveText('58%');
+    await expect(numbers.nth(1)).toHaveText('240');
+  });
 });
 
 test.describe('Theme Builder header and footer (HFE templates)', () => {

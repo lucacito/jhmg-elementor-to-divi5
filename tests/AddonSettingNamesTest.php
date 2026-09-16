@@ -510,10 +510,13 @@ final class AddonSettingNamesTest extends TestCase {
     }
 
     public function test_hfe_counter_reads_end_number(): void {
-        [ $block ] = $this->convert( 'hfe-counter', [ 'start_number' => 0, 'end_number' => 120, 'suffix' => '+', 'title' => 'Members' ] );
+        [ $block, $result ] = $this->convert( 'hfe-counter', [ 'start_number' => 0, 'end_number' => 120, 'suffix' => '+', 'title' => 'Members' ] );
 
-        $this->assertSame( '120+', $block['settings']['number']['innerContent']['desktop']['value'] );
+        // Divi's number counter animates the bare number and offers only a percent
+        // sign; the '+' is reported as not carried over (CounterConversionTest).
+        $this->assertSame( '120', $block['settings']['number']['innerContent']['desktop']['value'] );
         $this->assertSame( 'Members', $block['settings']['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'counter_affix', $result['report']['not_carried_over'][0]['kind'] );
     }
 
     public function test_core_counter_is_unaffected(): void {

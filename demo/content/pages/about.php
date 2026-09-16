@@ -114,6 +114,6 @@ return static function ( Context $ctx ): array {
             'Take the tour', 'tour.webm',
         ],
         // Counters convert to prefix . number . suffix.
-        'survive_exact' => [ '58%', '31%', '11%' ],
+        'survive_exact' => [ '58', '31', '11' ],
     ];
 };
