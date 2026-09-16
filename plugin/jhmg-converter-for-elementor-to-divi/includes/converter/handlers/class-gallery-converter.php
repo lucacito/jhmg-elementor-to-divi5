@@ -40,7 +40,7 @@ class GalleryConverter extends BaseElementorConverter {
             // Divi paginates at postsNumber (default 4); list everything, as Elementor does.
             $block_settings['module']['advanced']['postsNumber']['desktop']['value'] = (string) count( $ids );
             if ( $columns > 0 ) {
-                $block_settings['galleryGrid']['decoration']['layout']['desktop']['value'] = [ 'display' => 'grid', 'gridColumnCount' => (string) $columns ];
+                $block_settings = array_merge( $block_settings, $this->galleryGridSettings( (string) $columns ) );
             }
         }
 

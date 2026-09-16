@@ -92,6 +92,19 @@ test.describe('probe: core widgets', () => {
     await expect(page.locator('.et_pb_gallery').first().locator('.et_pb_gallery_pagination a')).toHaveCount(0);
   });
 
+  test('image carousel (4 slides): the images share one row, the first at the left edge', async ({ page }) => {
+    // Essential Addons' unscoped .clearfix::before used to take the first grid cell.
+    const gallery = page.locator('.et_pb_gallery').first();
+    const grid = await gallery.locator('.et_pb_gallery_items').boundingBox();
+    const items = await gallery.locator('.et_pb_gallery_item').all();
+    expect(items).toHaveLength(4);
+    const boxes = await Promise.all(items.map((item) => item.boundingBox()));
+    expect(Math.abs((boxes[0]?.x ?? -1) - (grid?.x ?? 1))).toBeLessThan(2);
+    for (const box of boxes) {
+      expect(Math.abs((box?.y ?? -1) - (boxes[0]?.y ?? 1))).toBeLessThan(2);
+    }
+  });
+
   test('image gallery: three items', async ({ page }) => {
     await expect(page.locator('.et_pb_gallery').nth(1).locator('.et_pb_gallery_item')).toHaveCount(3);
   });

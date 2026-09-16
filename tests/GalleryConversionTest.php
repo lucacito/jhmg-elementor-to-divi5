@@ -32,6 +32,33 @@ final class GalleryConversionTest extends TestCase {
         DiviModuleSchema::assertBlocksValid( [ $block ], 'carousel' );
     }
 
+    /**
+     * Essential Addons ships an unscoped `.clearfix::before { display: table }`
+     * (assets/front-end/css/view/general.css:1) that stays loaded while the add-on is
+     * active under Divi. Divi's gallery wrapper carries `clearfix` (GalleryModule.php:964)
+     * and lays its items out with CSS grid, so that pseudo-element takes the first cell
+     * and every image shifts one place. Divi's own rule styles only ::after.
+     */
+    public function test_gallery_grids_hide_the_clearfix_pseudo_element_essential_addons_adds(): void {
+        $expected = 'selector .et_pb_gallery_items::before{display:none}';
+
+        $carousel = $this->convert( 'image-carousel', [ 'carousel' => $this->images( 4 ), 'slides_to_show' => '4' ] )['divi']['elements'][0];
+        $this->assertSame( $expected, $carousel['settings']['css']['desktop']['value']['freeForm'] );
+
+        $gallery = $this->convert( 'image-gallery', [ 'wp_gallery' => $this->images( 3 ), 'gallery_columns' => 3 ] )['divi']['elements'][0];
+        $this->assertSame( $expected, $gallery['settings']['css']['desktop']['value']['freeForm'] );
+
+        $filterable = $this->convert( 'eael-filterable-gallery', [
+            'eael_fg_gallery_items' => [ [ 'eael_fg_gallery_img' => $this->images( 1 )[0] ] ],
+            'columns'               => '3',
+        ] )['divi']['elements'][0];
+        $this->assertSame( $expected, $filterable['settings']['css']['desktop']['value']['freeForm'] );
+
+        $slider = $this->convert( 'image-carousel', [ 'carousel' => $this->images( 3 ), 'slides_to_show' => '1' ] )['divi']['elements'][0];
+        $this->assertArrayNotHasKey( 'css', $slider['settings'], 'the slider layout has no grid to fix' );
+        DiviModuleSchema::assertBlocksValid( [ $carousel, $gallery, $filterable ], 'gallery grids' );
+    }
+
     public function test_single_slide_carousel_becomes_divis_slider_layout_with_autoplay(): void {
         $block = $this->convert( 'image-carousel', [ 'carousel' => $this->images( 3 ), 'slides_to_show' => '1', 'autoplay' => 'yes', 'autoplay_speed' => 4000 ] )['divi']['elements'][0];
         $this->assertSame( 'on', $block['settings']['module']['advanced']['fullwidth']['desktop']['value'] );

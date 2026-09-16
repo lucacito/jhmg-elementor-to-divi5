@@ -1490,6 +1490,26 @@ abstract class BaseElementorConverter implements ConverterInterface {
     }
 
     /**
+     * divi/gallery grid layout with $columns columns, plus the fix for Essential
+     * Addons' clearfix.
+     *
+     * EAEL ships an unscoped `.clearfix::before, .clearfix::after { content: " ";
+     * display: table }` (assets/front-end/css/view/general.css:1) that stays loaded
+     * while the add-on is active under Divi, as it is during a migration. Divi's
+     * gallery items wrapper carries `clearfix` (GalleryModule.php:964) and is a CSS
+     * grid (style-static.min.css, .et_grid_module), so that ::before becomes the first
+     * grid item: every image shifts one cell and the last wraps to a new row. Divi's
+     * own clearfix rule styles only ::after, a harmless trailing item. Free-form
+     * custom CSS (CssStyleUtils.php:216, 296; `selector` is this module) hides it.
+     */
+    protected function galleryGridSettings( string $columns ): array {
+        return [
+            'galleryGrid' => [ 'decoration' => [ 'layout' => [ 'desktop' => [ 'value' => [ 'display' => 'grid', 'gridColumnCount' => $columns ] ] ] ] ],
+            'css'         => [ 'desktop' => [ 'value' => [ 'freeForm' => 'selector .et_pb_gallery_items::before{display:none}' ] ] ],
+        ];
+    }
+
+    /**
      * Log every settings key that the converter did not explicitly handle.
      *
      * Elementor-internal bookkeeping keys (prefixed with __ or known system keys)

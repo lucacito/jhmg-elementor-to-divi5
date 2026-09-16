@@ -70,8 +70,7 @@ class EaelFilterableGalleryConverter extends BaseElementorConverter {
                     'postsNumber'         => [ 'desktop' => [ 'value' => (string) count( $ids ) ] ],
                     'showTitleAndCaption' => [ 'desktop' => [ 'value' => 'off' ] ],
                 ] ],
-                'galleryGrid' => [ 'decoration' => [ 'layout' => [ 'desktop' => [ 'value' => [ 'display' => 'grid', 'gridColumnCount' => $columns ] ] ] ] ],
-            ];
+            ] + $this->galleryGridSettings( (string) $columns );
         } else {
             $this->engine->logWarning( "Filterable gallery {$id}: none of its images are in this site's media library; the Divi gallery would list every attachment, so it was left empty." );
         }
