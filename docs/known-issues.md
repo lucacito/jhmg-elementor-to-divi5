@@ -1,5 +1,18 @@
 # Known issues
 
+## Fixed after free 3.0.2 and Pro 1.2.1 (unreleased)
+
+Found 2026-09-16 while retaking the demo site's before/after screenshots. Each has a PHPUnit test and a render assertion in `demo/tests/render.spec.ts`.
+
+| Item | Outcome |
+|---|---|
+| Flex-row columns stack (Home hero, About hero, Contact form beside the map, the Theme Builder header and footer); legacy section columns share a line only in content-driven widths | Divi 5 sizes a flex row's columns from each column's `module.decoration.sizing.*.flexType` (`Module.php:333-387`), never from the row's `columnStructure` or the column's `type`; a column without it is `24_24`, full width. Every column now carries the flexType Divi's structure picker writes (desktop from its fraction, phone `24_24`, tablet `12_24` from four columns), and a row whose fractions form no Divi structure (55% + 40% → `1_2,2_5`) snaps to the nearest one (`3_5,2_5`) |
+| Gallery grids leave the first cell empty and push the last image to a new row (Home carousel, Spaces gallery, the render probe; reported on 2026-09-16 as "a column-gap difference") | Essential Addons ships an unscoped `.clearfix::before { display: table }` (`assets/front-end/css/view/general.css`) that stays loaded while the add-on is active under Divi; Divi's gallery wrapper carries `clearfix` and is a CSS grid, so the pseudo-element became the first grid item. Gallery blocks now carry free-form CSS hiding it |
+| EAEL fancy text renders in Divi's default heading font | EAEL's typography controls default to Elementor's Primary global font at 22px, weight 600 (`Fancy_Text.php:348-357`), which Elementor never stores. The converter writes that where the widget left the typography alone |
+| Social icons invisible on a light section (Contact); white glyphs without a background in the footer | `divi/social-media-follow-network` has no background unless the block sets one, and the parent's icons default to light. Each item now carries Divi's colour for its network (what the Visual Builder writes), or the widget's custom primary and secondary colours |
+| Headings, text, counters, icon and image boxes the author never styled render in Divi's default font (Home counters, Spaces tab panel image box; every Kit Library heading without its own typography) | Elementor's core widgets fall back to the kit's global typography presets (`heading.php` Primary, `text-editor.php` Text, `counter.php` Primary and Secondary, `icon-box.php` and `image-box.php` Primary and Text) and Elementor stores no control defaults. `StyleMapper::map()` now applies those presets under `elementor_defaults`, which the core handlers and the EAEL fancy text pass; the secondary font path (counter title, blurb description) also resolves a `__globals__` preset, which it never did |
+| ElementsKit dual button renders as two stacked Divi outline buttons (Home hero) | ElementsKit styles the buttons itself: white 14px bold text on `#2575fc` and `rgb(23%,23%,23%)`, 5px apart on one line. The converter writes that look where the widget left a colour unset and puts the two buttons in a flex-row `divi/group` |
+
 ## Fixed in free 3.0.2 and Pro 1.2.1
 
 Branch `fix/divi-rendering-2026-09`. Every fix has a PHPUnit test against Divi 5.7.4's module definitions (`tests/support/DiviModuleSchema.php`, run on every fixture, add-on probe, both Kit Library kits and the demo pages) and, where the demo stack shows it, a render assertion in `demo/tests/render.spec.ts`.
