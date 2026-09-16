@@ -35,7 +35,7 @@ class EaelContentTickerConverter extends BaseElementorConverter {
                 'id'       => $id . '-heading',
                 'name'     => 'divi/icon-list-item',
                 'settings' => [
-                    'module' => [ 'advanced' => [ 'text' => [ 'desktop' => [ 'value' => '<strong>' . $heading . '</strong>' ] ] ] ],
+                    'content' => [ 'innerContent' => [ 'desktop' => [ 'value' => '<strong>' . $heading . '</strong>' ] ] ],
                 ],
                 'elements' => [],
             ];
@@ -46,21 +46,23 @@ class EaelContentTickerConverter extends BaseElementorConverter {
                 continue;
             }
 
-            $title = is_string( $item['eael_ct_title'] ?? '' ) ? ( $item['eael_ct_title'] ?? '' ) : '';
+            // EAEL 6.6.7 Content_Ticker.php:802-804 renders eael_ticker_custom_content and
+            // eael_ticker_custom_content_link per custom item (the eael_ct_* names are
+            // the older ones, kept as fallbacks).
+            $title = $item['eael_ticker_custom_content'] ?? $item['eael_ct_title'] ?? '';
+            $title = is_string( $title ) ? $title : '';
 
-            $link_raw = $item['eael_ct_link'] ?? [];
+            $link_raw = $item['eael_ticker_custom_content_link'] ?? $item['eael_ct_link'] ?? [];
             $link_url = is_array( $link_raw ) ? ( is_string( $link_raw['url'] ?? '' ) ? ( $link_raw['url'] ?? '' ) : '' ) : '';
 
+            // divi/icon-list-item (IconListItemModule.php): text in content.innerContent
+            // (line 310), link in module.advanced.link (line 178).
             $child_attrs = [];
             if ( $title !== '' ) {
-                $child_attrs['module'] = [
-                    'advanced' => [ 'text' => [ 'desktop' => [ 'value' => $title ] ] ],
-                ];
+                $child_attrs['content']['innerContent']['desktop']['value'] = $title;
             }
             if ( $link_url !== '' ) {
-                $child_attrs['link'] = [
-                    'innerContent' => [ 'desktop' => [ 'value' => [ 'url' => $link_url ] ] ],
-                ];
+                $child_attrs['module']['advanced']['link']['desktop']['value'] = [ 'url' => $link_url ];
             }
 
             $children[] = [

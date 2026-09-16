@@ -663,6 +663,52 @@ final class AddonSettingNamesTest extends TestCase {
     }
 
     // -------------------------------------------------------------------------
+    // Icon list items (Task 22): IconListItemModule.php reads content.innerContent (line 310),
+    // icon.innerContent as an icon object (line 77) and module.advanced.link (line 178).
+    // -------------------------------------------------------------------------
+
+    private function assertIconListItem( array $item, string $text, ?string $unicode, ?string $url ): void {
+        $this->assertSame( 'divi/icon-list-item', $item['name'] );
+        $this->assertSame( $text, $item['settings']['content']['innerContent']['desktop']['value'] );
+        if ( $unicode !== null ) {
+            $this->assertSame( $unicode, $item['settings']['icon']['innerContent']['desktop']['value']['unicode'] );
+            $this->assertSame( 'fa', $item['settings']['icon']['innerContent']['desktop']['value']['type'] );
+        }
+        if ( $url !== null ) {
+            $this->assertSame( $url, $item['settings']['module']['advanced']['link']['desktop']['value']['url'] );
+        }
+        $this->assertArrayNotHasKey( 'link', $item['settings'] );
+        $this->assertArrayNotHasKey( 'text', $item['settings']['module']['advanced'] ?? [] );
+    }
+
+    public function test_feature_list_items_carry_text_icon_and_link(): void {
+        [ $block ] = $this->convert( 'eael-feature-list', [ 'eael_feature_list' => [
+            [ 'eael_feature_list_title' => 'Fast wifi', 'eael_feature_list_content' => 'Gigabit fibre.', 'eael_feature_list_icon_new' => [ 'value' => 'fas fa-wifi', 'library' => 'fa-solid' ], 'eael_feature_list_link' => [ 'url' => 'https://x.test/wifi' ] ],
+            [ 'eael_feature_list_title' => 'Coffee', 'eael_feature_list_icon_new' => [ 'value' => 'fas fa-mug-hot', 'library' => 'fa-solid' ] ],
+        ] ] );
+        $this->assertCount( 2, $block['elements'] );
+        $this->assertIconListItem( $block['elements'][0], '<strong>Fast wifi</strong> Gigabit fibre.', '&#xf1eb;', 'https://x.test/wifi' );
+        $this->assertIconListItem( $block['elements'][1], 'Coffee', '&#xf7b6;', null );
+    }
+
+    public function test_price_list_items_carry_text_and_link(): void {
+        [ $block ] = $this->convert( 'price-list', [ 'price_list' => [
+            [ 'title' => 'Espresso', 'price' => '$3', 'link' => [ 'url' => 'https://x.test/e' ] ],
+            [ 'title' => 'Latte', 'price' => '$4' ],
+        ] ] );
+        $this->assertIconListItem( $block['elements'][0], 'Espresso — $3', null, 'https://x.test/e' );
+        $this->assertIconListItem( $block['elements'][1], 'Latte — $4', null, null );
+    }
+
+    public function test_content_ticker_items_carry_text_and_link(): void {
+        [ $block ] = $this->convert( 'eael-content-ticker', [ 'eael_ticker_type' => 'custom', 'eael_ticker_tag_text' => 'News', 'eael_ticker_custom_contents' => [
+            [ 'eael_ticker_custom_content' => 'Doors open at 8', 'eael_ticker_custom_content_link' => [ 'url' => 'https://x.test/doors' ] ],
+        ] ] );
+        $this->assertSame( '<strong>News</strong>', $block['elements'][0]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertIconListItem( $block['elements'][1], 'Doors open at 8', null, 'https://x.test/doors' );
+    }
+
+    // -------------------------------------------------------------------------
     // Header Footer Elementor
     // -------------------------------------------------------------------------
 

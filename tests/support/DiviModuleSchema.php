@@ -81,6 +81,8 @@ final class DiviModuleSchema {
         'divi/blurb imageIcon'      => [ 'useIcon', 'icon', 'src', 'alt', 'title', 'animation' ],
         // IconModule.php:197 reads the icon object.
         'divi/icon icon'            => [ 'unicode', 'type', 'weight' ],
+        // IconListItemModule.php:77 reads the icon object too; module.json has no subNames for it.
+        'divi/icon-list-item icon'  => [ 'unicode', 'type', 'weight' ],
     ];
 
     /**
@@ -93,30 +95,14 @@ final class DiviModuleSchema {
     ];
 
     private static ?array $schema = null;
-    private static array $gaps    = [];
 
     public static function assertBlocksValid( array $blocks, string $context ): void {
-        $problems = self::problems( $blocks );
-        $known    = self::knownGaps();
-        $report   = [];
-        $matched  = [];
-
-        foreach ( $problems as $problem ) {
-            $gap = self::matchGap( $problem, $known );
-            if ( $gap === null ) {
-                $report[] = "{$context}: {$problem}";
-            } else {
-                $matched[ $gap ] = true;
-            }
+        $report = [];
+        foreach ( self::problems( $blocks ) as $problem ) {
+            $report[] = "{$context}: {$problem}";
         }
 
         PHPUnit\Framework\Assert::assertSame( [], $report, "Converter output that Divi 5.7.4 will not render:\n" . implode( "\n", $report ) );
-        self::$gaps = array_merge( self::$gaps, array_keys( $matched ) );
-    }
-
-    /** Gaps in the known list that no fixture, probe or page has hit this run. */
-    public static function unusedKnownGaps(): array {
-        return array_values( array_diff( array_keys( self::knownGaps() ), array_unique( self::$gaps ) ) );
     }
 
     /** @return string[] "<block name> <dotted path> — <reason>" */
@@ -354,18 +340,4 @@ final class DiviModuleSchema {
         return self::$schema;
     }
 
-    private static function knownGaps(): array {
-        $file = __DIR__ . '/divi-schema-known-gaps.php';
-        return file_exists( $file ) ? require $file : [];
-    }
-
-    /** A gap matches when the problem starts with its key ("divi/x attr.path"). */
-    private static function matchGap( string $problem, array $known ): ?string {
-        foreach ( array_keys( $known ) as $prefix ) {
-            if ( str_starts_with( $problem, $prefix ) ) {
-                return $prefix;
-            }
-        }
-        return null;
-    }
 }

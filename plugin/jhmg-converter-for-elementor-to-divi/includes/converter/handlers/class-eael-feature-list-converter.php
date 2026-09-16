@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\Helpers\FontAwesomeIcons;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -21,24 +22,33 @@ class EaelFeatureListConverter extends BaseElementorConverter {
                 continue;
             }
 
-            $title = is_string( $item['eael_feature_list_title'] ?? '' ) ? ( $item['eael_feature_list_title'] ?? '' ) : '';
+            // EAEL 6.6.7 Feature_List.php: eael_feature_list_title, _content, _icon_new, _link.
+            $title   = is_string( $item['eael_feature_list_title'] ?? '' ) ? ( $item['eael_feature_list_title'] ?? '' ) : '';
+            $content = is_string( $item['eael_feature_list_content'] ?? '' ) ? trim( $item['eael_feature_list_content'] ?? '' ) : '';
+            $link    = is_array( $item['eael_feature_list_link'] ?? null ) && is_string( $item['eael_feature_list_link']['url'] ?? null ) ? $item['eael_feature_list_link']['url'] : '';
 
-            $icon_raw = $item['eael_feature_list_icon_new'] ?? null;
-            $icon     = '';
-            if ( is_array( $icon_raw ) ) {
-                $icon = is_string( $icon_raw['value'] ?? '' ) ? ( $icon_raw['value'] ?? '' ) : '';
-            }
+            // divi/icon-list-item (IconListItemModule.php): the text is content.innerContent
+            // (line 310), the icon an object in icon.innerContent (line 77), the link
+            // module.advanced.link (line 178). module.advanced.text and a `link`
+            // attribute were never read.
+            $text = $content !== '' && $title !== '' ? '<strong>' . $title . '</strong> ' . $content : ( $title !== '' ? $title : $content );
 
             $child_attrs = [];
-            if ( $title !== '' ) {
-                $child_attrs['module'] = [
-                    'advanced' => [ 'text' => [ 'desktop' => [ 'value' => $title ] ] ],
-                ];
+            if ( $text !== '' ) {
+                $child_attrs['content']['innerContent']['desktop']['value'] = $text;
             }
-            if ( $icon !== '' ) {
-                $child_attrs['icon'] = [
-                    'innerContent' => [ 'desktop' => [ 'value' => $icon ] ],
-                ];
+            $icon_raw = $item['eael_feature_list_icon_new'] ?? null;
+            if ( is_array( $icon_raw ) && ( $icon_raw['value'] ?? '' ) !== '' ) {
+                $divi_icon = FontAwesomeIcons::fromControl( $icon_raw );
+                if ( $divi_icon === null ) {
+                    $label = is_string( $icon_raw['value'] ) ? $icon_raw['value'] : 'svg';
+                    $this->engine->logWarning( "Feature list {$id}: icon '{$label}' has no FontAwesome equivalent in Divi; a star was used." );
+                    $divi_icon = FontAwesomeIcons::STAR;
+                }
+                $child_attrs['icon']['innerContent']['desktop']['value'] = $divi_icon;
+            }
+            if ( $link !== '' ) {
+                $child_attrs['module']['advanced']['link']['desktop']['value'] = [ 'url' => $link ];
             }
 
             $children[] = [

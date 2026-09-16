@@ -25,20 +25,18 @@ class PriceListConverter extends BaseElementorConverter {
             $price = is_string( $item['price'] ?? '' ) ? ( $item['price'] ?? '' ) : '';
             $label = $price !== '' ? $title . ' — ' . $price : $title;
 
+            // divi/icon-list-item (IconListItemModule.php): text in content.innerContent
+            // (line 310), link in module.advanced.link (line 178).
             $child_attrs = [];
             if ( $label !== '' ) {
-                $child_attrs['module'] = [
-                    'advanced' => [ 'text' => [ 'desktop' => [ 'value' => $label ] ] ],
-                ];
+                $child_attrs['content']['innerContent']['desktop']['value'] = $label;
             }
 
             $link_raw = $item['link'] ?? [];
             if ( is_array( $link_raw ) ) {
                 $link_url = is_string( $link_raw['url'] ?? '' ) ? ( $link_raw['url'] ?? '' ) : '';
                 if ( $link_url !== '' ) {
-                    $child_attrs['link'] = [
-                        'innerContent' => [ 'desktop' => [ 'value' => [ 'url' => $link_url ] ] ],
-                    ];
+                    $child_attrs['module']['advanced']['link']['desktop']['value'] = [ 'url' => $link_url ];
                 }
             }
 
