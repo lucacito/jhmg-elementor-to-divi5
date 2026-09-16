@@ -43,6 +43,22 @@ final class ColumnBackgroundTest extends TestCase {
         $this->assertSame( 'stretch', $row['settings']['module']['decoration']['layout']['desktop']['value']['alignItems'] );
     }
 
+    /**
+     * Elementor's "Full Width" layout stretches the columns across the viewport; Divi's
+     * row is 80% wide and at most 1080px by default (style-static.min.css .et_pb_row).
+     */
+    public function test_a_full_width_section_gives_its_row_the_full_width(): void {
+        $row = ( new ConverterEngine() )->convert( $this->hero() )['divi']['elements'][0]['elements'][0];
+
+        $this->assertSame( '100%', $row['settings']['module']['decoration']['sizing']['desktop']['value']['width'] );
+        $this->assertSame( '100%', $row['settings']['module']['decoration']['sizing']['desktop']['value']['maxWidth'] );
+
+        $boxed = $this->hero();
+        $boxed[0]['settings']['layout'] = 'boxed';
+        $row   = ( new ConverterEngine() )->convert( $boxed )['divi']['elements'][0]['elements'][0];
+        $this->assertArrayNotHasKey( 'width', $row['settings']['module']['decoration']['sizing']['desktop']['value'] );
+    }
+
     public function test_column_overlay_colour_stays_on_the_column(): void {
         $hero = $this->hero();
         $hero[0]['elements'][0]['settings']['background_overlay_background'] = 'classic';

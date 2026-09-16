@@ -67,6 +67,18 @@ class SectionConverter extends BaseElementorConverter {
             ] );
         }
 
+        // Elementor's "Full Width" section layout stretches the columns across the
+        // viewport (Elementor's .elementor-section-full_width > .elementor-container has
+        // max-width: 100%). Divi rows are 80% wide, at most 1080px, by default
+        // (style-static.min.css .et_pb_row), so the same columns lost a third of their
+        // width: padded text columns were squeezed and single-word display headings
+        // broke mid-word. The row takes the section's width instead.
+        if ( ( $settings['layout'] ?? '' ) === 'full_width' ) {
+            $row_settings = $this->deepMergeSettings( $row_settings, [
+                'module' => [ 'decoration' => [ 'sizing' => [ 'desktop' => [ 'value' => [ 'width' => '100%', 'maxWidth' => '100%' ] ] ] ] ],
+            ] );
+        }
+
         $this->engine->logConverted( 'section' );
         $this->logUnmappedSettings( $id, $settings, $style['handled_keys'] );
 

@@ -58,10 +58,18 @@ test.describe('probe: core widgets', () => {
     expect(await css(column, 'background-size')).toBe('cover');
   });
 
+  test('full-width section: the row spans the viewport', async ({ page }) => {
+    // Elementor's "Full Width" layout; Divi's row would be 1080px at most.
+    const row = page.locator('.et_pb_column_0').locator('xpath=ancestor::*[contains(@class, "et_pb_row")][1]');
+    expect((await row.boundingBox())?.width ?? 0).toBeGreaterThan(1400);
+  });
+
   test('heading (header_size span): keeps its 12vw typography and colour', async ({ page }) => {
     const word = page.locator('.et_pb_text span', { hasText: 'eramic' }).first();
     await expect(word).toBeVisible();
-    expect(parseFloat(await css(word, 'font-size'))).toBeGreaterThan(100); // 12vw at 1440px = 172.8px
+    const size = parseFloat(await css(word, 'font-size'));
+    expect(size).toBeGreaterThan(100); // 12vw at 1440px = 172.8px
+    expect((await word.boundingBox())?.height ?? 1e9).toBeLessThan(size * 1.5); // one line: the word must not break
     expect(await css(word, 'color')).toBe('rgb(200, 100, 59)');
     await expect(page.locator('.et_pb_heading', { hasText: 'eramic' })).toHaveCount(0);
   });
