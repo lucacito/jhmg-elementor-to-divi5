@@ -98,6 +98,14 @@ test.describe('probe: core widgets', () => {
     await expect(page.locator('.et_pb_gallery').nth(1).locator('.et_pb_gallery_item')).toHaveCount(3);
   });
 
+  test('google_maps: the embed loads a Google map at least 300px tall', async ({ page }) => {
+    const frame = page.locator('iframe[src*="maps.google.com"]').first();
+    await frame.scrollIntoViewIfNeeded(); // loading="lazy", as in Elementor's own embed
+    await expect(frame).toBeVisible();
+    expect((await frame.boundingBox())?.height ?? 0).toBeGreaterThan(300);
+    await expect(page.frameLocator('iframe[src*="maps.google.com"]').locator('body')).toContainText('Google', { timeout: 20_000 });
+  });
+
   test('social-icons: Instagram and LinkedIn, nothing else', async ({ page }) => {
     const items = page.locator('.et_pb_social_media_follow li');
     await expect(items).toHaveCount(2);

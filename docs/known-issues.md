@@ -74,6 +74,7 @@ Found 2026-09-15 by the demo site's before/after screenshots (`demo/output/scree
 | `eael-countdown` | `000:00:00:00`: the due date is not applied | Events |
 | `eael-filterable-gallery` | Every image in the media library, paginated, captioned with file names: the images are written as `src` only, and a Divi gallery with no image IDs falls back to all attachments | Spaces |
 | `google_maps` | Blank space where the map embed should be | Contact |
+|   | *2026-09-16: not a conversion bug.* The `divi/code` block carries the `<iframe>`, Divi renders it at 1080×400, and its frame navigates to `google.com/maps/embed` and shows the map ("Map data ©2026 Google"), on the Contact draft and on the render probe. The iframe is `loading="lazy"` as in Elementor's own embed, so a full-page screenshot taken right after scrolling catches it before it has loaded. `demo/tests/render.spec.ts` now waits for the frame and asserts the map. | |
 | `social-icons` | Facebook icons in place of Instagram and LinkedIn; missing entirely on Contact | Header/footer, Contact |
 | HFE `navigation-menu` (Theme Builder) | Menu on a white bar | Header, footer |
 | `button` (Theme Builder header) | Blue text on the terracotta background | Header |
