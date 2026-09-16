@@ -37,11 +37,11 @@ class EaelStickyVideoConverter extends BaseElementorConverter {
             $url = is_string( $url ) ? $url : '';
         }
 
+        // divi/video reads video.innerContent.desktop.value.src (VideoModule.php:153,
+        // video/conversion-outline.json src); module.advanced.videoUrl was never read.
         $block_settings = [];
         if ( $url !== '' ) {
-            $block_settings['module'] = [
-                'advanced' => [ 'videoUrl' => [ 'desktop' => [ 'value' => $url ] ] ],
-            ];
+            $block_settings['video']['innerContent']['desktop']['value'] = [ 'src' => $url ];
         }
 
         $this->engine->logConverted( 'video' );

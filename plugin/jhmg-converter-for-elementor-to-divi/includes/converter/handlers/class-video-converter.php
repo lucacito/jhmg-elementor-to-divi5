@@ -21,9 +21,12 @@ class VideoConverter extends BaseElementorConverter {
             $video_value['src'] = $src;
         }
 
-        $poster = $settings['poster'] ?? null;
+        // The poster is thumbnail.innerContent.src (video/conversion-outline.json
+        // image_src); video.innerContent knows only src and webm.
+        $thumbnail = [];
+        $poster    = $settings['poster'] ?? null;
         if ( is_array( $poster ) && ! empty( $poster['url'] ) ) {
-            $video_value['cover'] = (string) $poster['url'];
+            $thumbnail['src'] = (string) $poster['url'];
         }
 
         $style_result = ( new StyleMapper() )->map( 'video', $settings );
@@ -35,6 +38,7 @@ class VideoConverter extends BaseElementorConverter {
                     ],
                 ],
             ],
+            $thumbnail === [] ? [] : [ 'thumbnail' => [ 'innerContent' => [ 'desktop' => [ 'value' => $thumbnail ] ] ] ],
             $style_result['divi_attrs']
         );
 

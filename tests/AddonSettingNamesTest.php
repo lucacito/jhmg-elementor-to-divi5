@@ -203,13 +203,13 @@ final class AddonSettingNamesTest extends TestCase {
         // EAEL's source select defaults to youtube, and Elementor omits defaults.
         [ $block ] = $this->convert( 'eael-sticky-video', [ 'eaelsv_link_youtube' => 'https://www.youtube.com/watch?v=abc' ] );
 
-        $this->assertSame( 'https://www.youtube.com/watch?v=abc', $block['settings']['module']['advanced']['videoUrl']['desktop']['value'] );
+        $this->assertSame( 'https://www.youtube.com/watch?v=abc', $this->videoSrc( $block ) );
     }
 
     public function test_sticky_video_reads_vimeo_link(): void {
         [ $block ] = $this->convert( 'eael-sticky-video', [ 'eael_video_source' => 'vimeo', 'eaelsv_link_vimeo' => 'https://vimeo.com/1' ] );
 
-        $this->assertSame( 'https://vimeo.com/1', $block['settings']['module']['advanced']['videoUrl']['desktop']['value'] );
+        $this->assertSame( 'https://vimeo.com/1', $this->videoSrc( $block ) );
     }
 
     public function test_sticky_video_reads_self_hosted_media(): void {
@@ -218,7 +218,7 @@ final class AddonSettingNamesTest extends TestCase {
             'eaelsv_hosted_url' => [ 'url' => 'https://example.test/tour.mp4', 'id' => 9 ],
         ] );
 
-        $this->assertSame( 'https://example.test/tour.mp4', $block['settings']['module']['advanced']['videoUrl']['desktop']['value'] );
+        $this->assertSame( 'https://example.test/tour.mp4', $this->videoSrc( $block ) );
     }
 
     public function test_sticky_video_reads_external_url_when_switched_on(): void {
@@ -229,13 +229,13 @@ final class AddonSettingNamesTest extends TestCase {
             'eaelsv_hosted_url'    => [ 'url' => 'https://example.test/ignored.mp4' ],
         ] );
 
-        $this->assertSame( 'https://cdn.example.test/tour.mp4', $block['settings']['module']['advanced']['videoUrl']['desktop']['value'] );
+        $this->assertSame( 'https://cdn.example.test/tour.mp4', $this->videoSrc( $block ) );
     }
 
     public function test_sticky_video_legacy_url_still_converts(): void {
         [ $block ] = $this->convert( 'eael-sticky-video', [ 'eael_video_url' => 'https://example.test/old.mp4' ] );
 
-        $this->assertSame( 'https://example.test/old.mp4', $block['settings']['module']['advanced']['videoUrl']['desktop']['value'] );
+        $this->assertSame( 'https://example.test/old.mp4', $this->videoSrc( $block ) );
     }
 
     public function test_tooltip_reads_visible_text_and_hover_content(): void {
