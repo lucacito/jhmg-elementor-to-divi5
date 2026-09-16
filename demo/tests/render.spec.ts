@@ -226,6 +226,14 @@ test.describe('home', () => {
   test('testimonials (EAEL): portrait, author and position', async ({ page }) => {
     const first = page.locator('.et_pb_testimonial').first();
     await expect(first.locator('.et_pb_testimonial_author')).toHaveText('Priya Raman');
+  test("fancy text (EAEL): the kit's heading font at EAEL's default size and weight", async ({ page }) => {
+    const heading = page.locator('#et-main-area .et_pb_heading').first().locator('h1, h2, h3, h4, h5, h6');
+    await expect(heading).toContainText('A calmer place to do your best work');
+    expect(await css(heading, 'font-family')).toContain('Fraunces');
+    expect(await css(heading, 'font-weight')).toBe('600');
+    expect(await css(heading, 'font-size')).toBe('22px');
+  });
+
     await expect(first.locator('.et_pb_testimonial_position')).toHaveText('Brand designer');
     const portrait = first.locator('.et_pb_testimonial_portrait img');
     await expect(portrait).toBeVisible();
