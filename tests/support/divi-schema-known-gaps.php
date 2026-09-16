@@ -4,7 +4,6 @@
 // Key: "<block name> <attribute path>" prefix of the reported problem. Value: the task.
 // Deleted when empty.
 return [
-    'divi/pricing-table module.advanced'                               => 'Task 12',
     'divi/team-member module.advanced'                                 => 'Task 13',
     'divi/team-member image.innerContent'                              => 'Task 13',
     'divi/testimonial company.innerContent'                            => 'Task 13',

@@ -125,9 +125,9 @@ final class AddonSettingNamesTest extends TestCase {
             'eael_pricing_table_btn_link'     => [ 'url' => 'https://example.test/join', 'is_external' => '' ],
         ] );
 
-        $advanced = $block['elements'][0]['settings']['module']['advanced'];
-        $this->assertSame( 'month', $advanced['perText']['desktop']['value'] );
-        $this->assertSame( 'https://example.test/join', $advanced['buttonUrl']['desktop']['value'] );
+        $table = $block['elements'][0]['settings'];
+        $this->assertSame( 'month', $table['currencyFrequency']['innerContent']['desktop']['value']['per'] );
+        $this->assertSame( 'https://example.test/join', $table['button']['innerContent']['desktop']['value']['linkUrl'] );
     }
 
     public function test_pricing_table_legacy_period_and_url_still_convert(): void {
@@ -508,6 +508,36 @@ final class AddonSettingNamesTest extends TestCase {
     public function test_icon_box_maps_its_icon_instead_of_always_a_star(): void {
         [ $block ] = $this->convert( 'icon-box', [ 'selected_icon' => [ 'value' => 'fas fa-wifi', 'library' => 'fa-solid' ], 'title_text' => 'T' ] );
         $this->assertSame( '&#xf1eb;', $block['settings']['imageIcon']['innerContent']['desktop']['value']['icon']['unicode'] );
+    }
+
+    public function test_pricing_table_writes_the_attributes_divi_reads(): void {
+        [ $block ] = $this->convert( 'eael-pricing-table', [
+            'eael_pricing_table_title'        => 'Day Pass',
+            'eael_pricing_table_sub_title'    => 'Try us out',
+            'eael_pricing_table_price'        => '29',
+            'eael_pricing_table_price_cur'    => '$',
+            'eael_pricing_table_price_period' => 'day',
+            'eael_pricing_table_items'        => [
+                [ 'eael_pricing_table_item' => 'Any open desk' ],
+                [ 'eael_pricing_table_item' => 'Meeting rooms', 'eael_pricing_table_icon_mood' => 'no' ],
+            ],
+            'eael_pricing_table_btn'          => 'Book a day',
+            'eael_pricing_table_btn_link'     => [ 'url' => 'https://x.test/contact/' ],
+            'eael_pricing_table_featured'     => 'yes',
+        ] );
+
+        $this->assertSame( 'divi/pricing-tables', $block['name'] );
+        $table = $block['elements'][0]['settings'];
+        // PricingTablesItemModule.php: title, subtitle, currencyFrequency{currency,per},
+        // price, content (one feature per line, "-" = excluded), button{text,linkUrl}, featured.
+        $this->assertSame( 'Day Pass', $table['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'Try us out', $table['subtitle']['innerContent']['desktop']['value'] );
+        $this->assertSame( [ 'currency' => '$', 'per' => 'day' ], $table['currencyFrequency']['innerContent']['desktop']['value'] );
+        $this->assertSame( '29', $table['price']['innerContent']['desktop']['value'] );
+        $this->assertSame( "Any open desk\n-Meeting rooms", $table['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( [ 'text' => 'Book a day', 'linkUrl' => 'https://x.test/contact/' ], $table['button']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'on', $table['module']['advanced']['featured']['desktop']['value'] );
+        $this->assertArrayNotHasKey( 'title', $table['module']['advanced'] ?? [] );
     }
 
     // -------------------------------------------------------------------------

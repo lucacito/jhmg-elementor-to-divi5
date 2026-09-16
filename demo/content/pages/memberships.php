@@ -108,6 +108,7 @@ return static function ( Context $ctx ): array {
             'Do you have a minimum term?', 'Can I bring a guest?', 'Is there parking?',
         ],
         // The pricing table converts to currency . price.
-        'survive_exact' => [ '$29', '$189', '$549' ],
+        // Divi's pricing table keeps the currency and the price in separate fields.
+        'survive_exact' => [ '$', '29', '189', '549' ],
     ];
 };
