@@ -240,6 +240,17 @@ test.describe('home', () => {
     expect(await portrait.getAttribute('src')).toContain('member-1');
   });
 });
+  test('dual button (ElementsKit): its default colours, side by side', async ({ page }) => {
+    const one = page.locator('#et-main-area a.et_pb_button', { hasText: 'See memberships' }).first();
+    const two = page.locator('#et-main-area a.et_pb_button', { hasText: 'Book a tour' }).first();
+    expect(await css(one, 'background-color')).toBe('rgb(37, 117, 252)');
+    expect(await css(two, 'background-color')).toBe('rgb(59, 59, 59)');
+    expect(await css(one, 'color')).toBe('rgb(255, 255, 255)');
+    const [a, b] = await Promise.all([one.boundingBox(), two.boundingBox()]);
+    expect(Math.abs((a?.y ?? -1) - (b?.y ?? 1))).toBeLessThan(2);
+    expect(b?.x ?? 0).toBeGreaterThan((a?.x ?? 0) + (a?.width ?? 1e9) - 1);
+  });
+
 
 test.describe('memberships', () => {
   test("counter: the number in the kit's heading font (Elementor's Primary default)", async ({ page }) => {

@@ -188,8 +188,10 @@ final class ConverterEngineTest extends TestCase {
             ],
         ] );
 
-        $btn1 = $result['divi']['elements'][0];
-        $btn2 = $result['divi']['elements'][1];
+        $group = $result['divi']['elements'][0];
+        $this->assertSame( 'divi/group', $group['name'] );
+        $btn1 = $group['elements'][0];
+        $btn2 = $group['elements'][1];
 
         $btn1_bg = $btn1['settings']['button']['decoration']['background']['desktop']['value']['color'] ?? null;
         $btn2_bg = $btn2['settings']['button']['decoration']['background']['desktop']['value']['color'] ?? null;
@@ -255,6 +257,35 @@ final class ConverterEngineTest extends TestCase {
         $engine = new ConverterEngine();
         $result = $engine->convert( [
             [ 'id' => 'w1', 'elType' => 'widget', 'widgetType' => 'social-icons',
+    /**
+     * ElementsKit styles the dual button itself (widget-styles.css .ekit-double-btn):
+     * white 14px bold text on #2575fc and rgb(23%,23%,23%), 5px apart on one line.
+     * Divi's default for a button with nothing set is an outline in the link colour,
+     * and two modules in a column stack.
+     */
+    public function test_dual_button_keeps_elementskits_default_look_side_by_side(): void {
+        $result = ( new ConverterEngine() )->convert( [
+            [ 'id' => 'w1', 'elType' => 'widget', 'widgetType' => 'elementskit-dual-button', 'settings' => [
+                'ekit_button_one_text' => 'See memberships',
+                'ekit_button_two_text' => 'Book a tour',
+            ], 'elements' => [] ],
+        ] );
+
+        $group = $result['divi']['elements'][0];
+        $this->assertSame( 'divi/group', $group['name'] );
+        $layout = $group['settings']['module']['decoration']['layout']['desktop']['value'];
+        $this->assertSame( 'flex', $layout['display'] );
+        $this->assertSame( 'row', $layout['flexDirection'] );
+        $this->assertSame( '5px', $layout['columnGap'] );
+
+        [ $one, $two ] = $group['elements'];
+        $this->assertSame( '#2575fc', $one['settings']['button']['decoration']['background']['desktop']['value']['color'] );
+        $this->assertSame( '#3b3b3b', $two['settings']['button']['decoration']['background']['desktop']['value']['color'] );
+        $font = $one['settings']['button']['decoration']['font']['font']['desktop']['value'];
+        $this->assertSame( [ 'color' => '#ffffff', 'size' => '14px', 'weight' => '700' ], $font );
+        DiviModuleSchema::assertBlocksValid( $result['divi']['elements'], 'dual button' );
+    }
+
               'settings' => [
                   'social_icon_list' => [
                       [ 'social_icon' => 'fa fa-facebook', 'link' => [ 'url' => 'https://facebook.com/test' ] ],

@@ -10,13 +10,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Converts the ElementsKit Dual Button widget into two sequential divi/button blocks.
+ * Converts the ElementsKit Dual Button widget into two divi/button blocks side by side
+ * in a flex-row divi/group.
  *
  * The widget holds two independent button definitions under `ekit_button_one_*` and
- * `ekit_button_two_*` keys. Layout controls (gap, width) and hover styles are dropped
- * since Divi 5 does not support those as static block attrs.
+ * `ekit_button_two_*` keys. Width and hover styles are dropped since Divi 5 does not
+ * support those as static block attrs.
+ *
+ * ElementsKit styles the buttons itself, not through Elementor's kit: white 14px bold
+ * text on #2575fc for the first and rgb(23%,23%,23%) for the second, 5px apart
+ * (elementskit-lite widgets/init/assets/css/widget-styles.css `.ekit-double-btn`,
+ * dual-button.php `ekit_dual_button_gap` default 5). Elementor stores no control
+ * defaults, so the converter writes that look wherever the widget left a colour unset;
+ * Divi's own default would be an outline button in the body link colour.
  */
 class ElementsKitDualButtonConverter extends BaseElementorConverter {
+    private const DEFAULT_BACKGROUND = [ 'one' => '#2575fc', 'two' => '#3b3b3b' ];
+    private const DEFAULT_TEXT_COLOR = '#ffffff';
+    private const DEFAULT_GAP        = '5px';
+
     public function convert( array $element ): array {
         $id       = $element['id'] ?? uniqid( 'divi_btn_' );
         $settings = $element['settings'] ?? [];
@@ -44,6 +56,12 @@ class ElementsKitDualButtonConverter extends BaseElementorConverter {
 
             $bg_color   = $this->resolveColor( $settings, $globals, $bg_key );
             $text_color = $this->resolveColor( $settings, $globals, $text_key );
+            if ( $bg_color === '' ) {
+                $bg_color = self::DEFAULT_BACKGROUND[ $ekit_key ];
+            }
+            if ( $text_color === '' ) {
+                $text_color = self::DEFAULT_TEXT_COLOR;
+            }
 
             $button_decoration = [];
             if ( $bg_color !== '' ) {
@@ -55,7 +73,7 @@ class ElementsKitDualButtonConverter extends BaseElementorConverter {
             }
             if ( $text_color !== '' ) {
                 $button_decoration['font']['font'] = [
-                    'desktop' => [ 'value' => [ 'color' => $text_color ] ],
+                    'desktop' => [ 'value' => [ 'color' => $text_color, 'size' => '14px', 'weight' => '700' ] ],
                 ];
             }
 
@@ -98,7 +116,27 @@ class ElementsKitDualButtonConverter extends BaseElementorConverter {
             'ekit_double_button_two_background_background', 'ekit_double_button_two_hover_background_background',
         ] );
 
-        return $blocks;
+        if ( count( $blocks ) < 2 ) {
+            return $blocks;
+        }
+
+        // Two modules in a Divi column stack; a flex-row group keeps them on one line,
+        // as ElementsKit does, with its gap and alignment.
+        $gap     = $settings['ekit_dual_button_gap'] ?? null;
+        $gap     = is_array( $gap ) && isset( $gap['size'] ) && $gap['size'] !== '' ? $gap['size'] . ( $gap['unit'] ?? 'px' ) : self::DEFAULT_GAP;
+        $layout  = [ 'display' => 'flex', 'flexDirection' => 'row', 'flexWrap' => 'wrap', 'columnGap' => $gap, 'rowGap' => $gap ];
+        $align   = $settings['ekit_double_button_align'] ?? '';
+        $justify = [ 'left' => 'flex-start', 'center' => 'center', 'right' => 'flex-end' ][ is_string( $align ) ? $align : '' ] ?? null;
+        if ( $justify !== null ) {
+            $layout['justifyContent'] = $justify;
+        }
+
+        return [ [
+            'id'       => $id,
+            'name'     => 'divi/group',
+            'settings' => [ 'module' => [ 'decoration' => [ 'layout' => [ 'desktop' => [ 'value' => $layout ] ] ] ] ],
+            'elements' => $blocks,
+        ] ];
     }
 
     private function resolveColor( array $settings, array $globals, string $key ): string {
