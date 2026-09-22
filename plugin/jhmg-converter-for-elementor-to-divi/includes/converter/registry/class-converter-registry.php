@@ -245,6 +245,13 @@ class ConverterRegistry {
         $this->registerWidget( 'wcf--text',       '\\ElementorDivi5Converter\\Converter\\Handlers\\TextEditorConverter' );
         $this->registerWidget( 'wcf--team',       '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfTeamConverter' );
 
+        // Batch 5: standalone image-box — a dedicated converter, no equivalent
+        // fixed-field Divi module for its image+icon+title+subtitle+description+
+        // button shape, so it becomes a divi/group with the pieces as children
+        // (same free-form-container approach WcfImageBoxSliderConverter uses).
+        $this->registerWidget( 'wcf--image-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfImageBoxConverter' );
+        $this->registerWidget( 'wcf--toggle-switch', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfToggleSwitchConverter' );
+
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
         $this->registerWidget( 'e-paragraph', '\\ElementorDivi5Converter\\Converter\\Handlers\\TextEditorConverter' );
