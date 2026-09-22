@@ -289,4 +289,33 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $this->assertSame( '<p>We advise.</p>', $block['elements'][0]['settings']['content']['innerContent']['desktop']['value'] );
         $this->assertSame( [], $result['report']['skipped_settings'] );
     }
+
+    // -------------------------------------------------------------------------
+    // wcf--t-h-image (text-hover-image.php; get_name() returns 'wcf--t-h-image',
+    // not a guessable slug) — a heading built from three text fragments
+    // (before_hover_text/hover_text/after_hover_text) plus a decorative image
+    // that only appears on hover over the middle fragment. The text and link
+    // convert cleanly to divi/heading (same module.advanced.link pattern
+    // HeadingConverter already uses); the hover-reveal image has no Divi
+    // heading equivalent and is logged as not carried over rather than dropped
+    // silently.
+    // -------------------------------------------------------------------------
+
+    public function test_text_hover_image_builds_heading_from_three_fragments(): void {
+        [ $block, $result ] = $this->convert( 'wcf--t-h-image', [
+            'before_hover_text' => "I'm ",
+            'hover_text'        => 'Mariya',
+            'after_hover_text'  => ' the awarded dancer',
+            'html_tag'          => 'h2',
+            'image'             => [ 'url' => 'https://x.test/mariya.jpg' ],
+            'link'              => [ 'url' => 'https://x.test/about' ],
+        ] );
+
+        $this->assertSame( 'divi/heading', $block['name'] );
+        $this->assertSame( "I'm Mariya the awarded dancer", $block['settings']['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'h2', $block['settings']['title']['decoration']['font']['font']['desktop']['value']['headingLevel'] );
+        $this->assertSame( 'https://x.test/about', $block['settings']['module']['advanced']['link']['desktop']['value']['url'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+        $this->assertNotEmpty( $result['report']['not_carried_over'] );
+    }
 }
