@@ -321,6 +321,54 @@ class StyleMapper {
                 self::transformPath( $attrs, "module.{$group}.spacing.{$breakpoint}.value.{$prop}", $normalized );
             }
         }
+
+        if ( $widget_type === 'column' ) {
+            $this->mapColumnMarginAsTransform( $settings, $attrs );
+        }
+    }
+
+    /**
+     * Divi 5 columns drop margin entirely above (row flex-gutter protection),
+     * but a negative margin-left/-top on an Elementor column is sometimes a
+     * deliberate overlap trick — e.g. a badge pulled up over a neighbouring
+     * column's photo — rather than real spacing. CSS `transform: translate()`
+     * reproduces that visual shift without taking the column out of, or
+     * disturbing, the row's flex flow, so it is safe to carry over.
+     *
+     * margin-right/-bottom are intentionally not handled here: a negative
+     * margin-right/-bottom shifts a *following sibling* closer, not this
+     * column itself, so there is no equivalent self-transform.
+     */
+    private function mapColumnMarginAsTransform( array $settings, array &$attrs ): void {
+        foreach ( self::BREAKPOINT_MAP as $suffix => $breakpoint ) {
+            $value = $settings[ 'margin' . $suffix ] ?? $settings[ '_margin' . $suffix ] ?? null;
+            if ( ! is_array( $value ) ) {
+                continue;
+            }
+
+            $normalized = $this->normalizeSpacingValue( $value );
+            if ( $normalized === null ) {
+                continue;
+            }
+
+            $translate = [];
+            if ( self::isNegativeSpacingSide( $normalized['left'] ?? '' ) ) {
+                $translate['x'] = $normalized['left'];
+            }
+            if ( self::isNegativeSpacingSide( $normalized['top'] ?? '' ) ) {
+                $translate['y'] = $normalized['top'];
+            }
+
+            if ( $translate === [] ) {
+                continue;
+            }
+
+            self::transformPath( $attrs, "module.decoration.transform.{$breakpoint}.value.translate", $translate );
+        }
+    }
+
+    private static function isNegativeSpacingSide( string $side ): bool {
+        return $side !== '' && str_starts_with( $side, '-' );
     }
 
     private function mapColumnSize( array $settings, array &$attrs, array &$handled ): void {

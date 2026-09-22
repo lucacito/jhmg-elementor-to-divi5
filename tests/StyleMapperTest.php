@@ -97,6 +97,68 @@ final class StyleMapperTest extends TestCase {
         $this->assertSame( 'off', $margin['syncHorizontal'] );
     }
 
+    /**
+     * Divi 5 columns drop margin entirely (flex-gutter protection, see
+     * mapSpacing), but a negative margin-left/-top is often a deliberate
+     * overlap trick — e.g. a badge pulled over a neighbouring column's photo
+     * — rather than real spacing, so it is carried over as a CSS transform
+     * instead, which shifts the column visually without disturbing the row's
+     * flex flow.
+     */
+    public function test_column_negative_left_margin_becomes_transform_translate_x(): void {
+        $settings = [
+            'margin' => [ 'top' => '0', 'right' => '0', 'bottom' => '0', 'left' => '-6', 'unit' => 'em' ],
+        ];
+
+        $result = $this->mapper->map( 'column', $settings );
+
+        $this->assertArrayNotHasKey( 'margin', $result['divi_attrs']['module']['decoration']['spacing']['desktop']['value'] ?? [] );
+        $this->assertSame(
+            '-6em',
+            $result['divi_attrs']['module']['decoration']['transform']['desktop']['value']['translate']['x']
+        );
+        $this->assertArrayNotHasKey( 'y', $result['divi_attrs']['module']['decoration']['transform']['desktop']['value']['translate'] );
+    }
+
+    public function test_column_negative_top_margin_becomes_transform_translate_y(): void {
+        $settings = [
+            'margin' => [ 'top' => '-3', 'right' => '0', 'bottom' => '0', 'left' => '0', 'unit' => 'em' ],
+        ];
+
+        $result = $this->mapper->map( 'column', $settings );
+
+        $this->assertSame(
+            '-3em',
+            $result['divi_attrs']['module']['decoration']['transform']['desktop']['value']['translate']['y']
+        );
+    }
+
+    /**
+     * A negative margin-right/-bottom shifts a *following sibling* closer,
+     * not the column itself, so there is no equivalent self-transform — it
+     * is correctly dropped, same as any other column margin.
+     */
+    public function test_column_negative_right_margin_is_dropped_not_transformed(): void {
+        $settings = [
+            'margin' => [ 'top' => '0', 'right' => '-6', 'bottom' => '0', 'left' => '0', 'unit' => 'em' ],
+        ];
+
+        $result = $this->mapper->map( 'column', $settings );
+
+        $this->assertArrayNotHasKey( 'transform', $result['divi_attrs']['module']['decoration'] ?? [] );
+    }
+
+    public function test_column_positive_margin_is_dropped_not_transformed(): void {
+        $settings = [
+            'margin' => [ 'top' => '10', 'right' => '10', 'bottom' => '10', 'left' => '10', 'unit' => 'px' ],
+        ];
+
+        $result = $this->mapper->map( 'column', $settings );
+
+        $this->assertArrayNotHasKey( 'transform', $result['divi_attrs']['module']['decoration'] ?? [] );
+        $this->assertArrayNotHasKey( 'margin', $result['divi_attrs']['module']['decoration']['spacing']['desktop']['value'] ?? [] );
+    }
+
     public function test_maps_padding_to_divi_spacing_path(): void {
         $settings = [
             'padding' => [ 'top' => '20', 'right' => '15', 'bottom' => '20', 'left' => '15', 'unit' => 'em' ],
