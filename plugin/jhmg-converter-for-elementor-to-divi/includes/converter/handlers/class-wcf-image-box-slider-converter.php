@@ -9,19 +9,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Converts the "wcf--image-box-slider" widget (an animation/box-slider addon
- * widget bundled with themes such as Brandberry) to divi/slider + divi/slide
- * children — the same target SliderConverter uses for Elementor's own Slides
- * widget, since each item here carries the same title/description/image shape
- * as a full slide rather than a plain gallery photo.
+ * Converts the "wcf--image-box-slider" widget (Animation Addons for Elementor,
+ * image-box-slider.php) to divi/group-carousel + one divi/group per box.
  *
- * The source widget can show several boxes side by side (slides_to_show > 1);
- * divi/slider always shows one slide at a time, so that case is reported as
- * an approximation rather than silently collapsed.
+ * The widget can show several boxes side by side (slides_to_show), unlike
+ * Elementor's own Slides widget (one full slide at a time), so it targets
+ * divi/group-carousel rather than divi/slider — group-carousel's
+ * module.advanced.slidesToShow/slidesToScroll/centerMode natively support that,
+ * with no approximation needed. Each divi/group is a free-form container
+ * (module.json: childrenName []), so its title/subtitle/description/image are
+ * built as ordinary child blocks (divi/image, divi/heading, divi/text) rather
+ * than through fixed slide fields the way divi/slide works.
  */
 class WcfImageBoxSliderConverter extends BaseElementorConverter {
     public function convert( array $element ): array {
-        $id       = $element['id'] ?? uniqid( 'divi_slider_' );
+        $id       = $element['id'] ?? uniqid( 'divi_carousel_' );
         $settings = $element['settings'] ?? [];
 
         $raw_slides = is_array( $settings['image_box_slider'] ?? null ) ? $settings['image_box_slider'] : [];
@@ -46,60 +48,80 @@ class WcfImageBoxSliderConverter extends BaseElementorConverter {
                 $img_url = $image_raw;
             }
 
-            $slide_attrs = [];
-
-            if ( $title !== '' ) {
-                $slide_attrs['title'] = [ 'innerContent' => [ 'desktop' => [ 'value' => $title ] ] ];
-            }
-
-            // divi/slide has no dedicated subtitle field (module.json: content is the
-            // only body element); fold it into content ahead of the description, the
-            // same way EAEL's CTA box subtitle is combined with its body text.
-            $content_parts = array_filter( [ $subtitle, $desc ] );
-            if ( $content_parts !== [] ) {
-                $slide_attrs['content'] = [ 'innerContent' => [ 'desktop' => [ 'value' => implode( "\n", array_map( static fn( $p ) => "<p>{$p}</p>", $content_parts ) ) ] ] ];
-            }
+            $group_children = [];
+            $group_id       = $id . '-box-' . ( $idx + 1 );
 
             if ( $img_url !== '' ) {
                 $image_value = [ 'src' => $img_url ];
                 if ( $img_alt !== '' ) {
                     $image_value['alt'] = $img_alt;
                 }
-                $slide_attrs['image'] = [ 'innerContent' => [ 'desktop' => [ 'value' => $image_value ] ] ];
+                $group_children[] = [
+                    'id'       => $group_id . '-image',
+                    'name'     => 'divi/image',
+                    'settings' => [ 'image' => [ 'innerContent' => [ 'desktop' => [ 'value' => $image_value ] ] ] ],
+                    'elements' => [],
+                ];
+            }
+
+            if ( $title !== '' ) {
+                $group_children[] = [
+                    'id'       => $group_id . '-title',
+                    'name'     => 'divi/heading',
+                    'settings' => [
+                        'title' => [
+                            'innerContent' => [ 'desktop' => [ 'value' => $title ] ],
+                            'decoration'   => [ 'font' => [ 'font' => [ 'desktop' => [ 'value' => [ 'headingLevel' => 'h3' ] ] ] ] ],
+                        ],
+                    ],
+                    'elements' => [],
+                ];
+            }
+
+            // divi/group has no dedicated subtitle field; fold it into the text
+            // module ahead of the description, the same way EAEL's CTA box
+            // subtitle is combined with its body text.
+            $content_parts = array_filter( [ $subtitle, $desc ] );
+            if ( $content_parts !== [] ) {
+                $group_children[] = [
+                    'id'       => $group_id . '-text',
+                    'name'     => 'divi/text',
+                    'settings' => [ 'content' => [ 'innerContent' => [ 'desktop' => [ 'value' => implode( "\n", array_map( static fn( $p ) => "<p>{$p}</p>", $content_parts ) ) ] ] ] ],
+                    'elements' => [],
+                ];
             }
 
             $children[] = [
-                'id'       => $id . '-slide-' . ( $idx + 1 ),
-                'name'     => 'divi/slide',
-                'settings' => $slide_attrs,
-                'elements' => [],
+                'id'       => $group_id,
+                'name'     => 'divi/group',
+                'settings' => [],
+                'elements' => $group_children,
             ];
         }
 
         $block_settings = [];
 
+        $slides_to_show = (int) ( $settings['slides_to_show'] ?? 1 );
+        $slides_to_show = $slides_to_show > 0 ? $slides_to_show : 1;
+        $block_settings['module']['advanced']['slidesToShow']['desktop']['value'] = (string) $slides_to_show;
+
         if ( ( $settings['autoplay'] ?? '' ) === 'yes' ) {
-            $block_settings['module']['advanced']['auto'] = [ 'desktop' => [ 'value' => 'on' ] ];
+            $block_settings['module']['advanced']['auto']['desktop']['value'] = 'on';
+        }
+
+        if ( ( $settings['center_slide'] ?? '' ) === 'yes' ) {
+            $block_settings['module']['advanced']['centerMode']['desktop']['value'] = 'on';
         }
 
         if ( ( $settings['navigation'] ?? '' ) !== '' ) {
-            $block_settings['arrows']['advanced']['show'] = [ 'desktop' => [ 'value' => 'on' ] ];
+            $block_settings['arrows']['advanced']['show']['desktop']['value'] = 'on';
         }
 
         if ( ( $settings['pagination'] ?? '' ) !== '' ) {
-            $block_settings['pagination']['advanced']['show'] = [ 'desktop' => [ 'value' => 'on' ] ];
+            $block_settings['dotNav']['advanced']['show']['desktop']['value'] = 'on';
         }
 
-        $slides_to_show = (int) ( $settings['slides_to_show'] ?? 1 );
-        if ( $slides_to_show > 1 ) {
-            $this->engine->logNotCarriedOver(
-                'slider_layout',
-                $id,
-                "showed {$slides_to_show} slides side by side; Divi's slider always shows one slide at a time"
-            );
-        }
-
-        $this->engine->logConverted( 'slider' );
+        $this->engine->logConverted( 'group-carousel' );
         $this->logUnmappedSettings( $id, $settings, [
             'image_box_slider',
             'slides_to_show', 'slides_to_show_tablet', 'slides_to_show_mobile', 'slides_to_show_mobile_extra',
@@ -110,7 +132,7 @@ class WcfImageBoxSliderConverter extends BaseElementorConverter {
 
         return [
             'id'       => $id,
-            'name'     => 'divi/slider',
+            'name'     => 'divi/group-carousel',
             'settings' => $block_settings,
             'elements' => $children,
         ];
