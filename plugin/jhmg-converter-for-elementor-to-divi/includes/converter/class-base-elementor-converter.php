@@ -1633,6 +1633,15 @@ abstract class BaseElementorConverter implements ConverterInterface {
             'arrows_',           // Slider/carousel arrow styling — no Divi 5 block-attr equivalent.
             'dots_',             // Slider/carousel dots styling — no Divi 5 block-attr equivalent.
             'icon_typography_',  // Icon font styling — no icon-text font path in divi/icon.
+            // Animation Add-ons / "wcf" widget suite (bundled with themes such as
+            // Brandberry): scroll-triggered animation, pin, cursor-hover and tooltip
+            // presentation settings attached to ordinary widgets (heading, image,
+            // container, text-editor, …). Purely cosmetic, no Divi 5 equivalent, and
+            // present on nearly every element of an export using this suite — logging
+            // each one would flood the unmapped-settings report for every widget.
+            'aae_',
+            'wcf_',
+            'brandberry_',
         ];
 
         // Additional exact keys that are globally suppressible but not yet in $always_ignore.

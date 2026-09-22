@@ -198,6 +198,13 @@ class ConverterRegistry {
         $this->registerWidget( 'alert', '\\ElementorDivi5Converter\\Converter\\Handlers\\AlertConverter' );
         $this->registerWidget( 'premium-addon-blog', '\\ElementorDivi5Converter\\Converter\\Handlers\\PremiumBlogConverter' );
 
+        // ── Animation Add-ons / "wcf" widget suite (bundled with themes such as
+        // Brandberry) — Tier 1: dedicated converter. Its per-element aae_/wcf_/
+        // brandberry_ scroll-animation and cursor/tooltip settings are cosmetic-only
+        // and suppressed globally via $always_ignore_prefixes in
+        // BaseElementorConverter::logUnmappedSettings(), regardless of widgetType.
+        $this->registerWidget( 'wcf--image-box-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfImageBoxSliderConverter' );
+
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
         $this->registerWidget( 'e-paragraph', '\\ElementorDivi5Converter\\Converter\\Handlers\\TextEditorConverter' );
