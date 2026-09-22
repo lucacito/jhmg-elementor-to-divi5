@@ -1560,6 +1560,10 @@ abstract class BaseElementorConverter implements ConverterInterface {
             // Elementor / WordPress internals.
             '__globals__', '__dynamic__', '_id', '_element_id', 'css_classes', '_css_classes',
             '_css_custom_property', 'widget_type',
+            // Elementor's own internal element label (Navigator panel only, never rendered).
+            '_title',
+            // Animation Addons' "spin text" scroll effect anchor point — cosmetic-only.
+            'text_transform_origin',
             // Element-width / layout overrides — no Divi equivalent via block attrs.
             '_element_width', '_element_custom_width',
             // Elementor render cache hint.
@@ -1678,6 +1682,11 @@ abstract class BaseElementorConverter implements ConverterInterface {
             'aae_',
             'wcf_',
             'brandberry_',
+            // The Brandberry theme's own parallax controls (bb_*, distinct from the
+            // Animation Addons plugin) and the "spin text" scroll-animation effect —
+            // found on a real client export, also present on nearly every element.
+            'bb_',
+            'spin_text_',
         ];
 
         // Additional exact keys that are globally suppressible but not yet in $always_ignore.

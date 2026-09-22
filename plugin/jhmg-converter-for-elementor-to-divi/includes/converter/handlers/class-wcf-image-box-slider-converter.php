@@ -111,7 +111,19 @@ class WcfImageBoxSliderConverter extends BaseElementorConverter {
             'slides_to_show', 'slides_to_show_tablet', 'slides_to_show_mobile', 'slides_to_show_mobile_extra',
             'space_between', 'space_between_tablet', 'space_between_mobile', 'space_between_mobile_extra',
             'navigation', 'pagination', 'autoplay', 'center_slide', 'allow_touch_move',
-            'image_box_style', 'slide_popover_toggle', 'btn_text',
+            'image_box_style', 'slide_popover_toggle', 'btn_text', 'wcf-animation',
+            // Style-only controls found on a real client export: box padding/radius
+            // and title/subtitle colour+typography for the widget's own box styles
+            // (image-box-slider.php) — no divi/group-carousel or divi/heading/text
+            // equivalent beyond what the child blocks already carry.
+            'box_padding', 'box_padding_mobile', 'box_padding_tablet',
+            'content_padding_mobile', 'content_padding_tablet',
+            'box_border_radius',
+            'title_color', 'title_typography_typography',
+            'title_typography_font_size', 'title_typography_font_size_mobile', 'title_typography_font_size_tablet',
+            'title_typography_font_weight', 'title_typography_line_height',
+            'subtitle_color', 'subtitle_typography_typography',
+            'subtitle_typography_font_size', 'subtitle_typography_font_weight', 'subtitle_typography_line_height',
         ] );
 
         return [
