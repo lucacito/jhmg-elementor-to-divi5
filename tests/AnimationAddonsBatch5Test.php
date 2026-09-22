@@ -258,4 +258,35 @@ final class AnimationAddonsBatch5Test extends TestCase {
 
         $this->assertSame( 'divi/code', $block['name'] );
     }
+
+    // -------------------------------------------------------------------------
+    // wcf--services-tab (services-tab.php) — its 'tabs' repeater already uses
+    // TabsConverter's own 'tab_title'/'tab_content' keys exactly, so it's a
+    // straight reuse with zero new converter code. Its own extra per-item
+    // fields ('tab_number', 'tab_image', 'link') and widget-level style/button
+    // controls aren't read by TabsConverter, so they need adding to its
+    // skipped-settings allowlist.
+    // -------------------------------------------------------------------------
+
+    public function test_services_tab_reuses_tabs_converter(): void {
+        [ $block, $result ] = $this->convert( 'wcf--services-tab', [
+            'tabs' => [
+                [ 'tab_number' => '01', 'tab_title' => 'Consulting', 'tab_content' => '<p>We advise.</p>', 'tab_image' => [ 'url' => 'https://x.test/a.jpg' ], 'link' => [ 'url' => 'https://x.test/a' ] ],
+                [ 'tab_number' => '02', 'tab_title' => 'Design', 'tab_content' => '<p>We design.</p>' ],
+            ],
+            'view'         => 'traditional',
+            'element_list' => '1',
+            'btn_text'     => 'Get ticket',
+            'image_size'   => 'full',
+            'image_size_size' => [ 'width' => 100 ],
+            'tabs_direction' => 'row',
+            'tabs_align'     => 'left',
+        ] );
+
+        $this->assertSame( 'divi/tabs', $block['name'] );
+        $this->assertCount( 2, $block['elements'] );
+        $this->assertSame( 'Consulting', $block['elements'][0]['settings']['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( '<p>We advise.</p>', $block['elements'][0]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
 }
