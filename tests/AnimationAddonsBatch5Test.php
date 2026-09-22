@@ -406,4 +406,50 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $this->assertSame( 'https://x.test/fb', $social['facebookUrl'] );
         $this->assertSame( 'https://x.test/fb', $social['twitterUrl'] );
     }
+
+    // -------------------------------------------------------------------------
+    // wcf--a-pricing-table (widgets/advance-pricing-table/advance-pricing-table.php,
+    // its content controls shared across all skins — skin-pricing-table-*.php
+    // only vary the style controls/markup) — same divi/pricing-tables +
+    // divi/pricing-table target PriceTableConverter already uses for
+    // Elementor's native Price Table widget, with this widget's own
+    // 'currency_symbol' enum (mapped to the same HTML-entity table
+    // skin-pricing-table-base.php's get_currency_symbol() uses) and
+    // Aaeaddon_Button_Trait's 'btn_text'/'btn_link' instead of
+    // 'button_text'/'button_url'.
+    // -------------------------------------------------------------------------
+
+    public function test_advance_pricing_table_builds_pricing_table(): void {
+        [ $block, $result ] = $this->convert( 'wcf--a-pricing-table', [
+            'title' => 'Pro Plan', 'title_tag' => 'h3', 'sub_title' => 'For growing teams',
+            'currency_symbol' => 'dollar', 'price' => '9.99', 'period' => 'Monthly',
+            'features_list' => [
+                [ 'item_text' => 'Starter Pack Included', 'selected_item_icon' => [ 'value' => 'fas fa-check' ] ],
+                [ 'item_text' => 'Venue Booking' ],
+            ],
+            'btn_text' => 'Choose Plan', 'btn_link' => [ 'url' => 'https://x.test/choose' ],
+        ] );
+
+        $this->assertSame( 'divi/pricing-tables', $block['name'] );
+        $table = $block['elements'][0];
+        $this->assertSame( 'divi/pricing-table', $table['name'] );
+        $s = $table['settings'];
+        $this->assertSame( 'Pro Plan', $s['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'For growing teams', $s['subtitle']['innerContent']['desktop']['value'] );
+        $this->assertSame( '9.99', $s['price']['innerContent']['desktop']['value'] );
+        $this->assertSame( [ 'currency' => '$ ', 'per' => 'Monthly' ], $s['currencyFrequency']['innerContent']['desktop']['value'] );
+        $this->assertSame( '<ul><li>Starter Pack Included</li><li>Venue Booking</li></ul>', $s['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'Choose Plan', $s['button']['innerContent']['desktop']['value']['text'] );
+        $this->assertSame( 'https://x.test/choose', $s['button']['innerContent']['desktop']['value']['linkUrl'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
+
+    public function test_advance_pricing_table_custom_currency_symbol(): void {
+        [ $block ] = $this->convert( 'wcf--a-pricing-table', [
+            'title' => 'Custom', 'currency_symbol' => 'custom', 'currency_symbol_custom' => 'CHF ',
+            'price' => '49',
+        ] );
+
+        $this->assertSame( 'CHF ', $block['elements'][0]['settings']['currencyFrequency']['innerContent']['desktop']['value']['currency'] );
+    }
 }
