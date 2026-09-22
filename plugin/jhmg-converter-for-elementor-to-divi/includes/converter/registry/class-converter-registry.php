@@ -218,6 +218,13 @@ class ConverterRegistry {
         $this->registerWidget( 'wcf--social-icons', '\\ElementorDivi5Converter\\Converter\\Handlers\\SocialIconsConverter' );
         $this->registerWidget( 'wcf--image-gallery', '\\ElementorDivi5Converter\\Converter\\Handlers\\GalleryConverter' );
 
+        // Batch 2: dedicated converters, all targeting divi/group-carousel like
+        // wcf--image-box-slider — several boxes shown side by side, not one full
+        // slide at a time.
+        $this->registerWidget( 'wcf--event-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfEventSliderConverter' );
+        $this->registerWidget( 'wcf--brand-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfBrandSliderConverter' );
+        $this->registerWidget( 'wcf--content-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfContentSliderConverter' );
+
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
         $this->registerWidget( 'e-paragraph', '\\ElementorDivi5Converter\\Converter\\Handlers\\TextEditorConverter' );

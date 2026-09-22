@@ -1510,6 +1510,42 @@ abstract class BaseElementorConverter implements ConverterInterface {
     }
 
     /**
+     * divi/group-carousel's module.advanced/arrows/dotNav settings from Animation
+     * Addons' shared `Aaeaddon_Slider_Trait::register_slider_controls()` — the
+     * control names every "wcf--*" carousel widget built on that trait shares
+     * (brand-slider, category-slider, content-slider, event-slider,
+     * filterable-slider, image-box-slider, advanced-testimonial, …), verified
+     * against inc/Aaeaddon_Slider_Trait.php in
+     * references/animation-addons-for-elementor.4.2.2.zip. A widget's own extra
+     * controls (e.g. image-box-slider's `center_slide`) are not part of the
+     * shared trait and stay in that converter's own mapping.
+     */
+    protected function groupCarouselModuleSettings( array $settings ): array {
+        $block_settings = [];
+
+        $slides_to_show = (int) ( $settings['slides_to_show'] ?? 1 );
+        $slides_to_show = $slides_to_show > 0 ? $slides_to_show : 1;
+        $block_settings['module']['advanced']['slidesToShow']['desktop']['value'] = (string) $slides_to_show;
+
+        if ( ( $settings['autoplay'] ?? '' ) === 'yes' ) {
+            $block_settings['module']['advanced']['auto']['desktop']['value'] = 'on';
+        }
+
+        // navigation/pagination are SWITCHER controls with no explicit return_value
+        // (Aaeaddon_Slider_Trait.php), so Elementor's default 'yes' applies when on;
+        // Elementor omits the key (or exports '') when off.
+        if ( ( $settings['navigation'] ?? '' ) === 'yes' ) {
+            $block_settings['arrows']['advanced']['show']['desktop']['value'] = 'on';
+        }
+
+        if ( ( $settings['pagination'] ?? '' ) === 'yes' ) {
+            $block_settings['dotNav']['advanced']['show']['desktop']['value'] = 'on';
+        }
+
+        return $block_settings;
+    }
+
+    /**
      * Log every settings key that the converter did not explicitly handle.
      *
      * Elementor-internal bookkeeping keys (prefixed with __ or known system keys)

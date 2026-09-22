@@ -54,6 +54,7 @@ services:
     volumes:
       - wp_html:/var/www/html
       - ../../references:/refs:ro
+      - .:/probe:ro
 
 volumes:
   wp_html:

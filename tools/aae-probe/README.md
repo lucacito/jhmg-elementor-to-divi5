@@ -19,7 +19,7 @@ docker compose run --rm cli wp core install \
   --admin_user=admin --admin_password=probe --admin_email=probe@example.test --skip-email
 docker compose run --rm cli wp plugin install /refs/elementor.4.1.3.zip --activate
 docker compose run --rm cli wp plugin install /refs/animation-addons-for-elementor.4.2.2.zip --activate
-docker compose run --rm cli wp eval-file /refs/../tools/aae-probe/enable-widgets.php
+docker compose run --rm cli wp eval-file /probe/enable-widgets.php
 ```
 
 Every widget is disabled by default — `enable-widgets.php` flips the plugin's own

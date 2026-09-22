@@ -13,7 +13,7 @@
  * the PHP filename under widgets/, e.g. "counter", "image-box-slider", not the
  * "wcf--"/"aae--" Elementor widget slug). Run via:
  *
- *   docker compose run --rm cli wp eval-file /refs/../tools/aae-probe/enable-widgets.php
+ *   docker compose run --rm cli wp eval-file /probe/enable-widgets.php
  *
  * or paste into `wp eval`.
  */

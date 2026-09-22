@@ -99,26 +99,10 @@ class WcfImageBoxSliderConverter extends BaseElementorConverter {
             ];
         }
 
-        $block_settings = [];
-
-        $slides_to_show = (int) ( $settings['slides_to_show'] ?? 1 );
-        $slides_to_show = $slides_to_show > 0 ? $slides_to_show : 1;
-        $block_settings['module']['advanced']['slidesToShow']['desktop']['value'] = (string) $slides_to_show;
-
-        if ( ( $settings['autoplay'] ?? '' ) === 'yes' ) {
-            $block_settings['module']['advanced']['auto']['desktop']['value'] = 'on';
-        }
+        $block_settings = $this->groupCarouselModuleSettings( $settings );
 
         if ( ( $settings['center_slide'] ?? '' ) === 'yes' ) {
             $block_settings['module']['advanced']['centerMode']['desktop']['value'] = 'on';
-        }
-
-        if ( ( $settings['navigation'] ?? '' ) !== '' ) {
-            $block_settings['arrows']['advanced']['show']['desktop']['value'] = 'on';
-        }
-
-        if ( ( $settings['pagination'] ?? '' ) !== '' ) {
-            $block_settings['dotNav']['advanced']['show']['desktop']['value'] = 'on';
         }
 
         $this->engine->logConverted( 'group-carousel' );
