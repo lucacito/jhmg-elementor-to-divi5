@@ -251,6 +251,7 @@ class ConverterRegistry {
         // (same free-form-container approach WcfImageBoxSliderConverter uses).
         $this->registerWidget( 'wcf--image-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfImageBoxConverter' );
         $this->registerWidget( 'wcf--toggle-switch', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfToggleSwitchConverter' );
+        $this->registerWidget( 'wcf--image-accordion', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfImageAccordionConverter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );

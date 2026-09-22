@@ -144,4 +144,67 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $this->assertArrayNotHasKey( 'content', $block['elements'][0]['settings'] ?? [] );
         $this->assertSame( [], $result['report']['skipped_settings'] );
     }
+
+    // -------------------------------------------------------------------------
+    // wcf--image-accordion (image-accordion.php) — a repeater of items always
+    // shown side by side (no slidesToShow/navigation, unlike the group-carousel
+    // cluster), each with its own image/title/subtitle/description/link, plus
+    // one widget-wide title_tag and btn_text. Becomes a plain divi/group of
+    // divi/group children, the same free-form-container shape as
+    // WcfImageBoxSliderConverter's per-slide boxes but without a carousel wrapper.
+    // -------------------------------------------------------------------------
+
+    public function test_image_accordion_builds_one_group_per_item(): void {
+        [ $block, $result ] = $this->convert( 'wcf--image-accordion', [
+            'title_tag' => 'h3',
+            'link_type' => 'button',
+            'btn_text'  => 'Read More',
+            'accordions' => [
+                [
+                    'image' => [ 'url' => 'https://x.test/a.jpg', 'alt' => 'A' ],
+                    'title' => 'Item A', 'subtitle' => 'Sub A', 'description' => 'Desc A',
+                    'details_link' => [ 'url' => 'https://x.test/a' ],
+                ],
+                [
+                    'image' => [ 'url' => 'https://x.test/b.jpg' ],
+                    'title' => 'Item B',
+                ],
+            ],
+        ] );
+
+        $this->assertSame( 'divi/group', $block['name'] );
+        $this->assertCount( 2, $block['elements'] );
+
+        $item_a = $block['elements'][0];
+        $this->assertSame( 'divi/group', $item_a['name'] );
+        $names_a = array_map( static fn( $c ) => $c['name'], $item_a['elements'] );
+        $this->assertSame( [ 'divi/image', 'divi/heading', 'divi/text', 'divi/button' ], $names_a );
+        $this->assertSame( 'Item A', $item_a['elements'][1]['settings']['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'h3', $item_a['elements'][1]['settings']['title']['decoration']['font']['font']['desktop']['value']['headingLevel'] );
+        $this->assertSame( 'Read More', $item_a['elements'][3]['settings']['button']['innerContent']['desktop']['value']['text'] );
+        $this->assertSame( 'https://x.test/a', $item_a['elements'][3]['settings']['button']['innerContent']['desktop']['value']['linkUrl'] );
+
+        // Item B has no 'details_link', but the widget-wide button label still
+        // renders (Aaeaddon_Button_Trait shows the button whenever link_type is
+        // 'button' regardless of whether that item's own link is set) — just
+        // without a linkUrl.
+        $item_b = $block['elements'][1];
+        $names_b = array_map( static fn( $c ) => $c['name'], $item_b['elements'] );
+        $this->assertSame( [ 'divi/image', 'divi/heading', 'divi/button' ], $names_b );
+        $this->assertArrayNotHasKey( 'linkUrl', $item_b['elements'][2]['settings']['button']['innerContent']['desktop']['value'] );
+
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
+
+    public function test_image_accordion_no_button_when_link_type_none(): void {
+        [ $block ] = $this->convert( 'wcf--image-accordion', [
+            'link_type' => 'none',
+            'accordions' => [
+                [ 'title' => 'Item A', 'details_link' => [ 'url' => 'https://x.test/a' ] ],
+            ],
+        ] );
+
+        $names = array_map( static fn( $c ) => $c['name'], $block['elements'][0]['elements'] ?? [] );
+        $this->assertNotContains( 'divi/button', $names );
+    }
 }
