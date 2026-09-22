@@ -13,10 +13,17 @@ class ButtonConverter extends BaseElementorConverter {
     public function convert( array $element ): array {
         $id       = $element['id'] ?? uniqid( 'divi_button_' );
         $settings = $element['settings'] ?? [];
-        $text     = is_string( $this->getSettingValue( $settings, 'text', '' ) )
+        // Animation Addons' wcf--button (Aaeaddon_Button_Trait.php) uses its own
+        // 'btn_text'/'btn_link' keys for the same TEXT/URL controls.
+        $text = is_string( $this->getSettingValue( $settings, 'text', '' ) )
             ? $this->getSettingValue( $settings, 'text', '' )
             : '';
-        $link       = is_array( $settings['link'] ?? null ) ? $settings['link'] : [];
+        if ( $text === '' ) {
+            $text = is_string( $this->getSettingValue( $settings, 'btn_text', '' ) )
+                ? $this->getSettingValue( $settings, 'btn_text', '' )
+                : '';
+        }
+        $link       = is_array( $settings['link'] ?? null ) ? $settings['link'] : ( is_array( $settings['btn_link'] ?? null ) ? $settings['btn_link'] : [] );
         $url        = is_string( $link['url'] ?? '' ) ? ( $link['url'] ?? '' ) : '';
         // Elementor fixtures use camelCase 'isExternal'; real exports use snake_case 'is_external'.
         $new_window = ! empty( $link['isExternal'] ) || ( ( $link['is_external'] ?? '' ) === 'on' );
@@ -46,7 +53,7 @@ class ButtonConverter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'button' );
         $this->logUnmappedSettings( $id, $settings, array_merge(
-            [ 'text', 'link' ],
+            [ 'text', 'link', 'btn_text', 'btn_link', 'current_link', 'btn_element_list' ],
             $style['handled_keys']
         ) );
 

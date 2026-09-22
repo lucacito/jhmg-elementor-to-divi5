@@ -31,7 +31,7 @@ class WcfContentSliderConverter extends BaseElementorConverter {
                 continue;
             }
 
-            $type    = is_string( $item['content_type'] ?? '' ) ? ( $item['content_type'] ?? 'content' ) : 'content';
+            $type    = is_string( $item['content_type'] ?? null ) ? ( $item['content_type'] ?? 'content' ) : 'content';
             $group_id = $id . '-slide-' . ( $idx + 1 );
 
             if ( $type === 'template' ) {
@@ -45,7 +45,7 @@ class WcfContentSliderConverter extends BaseElementorConverter {
                 continue;
             }
 
-            $html = is_string( $item['slide_content'] ?? '' ) ? ( $item['slide_content'] ?? '' ) : '';
+            $html = is_string( $item['slide_content'] ?? null ) ? ( $item['slide_content'] ?? '' ) : '';
 
             $children[] = [
                 'id'       => $group_id,

@@ -22,7 +22,7 @@ class WcfBrandSliderConverter extends BaseElementorConverter {
     public function convert( array $element ): array {
         $id       = $element['id'] ?? uniqid( 'divi_carousel_' );
         $settings = $element['settings'] ?? [];
-        $mode     = is_string( $settings['slide_content'] ?? '' ) ? ( $settings['slide_content'] ?? '' ) : 'text';
+        $mode     = is_string( $settings['slide_content'] ?? null ) ? ( $settings['slide_content'] ?? '' ) : 'text';
 
         $children = $mode === 'image'
             ? $this->imageChildren( $id, $settings['wcf_brand_carousel'] ?? [] )

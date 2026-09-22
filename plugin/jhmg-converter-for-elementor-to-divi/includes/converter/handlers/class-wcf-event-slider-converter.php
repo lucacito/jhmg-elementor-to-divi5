@@ -28,16 +28,16 @@ class WcfEventSliderConverter extends BaseElementorConverter {
                 continue;
             }
 
-            $name = is_string( $event['event_name'] ?? '' ) ? ( $event['event_name'] ?? '' ) : '';
-            $date = is_string( $event['event_date'] ?? '' ) ? ( $event['event_date'] ?? '' ) : '';
-            $desc = is_string( $event['event_desc'] ?? '' ) ? ( $event['event_desc'] ?? '' ) : '';
+            $name = is_string( $event['event_name'] ?? null ) ? ( $event['event_name'] ?? '' ) : '';
+            $date = is_string( $event['event_date'] ?? null ) ? ( $event['event_date'] ?? '' ) : '';
+            $desc = is_string( $event['event_desc'] ?? null ) ? ( $event['event_desc'] ?? '' ) : '';
 
             $image_raw = $event['event_image'] ?? null;
-            $img_url   = is_array( $image_raw ) && is_string( $image_raw['url'] ?? '' ) ? $image_raw['url'] : '';
-            $img_alt   = is_array( $image_raw ) && is_string( $image_raw['alt'] ?? '' ) ? $image_raw['alt'] : '';
+            $img_url   = is_array( $image_raw ) && is_string( $image_raw['url'] ?? null ) ? $image_raw['url'] : '';
+            $img_alt   = is_array( $image_raw ) && is_string( $image_raw['alt'] ?? null ) ? $image_raw['alt'] : '';
 
             $link_raw = $event['event_link'] ?? [];
-            $link_url = is_array( $link_raw ) && is_string( $link_raw['url'] ?? '' ) ? $link_raw['url'] : '';
+            $link_url = is_array( $link_raw ) && is_string( $link_raw['url'] ?? null ) ? $link_raw['url'] : '';
 
             $group_children = [];
             $group_id       = $id . '-event-' . ( $idx + 1 );

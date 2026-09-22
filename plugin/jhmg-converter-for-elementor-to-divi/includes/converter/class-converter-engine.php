@@ -113,7 +113,7 @@ class ConverterEngine {
      *
      * @param string $kind One of 'dynamic', 'animation', 'motion', 'form_fields',
      *                     'counter_affix', 'gallery_extras', 'social_network', 'query_filter',
-     *                     'saved_template'.
+     *                     'saved_template', 'testimonial_rating'.
      */
     public function logNotCarriedOver( string $kind, string $element_id, string $detail ): void {
         $entry = [

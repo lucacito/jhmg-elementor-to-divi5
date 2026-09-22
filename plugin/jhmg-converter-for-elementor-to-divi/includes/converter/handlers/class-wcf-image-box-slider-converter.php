@@ -34,16 +34,16 @@ class WcfImageBoxSliderConverter extends BaseElementorConverter {
                 continue;
             }
 
-            $title    = is_string( $slide['title'] ?? '' ) ? ( $slide['title'] ?? '' ) : '';
-            $subtitle = is_string( $slide['subtitle'] ?? '' ) ? ( $slide['subtitle'] ?? '' ) : '';
-            $desc     = is_string( $slide['description'] ?? '' ) ? ( $slide['description'] ?? '' ) : '';
+            $title    = is_string( $slide['title'] ?? null ) ? ( $slide['title'] ?? '' ) : '';
+            $subtitle = is_string( $slide['subtitle'] ?? null ) ? ( $slide['subtitle'] ?? '' ) : '';
+            $desc     = is_string( $slide['description'] ?? null ) ? ( $slide['description'] ?? '' ) : '';
 
             $image_raw = $slide['image'] ?? null;
             $img_url   = '';
             $img_alt   = '';
             if ( is_array( $image_raw ) ) {
-                $img_url = is_string( $image_raw['url'] ?? '' ) ? ( $image_raw['url'] ?? '' ) : '';
-                $img_alt = is_string( $image_raw['alt'] ?? '' ) ? ( $image_raw['alt'] ?? '' ) : '';
+                $img_url = is_string( $image_raw['url'] ?? null ) ? ( $image_raw['url'] ?? '' ) : '';
+                $img_alt = is_string( $image_raw['alt'] ?? null ) ? ( $image_raw['alt'] ?? '' ) : '';
             } elseif ( is_string( $image_raw ) ) {
                 $img_url = $image_raw;
             }

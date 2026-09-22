@@ -37,9 +37,23 @@ class ImageConverter extends BaseElementorConverter {
             $style['divi_attrs']
         );
 
+        // 'link' (Elementor's own image widget, and Animation Addons' wcf--image,
+        // image-box.php's details_link) is a plain URL control. divi/image reads
+        // its link from image.innerContent.linkUrl/linkTarget (module.json:
+        // elementType "imageLink"), not module.advanced.link.
+        $link     = is_array( $settings['link'] ?? null ) ? $settings['link'] : [];
+        $link_url = is_string( $link['url'] ?? '' ) ? trim( (string) ( $link['url'] ?? '' ) ) : '';
+        if ( $link_url !== '' ) {
+            $attrs['image']['innerContent']['desktop']['value']['linkUrl'] = $link_url;
+            $is_external = is_string( $link['is_external'] ?? '' ) ? ( $link['is_external'] ?? '' ) : '';
+            if ( $is_external === 'on' || $is_external === 'true' || $is_external === '1' || ! empty( $link['isExternal'] ) ) {
+                $attrs['image']['innerContent']['desktop']['value']['linkTarget'] = '_blank';
+            }
+        }
+
         $this->engine->logConverted( 'image' );
         $this->logUnmappedSettings( $id, $settings, array_merge(
-            [ 'image' ],
+            [ 'image', 'link', 'link_to', 'open_lightbox' ],
             $style['handled_keys']
         ) );
 

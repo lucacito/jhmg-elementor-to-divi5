@@ -225,6 +225,16 @@ class ConverterRegistry {
         $this->registerWidget( 'wcf--brand-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfBrandSliderConverter' );
         $this->registerWidget( 'wcf--content-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfContentSliderConverter' );
 
+        // Batch 3: more cheap reuse (identical or fallback-compatible control
+        // names) plus the testimonial-carousel cluster (dedicated converters,
+        // same group-carousel target, divi/testimonial per item this time).
+        $this->registerWidget( 'wcf--button', '\\ElementorDivi5Converter\\Converter\\Handlers\\ButtonConverter' );
+        $this->registerWidget( 'wcf--image', '\\ElementorDivi5Converter\\Converter\\Handlers\\ImageConverter' );
+        $this->registerWidget( 'wcf--testimonial', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfTestimonialConverter' );
+        $this->registerWidget( 'wcf--testimonial2', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfTestimonialConverter' );
+        $this->registerWidget( 'wcf--testimonial3', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfTestimonialConverter' );
+        $this->registerWidget( 'wcf--a-testimonial', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfAdvancedTestimonialConverter' );
+
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
         $this->registerWidget( 'e-paragraph', '\\ElementorDivi5Converter\\Converter\\Handlers\\TextEditorConverter' );
