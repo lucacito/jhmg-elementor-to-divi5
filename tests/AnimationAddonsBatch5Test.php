@@ -438,7 +438,7 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $this->assertSame( 'For growing teams', $s['subtitle']['innerContent']['desktop']['value'] );
         $this->assertSame( '9.99', $s['price']['innerContent']['desktop']['value'] );
         $this->assertSame( [ 'currency' => '$ ', 'per' => 'Monthly' ], $s['currencyFrequency']['innerContent']['desktop']['value'] );
-        $this->assertSame( '<ul><li>Starter Pack Included</li><li>Venue Booking</li></ul>', $s['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( "Starter Pack Included\nVenue Booking", $s['content']['innerContent']['desktop']['value'] );
         $this->assertSame( 'Choose Plan', $s['button']['innerContent']['desktop']['value']['text'] );
         $this->assertSame( 'https://x.test/choose', $s['button']['innerContent']['desktop']['value']['linkUrl'] );
         $this->assertSame( [], $result['report']['skipped_settings'] );

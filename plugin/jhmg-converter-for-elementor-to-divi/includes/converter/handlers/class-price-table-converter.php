@@ -14,6 +14,7 @@ class PriceTableConverter extends BaseElementorConverter {
         $settings = $element['settings'] ?? [];
 
         $title    = is_string( $settings['title'] ?? '' ) ? ( $settings['title'] ?? '' ) : '';
+        $subtitle = is_string( $settings['sub_heading'] ?? '' ) ? ( $settings['sub_heading'] ?? '' ) : '';
         $price    = is_string( $settings['price'] ?? '' ) ? ( $settings['price'] ?? '' ) : '';
         $currency = is_string( $settings['currency_symbol'] ?? '' ) ? ( $settings['currency_symbol'] ?? '' ) : '';
         $period   = is_string( $settings['period'] ?? '' ) ? ( $settings['period'] ?? '' ) : '';
@@ -34,26 +35,50 @@ class PriceTableConverter extends BaseElementorConverter {
             }
         }
 
+        // divi/pricing-table (PricingTableModule.php, fixtures/divi-schema/
+        // modules.json) has its own plain title/subtitle/price attributes, a
+        // structured currencyFrequency.innerContent.value.{currency,per}, a
+        // free-form 'content' body for the feature list, and a 'button' field —
+        // not a combined 'priceText'/'perText'/'bulletItems'/'buttonText'/
+        // 'buttonUrl' set (those keys don't exist in the declared schema and
+        // rendered nothing).
         $child_settings = [];
 
         if ( $title !== '' ) {
-            $child_settings['module']['advanced']['title'] = [ 'desktop' => [ 'value' => $title ] ];
+            $child_settings['title']['innerContent']['desktop']['value'] = $title;
         }
 
-        if ( $price !== '' || $currency !== '' ) {
-            $child_settings['module']['advanced']['priceText'] = [ 'desktop' => [ 'value' => $currency . $price ] ];
-            $child_settings['module']['advanced']['perText']   = [ 'desktop' => [ 'value' => $period ] ];
+        if ( $subtitle !== '' ) {
+            $child_settings['subtitle']['innerContent']['desktop']['value'] = $subtitle;
         }
 
-        if ( ! empty( $features ) ) {
-            $child_settings['module']['advanced']['bulletItems'] = [
-                'desktop' => [ 'value' => implode( "\n", $features ) ],
+        if ( $price !== '' ) {
+            $child_settings['price']['innerContent']['desktop']['value'] = $price;
+        }
+
+        if ( $currency !== '' || $period !== '' ) {
+            $child_settings['currencyFrequency']['innerContent']['desktop']['value'] = [
+                'currency' => $currency,
+                'per'      => $period,
             ];
         }
 
+        if ( $features !== [] ) {
+            // divi/pricing-table's own render_pricing_list() splits 'content' on
+            // newlines into <li> items itself (EaelPricingTableConverter's
+            // already-verified pattern) — it is not raw HTML.
+            $child_settings['content']['innerContent']['desktop']['value'] = implode( "\n", $features );
+        }
+
         if ( $btn_text !== '' || $btn_url !== '' ) {
-            $child_settings['module']['advanced']['buttonText'] = [ 'desktop' => [ 'value' => $btn_text ] ];
-            $child_settings['module']['advanced']['buttonUrl']  = [ 'desktop' => [ 'value' => $btn_url ] ];
+            $button_value = [];
+            if ( $btn_text !== '' ) {
+                $button_value['text'] = $btn_text;
+            }
+            if ( $btn_url !== '' ) {
+                $button_value['linkUrl'] = $btn_url;
+            }
+            $child_settings['button']['innerContent']['desktop']['value'] = $button_value;
         }
 
         $child = [
@@ -65,9 +90,9 @@ class PriceTableConverter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'pricing-tables' );
         $this->logUnmappedSettings( $id, $settings, [
-            'title', 'price', 'currency_symbol', 'period',
+            'title', 'sub_heading', 'price', 'currency_symbol', 'period',
             'features_list', 'button_text', 'button_url',
-            'header_type', 'sub_heading', 'ribbon_title', 'best_value',
+            'header_type', 'ribbon_title', 'best_value',
         ] );
 
         return [

@@ -111,8 +111,10 @@ class WcfAdvancePricingTableConverter extends BaseElementorConverter {
         }
 
         if ( $features !== [] ) {
-            $child_settings['content']['innerContent']['desktop']['value'] =
-                '<ul>' . implode( '', array_map( static fn( $f ) => '<li>' . esc_html( $f ) . '</li>', $features ) ) . '</ul>';
+            // divi/pricing-table's own render_pricing_list() splits 'content' on
+            // newlines into <li> items itself (EaelPricingTableConverter's
+            // already-verified pattern) — it is not raw HTML.
+            $child_settings['content']['innerContent']['desktop']['value'] = implode( "\n", $features );
         }
 
         if ( $btn_text !== '' || $btn_url !== '' ) {
