@@ -255,6 +255,7 @@ class ConverterRegistry {
         $this->registerWidget( 'wcf--author-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfAuthorBoxConverter' );
         $this->registerWidget( 'wcf--services-tab', '\\ElementorDivi5Converter\\Converter\\Handlers\\TabsConverter' );
         $this->registerWidget( 'wcf--t-h-image', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfTextHoverImageConverter' );
+        $this->registerWidget( 'wcf--one-page-nav', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfOnePageNavConverter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );

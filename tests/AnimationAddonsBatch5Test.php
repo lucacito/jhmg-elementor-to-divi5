@@ -318,4 +318,33 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $this->assertSame( [], $result['report']['skipped_settings'] );
         $this->assertNotEmpty( $result['report']['not_carried_over'] );
     }
+
+    // -------------------------------------------------------------------------
+    // wcf--one-page-nav (one-page-nav.php) — a fixed scroll-spy side nav whose
+    // items (icon + text + section_id anchor) each become a divi/icon-list-item
+    // (PriceListConverter's proven icon-list shape: text in content.innerContent,
+    // link in module.advanced.link — here '#' + section_id instead of a URL
+    // control, since this widget links to in-page anchors, not external URLs).
+    // The fixed/scroll-spy positioning itself has no Divi equivalent and is
+    // logged as not carried over; the nav items and their anchors do carry over.
+    // -------------------------------------------------------------------------
+
+    public function test_one_page_nav_builds_icon_list_with_anchor_links(): void {
+        [ $block, $result ] = $this->convert( 'wcf--one-page-nav', [
+            'wcf_one_page_nav' => [
+                [ 'nav_text' => 'Home', 'section_id' => 'home', 'selected_icon' => [ 'value' => 'fas fa-home', 'library' => 'fa-solid' ] ],
+                [ 'nav_text' => 'About', 'section_id' => 'about' ],
+            ],
+        ] );
+
+        $this->assertSame( 'divi/icon-list', $block['name'] );
+        $this->assertCount( 2, $block['elements'] );
+        $this->assertSame( 'divi/icon-list-item', $block['elements'][0]['name'] );
+        $this->assertSame( 'Home', $block['elements'][0]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( '#home', $block['elements'][0]['settings']['module']['advanced']['link']['desktop']['value']['url'] );
+        $this->assertArrayHasKey( 'icon', $block['elements'][0]['settings'] );
+        $this->assertSame( '#about', $block['elements'][1]['settings']['module']['advanced']['link']['desktop']['value']['url'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+        $this->assertNotEmpty( $result['report']['not_carried_over'] );
+    }
 }
