@@ -207,4 +207,55 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $names = array_map( static fn( $c ) => $c['name'], $block['elements'][0]['elements'] ?? [] );
         $this->assertNotContains( 'divi/button', $names );
     }
+
+    // -------------------------------------------------------------------------
+    // wcf--author-box (author-box.php) — 'source' => 'custom' is fully static
+    // (author_avatar/author_name/author_website/author_bio/posts_url are plain
+    // settings) and becomes a divi/group of image/heading/text/button, the same
+    // shape as wcf--image-box. 'source' => 'current' (the widget's own default)
+    // instead pulls the *current post's author* at render time via
+    // get_the_author_meta()/get_author_posts_url()/count_user_posts() — none of
+    // which the converter has access to (ConverterEngine has no post context),
+    // so that variant has no static equivalent and falls back to
+    // GenericFallbackConverter's placeholder rather than fabricating content.
+    // -------------------------------------------------------------------------
+
+    public function test_author_box_custom_source_builds_static_group(): void {
+        [ $block, $result ] = $this->convert( 'wcf--author-box', [
+            'source'         => 'custom',
+            'author_avatar'  => [ 'url' => 'https://x.test/jd.jpg' ],
+            'author_name'    => 'John Doe',
+            'author_name_tag' => 'h5',
+            'author_website' => [ 'url' => 'https://x.test/john' ],
+            'author_bio'     => 'Writes about yoga.',
+            'posts_url'      => [ 'url' => 'https://x.test/author/john' ],
+            'link_text'      => 'All Posts',
+        ] );
+
+        $this->assertSame( 'divi/group', $block['name'] );
+        $names = array_map( static fn( $c ) => $c['name'], $block['elements'] );
+        $this->assertSame( [ 'divi/image', 'divi/heading', 'divi/text', 'divi/button' ], $names );
+
+        $this->assertSame( 'https://x.test/jd.jpg', $block['elements'][0]['settings']['image']['innerContent']['desktop']['value']['src'] );
+        $this->assertSame( 'John Doe', $block['elements'][1]['settings']['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'h5', $block['elements'][1]['settings']['title']['decoration']['font']['font']['desktop']['value']['headingLevel'] );
+        $this->assertSame( 'Writes about yoga.', $block['elements'][2]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'All Posts', $block['elements'][3]['settings']['button']['innerContent']['desktop']['value']['text'] );
+        $this->assertSame( 'https://x.test/author/john', $block['elements'][3]['settings']['button']['innerContent']['desktop']['value']['linkUrl'] );
+
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
+
+    public function test_author_box_current_source_falls_back_to_placeholder(): void {
+        [ $block, $result ] = $this->convert( 'wcf--author-box', [ 'source' => 'current' ] );
+
+        $this->assertSame( 'divi/code', $block['name'] );
+        $this->assertNotEmpty( $result['report']['warnings'] );
+    }
+
+    public function test_author_box_defaults_to_current_source_when_unset(): void {
+        [ $block ] = $this->convert( 'wcf--author-box', [] );
+
+        $this->assertSame( 'divi/code', $block['name'] );
+    }
 }

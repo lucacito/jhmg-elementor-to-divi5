@@ -252,6 +252,7 @@ class ConverterRegistry {
         $this->registerWidget( 'wcf--image-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfImageBoxConverter' );
         $this->registerWidget( 'wcf--toggle-switch', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfToggleSwitchConverter' );
         $this->registerWidget( 'wcf--image-accordion', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfImageAccordionConverter' );
+        $this->registerWidget( 'wcf--author-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfAuthorBoxConverter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
