@@ -979,6 +979,14 @@ class KitPage {
                 <?php esc_html_e( 'Upload an Elementor JSON export or a full-site Kit ZIP. No Elementor plugin required — this converts the exported file directly. Pages will be created in this Divi site.', 'jhmg-converter-for-elementor-to-divi-pro' ); ?>
             </p>
 
+            <div class="notice notice-info inline edc-import-tip">
+                <p>
+                    <?php
+                    esc_html_e( 'Use this form, not Divi\'s own Import & Export dialog — that one only accepts Divi layout files and will reject an Elementor export.', 'jhmg-converter-for-elementor-to-divi-pro' );
+                    ?>
+                </p>
+            </div>
+
             <form method="post" enctype="multipart/form-data" action="" class="edc-import-form">
                 <?php wp_nonce_field( self::IMPORT_NONCE_ACTION, self::IMPORT_NONCE_NAME ); ?>
                 <input type="hidden" name="page" value="<?php echo esc_attr( self::MENU_SLUG ); ?>">

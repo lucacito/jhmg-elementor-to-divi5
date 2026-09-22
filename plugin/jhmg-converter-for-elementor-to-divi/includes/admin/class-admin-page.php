@@ -416,7 +416,7 @@ class AdminPage {
                                 <div class="edc-import-field">
                                     <label for="edc_import_file_lp"><strong><?php esc_html_e( 'JSON File', 'jhmg-converter-for-elementor-to-divi' ); ?></strong></label>
                                     <input type="file" id="edc_import_file_lp" name="edc_import_file" accept=".json" required>
-                                    <p class="description"><?php esc_html_e( 'Upload an Elementor page JSON export.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
+                                    <p class="description"><?php esc_html_e( 'Upload an Elementor page JSON export here — not through Divi\'s own Import & Export dialog, which does not accept Elementor files.', 'jhmg-converter-for-elementor-to-divi' ); ?></p>
                                 </div>
                                 <div class="edc-import-field">
                                     <label for="edc_post_type_lp"><strong><?php esc_html_e( 'Create as', 'jhmg-converter-for-elementor-to-divi' ); ?></strong></label>
