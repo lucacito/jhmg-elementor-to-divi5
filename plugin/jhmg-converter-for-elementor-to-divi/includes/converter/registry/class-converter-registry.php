@@ -256,6 +256,8 @@ class ConverterRegistry {
         $this->registerWidget( 'wcf--services-tab', '\\ElementorDivi5Converter\\Converter\\Handlers\\TabsConverter' );
         $this->registerWidget( 'wcf--t-h-image', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfTextHoverImageConverter' );
         $this->registerWidget( 'wcf--one-page-nav', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfOnePageNavConverter' );
+        // Real get_name() typo: 'wfc--team-slider', not 'wcf--team-slider' (team-slider.php).
+        $this->registerWidget( 'wfc--team-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WfcTeamSliderConverter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );

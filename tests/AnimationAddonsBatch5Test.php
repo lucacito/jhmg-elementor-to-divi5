@@ -347,4 +347,63 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $this->assertSame( [], $result['report']['skipped_settings'] );
         $this->assertNotEmpty( $result['report']['not_carried_over'] );
     }
+
+    // -------------------------------------------------------------------------
+    // wfc--team-slider (team-slider.php — get_name() returns 'wfc--team-slider',
+    // a typo'd prefix, not 'wcf--team-slider'; confirmed from source rather than
+    // guessed) — a carousel version of wcf--team's single member. Each item
+    // becomes a divi/team-member (WcfTeamConverter's target) wrapped in a
+    // divi/group, inside divi/group-carousel — the same "typed module wrapped
+    // in a group" shape WcfTestimonialConverter already uses for its carousel.
+    // -------------------------------------------------------------------------
+
+    public function test_team_slider_builds_group_carousel_of_team_members(): void {
+        [ $block, $result ] = $this->convert( 'wfc--team-slider', [
+            'title_tag'  => 'h3',
+            'slides_to_show' => 3,
+            'team_slides' => [
+                [
+                    'title' => 'Jeanel Christina', 'desc' => 'Senior Developer',
+                    'image' => [ 'url' => 'https://x.test/jc.jpg' ],
+                    'helo_show_social' => 'yes',
+                    'social_icon_01' => [ 'value' => 'fab fa-facebook' ], 'link_one' => [ 'url' => 'https://x.test/fb' ],
+                ],
+            ],
+        ] );
+
+        $this->assertSame( 'divi/group-carousel', $block['name'] );
+        $this->assertCount( 1, $block['elements'] );
+        $item_group = $block['elements'][0];
+        $this->assertSame( 'divi/group', $item_group['name'] );
+        $this->assertCount( 1, $item_group['elements'] );
+        $member = $item_group['elements'][0];
+        $this->assertSame( 'divi/team-member', $member['name'] );
+        $this->assertSame( 'Jeanel Christina', $member['settings']['name']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'Senior Developer', $member['settings']['position']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'https://x.test/jc.jpg', $member['settings']['image']['innerContent']['desktop']['value']['url'] );
+        $this->assertSame( [ 'facebookUrl' => 'https://x.test/fb' ], $member['settings']['social']['innerContent']['desktop']['value'] );
+
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
+
+    // The real widget's own bug (team-slider.php render_team_slider_one()):
+    // every social <a href> reads $item['link_one']['url'] regardless of which
+    // icon it's for — social_icon_02/03/04 all point at link_one's URL, not
+    // their own link_two/three/four. Matched here for visual parity with what
+    // the real plugin (v4.2.2) actually renders.
+    public function test_team_slider_reproduces_widgets_own_link_one_bug(): void {
+        [ $block ] = $this->convert( 'wfc--team-slider', [
+            'team_slides' => [
+                [
+                    'title' => 'A', 'helo_show_social' => 'yes',
+                    'social_icon_01' => [ 'value' => 'fab fa-facebook' ], 'link_one' => [ 'url' => 'https://x.test/fb' ],
+                    'social_icon_02' => [ 'value' => 'fab fa-twitter' ], 'link_two' => [ 'url' => 'https://x.test/tw' ],
+                ],
+            ],
+        ] );
+
+        $social = $block['elements'][0]['elements'][0]['settings']['social']['innerContent']['desktop']['value'];
+        $this->assertSame( 'https://x.test/fb', $social['facebookUrl'] );
+        $this->assertSame( 'https://x.test/fb', $social['twitterUrl'] );
+    }
 }
