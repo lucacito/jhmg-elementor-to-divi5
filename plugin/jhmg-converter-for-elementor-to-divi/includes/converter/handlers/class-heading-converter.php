@@ -14,10 +14,18 @@ class HeadingConverter extends BaseElementorConverter {
     public function convert( array $element ): array {
         $id       = $element['id'] ?? uniqid( 'divi_text_' );
         $settings = $element['settings'] ?? [];
-        $title    = $this->getSettingValue( $settings, 'title' );
+        // Animation Addons' wcf--animated-heading (animated-heading.php) uses its
+        // own 'heading'/'heading_tag'/'heading_link' keys for the same
+        // title/tag/link controls; wcf--title (animated-title.php) happens to
+        // already match title/header_size/link exactly.
+        $title = $this->getSettingValue( $settings, 'title' );
+        if ( $title === '' || $title === null ) {
+            $title = $this->getSettingValue( $settings, 'heading', '' );
+        }
         // Real Elementor exports use 'header_size'; our fixtures use 'tag'.
         $tag_raw  = $this->getSettingValue( $settings, 'tag', '' );
-        $tag      = $tag_raw !== '' ? $tag_raw : $this->getSettingValue( $settings, 'header_size', 'h2' );
+        $tag      = $tag_raw !== '' ? $tag_raw : $this->getSettingValue( $settings, 'header_size', '' );
+        $tag      = $tag !== '' ? $tag : $this->getSettingValue( $settings, 'heading_tag', 'h2' );
 
         // Elementor's heading falls back to the kit's Primary typography (heading.php).
         $style = ( new StyleMapper() )->map( 'heading', $settings, [ 'elementor_defaults' => true ] );
@@ -44,7 +52,7 @@ class HeadingConverter extends BaseElementorConverter {
         $attrs['title'] = $title_attrs;
 
         // Map Elementor heading link → Divi 5 module.advanced.link.
-        $link     = is_array( $settings['link'] ?? null ) ? $settings['link'] : [];
+        $link     = is_array( $settings['link'] ?? null ) ? $settings['link'] : ( is_array( $settings['heading_link'] ?? null ) ? $settings['heading_link'] : [] );
         $link_url = is_string( $link['url'] ?? '' ) ? trim( (string) ( $link['url'] ?? '' ) ) : '';
         if ( $link_url !== '' ) {
             $link_value  = [ 'url' => $link_url ];
@@ -60,7 +68,17 @@ class HeadingConverter extends BaseElementorConverter {
         }
 
         $this->logUnmappedSettings( $id, $settings, array_merge(
-            [ 'title', 'tag', 'header_size', 'title_tag', 'size', 'link' ],
+            [
+                'title', 'tag', 'header_size', 'title_tag', 'size', 'link',
+                // wcf--animated-heading's own keys, plus its and wcf--title's
+                // GSAP-only trigger/colour controls with no Divi equivalent.
+                'heading', 'heading_tag', 'heading_link',
+                'trigger_type', 'trigger_selector', 'heading_color_mode', 'heading_color',
+                'heading_colors', 'heading_color_end', 'blend_mode', 'highlight',
+                'highlight_color', 'highlight_blend_mode', 'title_color',
+                'show_title_prefix', 'title_prefix_use', 'title_prefix_color',
+                'title_prefix_v_alignment', 'title_h_color', 'highlight_h_color', 'prefix_h_color',
+            ],
             $style['handled_keys']
         ) );
 

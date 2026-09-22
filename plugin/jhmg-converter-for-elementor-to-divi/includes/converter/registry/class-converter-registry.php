@@ -235,6 +235,16 @@ class ConverterRegistry {
         $this->registerWidget( 'wcf--testimonial3', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfTestimonialConverter' );
         $this->registerWidget( 'wcf--a-testimonial', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfAdvancedTestimonialConverter' );
 
+        // Batch 4: more cheap reuse — site chrome, breadcrumbs and single-field
+        // heading/text widgets whose control names match or were given fallbacks.
+        $this->registerWidget( 'wcf--site-logo',  '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeSiteLogoConverter' );
+        $this->registerWidget( 'wcf--nav-menu',   '\\ElementorDivi5Converter\\Converter\\Handlers\\HfeNavigationMenuConverter' );
+        $this->registerWidget( 'wcf--breadcrumbs','\\ElementorDivi5Converter\\Converter\\Handlers\\HfeBreadcrumbsConverter' );
+        $this->registerWidget( 'wcf--animated-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
+        $this->registerWidget( 'wcf--title',      '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
+        $this->registerWidget( 'wcf--text',       '\\ElementorDivi5Converter\\Converter\\Handlers\\TextEditorConverter' );
+        $this->registerWidget( 'wcf--team',       '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfTeamConverter' );
+
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
         $this->registerWidget( 'e-paragraph', '\\ElementorDivi5Converter\\Converter\\Handlers\\TextEditorConverter' );

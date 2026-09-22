@@ -49,6 +49,22 @@ class HfeNavigationMenuConverter extends BaseElementorConverter {
             'dropdown_animation', 'flyout_orientation', 'appear_effect',
             'menu_last_item', 'schema_support', 'hide_plus_minus',
             'menu_items_align', 'hamburger_align',
+            // wcf--nav-menu's own layout/colour controls (nav-menu/nav-menu.php) —
+            // desktop/mobile submenu and hamburger styling, no divi/menu equivalent.
+            'submenu_indicator', 'innersubmenu_indicator_icon', 'menu_layout', 'menu_hover_pointer',
+            'hamburger_icon', 'mobile_close', 'mobile_menu_breakpoint',
+            'desktop_menu_item_text_color', 'desktop_menu_item_hover_color',
+            'desktop_menu_item_hover_border_color', 'desktop_menu_item_active_color',
+            'desktop_menu_item_active_border_color', 'desktop_submenu_width',
+            'desktop_submenu_item_text_color', 'desktop_submenu_item_hover_color',
+            'desktop_submenu_item_hover_border_color', 'desktop_submenu_item_active_color',
+            'desktop_submenu_item_active_border_color', 'mobile_menu_position',
+            'mobile_menu_item_text_color', 'mobile_menu_item_hover_color',
+            'mobile_menu_item_hover_border_color', 'hamburger_color', 'hamburger_hover_color',
+            'hamburger_hover_border_color', 'mobile_menu_close_color', 'mobile_menu_close_hover_color',
+            'mobile_menu_close_hover_border_color', 'back_icon', 'mobile_menu_back_color',
+            'mobile_menu_back_hover_color', 'hover_pointer_width', 'hover_pointer_height',
+            'hover_pointer_color',
         ] );
 
         return [

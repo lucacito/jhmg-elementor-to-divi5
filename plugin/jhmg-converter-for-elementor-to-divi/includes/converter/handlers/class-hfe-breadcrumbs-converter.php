@@ -16,6 +16,11 @@ class HfeBreadcrumbsConverter extends BaseElementorConverter {
         $this->engine->logConverted( 'breadcrumbs' );
         $this->logUnmappedSettings( $id, $settings, [
             'alignment', 'text_color', 'text_typography',
+            // wcf--breadcrumbs' own controls (breadcrumbs.php) — separator,
+            // Yoast toggle and colours, all cosmetic; breadcrumbs render from
+            // WordPress itself either way, not from widget content.
+            'yoast_seo', 'warning_text', 'html_tag', 'html_description',
+            'br_separator', 'sep_description', 'link_color', 'link_hover_color',
         ] );
 
         return [
