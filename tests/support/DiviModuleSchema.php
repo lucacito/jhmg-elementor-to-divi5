@@ -25,8 +25,10 @@ final class DiviModuleSchema {
         'background'   => [ 'color', 'image', 'gradient', 'mask', 'pattern', 'video' ],
         // Options/Spacing/Style/StyleDeclarations.php
         'spacing'      => [ 'margin', 'padding' ],
-        // Options/Sizing/Style/StyleDeclarations.php
-        'sizing'       => [ 'width', 'maxWidth', 'minWidth', 'height', 'minHeight', 'maxHeight', 'alignment', 'flex', 'flexBasis', 'flexGrow', 'flexShrink', 'alignSelf' ],
+        // Options/Sizing/Style/StyleDeclarations.php; flexType is the sizing key rendered
+        // as a classname, not CSS (Options/Sizing/SizingPresetAttrsMap.php:129 `preset: html`,
+        // Module.php:333-387 `et_flex_column_{flexType}`, column/module-default-render-attributes.json).
+        'sizing'       => [ 'width', 'maxWidth', 'minWidth', 'height', 'minHeight', 'maxHeight', 'alignment', 'flex', 'flexBasis', 'flexGrow', 'flexShrink', 'alignSelf', 'flexType' ],
         // Options/Border/Style/StyleDeclarations.php
         'border'       => [ 'radius', 'styles' ],
         // Options/BoxShadow/Style/StyleDeclarations.php

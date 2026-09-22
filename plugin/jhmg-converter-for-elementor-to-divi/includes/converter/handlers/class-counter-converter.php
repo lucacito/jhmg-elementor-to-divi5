@@ -33,7 +33,9 @@ class CounterConverter extends BaseElementorConverter {
         $numeric = preg_replace( '/[^0-9.\-]/', '', $number );
         $numeric = $numeric === '' || $numeric === '-' ? '0' : $numeric;
 
-        $style          = ( new StyleMapper() )->map( 'counter', $settings );
+        // Elementor's counter falls back to the kit's Primary typography for the number
+        // and Secondary for the title (counter.php).
+        $style          = ( new StyleMapper() )->map( 'counter', $settings, [ 'elementor_defaults' => true ] );
         $block_settings = $style['divi_attrs'];
 
         $block_settings['number']['innerContent']['desktop']['value']                 = $numeric;

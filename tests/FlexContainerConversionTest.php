@@ -335,6 +335,97 @@ final class FlexContainerConversionTest extends TestCase {
     }
 
     /**
+     * Divi 5 sizes a flex row's columns from module.decoration.sizing.*.flexType
+     * (Module.php:333-387, `et_flex_column_{flexType}`), never from the row's
+     * columnStructure or the column's type. Without it every column is
+     * et_flex_column_24_24 and a wrapping row stacks them. The responsive values are
+     * the ones Divi's structure picker writes (constant-library.js, flexTypeAttr).
+     */
+    public function test_two_columns_carry_divis_flex_widths_and_stack_on_phones(): void {
+        $result = $this->convert( [
+            $this->container( 'parent', [
+                $this->container( 'c1', [ $this->widget( 'w1' ) ], [ 'width' => [ 'size' => 50, 'unit' => '%' ] ] ),
+                $this->container( 'c2', [ $this->widget( 'w2' ) ], [ 'width' => [ 'size' => 50, 'unit' => '%' ] ] ),
+            ], [ 'flex_direction' => 'row', 'flex_wrap' => 'wrap' ] ),
+        ] );
+
+        $row = $result[0]['elements'][0];
+        foreach ( $row['elements'] as $column ) {
+            $sizing = $column['settings']['module']['decoration']['sizing'];
+            $this->assertSame( '12_24', $sizing['desktop']['value']['flexType'] );
+            $this->assertSame( '24_24', $sizing['phone']['value']['flexType'] );
+            $this->assertArrayNotHasKey( 'tablet', $sizing );
+        }
+        DiviModuleSchema::assertBlocksValid( $result, 'two columns' );
+    }
+
+    public function test_four_columns_go_two_per_row_on_tablets(): void {
+        $children = [];
+        foreach ( [ 'a', 'b', 'c', 'd' ] as $i ) {
+            $children[] = $this->container( "c{$i}", [ $this->widget( "w{$i}" ) ], [ 'width' => [ 'size' => 25, 'unit' => '%' ] ] );
+        }
+        $result = $this->convert( [ $this->container( 'parent', $children, [ 'flex_direction' => 'row' ] ) ] );
+
+        $row = $result[0]['elements'][0];
+        $this->assertSame( '1_4,1_4,1_4,1_4', $row['settings']['module']['advanced']['columnStructure']['desktop']['value'] );
+        foreach ( $row['elements'] as $column ) {
+            $sizing = $column['settings']['module']['decoration']['sizing'];
+            $this->assertSame( '6_24', $sizing['desktop']['value']['flexType'] );
+            $this->assertSame( '12_24', $sizing['tablet']['value']['flexType'] );
+            $this->assertSame( '24_24', $sizing['phone']['value']['flexType'] );
+        }
+    }
+
+    /**
+     * The Ferncourt hero: 55% beside 40%. Each width rounds to a Divi fraction on its
+     * own, so the pair must land on a structure Divi has (GetColumnClassnameTrait.php,
+     * constant-library.js): 55% is as close to 3/5 as to 1/2, and 3/5 pairs with the
+     * 2/5 that 40% becomes.
+     */
+    public function test_55_and_40_percent_columns_become_the_3_5_2_5_structure(): void {
+        $result = $this->convert( [
+            $this->container( 'parent', [
+                $this->container( 'text', [ $this->widget( 'w1' ) ], [ 'width' => [ 'size' => 55, 'unit' => '%' ] ] ),
+                $this->container( 'image', [ $this->widget( 'w2', 'image' ) ], [ 'width' => [ 'size' => 40, 'unit' => '%' ] ] ),
+            ], [ 'flex_direction' => 'row', 'flex_wrap' => 'wrap' ] ),
+        ] );
+
+        $row = $result[0]['elements'][0];
+        $this->assertSame( '3_5,2_5', $row['settings']['module']['advanced']['columnStructure']['desktop']['value'] );
+        $this->assertSame( '3_5', $row['elements'][0]['settings']['module']['advanced']['type']['desktop']['value'] );
+        $this->assertSame( '2_5', $row['elements'][1]['settings']['module']['advanced']['type']['desktop']['value'] );
+        $this->assertSame( '3_5', $row['elements'][0]['settings']['module']['decoration']['sizing']['desktop']['value']['flexType'] );
+        $this->assertSame( '2_5', $row['elements'][1]['settings']['module']['decoration']['sizing']['desktop']['value']['flexType'] );
+    }
+
+    /**
+     * 60% + 35% round to 3_5 and 1_3, which is no Divi structure. The row snaps to the
+     * nearest one by total width difference, keeping the first column's fraction on a
+     * tie (3_5,2_5 over 2_3,1_3), and the column types follow.
+     */
+    public function test_widths_that_form_no_divi_structure_snap_to_the_nearest_one(): void {
+        $result = $this->convert( [
+            $this->container( 'parent', [
+                $this->container( 'c1', [ $this->widget( 'w1' ) ], [ 'width' => [ 'size' => 60, 'unit' => '%' ] ] ),
+                $this->container( 'c2', [ $this->widget( 'w2' ) ], [ 'width' => [ 'size' => 35, 'unit' => '%' ] ] ),
+            ], [ 'flex_direction' => 'row' ] ),
+        ] );
+
+        $row = $result[0]['elements'][0];
+        $this->assertSame( '3_5,2_5', $row['settings']['module']['advanced']['columnStructure']['desktop']['value'] );
+        $this->assertSame( '2_5', $row['elements'][1]['settings']['module']['advanced']['type']['desktop']['value'] );
+        $this->assertSame( '2_5', $row['elements'][1]['settings']['module']['decoration']['sizing']['desktop']['value']['flexType'] );
+    }
+
+    public function test_a_single_column_row_gets_no_flex_width(): void {
+        $result = $this->convert( [ $this->container( 'parent', [ $this->widget( 'w1' ) ] ) ] );
+
+        $column = $result[0]['elements'][0]['elements'][0];
+        $this->assertSame( 'divi/column', $column['name'] );
+        $this->assertArrayNotHasKey( 'sizing', $column['settings']['module']['decoration'] ?? [] );
+    }
+
+    /**
      * Children without an explicit size must NOT get a forced 100% width.
      * They should have empty column settings (Divi auto-distributes widths).
      */

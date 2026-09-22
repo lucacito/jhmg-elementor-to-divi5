@@ -52,6 +52,13 @@
                                                         }
                                                     }
                                                 }
+                                            },
+                                            "css": {
+                                                "desktop": {
+                                                    "value": {
+                                                        "freeForm": "selector .et_pb_gallery_items::before{display:none}"
+                                                    }
+                                                }
                                             }
                                         },
                                         "elements": []

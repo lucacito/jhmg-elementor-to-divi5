@@ -100,6 +100,43 @@ final class AddonSettingNamesTest extends TestCase {
         $this->assertSame( 'Hello', $block['settings']['title']['innerContent']['desktop']['value'] );
     }
 
+    /**
+     * EAEL renders the fancy text with no typography of its own: its typography
+     * controls default to Elementor's Primary global font at 22px, weight 600
+     * (Fancy_Text.php:348-357), and Elementor stores no control defaults. Divi's heading
+     * has no such inheritance, so the converter writes what EAEL would have rendered.
+     */
+    public function test_fancy_text_renders_in_the_kits_primary_font_at_eaels_default_size(): void {
+        add_filter( 'edc_kit_globals', static fn() => [ 'typography' => [ 'primary' => [ 'family' => 'Fraunces', 'weight' => '600' ] ] ] );
+
+        [ $block ] = $this->convert( 'eael-fancy-text', [
+            'eael_fancy_text_prefix'  => 'A calmer place to',
+            'eael_fancy_text_strings' => [ [ '_id' => 'a1', 'eael_fancy_text_strings_text_field' => 'do your best work' ] ],
+        ] );
+
+        $font = $block['settings']['title']['decoration']['font']['font']['desktop']['value'];
+        $this->assertSame( 'Fraunces', $font['family'] );
+        $this->assertSame( '600', $font['weight'] );
+        $this->assertSame( '22px', $font['size'] );
+    }
+
+    public function test_fancy_text_keeps_the_typography_the_widget_set(): void {
+        add_filter( 'edc_kit_globals', static fn() => [ 'typography' => [ 'primary' => [ 'family' => 'Fraunces', 'weight' => '600' ] ] ] );
+
+        [ $block ] = $this->convert( 'eael-fancy-text', [
+            'eael_fancy_text_prefix' => 'Work',
+            'typography_typography'  => 'custom',
+            'typography_font_family' => 'Inter',
+            'typography_font_size'   => [ 'unit' => 'px', 'size' => 40, 'sizes' => [] ],
+            'typography_font_weight' => '700',
+        ] );
+
+        $font = $block['settings']['title']['decoration']['font']['font']['desktop']['value'];
+        $this->assertSame( 'Inter', $font['family'] );
+        $this->assertSame( '700', $font['weight'] );
+        $this->assertSame( '40px', $font['size'] );
+    }
+
     public function test_info_box_reads_its_description_text(): void {
         [ $block ] = $this->convert( 'eael-info-box', [
             'eael_infobox_title' => 'Fast Wi-Fi',

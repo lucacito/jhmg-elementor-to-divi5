@@ -3,6 +3,7 @@
 namespace ElementorDivi5Converter\Converter\Handlers;
 
 use ElementorDivi5Converter\Converter\BaseElementorConverter;
+use ElementorDivi5Converter\StyleMapper\GlobalsResolver;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -84,9 +85,64 @@ class SocialIconsConverter extends BaseElementorConverter {
         'whatsapp', 'xing', 'yelp', 'youtube',
     ];
 
+    /**
+     * Each network's colour, from SocialMediaFollowItemModule::get_social_networks().
+     * divi/social-media-follow-network renders no background unless the block sets
+     * one (social-media-follow-item/module-default-render-attributes.json has none;
+     * the Visual Builder writes this colour when an item is added), and the parent
+     * module's icons default to light (text.color 'light'): a converted list with no
+     * colours is white icons on nothing, invisible on a light section.
+     */
+    private const NETWORK_BACKGROUND = [
+        'amazon'     => '#ff9900',
+        'behance'    => '#0057ff',
+        'discord'    => '#5865f2',
+        'dribbble'   => '#ea4c8d',
+        'facebook'   => '#3b5998',
+        'flikr'      => '#ff0084',
+        'flipboard'  => '#e12828',
+        'github'     => '#333333',
+        'google'     => '#4285f4',
+        'instagram'  => '#ea2c59',
+        'linkedin'   => '#007bb6',
+        'medium'     => '#00ab6c',
+        'meetup'     => '#e0393e',
+        'mixcloud'   => '#314359',
+        'pinterest'  => '#cb2027',
+        'quora'      => '#a82400',
+        'reddit'     => '#ff4500',
+        'rss'        => '#ff8a3c',
+        'skype'      => '#12A5F4',
+        'slack'      => '#4a154b',
+        'snapchat'   => '#fffc00',
+        'soundcloud' => '#ff8800',
+        'spotify'    => '#1db954',
+        'telegram'   => '#179cde',
+        'tiktok'     => '#fe2c55',
+        'tumblr'     => '#32506d',
+        'twitch'     => '#6441a5',
+        'twitter'    => '#000000',
+        'vimeo'      => '#45bbff',
+        'vk'         => '#45668e',
+        'whatsapp'   => '#25D366',
+        'xing'       => '#026466',
+        'yelp'       => '#af0606',
+        'youtube'    => '#a82400',
+    ];
+
     public function convert( array $element ): array {
         $id       = $element['id'] ?? uniqid( 'divi_social_' );
         $settings = $element['settings'] ?? [];
+
+        // Elementor's Social Icons default to each network's official colour behind a
+        // white glyph (social-icons.php:356-395: icon_color 'default'); 'custom' uses the
+        // widget's primary colour behind the icon and secondary colour for the glyph.
+        $globals      = is_array( $settings['__globals__'] ?? null ) ? $settings['__globals__'] : [];
+        $custom       = ( $settings['icon_color'] ?? 'default' ) === 'custom';
+        $custom_bg    = $custom ? $this->resolveColor( $settings, $globals, 'icon_primary_color' ) : '';
+        $custom_glyph = $custom ? $this->resolveColor( $settings, $globals, 'icon_secondary_color' ) : '';
+        // Divi paints the glyph in the section's link colour unless the item says otherwise.
+        $glyph        = $custom_glyph !== '' ? $custom_glyph : '#ffffff';
 
         $raw_items = $settings['social_icon_list'] ?? [];
         $children  = [];
@@ -113,29 +169,36 @@ class SocialIconsConverter extends BaseElementorConverter {
 
             $label = ucfirst( $network );
 
-            $children[] = [
-                'id'       => $id . '-network-' . ( $idx + 1 ),
-                'name'     => 'divi/social-media-follow-network',
-                'settings' => [
-                    'socialNetwork' => [
-                        'innerContent' => [
-                            'desktop' => [
-                                'value' => [
-                                    'title' => $network,
-                                    'link'  => $url,
-                                    'label' => $label,
-                                ],
+            $child_settings = [
+                'socialNetwork' => [
+                    'innerContent' => [
+                        'desktop' => [
+                            'value' => [
+                                'title' => $network,
+                                'link'  => $url,
+                                'label' => $label,
                             ],
                         ],
                     ],
                 ],
+            ];
+            $background = $custom_bg !== '' ? $custom_bg : ( self::NETWORK_BACKGROUND[ $network ] ?? '' );
+            if ( $background !== '' ) {
+                $child_settings['module']['decoration']['background']['desktop']['value']['color'] = $background;
+            }
+            $child_settings['icon']['advanced']['color']['desktop']['value'] = $glyph;
+
+            $children[] = [
+                'id'       => $id . '-network-' . ( $idx + 1 ),
+                'name'     => 'divi/social-media-follow-network',
+                'settings' => $child_settings,
                 'elements' => [],
             ];
         }
 
         $this->engine->logConverted( 'social-media-follow' );
         $this->logUnmappedSettings( $id, $settings, [
-            'social_icon_list',
+            'social_icon_list', 'icon_color', 'icon_primary_color', 'icon_secondary_color',
             'view', 'shape', 'columns', 'icon_size', 'icon_padding', 'icon_spacing',
         ] );
 
@@ -177,5 +240,17 @@ class SocialIconsConverter extends BaseElementorConverter {
         $network = self::NETWORK_MAP[ $slug ] ?? $slug;
 
         return in_array( $network, self::DIVI_NETWORKS, true ) ? $network : null;
+    }
+
+    /** A colour control's value: the literal, or the kit colour its `__globals__` entry names. */
+    private function resolveColor( array $settings, array $globals, string $key ): string {
+        $direct = $settings[ $key ] ?? '';
+        if ( is_string( $direct ) && $direct !== '' ) {
+            return $direct;
+        }
+        $ref = $globals[ $key ] ?? '';
+        $id  = is_string( $ref ) && $ref !== '' ? GlobalsResolver::colorIdFromRef( $ref ) : null;
+
+        return $id === null ? '' : ( GlobalsResolver::resolveColor( $id ) ?? '' );
     }
 }

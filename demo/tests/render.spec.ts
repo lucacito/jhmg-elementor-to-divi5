@@ -58,10 +58,18 @@ test.describe('probe: core widgets', () => {
     expect(await css(column, 'background-size')).toBe('cover');
   });
 
+  test('full-width section: the row spans the viewport', async ({ page }) => {
+    // Elementor's "Full Width" layout; Divi's row would be 1080px at most.
+    const row = page.locator('.et_pb_column_0').locator('xpath=ancestor::*[contains(@class, "et_pb_row")][1]');
+    expect((await row.boundingBox())?.width ?? 0).toBeGreaterThan(1400);
+  });
+
   test('heading (header_size span): keeps its 12vw typography and colour', async ({ page }) => {
     const word = page.locator('.et_pb_text span', { hasText: 'eramic' }).first();
     await expect(word).toBeVisible();
-    expect(parseFloat(await css(word, 'font-size'))).toBeGreaterThan(100); // 12vw at 1440px = 172.8px
+    const size = parseFloat(await css(word, 'font-size'));
+    expect(size).toBeGreaterThan(100); // 12vw at 1440px = 172.8px
+    expect((await word.boundingBox())?.height ?? 1e9).toBeLessThan(size * 1.5); // one line: the word must not break
     expect(await css(word, 'color')).toBe('rgb(200, 100, 59)');
     await expect(page.locator('.et_pb_heading', { hasText: 'eramic' })).toHaveCount(0);
   });
@@ -90,6 +98,19 @@ test.describe('probe: core widgets', () => {
     }
     // Divi always prints the pagination container; only its page links would mean a second page.
     await expect(page.locator('.et_pb_gallery').first().locator('.et_pb_gallery_pagination a')).toHaveCount(0);
+  });
+
+  test('image carousel (4 slides): the images share one row, the first at the left edge', async ({ page }) => {
+    // Essential Addons' unscoped .clearfix::before used to take the first grid cell.
+    const gallery = page.locator('.et_pb_gallery').first();
+    const grid = await gallery.locator('.et_pb_gallery_items').boundingBox();
+    const items = await gallery.locator('.et_pb_gallery_item').all();
+    expect(items).toHaveLength(4);
+    const boxes = await Promise.all(items.map((item) => item.boundingBox()));
+    expect(Math.abs((boxes[0]?.x ?? -1) - (grid?.x ?? 1))).toBeLessThan(2);
+    for (const box of boxes) {
+      expect(Math.abs((box?.y ?? -1) - (boxes[0]?.y ?? 1))).toBeLessThan(2);
+    }
   });
 
   test('image gallery: three items', async ({ page }) => {
@@ -143,6 +164,12 @@ test.describe('spaces', () => {
     await expect(page.locator('.et_pb_gallery_pagination a')).toHaveCount(0);
   });
 
+  test("image box: the title in the kit's heading font (Elementor's Primary default)", async ({ page }) => {
+    const title = page.locator('.et_pb_blurb', { hasText: 'Every desk, a window seat' }).locator('.et_pb_module_header').first();
+    await expect(title).toBeVisible();
+    expect(await css(title, 'font-family')).toContain('Fraunces');
+  });
+
   test('flip boxes (EAEL): titles and text render as blurbs', async ({ page }) => {
     const blurbs = page.locator('.et_pb_blurb');
     expect(await blurbs.count()).toBeGreaterThanOrEqual(3);
@@ -170,6 +197,18 @@ test.describe('Theme Builder header and footer (HFE templates)', () => {
     expect(await css(menu, 'background-color')).toMatch(/rgba\(\d+, \d+, \d+, 0\)/); // fully transparent
   });
 
+  test('footer (HFE, 60% + 35% columns): the menu and the social icons share a line', async ({ page }) => {
+    const column = (selector: string) =>
+      page.locator(selector).first().evaluate((el) => {
+        const box = (el.closest('.et_pb_column') as HTMLElement).getBoundingClientRect();
+        return { x: box.x, width: box.width, y: box.y, height: box.height };
+      });
+    const menu = await column('.et-l--footer .et_pb_menu, footer .et_pb_menu');
+    const social = await column('.et-l--footer .et_pb_social_media_follow, footer .et_pb_social_media_follow');
+    expect(social.x).toBeGreaterThanOrEqual(menu.x + menu.width);
+    expect(social.y).toBeLessThan(menu.y + menu.height);
+  });
+
   test('footer social-icons (HFE footer): Instagram and LinkedIn', async ({ page }) => {
     const items = page.locator('.et-l--footer .et_pb_social_media_follow li, footer .et_pb_social_media_follow li');
     await expect(items).toHaveCount(2);
@@ -182,6 +221,42 @@ test.describe('home', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(draft('home'));
     await settle(page);
+  });
+
+  test('hero (container row, 55% + 40%): the text and image columns share a line', async ({ page }) => {
+    // Divi sizes flex-row columns from module.decoration.sizing.flexType; without it they stack.
+    const row = page.locator('#et-main-area .et_pb_row').first();
+    const columns = row.locator(':scope > .et_pb_column');
+    await expect(columns).toHaveCount(2);
+    const [rowBox, text, image] = await Promise.all([row.boundingBox(), columns.nth(0).boundingBox(), columns.nth(1).boundingBox()]);
+    expect(image?.x ?? 0).toBeGreaterThanOrEqual((text?.x ?? 0) + (text?.width ?? 1e9));
+    expect(text?.width ?? 1e9).toBeLessThan((rowBox?.width ?? 0) * 0.65);
+    expect(image?.width ?? 1e9).toBeLessThan((rowBox?.width ?? 0) * 0.45);
+  });
+
+  test("fancy text (EAEL): the kit's heading font at EAEL's default size and weight", async ({ page }) => {
+    const heading = page.locator('#et-main-area .et_pb_heading').first().locator('h1, h2, h3, h4, h5, h6');
+    await expect(heading).toContainText('A calmer place to do your best work');
+    expect(await css(heading, 'font-family')).toContain('Fraunces');
+    expect(await css(heading, 'font-weight')).toBe('600');
+    expect(await css(heading, 'font-size')).toBe('22px');
+  });
+
+  test("counter: the number in the kit's heading font (Elementor's Primary default)", async ({ page }) => {
+    const number = page.locator('.et_pb_number_counter .percent-value').first();
+    await expect(number).toBeVisible();
+    expect(await css(number, 'font-family')).toContain('Fraunces');
+  });
+
+  test('dual button (ElementsKit): its default colours, side by side', async ({ page }) => {
+    const one = page.locator('#et-main-area a.et_pb_button', { hasText: 'See memberships' }).first();
+    const two = page.locator('#et-main-area a.et_pb_button', { hasText: 'Book a tour' }).first();
+    expect(await css(one, 'background-color')).toBe('rgb(37, 117, 252)');
+    expect(await css(two, 'background-color')).toBe('rgb(59, 59, 59)');
+    expect(await css(one, 'color')).toBe('rgb(255, 255, 255)');
+    const [a, b] = await Promise.all([one.boundingBox(), two.boundingBox()]);
+    expect(Math.abs((a?.y ?? -1) - (b?.y ?? 1))).toBeLessThan(2);
+    expect(b?.x ?? 0).toBeGreaterThan((a?.x ?? 0) + (a?.width ?? 1e9) - 1);
   });
 
   test('info boxes (EAEL): title, body and icon render', async ({ page }) => {
@@ -246,5 +321,22 @@ test.describe('events', () => {
     const end = Number(await timer.getAttribute('data-end-timestamp')); // CountdownTimerModule.php:467
     expect(end).toBeGreaterThan(Date.now() / 1000);
     await expect(timer.locator('.days .value')).not.toHaveText('000');
+  });
+});
+
+test.describe('contact', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(draft('contact'));
+    await settle(page);
+  });
+
+  test("social-icons: each network's colour behind a white icon, so they show on a light section", async ({ page }) => {
+    // The page body's layout only: the Theme Builder footer has its own list.
+    const icons = page.locator('.et-l--post .et_pb_social_media_follow li a.icon');
+    await expect(icons).toHaveCount(3);
+    expect(await css(icons.nth(0), 'background-color')).toBe('rgb(234, 44, 89)'); // Instagram
+    expect(await css(icons.nth(1), 'background-color')).toBe('rgb(0, 123, 182)'); // LinkedIn
+    // Divi draws the glyph with a.icon::before and colours only that pseudo-element.
+    expect(await icons.nth(0).evaluate((el) => getComputedStyle(el, '::before').color)).toBe('rgb(255, 255, 255)');
   });
 });

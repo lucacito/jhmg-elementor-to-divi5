@@ -38,7 +38,7 @@ class StyleMapper {
         65  => '2_3',
         63  => '2_3',
         60  => '3_5',
-        55  => '1_2',   // between 1/2 and 3/5; round to 1/2
+        55  => '3_5',   // as close to 3/5 as to 1/2; 3/5 pairs with the 2/5 that 40–45 become, a structure Divi has
         52  => '1_2',
         50  => '1_2',
         48  => '1_2',
@@ -51,6 +51,27 @@ class StyleMapper {
         30  => '1_3',
         25  => '1_4',
         20  => '1_5',
+    ];
+
+    /**
+     * The kit typography preset a widget's main typography control falls back to when
+     * the author left it alone, from Elementor's own controls (`'global' => [ 'default'
+     * => Global_Typography::TYPOGRAPHY_* ]`): heading.php, text-editor.php, counter.php
+     * (typography_number), icon-box.php and image-box.php (title_typography). Elementor
+     * stores no control defaults, so such a widget renders in the preset in Elementor
+     * and would render in Divi's default font here. Applied under `elementor_defaults`.
+     */
+    private const WIDGET_DEFAULT_GLOBAL_TYPOGRAPHY = [
+        'heading'     => 'primary',
+        'text-editor' => 'text',
+        'counter'     => 'primary',
+        'blurb'       => 'primary',
+    ];
+
+    /** The same for the secondary control: counter.php typography_title, icon-box.php description_typography. */
+    private const WIDGET_DEFAULT_SECONDARY_GLOBAL_TYPOGRAPHY = [
+        'counter' => 'secondary',
+        'blurb'   => 'text',
     ];
 
     /**
@@ -172,6 +193,10 @@ class StyleMapper {
     public function map( string $widget_type, array $settings, array $options = [] ): array {
         $divi_attrs   = [];
         $handled_keys = [];
+
+        if ( ! empty( $options['elementor_defaults'] ) ) {
+            $settings = $this->withElementorTypographyDefaults( $widget_type, $settings );
+        }
 
         $this->suppressUnimplementable( $settings, $handled_keys );
         $this->mapSpacing( $widget_type, $settings, $divi_attrs, $handled_keys );
@@ -389,20 +414,50 @@ class StyleMapper {
 
         $font_path = self::WIDGET_FONT_PATH[ $widget_type ] ?? null;
         $this->applyFontGroup( $pfx, $font_path, $settings, $attrs, $handled );
+        $this->applyGlobalTypographyRef( $pfx, $font_path, $settings, $attrs );
+    }
 
-        // Global typography preset fallback.
-        if ( $font_path !== null ) {
-            $ref = $settings['__globals__'][ $pfx . 'typography' ] ?? '';
-            if ( is_string( $ref ) && $ref !== '' ) {
-                $id = GlobalsResolver::typographyIdFromRef( $ref );
-                if ( $id !== null ) {
-                    $preset = GlobalsResolver::resolveTypography( $id );
-                    if ( $preset !== null ) {
-                        $this->applyGlobalTypography( $font_path, $preset, $attrs );
-                    }
-                }
-            }
+    /**
+     * Global typography preset fallback: the kit preset a `__globals__` entry names for
+     * this control group fills whatever the group's own values left unset.
+     */
+    private function applyGlobalTypographyRef( string $pfx, ?string $font_path, array $settings, array &$attrs ): void {
+        if ( $font_path === null ) {
+            return;
         }
+        $ref = $settings['__globals__'][ $pfx . 'typography' ] ?? '';
+        if ( ! is_string( $ref ) || $ref === '' ) {
+            return;
+        }
+        $id     = GlobalsResolver::typographyIdFromRef( $ref );
+        $preset = $id !== null ? GlobalsResolver::resolveTypography( $id ) : null;
+        if ( $preset !== null ) {
+            $this->applyGlobalTypography( $font_path, $preset, $attrs );
+        }
+    }
+
+    /**
+     * Points a typography control the widget left alone at the kit preset Elementor
+     * would have rendered it with (WIDGET_DEFAULT_GLOBAL_TYPOGRAPHY), as if the widget
+     * carried that `__globals__` reference; mapTypography() then resolves it. A control
+     * the author set to custom, or to another preset, is left as it is.
+     */
+    private function withElementorTypographyDefaults( string $widget_type, array $settings ): array {
+        $defaults = [
+            self::WIDGET_TYPOGRAPHY_PREFIX[ $widget_type ] ?? 'typography_'   => self::WIDGET_DEFAULT_GLOBAL_TYPOGRAPHY[ $widget_type ] ?? null,
+            self::WIDGET_SECONDARY_TYPOGRAPHY_PREFIX[ $widget_type ] ?? '' => self::WIDGET_DEFAULT_SECONDARY_GLOBAL_TYPOGRAPHY[ $widget_type ] ?? null,
+        ];
+        foreach ( $defaults as $pfx => $preset ) {
+            if ( $pfx === '' || $preset === null ) {
+                continue;
+            }
+            $key = $pfx . 'typography';
+            if ( ! empty( $settings[ $key ] ) || ! empty( $settings['__globals__'][ $key ] ) ) {
+                continue;
+            }
+            $settings['__globals__'][ $key ] = 'globals/typography?id=' . $preset;
+        }
+        return $settings;
     }
 
     /**
@@ -428,6 +483,7 @@ class StyleMapper {
         }
 
         $this->applyFontGroup( $pfx, $font_path, $settings, $attrs, $handled );
+        $this->applyGlobalTypographyRef( $pfx, $font_path, $settings, $attrs );
     }
 
     /**

@@ -71,7 +71,7 @@ class ImageCarouselConverter extends BaseElementorConverter {
                 }
             }
         } else {
-            $block_settings['galleryGrid'] = [ 'decoration' => [ 'layout' => [ 'desktop' => [ 'value' => [ 'display' => 'grid', 'gridColumnCount' => (string) $slides_to_show ] ] ] ] ];
+            $block_settings = array_merge( $block_settings, $this->galleryGridSettings( (string) $slides_to_show ) );
         }
 
         $this->engine->logConverted( 'gallery' );
