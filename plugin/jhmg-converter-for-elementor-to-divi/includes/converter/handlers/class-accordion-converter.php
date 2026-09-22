@@ -64,6 +64,11 @@ class AccordionConverter extends BaseElementorConverter {
             'ekit_accordion_title_padding',
             'selected_icon', 'selected_active_icon',
             'title_html_tag', 'faq_schema',
+            // wcf--a-accordion's own style-variant and colour controls (advance-accordion.php).
+            'accordion_style', 'border_color', 'border_radius', 'border_width',
+            'content_background_color', 'content_color', 'count_color',
+            'first_item_open', 'icon_active_color', 'icon_align', 'icon_color',
+            'tab_active_color', 'title_background', 'title_color',
         ] );
 
         return [

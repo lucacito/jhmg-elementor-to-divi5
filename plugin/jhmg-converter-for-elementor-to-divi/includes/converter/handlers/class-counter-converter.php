@@ -61,6 +61,9 @@ class CounterConverter extends BaseElementorConverter {
             'starting_number', 'ending_number', 'start_number', 'end_number', 'number',
             'prefix', 'suffix', 'title',
             'duration', 'separator', 'separator_char',
+            // wcf--counter's own thousand-separator and colour controls (counter.php).
+            'thousand_separator', 'thousand_separator_char',
+            'number_color', 'suffix_prefix_color', 'separator_color', 'title_color',
         ], $style['handled_keys'] ) );
 
         return [

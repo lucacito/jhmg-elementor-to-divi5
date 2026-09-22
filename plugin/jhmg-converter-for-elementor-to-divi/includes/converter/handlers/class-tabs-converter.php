@@ -39,7 +39,13 @@ class TabsConverter extends BaseElementorConverter {
         }
 
         $this->engine->logConverted( 'tabs' );
-        $this->logUnmappedSettings( $id, $settings, [ 'tabs', 'type', 'tab_width' ] );
+        $this->logUnmappedSettings( $id, $settings, [
+            'tabs', 'type', 'tab_width',
+            // wcf--tabs' own layout and colour controls (tabs.php).
+            'tabs_direction', 'tabs_align', 'tabs_content_type', 'navigation_width',
+            'breakpoint_selector', 'title_text_color', 'title_text_hover_color',
+            'title_hover_border_color', 'view',
+        ] );
 
         return [
             'id'       => $id,

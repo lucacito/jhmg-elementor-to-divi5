@@ -144,7 +144,9 @@ class SocialIconsConverter extends BaseElementorConverter {
         // Divi paints the glyph in the section's link colour unless the item says otherwise.
         $glyph        = $custom_glyph !== '' ? $custom_glyph : '#ffffff';
 
-        $raw_items = $settings['social_icon_list'] ?? [];
+        // Animation Addons' wcf--social-icons (social-icons.php) repeats the same
+        // {social_icon: {value, library}, link} item shape under its own key.
+        $raw_items = $settings['social_icon_list'] ?? $settings['wcf_social_icons'] ?? [];
         $children  = [];
 
         foreach ( $raw_items as $idx => $item ) {
@@ -200,6 +202,10 @@ class SocialIconsConverter extends BaseElementorConverter {
         $this->logUnmappedSettings( $id, $settings, [
             'social_icon_list', 'icon_color', 'icon_primary_color', 'icon_secondary_color',
             'view', 'shape', 'columns', 'icon_size', 'icon_padding', 'icon_spacing',
+            // wcf--social-icons' own repeater key and per-item hover styling.
+            'wcf_social_icons', 'hover_animation', 'icon_bg_color',
+            'item_icon_bg_color', 'item_icon_color',
+            'hover_icon_bg_color', 'hover_icon_border_color', 'hover_icon_color',
         ] );
 
         return [

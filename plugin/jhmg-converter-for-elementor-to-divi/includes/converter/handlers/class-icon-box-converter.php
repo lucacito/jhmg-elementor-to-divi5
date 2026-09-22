@@ -77,6 +77,15 @@ class IconBoxConverter extends BaseElementorConverter {
                 // Elementor group-control type selectors — not CSS properties.
                 'title_typography_typography', 'description_typography_typography',
                 'pa_condition_repeater', 'icon_space', 'title_bottom_space',
+                // wcf--icon-box's own style-variant and hover-state controls (icon-box.php).
+                'element_list', 'link_type', 'title_color', 'title_hover_color',
+                'icon_bg_color', 'icon_hover_bg_color', 'icon_hover_color',
+                'arrow_hover_color', 'desc_hover_color', 'enable_icon_hover_effect',
+                'box_animated_bg', 'box_bg_transition',
+                'icon_box_button_hover_color', 'icon_box_button_hover_border_color',
+                'heading_title', 'heading_description', 'heading_Box',
+                'heading_hover_icon', 'heading_hover_title', 'heading_hover_desc',
+                'heading_hover_button', 'heading_hover_arrow',
             ],
             $style_result['handled_keys']
         ) );

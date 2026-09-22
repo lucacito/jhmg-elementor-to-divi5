@@ -198,12 +198,25 @@ class ConverterRegistry {
         $this->registerWidget( 'alert', '\\ElementorDivi5Converter\\Converter\\Handlers\\AlertConverter' );
         $this->registerWidget( 'premium-addon-blog', '\\ElementorDivi5Converter\\Converter\\Handlers\\PremiumBlogConverter' );
 
-        // ── Animation Add-ons / "wcf" widget suite (bundled with themes such as
-        // Brandberry) — Tier 1: dedicated converter. Its per-element aae_/wcf_/
+        // ── Animation Add-ons for Elementor (wordpress.org: animation-addons-for-elementor,
+        // internal widget-slug prefix "wcf--"/"aae--"). Its per-element aae_/wcf_/
         // brandberry_ scroll-animation and cursor/tooltip settings are cosmetic-only
         // and suppressed globally via $always_ignore_prefixes in
         // BaseElementorConverter::logUnmappedSettings(), regardless of widgetType.
+        //
+        // Batch 1 (verified against the free plugin's real widget source,
+        // references/animation-addons-for-elementor/widgets/): widgets whose control
+        // keys match, or were made to match with a small fallback, an already-supported
+        // widget — reused directly rather than duplicated into a new class.
         $this->registerWidget( 'wcf--image-box-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfImageBoxSliderConverter' );
+        $this->registerWidget( 'wcf--counter', '\\ElementorDivi5Converter\\Converter\\Handlers\\CounterConverter' );
+        $this->registerWidget( 'wcf--icon-box', '\\ElementorDivi5Converter\\Converter\\Handlers\\IconBoxConverter' );
+        $this->registerWidget( 'wcf--tabs', '\\ElementorDivi5Converter\\Converter\\Handlers\\TabsConverter' );
+        $this->registerWidget( 'wcf--a-accordion', '\\ElementorDivi5Converter\\Converter\\Handlers\\AccordionConverter' );
+        $this->registerWidget( 'wcf--countdown', '\\ElementorDivi5Converter\\Converter\\Handlers\\CountdownConverter' );
+        $this->registerWidget( 'wcf--progressbar', '\\ElementorDivi5Converter\\Converter\\Handlers\\ProgressBarConverter' );
+        $this->registerWidget( 'wcf--social-icons', '\\ElementorDivi5Converter\\Converter\\Handlers\\SocialIconsConverter' );
+        $this->registerWidget( 'wcf--image-gallery', '\\ElementorDivi5Converter\\Converter\\Handlers\\GalleryConverter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );

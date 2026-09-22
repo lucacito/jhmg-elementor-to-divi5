@@ -68,6 +68,11 @@ class ProgressBarConverter extends BaseElementorConverter {
             // inline percentage toggle, the free-text suffix shown inside the
             // bar, and the preset colour variant.
             'display_percentage', 'inner_text', 'progress_type', 'title_html_tag',
+            // wcf--progressbar's own style controls (progressbar.php) — line/circle/dot
+            // rendering, colours and sizing with no divi/counter equivalent.
+            'percentage', 'element_list', 'color', 'bg-color', 'border-width',
+            'stroke-width', 'trail-width', 'progress-size', 'percentage_color',
+            'percentage_typography', 'percentage_position',
         ] );
 
         return [
@@ -95,6 +100,13 @@ class ProgressBarConverter extends BaseElementorConverter {
 
         $title   = $this->getSettingValue( $settings, 'title', '' );
         $percent = $settings['percent'] ?? null;
+
+        // Animation Addons' wcf--progressbar (progressbar.php) has no title field at
+        // all and stores its value as a SLIDER control ('percentage' => ['size' => n])
+        // rather than the native widget's plain 'percent'.
+        if ( $percent === null && isset( $settings['percentage'] ) ) {
+            $percent = $settings['percentage'];
+        }
 
         if ( $percent === null && ( ! is_string( $title ) || $title === '' ) ) {
             return [];
