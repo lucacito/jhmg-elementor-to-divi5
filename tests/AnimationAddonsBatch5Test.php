@@ -469,4 +469,90 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $this->assertSame( 42, $block['settings']['form']['advanced']['formId']['desktop']['value'] );
         $this->assertSame( [], $result['report']['skipped_settings'] );
     }
+
+    // -------------------------------------------------------------------------
+    // wcf--filterable-slider (filterable-slider.php) — a project carousel with
+    // JS category filtering. Its 'project_items' repeater (image/title/
+    // subtitle/description/link) is the same shape WcfImageBoxSliderConverter
+    // already builds per-slide, so it targets divi/group-carousel the same
+    // way. Each item's own 'project_item_filter_name' and the widget's
+    // separate 'filter_items' repeater only drive the JS filter buttons —
+    // logged as not carried over, since Divi's carousel has no filtering.
+    // -------------------------------------------------------------------------
+
+    public function test_filterable_slider_builds_group_carousel(): void {
+        [ $block, $result ] = $this->convert( 'wcf--filterable-slider', [
+            'title_tag' => 'h3',
+            'project_items' => [
+                [
+                    'project_item_filter_name' => 'Construction',
+                    'project_image' => [ 'url' => 'https://x.test/a.jpg', 'alt' => 'A' ],
+                    'title' => 'Alexa Complex', 'subtitle' => 'Construction',
+                    'description' => '<p>A big project.</p>', 'link' => [ 'url' => 'https://x.test/a' ],
+                ],
+            ],
+        ] );
+
+        $this->assertSame( 'divi/group-carousel', $block['name'] );
+        $item_group = $block['elements'][0];
+        $this->assertSame( 'divi/group', $item_group['name'] );
+        $names = array_map( static fn( $c ) => $c['name'], $item_group['elements'] );
+        $this->assertSame( [ 'divi/image', 'divi/heading', 'divi/text' ], $names );
+        $this->assertSame( 'Alexa Complex', $item_group['elements'][1]['settings']['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+        $this->assertNotEmpty( $result['report']['not_carried_over'] );
+    }
+
+    // -------------------------------------------------------------------------
+    // wcf--nested-slider (nested-slider.php) — different from every other
+    // carousel widget here: 'carousel_items' is a Control_Nested_Repeater
+    // (frontend_available), so each slide's body is a full container of real
+    // Elementor elements in the widget's own top-level 'elements' array,
+    // index-aligned with the repeater — not settings fields. Each slide's own
+    // 'slide_title' is confirmed from source (nested-slider.php's render/
+    // data-binding) to be purely an editor-panel label, never printed on the
+    // frontend, so it's dropped rather than fabricated as visible content.
+    // Real child elements are recursively converted (convertChildren()) and
+    // nested inside a divi/group per slide, inside divi/group-carousel.
+    // -------------------------------------------------------------------------
+
+    public function test_nested_slider_converts_real_nested_elements(): void {
+        $engine = new ConverterEngine();
+        $result = $engine->convert( [ [
+            'id'         => 'ns1',
+            'elType'     => 'widget',
+            'widgetType' => 'wcf--nested-slider',
+            'settings'   => [
+                'slides_to_show' => 1,
+                'carousel_items' => [
+                    [ 'slide_title' => 'Slide #1' ],
+                    [ 'slide_title' => 'Slide #2' ],
+                ],
+            ],
+            'elements'   => [
+                [
+                    'id' => 'body1', 'elType' => 'container', 'settings' => [], 'elements' => [
+                        [ 'id' => 'h1', 'elType' => 'widget', 'widgetType' => 'wcf--text', 'settings' => [ 'text' => '<p>First slide body.</p>' ], 'elements' => [] ],
+                    ],
+                ],
+                [
+                    'id' => 'body2', 'elType' => 'container', 'settings' => [], 'elements' => [
+                        [ 'id' => 'h2', 'elType' => 'widget', 'widgetType' => 'wcf--text', 'settings' => [ 'text' => '<p>Second slide body.</p>' ], 'elements' => [] ],
+                    ],
+                ],
+            ],
+        ] ] );
+
+        DiviModuleSchema::assertBlocksValid( $result['divi']['elements'], 'widget wcf--nested-slider' );
+        $block = $result['divi']['elements'][0];
+
+        $this->assertSame( 'divi/group-carousel', $block['name'] );
+        $this->assertCount( 2, $block['elements'] );
+        $slide1 = $block['elements'][0];
+        $this->assertSame( 'divi/group', $slide1['name'] );
+        $this->assertSame( 'divi/text', $slide1['elements'][0]['name'] );
+        $this->assertSame( '<p>First slide body.</p>', $slide1['elements'][0]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( '<p>Second slide body.</p>', $block['elements'][1]['elements'][0]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
 }

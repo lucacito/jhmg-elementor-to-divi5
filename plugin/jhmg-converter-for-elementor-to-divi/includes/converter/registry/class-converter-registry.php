@@ -260,6 +260,8 @@ class ConverterRegistry {
         $this->registerWidget( 'wfc--team-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WfcTeamSliderConverter' );
         $this->registerWidget( 'wcf--a-pricing-table', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfAdvancePricingTableConverter' );
         $this->registerWidget( 'wcf--contact-form-7', '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelContactForm7Converter' );
+        $this->registerWidget( 'wcf--filterable-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfFilterableSliderConverter' );
+        $this->registerWidget( 'wcf--nested-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfNestedSliderConverter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
