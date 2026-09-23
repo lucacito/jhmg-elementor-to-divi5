@@ -262,6 +262,9 @@ class ConverterRegistry {
         $this->registerWidget( 'wcf--contact-form-7', '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelContactForm7Converter' );
         $this->registerWidget( 'wcf--filterable-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfFilterableSliderConverter' );
         $this->registerWidget( 'wcf--nested-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfNestedSliderConverter' );
+        $this->registerWidget( 'wcf--image-compare', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfImageCompareConverter' );
+        // Real get_name() prefix: 'aae--image-hotspot', not 'wcf--image-hotspot' (image-hotspot.php).
+        $this->registerWidget( 'aae--image-hotspot', '\\ElementorDivi5Converter\\Converter\\Handlers\\AaeImageHotspotConverter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );

@@ -555,4 +555,72 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $this->assertSame( '<p>Second slide body.</p>', $block['elements'][1]['elements'][0]['settings']['content']['innerContent']['desktop']['value'] );
         $this->assertSame( [], $result['report']['skipped_settings'] );
     }
+
+    // -------------------------------------------------------------------------
+    // wcf--image-compare (image-compare.php) — a JS drag-to-reveal before/after
+    // image slider. Divi has no interactive compare-slider module, so the
+    // drag behaviour itself is logged as not carried over; the two images
+    // (and captions, if shown) still carry over as a divi/group of two
+    // divi/image (+ divi/text caption) pairs, rather than an empty
+    // placeholder that would drop both images from the page entirely.
+    // -------------------------------------------------------------------------
+
+    public function test_image_compare_builds_group_with_both_images(): void {
+        [ $block, $result ] = $this->convert( 'wcf--image-compare', [
+            'before_image' => [ 'url' => 'https://x.test/before.jpg', 'alt' => 'Before' ],
+            'after_image'  => [ 'url' => 'https://x.test/after.jpg', 'alt' => 'After' ],
+            'show_caption' => 'yes',
+            'before_caption' => 'Old kitchen', 'after_caption' => 'New kitchen',
+        ] );
+
+        $this->assertSame( 'divi/group', $block['name'] );
+        $names = array_map( static fn( $c ) => $c['name'], $block['elements'] );
+        $this->assertSame( [ 'divi/image', 'divi/text', 'divi/image', 'divi/text' ], $names );
+        $this->assertSame( 'https://x.test/before.jpg', $block['elements'][0]['settings']['image']['innerContent']['desktop']['value']['src'] );
+        $this->assertSame( 'Old kitchen', $block['elements'][1]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'https://x.test/after.jpg', $block['elements'][2]['settings']['image']['innerContent']['desktop']['value']['src'] );
+        $this->assertSame( 'New kitchen', $block['elements'][3]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+        $this->assertNotEmpty( $result['report']['not_carried_over'] );
+    }
+
+    public function test_image_compare_no_captions_when_hidden(): void {
+        [ $block ] = $this->convert( 'wcf--image-compare', [
+            'before_image' => [ 'url' => 'https://x.test/before.jpg' ],
+            'after_image'  => [ 'url' => 'https://x.test/after.jpg' ],
+        ] );
+
+        $names = array_map( static fn( $c ) => $c['name'], $block['elements'] );
+        $this->assertSame( [ 'divi/image', 'divi/image' ], $names );
+    }
+
+    // -------------------------------------------------------------------------
+    // aae--image-hotspot (image-hotspot.php; get_name() returns
+    // 'aae--image-hotspot', not 'wcf--image-hotspot') — a base image with
+    // absolutely-positioned hover-tooltip pins ('hsp_list' repeater). Divi has
+    // no absolute-hotspot-with-tooltip module, so the pin positions/tooltip
+    // interactivity are logged as not carried over; the base image and each
+    // hotspot's own visible text (its 'hsp_text' label, and 'tlp_content' for
+    // tooltip-type hotspots) still carry over as a divi/group of the image
+    // plus one divi/text per hotspot with something to show.
+    // -------------------------------------------------------------------------
+
+    public function test_image_hotspot_builds_group_with_image_and_hotspot_text(): void {
+        [ $block, $result ] = $this->convert( 'aae--image-hotspot', [
+            'hsp_image' => [ 'url' => 'https://x.test/floorplan.jpg', 'alt' => 'Floor plan' ],
+            'hsp_list'  => [
+                [ 'hsp_layout' => 'text', 'hsp_text' => 'Kitchen', 'tooltip_type' => 'tooltip', 'tlp_content' => '<p>Modern kitchen.</p>' ],
+                [ 'hsp_layout' => 'dot', 'tooltip_type' => 'link', 'tlp_link' => [ 'url' => 'https://x.test/bath' ] ],
+            ],
+        ] );
+
+        $this->assertSame( 'divi/group', $block['name'] );
+        $names = array_map( static fn( $c ) => $c['name'], $block['elements'] );
+        $this->assertSame( [ 'divi/image', 'divi/text' ], $names );
+        $this->assertSame( 'https://x.test/floorplan.jpg', $block['elements'][0]['settings']['image']['innerContent']['desktop']['value']['src'] );
+        $this->assertStringContainsString( 'Kitchen', $block['elements'][1]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertStringContainsString( 'Modern kitchen.', $block['elements'][1]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+        $this->assertNotEmpty( $result['report']['not_carried_over'] );
+    }
 }
