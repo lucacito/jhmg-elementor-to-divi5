@@ -53,7 +53,11 @@ class ButtonConverter extends BaseElementorConverter {
 
         $this->engine->logConverted( 'button' );
         $this->logUnmappedSettings( $id, $settings, array_merge(
-            [ 'text', 'link', 'btn_text', 'btn_link', 'current_link', 'btn_element_list' ],
+            [
+                'text', 'link', 'btn_text', 'btn_link', 'current_link', 'btn_element_list',
+                // aae--advanced-button's own hover-animation style controls (button-pro.php).
+                'btn_style', 'btn_icon', 'btn_icon_position',
+            ],
             $style['handled_keys']
         ) );
 

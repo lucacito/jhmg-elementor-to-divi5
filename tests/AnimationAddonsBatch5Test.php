@@ -646,4 +646,50 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $this->assertNotEmpty( $result['report']['warnings'] );
         $this->assertSame( 1, $result['report']['converted']['code'] ?? 0 );
     }
+
+    // -------------------------------------------------------------------------
+    // aae--advanced-button (button-pro.php; get_name() returns
+    // 'aae--advanced-button', not the guessable 'wcf--button-pro') — its
+    // 'btn_text'/'btn_link' are the exact same fallback keys ButtonConverter
+    // already reads for the standalone wcf--button widget. A real, full reuse
+    // (not a "no clean equivalent" widget, despite the fancy hover-animation
+    // styles it also carries).
+    // -------------------------------------------------------------------------
+
+    public function test_advanced_button_reuses_button_converter(): void {
+        [ $block, $result ] = $this->convert( 'aae--advanced-button', [
+            'btn_text' => 'Get Started', 'btn_link' => [ 'url' => 'https://x.test/start' ],
+            'btn_style' => '3', 'btn_icon' => [ 'value' => 'fas fa-arrow-right' ], 'btn_icon_position' => 'row',
+        ] );
+
+        $this->assertSame( 'divi/button', $block['name'] );
+        $this->assertSame( 'Get Started', $block['settings']['button']['innerContent']['desktop']['value']['text'] );
+        $this->assertSame( 'https://x.test/start', $block['settings']['button']['innerContent']['desktop']['value']['linkUrl'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
+
+    // -------------------------------------------------------------------------
+    // wcf--typewriter (typewriter.php) — a static prefix ('typewriter_normal_text')
+    // followed by a JS-cycling list of words ('typewriter_animated_text').
+    // Divi's heading module can't animate through a word list, so the cycling
+    // itself is logged as not carried over; the static prefix plus the first
+    // cycling word still convert to a real divi/heading, matching what's
+    // visible on page load rather than an empty placeholder.
+    // -------------------------------------------------------------------------
+
+    public function test_typewriter_builds_heading_from_prefix_and_first_word(): void {
+        [ $block, $result ] = $this->convert( 'wcf--typewriter', [
+            'typewriter_normal_text' => 'A Web',
+            'typewriter_animated_text' => [
+                [ 'list_text' => 'Designer' ], [ 'list_text' => 'Developer' ],
+            ],
+            'html_tag' => 'h1',
+        ] );
+
+        $this->assertSame( 'divi/heading', $block['name'] );
+        $this->assertSame( 'A Web Designer', $block['settings']['title']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'h1', $block['settings']['title']['decoration']['font']['font']['desktop']['value']['headingLevel'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+        $this->assertNotEmpty( $result['report']['not_carried_over'] );
+    }
 }

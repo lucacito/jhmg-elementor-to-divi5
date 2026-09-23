@@ -273,6 +273,10 @@ class ConverterRegistry {
         $this->registerWidget( 'wcf--mailchimp', static function ( $engine ) {
             return new \ElementorDivi5Converter\Converter\Handlers\GenericFallbackConverter( $engine, 'wcf--mailchimp', true );
         } );
+        // Real get_name(): 'aae--advanced-button', not the guessable 'wcf--button-pro'
+        // (button-pro.php) — reuses ButtonConverter's 'btn_text'/'btn_link' fallback.
+        $this->registerWidget( 'aae--advanced-button', '\\ElementorDivi5Converter\\Converter\\Handlers\\ButtonConverter' );
+        $this->registerWidget( 'wcf--typewriter', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfTypewriterConverter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
