@@ -692,4 +692,91 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $this->assertSame( [], $result['report']['skipped_settings'] );
         $this->assertNotEmpty( $result['report']['not_carried_over'] );
     }
+
+    // -------------------------------------------------------------------------
+    // wcf--floating-elements (floating-elements.php) — a repeater of images
+    // ('wcf_floating_elements') each absolutely positioned with a parallax/
+    // float animation. Divi has no free-floating absolute-position image
+    // module, so the positioning and animation are logged as not carried
+    // over; each image itself still converts as a divi/image in a divi/group,
+    // rather than vanishing along with the positioning.
+    // -------------------------------------------------------------------------
+
+    public function test_floating_elements_builds_group_of_images(): void {
+        [ $block, $result ] = $this->convert( 'wcf--floating-elements', [
+            'wcf_floating_elements' => [
+                [ 'floating_image' => [ 'url' => 'https://x.test/star.png', 'alt' => 'Star' ] ],
+                [ 'floating_image' => [ 'url' => 'https://x.test/cloud.png' ] ],
+            ],
+        ] );
+
+        $this->assertSame( 'divi/group', $block['name'] );
+        $names = array_map( static fn( $c ) => $c['name'], $block['elements'] );
+        $this->assertSame( [ 'divi/image', 'divi/image' ], $names );
+        $this->assertSame( 'https://x.test/star.png', $block['elements'][0]['settings']['image']['innerContent']['desktop']['value']['src'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+        $this->assertNotEmpty( $result['report']['not_carried_over'] );
+    }
+
+    // -------------------------------------------------------------------------
+    // aae--clickdrop (clickdrop.php) — a login/account-state dropdown menu
+    // (different content shown logged-in vs logged-out, via is_user_logged_in()
+    // at render time). That state switch has no static equivalent and is
+    // logged as not carried over; the menu's own repeater items
+    // (menu_title/menu_link/menu_icon) still convert to divi/icon-list-item
+    // children, the same shape wcf--one-page-nav already uses.
+    // -------------------------------------------------------------------------
+
+    public function test_clickdrop_builds_icon_list_from_menu_items(): void {
+        [ $block, $result ] = $this->convert( 'aae--clickdrop', [
+            'login_label' => 'Login', 'logged_label' => 'Your Account',
+            'menus_url' => [
+                [ 'menu_title' => 'Saved', 'menu_link' => [ 'url' => 'https://x.test/saved' ], 'menu_icon' => [ 'value' => 'fas fa-heart' ] ],
+            ],
+        ] );
+
+        $this->assertSame( 'divi/icon-list', $block['name'] );
+        $this->assertSame( 'divi/icon-list-item', $block['elements'][0]['name'] );
+        $this->assertSame( 'Saved', $block['elements'][0]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'https://x.test/saved', $block['elements'][0]['settings']['module']['advanced']['link']['desktop']['value']['url'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+        $this->assertNotEmpty( $result['report']['not_carried_over'] );
+    }
+
+    // -------------------------------------------------------------------------
+    // aae--notification (notification.php; get_name() returns
+    // 'aae--notification', not 'wcf--notification') — a dismissible top-bar
+    // notice: fully static text + button. The localStorage-based dismiss
+    // behaviour has no Divi equivalent (logged as not carried over); the
+    // notice text and button convert to a real divi/group.
+    // -------------------------------------------------------------------------
+
+    public function test_notification_builds_group_with_text_and_button(): void {
+        [ $block, $result ] = $this->convert( 'aae--notification', [
+            'notify_text' => 'All plans have 30% OFF this week.',
+            'btn_text' => 'Claim', 'btn_link' => [ 'url' => 'https://x.test/claim' ],
+        ] );
+
+        $this->assertSame( 'divi/group', $block['name'] );
+        $names = array_map( static fn( $c ) => $c['name'], $block['elements'] );
+        $this->assertSame( [ 'divi/text', 'divi/button' ], $names );
+        $this->assertSame( 'All plans have 30% OFF this week.', $block['elements'][0]['settings']['content']['innerContent']['desktop']['value'] );
+        $this->assertSame( 'Claim', $block['elements'][1]['settings']['button']['innerContent']['desktop']['value']['text'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+        $this->assertNotEmpty( $result['report']['not_carried_over'] );
+    }
+
+    // -------------------------------------------------------------------------
+    // aae--weather (weather.php; get_name() returns 'aae--weather', not
+    // 'wcf--weather') — pulls live weather data from a third-party API at
+    // render time based on a configured location; there is no static content
+    // in the widget's settings at all to carry over.
+    // -------------------------------------------------------------------------
+
+    public function test_weather_has_no_static_equivalent(): void {
+        [ $block, $result ] = $this->convert( 'aae--weather', [ 'location' => 'New York' ] );
+
+        $this->assertSame( 'divi/code', $block['name'] );
+        $this->assertSame( 1, $result['report']['converted']['code'] ?? 0 );
+    }
 }

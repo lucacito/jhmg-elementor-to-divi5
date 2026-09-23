@@ -277,6 +277,16 @@ class ConverterRegistry {
         // (button-pro.php) — reuses ButtonConverter's 'btn_text'/'btn_link' fallback.
         $this->registerWidget( 'aae--advanced-button', '\\ElementorDivi5Converter\\Converter\\Handlers\\ButtonConverter' );
         $this->registerWidget( 'wcf--typewriter', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfTypewriterConverter' );
+        $this->registerWidget( 'wcf--floating-elements', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfFloatingElementsConverter' );
+        // Real get_name(): 'aae--clickdrop', not 'wcf--clickdrop' (clickdrop.php).
+        $this->registerWidget( 'aae--clickdrop', '\\ElementorDivi5Converter\\Converter\\Handlers\\AaeClickdropConverter' );
+        // Real get_name(): 'aae--notification', not 'wcf--notification' (notification.php).
+        $this->registerWidget( 'aae--notification', '\\ElementorDivi5Converter\\Converter\\Handlers\\AaeNotificationConverter' );
+        // aae--weather (weather.php): live third-party weather API data, no static
+        // content in settings at all — explicit placeholder, not left to the default.
+        $this->registerWidget( 'aae--weather', static function ( $engine ) {
+            return new \ElementorDivi5Converter\Converter\Handlers\GenericFallbackConverter( $engine, 'aae--weather', true );
+        } );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
