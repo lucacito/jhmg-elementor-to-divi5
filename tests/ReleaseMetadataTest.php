@@ -10,9 +10,9 @@ class ReleaseMetadataTest extends TestCase {
         $main   = (string) file_get_contents( self::FREE . '/jhmg-converter-for-elementor-to-divi.php' );
         $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
 
-        $this->assertStringContainsString( 'Version:     3.0.2', $main );
-        $this->assertStringContainsString( "EDC_PLUGIN_VERSION', '3.0.2'", $main );
-        $this->assertStringContainsString( 'Stable tag: 3.0.2', $readme );
+        $this->assertStringContainsString( 'Version:     3.1.0', $main );
+        $this->assertStringContainsString( "EDC_PLUGIN_VERSION', '3.1.0'", $main );
+        $this->assertStringContainsString( 'Stable tag: 3.1.0', $readme );
     }
 
     public function test_readme_discloses_the_external_service(): void {
@@ -61,12 +61,18 @@ class ReleaseMetadataTest extends TestCase {
         );
     }
 
-    public function test_version_is_three_zero_one_everywhere(): void {
+    public function test_version_is_three_one_zero_everywhere(): void {
         $main   = (string) file_get_contents( self::FREE . '/jhmg-converter-for-elementor-to-divi.php' );
         $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
 
-        $this->assertMatchesRegularExpression( '/^\s*\*\s*Version:\s*3\.0\.2\s*$/m', $main );
-        $this->assertMatchesRegularExpression( '/^Stable tag:\s*3\.0\.2\s*$/m', $readme );
+        $this->assertMatchesRegularExpression( '/^\s*\*\s*Version:\s*3\.1\.0\s*$/m', $main );
+        $this->assertMatchesRegularExpression( '/^Stable tag:\s*3\.1\.0\s*$/m', $readme );
+    }
+
+    public function test_readme_documents_3_1_0_in_changelog_and_upgrade_notice(): void {
+        $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
+
+        $this->assertSame( 2, substr_count( $readme, '= 3.1.0 =' ), 'a changelog entry and an upgrade notice' );
     }
 
     public function test_readme_documents_3_0_2_in_changelog_and_upgrade_notice(): void {

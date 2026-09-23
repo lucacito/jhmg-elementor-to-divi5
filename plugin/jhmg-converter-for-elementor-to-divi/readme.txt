@@ -3,7 +3,7 @@ Contributors: lucaslopvet
 Tags: divi migration, elementor export, page builder converter, elementor to divi, divi 5
 Requires at least: 5.9
 Tested up to: 7.1
-Stable tag: 3.0.2
+Stable tag: 3.1.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -16,7 +16,7 @@ Convert Elementor pages and templates into native Divi 5 blocks. If Elementor is
 
 Click **Check this page** first: the report shows the structure the conversion will produce and names anything that cannot be carried over. Converting creates a new Divi draft, never touches the Elementor page, and can be undone from the import history.
 
-Supported: Elementor's core widgets and layouts, plus Essential Addons, Header Footer Elementor, ElementsKit and Premium Addons widgets. Converted pages render as designed in Divi 5.7.4: backgrounds, typography, buttons, galleries, counters and add-on modules included.
+Supported: Elementor's core widgets and layouts, plus Essential Addons, Header Footer Elementor, ElementsKit, Animation Addons for Elementor and Premium Addons widgets. Converted pages render as designed in Divi 5.7.4: backgrounds, typography, buttons, galleries, counters and add-on modules included.
 
 The free plugin converts unlimited single pages. The [Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5) converts whole sites from a Kit ZIP, turns headers and footers into Divi Theme Builder layouts, and applies your kit's global colours, fonts and button styles.
 
@@ -99,6 +99,15 @@ commonly missing Elementor widgets get built first.
 
 == Changelog ==
 
+= 3.1.0 =
+* New: support for Animation Addons for Elementor — 50 of its widgets now convert to native Divi 5 modules, including its slider/carousel widgets, image box, image accordion, author box, advanced pricing table, team slider, one-page navigation and the widgets that read the current post (title, content, comments, pagination, search)
+* New: widgets Animation Addons has no Divi equivalent for (live weather, Mailchimp signup, post ratings and reactions, and a few large query-driven post grids) are listed in the conversion report with a clear reason, instead of converting to something misleading
+* Fixed: converting a page with Elementor's native Price Table widget produced an empty box — it wrote to Divi fields the pricing table module doesn't have. Price, title, features and button now render
+* Fixed: the Search widget (both Elementor's own and Header Footer Elementor's) dropped its placeholder text for the same reason — a field name that doesn't exist in Divi's search module
+* Fixed: converted pages render as designed in more cases — columns keep Divi's flex widths and snap to a real Divi row structure, image galleries no longer show a stray clearfix line, Elementor's core widgets keep the kit typography they fall back to, and ElementsKit's dual button and EAEL's fancy text and social icons keep their original look and colours
+* New: an admin notice warns if you upload an Elementor JSON export into Divi's own importer by mistake, which Divi rejects with a confusing error
+* Dev: every new converter is checked against Divi 5.7.4's real module definitions in the test suite, and verified against the real Animation Addons plugin and a live Divi 5 site before merging
+
 = 3.0.2 =
 * Fixed: converted pages now render as designed in Divi 5.7.4. Column background images fill their column instead of a thin strip, oversized display headings (Elementor's span, p and div heading tags) keep their size, weight and colour, buttons keep Elementor's default look and your kit's button style instead of Divi's blue outline, counters show the right number with a percent sign only where you had one, image carousels and galleries show their own images instead of the whole media library, social icons keep their network, and Header Footer Elementor menus no longer sit on a white bar
 * Fixed: Essential Addons info boxes, flip boxes, pricing tables, team members, testimonials, countdowns, progress bars and feature lists rendered empty or partly empty in Divi. They now render with all their content, and FontAwesome icons are carried into Divi's icon font
@@ -178,6 +187,9 @@ commonly missing Elementor widgets get built first.
 * Detailed conversion logging
 
 == Upgrade Notice ==
+
+= 3.1.0 =
+Adds support for Animation Addons for Elementor (50 widgets). Also fixes the native Price Table and Search widgets, which converted with missing content in every prior version.
 
 = 3.0.2 =
 Converted pages now render as designed in Divi 5.7.4: column backgrounds, display headings, buttons, counters, galleries, social icons and the Essential Addons widgets that came through empty. Reconvert any page that looked wrong in Divi.
