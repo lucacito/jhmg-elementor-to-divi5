@@ -297,6 +297,32 @@ class ConverterRegistry {
         $this->registerWidget( 'wcf--blog--search--form', '\\ElementorDivi5Converter\\Converter\\Handlers\\SearchConverter' );
         $this->registerWidget( 'wcf--blog--post--paginate', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfBlogPostPaginateConverter' );
 
+        // wcf--timeline (timeline.php) — a fully static repeater, found while
+        // cross-checking every widget file's real get_name() against the
+        // registry; not in the original session plan's list at all.
+        $this->registerWidget( 'wcf--timeline', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfTimelineConverter' );
+
+        // Remaining Animation Addons widgets with no safe static or
+        // dynamic-context equivalent — explicit placeholder registrations (a
+        // deliberate choice, not a hole nobody looked at). See
+        // tests/AnimationAddonsBatch5Test.php's
+        // test_remaining_dynamic_and_bigger_lift_widgets_are_explicit_placeholders()
+        // for the reasoning behind each group; every real get_name() below is
+        // confirmed from source, not guessed.
+        foreach ( [
+            'wcf--blog--post--excerpt', 'wcf--blog--post--meta-info', 'wcf--theme-post-image',
+            'aae--post-rating', 'aae--post-rating-form', 'aaeaddon-post-reactions',
+            'wcf--blog--post--social-share', 'wcf--posts-timeline', 'aae--video-posts-tab',
+            'wcf--current-date', 'wcf--blog--archive--title',
+            'wcf--blog--search--result-message', 'wcf--blog--search--query',
+            'wcf--posts', 'aae--loop-grid', 'grid-hover-posts', 'category-showcase',
+            'wcf--banner-posts', 'wcf--feature-posts', 'aae--category-slider',
+        ] as $no_equivalent_widget ) {
+            $this->registerWidget( $no_equivalent_widget, static function ( $engine ) use ( $no_equivalent_widget ) {
+                return new \ElementorDivi5Converter\Converter\Handlers\GenericFallbackConverter( $engine, $no_equivalent_widget, true );
+            } );
+        }
+
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
         $this->registerWidget( 'e-paragraph', '\\ElementorDivi5Converter\\Converter\\Handlers\\TextEditorConverter' );

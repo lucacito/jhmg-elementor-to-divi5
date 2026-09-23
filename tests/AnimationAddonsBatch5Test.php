@@ -856,4 +856,89 @@ final class AnimationAddonsBatch5Test extends TestCase {
 
         $this->assertSame( 'off', $block['settings']['links']['advanced']['showPrev']['desktop']['value'] );
     }
+
+    // -------------------------------------------------------------------------
+    // Remaining widgets with no safe static or dynamic-context equivalent —
+    // each explicitly registered to GenericFallbackConverter (a deliberate
+    // placeholder decision, not a hole nobody looked at), real get_name()
+    // confirmed from source for each:
+    //
+    // - wcf--blog--post--excerpt, wcf--blog--post--meta-info,
+    //   wcf--theme-post-image: post-context fields with no single matching
+    //   Divi module (post-excerpt.php/post-meta-info.php/post-feature-image.php
+    //   → 'wcf--theme-post-image' — get_name() doesn't match the file name).
+    // - aae--post-rating, aae--post-rating-form, aaeaddon-post-reactions,
+    //   wcf--blog--post--social-share: interactive widgets needing their own
+    //   stored per-post meta (ratings/reactions/share counts) — no static or
+    //   dynamic-context conversion is meaningful without that data store.
+    // - wcf--posts-timeline, aae--video-posts-tab: bespoke query-driven
+    //   layouts with no Divi module shape.
+    // - wcf--current-date, wcf--blog--archive--title,
+    //   wcf--blog--search--result-message, wcf--blog--search--query: small
+    //   dynamic text fragments (today's date, the current archive/search
+    //   term) with no matching Divi dynamic-content tag.
+    // - wcf--posts, aae--loop-grid, grid-hover-posts, category-showcase,
+    //   wcf--banner-posts, wcf--feature-posts: each a large (1,000+ line)
+    //   WP_Query-driven grid/carousel widget. divi/blog is a plausible target
+    //   for some of these, but confirming each widget's real
+    //   category/post-type/order query-control names (not just guessing) is
+    //   its own multi-widget pass, flagged as a bigger lift in the original
+    //   session plan — left as placeholders here rather than shipping an
+    //   unverified query mapping that could silently show the wrong posts.
+    // - aae--category-slider: pulls live WordPress category terms via
+    //   get_categories() (found early this session, see class docblock notes
+    //   from that pass) — dynamic WP-data, not a settings-driven carousel.
+    // -------------------------------------------------------------------------
+
+    // -------------------------------------------------------------------------
+    // wcf--timeline (timeline.php) — found while cross-checking every widget
+    // file's real get_name() against the registry: not in the original
+    // session plan's 69-widget list at all. Fully static (a repeater of
+    // image/date/title/subtitle/description items, no live data), so it
+    // converts for real rather than joining the placeholder batch above —
+    // same free-form-container shape as wcf--image-accordion.
+    // -------------------------------------------------------------------------
+
+    public function test_timeline_builds_group_of_step_groups(): void {
+        [ $block, $result ] = $this->convert( 'wcf--timeline', [
+            'timelines' => [
+                [
+                    'timeline_image' => [ 'url' => 'https://x.test/ny.jpg', 'alt' => 'NY' ],
+                    'timeline_date' => 'Jan 01, 2021', 'timeline_title' => 'Journey Started at New York',
+                    'timeline_sub' => 'Designer', 'timeline_desc' => 'It all began here.',
+                ],
+            ],
+        ] );
+
+        $this->assertSame( 'divi/group', $block['name'] );
+        $step = $block['elements'][0];
+        $this->assertSame( 'divi/group', $step['name'] );
+        $names = array_map( static fn( $c ) => $c['name'], $step['elements'] );
+        $this->assertSame( [ 'divi/image', 'divi/heading', 'divi/text' ], $names );
+        $this->assertSame( 'Journey Started at New York', $step['elements'][1]['settings']['title']['innerContent']['desktop']['value'] );
+        $text_value = $step['elements'][2]['settings']['content']['innerContent']['desktop']['value'];
+        $this->assertStringContainsString( 'Jan 01, 2021', $text_value );
+        $this->assertStringContainsString( 'Designer', $text_value );
+        $this->assertStringContainsString( 'It all began here.', $text_value );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
+
+    public function test_remaining_dynamic_and_bigger_lift_widgets_are_explicit_placeholders(): void {
+        $widget_types = [
+            'wcf--blog--post--excerpt', 'wcf--blog--post--meta-info', 'wcf--theme-post-image',
+            'aae--post-rating', 'aae--post-rating-form', 'aaeaddon-post-reactions',
+            'wcf--blog--post--social-share', 'wcf--posts-timeline', 'aae--video-posts-tab',
+            'wcf--current-date', 'wcf--blog--archive--title',
+            'wcf--blog--search--result-message', 'wcf--blog--search--query',
+            'wcf--posts', 'aae--loop-grid', 'grid-hover-posts', 'category-showcase',
+            'wcf--banner-posts', 'wcf--feature-posts', 'aae--category-slider',
+        ];
+
+        foreach ( $widget_types as $widget_type ) {
+            [ $block, $result ] = $this->convert( $widget_type, [] );
+
+            $this->assertSame( 'divi/code', $block['name'], "{$widget_type} should be an explicit placeholder" );
+            $this->assertSame( 1, $result['report']['converted']['code'] ?? 0, "{$widget_type} should count as a deliberate placeholder, not an unregistered widget" );
+        }
+    }
 }
