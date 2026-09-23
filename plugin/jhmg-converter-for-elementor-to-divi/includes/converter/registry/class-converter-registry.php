@@ -259,6 +259,7 @@ class ConverterRegistry {
         // Real get_name() typo: 'wfc--team-slider', not 'wcf--team-slider' (team-slider.php).
         $this->registerWidget( 'wfc--team-slider', '\\ElementorDivi5Converter\\Converter\\Handlers\\WfcTeamSliderConverter' );
         $this->registerWidget( 'wcf--a-pricing-table', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfAdvancePricingTableConverter' );
+        $this->registerWidget( 'wcf--contact-form-7', '\\ElementorDivi5Converter\\Converter\\Handlers\\EaelContactForm7Converter' );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );

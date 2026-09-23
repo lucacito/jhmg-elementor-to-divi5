@@ -452,4 +452,21 @@ final class AnimationAddonsBatch5Test extends TestCase {
 
         $this->assertSame( 'CHF ', $block['elements'][0]['settings']['currencyFrequency']['innerContent']['desktop']['value']['currency'] );
     }
+
+    // -------------------------------------------------------------------------
+    // wcf--contact-form-7 (contact-form-7.php) — its only real content control
+    // is 'contact_form_id' (a wpcf7_contact_form post ID), the same thing
+    // EaelContactForm7Converter already reads as 'contact_form_list' (or the
+    // older 'eael_contact_form_id') to build divi/contact-form-7's
+    // form.advanced.formId. Reused directly with 'contact_form_id' added as a
+    // third fallback key.
+    // -------------------------------------------------------------------------
+
+    public function test_contact_form_7_reads_its_own_form_id_key(): void {
+        [ $block, $result ] = $this->convert( 'wcf--contact-form-7', [ 'contact_form_id' => '42' ] );
+
+        $this->assertSame( 'divi/contact-form-7', $block['name'] );
+        $this->assertSame( 42, $block['settings']['form']['advanced']['formId']['desktop']['value'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
 }

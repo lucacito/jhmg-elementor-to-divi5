@@ -14,8 +14,10 @@ class EaelContactForm7Converter extends BaseElementorConverter {
         $settings = $element['settings'] ?? [];
 
         // EAEL 6.x stores the CF7 form's post ID in `contact_form_list`;
-        // `eael_contact_form_id` is kept for older exports.
-        $form_id = (int) ( $settings['contact_form_list'] ?? $settings['eael_contact_form_id'] ?? 0 );
+        // `eael_contact_form_id` is kept for older exports; Animation Addons'
+        // wcf--contact-form-7 (contact-form-7.php) uses its own `contact_form_id`
+        // for the same single SELECT control.
+        $form_id = (int) ( $settings['contact_form_list'] ?? $settings['eael_contact_form_id'] ?? $settings['contact_form_id'] ?? 0 );
 
         $block_settings = [];
         if ( $form_id > 0 ) {
@@ -32,6 +34,7 @@ class EaelContactForm7Converter extends BaseElementorConverter {
         $this->logUnmappedSettings( $id, $settings, [
             'contact_form_list', 'eael_contact_form_id', 'eael_contact_form_title',
             'form_title', 'form_title_text', 'form_description', 'form_description_text',
+            'contact_form_id',
         ] );
 
         return [
