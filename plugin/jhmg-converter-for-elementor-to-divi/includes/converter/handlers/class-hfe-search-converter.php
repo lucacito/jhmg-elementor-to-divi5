@@ -15,13 +15,13 @@ class HfeSearchConverter extends BaseElementorConverter {
 
         $placeholder = is_string( $settings['placeholder'] ?? '' ) ? ( $settings['placeholder'] ?? '' ) : '';
 
+        // divi/search's 'search' attribute (SearchModule.php, fixtures/divi-schema/
+        // modules.json) declares only module.advanced.{showButton,…} — no
+        // innerContent group. The placeholder text lives on the separate
+        // 'searchPlaceholder' attribute.
         $block_settings = [];
         if ( $placeholder !== '' ) {
-            $block_settings['search'] = [
-                'innerContent' => [
-                    'desktop' => [ 'value' => [ 'placeholder' => $placeholder ] ],
-                ],
-            ];
+            $block_settings['searchPlaceholder']['innerContent']['desktop']['value'] = $placeholder;
         }
 
         $this->engine->logConverted( 'search' );

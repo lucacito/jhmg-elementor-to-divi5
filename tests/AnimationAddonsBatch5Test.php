@@ -779,4 +779,81 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $this->assertSame( 'divi/code', $block['name'] );
         $this->assertSame( 1, $result['report']['converted']['code'] ?? 0 );
     }
+
+    // -------------------------------------------------------------------------
+    // Dynamic post-context widgets (widgets/post-*.php, search-form.php) —
+    // these read the current post/page at render time rather than storing
+    // static content in settings, so they map to Divi's own dynamic
+    // post-context modules with little more than a tag/style translation.
+    // -------------------------------------------------------------------------
+
+    // wcf--blog--post--title (post-title.php) targets the same divi/post-title
+    // as HFE's HfePageTitleConverter, but as its own class reading its own
+    // 'header_size' key — see WcfBlogPostTitleConverter's docblock for why
+    // it isn't just a fallback added to HfePageTitleConverter.
+    public function test_blog_post_title_reuses_page_title_converter(): void {
+        [ $block, $result ] = $this->convert( 'wcf--blog--post--title', [ 'header_size' => 'h1' ] );
+
+        $this->assertSame( 'divi/post-title', $block['name'] );
+        $this->assertSame( 'h1', $block['settings']['title']['decoration']['font']['font']['desktop']['value']['headingLevel'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
+
+    // wcf--theme-post-content (post-content.php) has no content settings at
+    // all — it always prints the current post's the_content().
+    public function test_theme_post_content_has_no_content_settings(): void {
+        [ $block, $result ] = $this->convert( 'wcf--theme-post-content', [] );
+
+        $this->assertSame( 'divi/post-content', $block['name'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
+
+    // wcf--blog--post--comment (post-comment.php) likewise has no content
+    // settings — it always prints the current post's comment_form()/list.
+    public function test_blog_post_comment_has_no_content_settings(): void {
+        [ $block, $result ] = $this->convert( 'wcf--blog--post--comment', [ 'theme_comment_style' => 'yes' ] );
+
+        $this->assertSame( 'divi/comments', $block['name'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
+
+    // wcf--blog--search--form (search-form.php) reuses SearchConverter's
+    // divi/search target — its 'placeholder'/'button_text' keys already
+    // match exactly; its extra AJAX/date/category filter presets have no
+    // Divi equivalent (divi/search is a plain search box).
+    public function test_blog_search_form_reuses_search_converter(): void {
+        [ $block, $result ] = $this->convert( 'wcf--blog--search--form', [
+            'placeholder' => 'Search articles…', 'button_text' => 'Go',
+            'preset' => 'style-classic', 'show_search_filter' => 'yes',
+        ] );
+
+        $this->assertSame( 'divi/search', $block['name'] );
+        $this->assertSame( 'Search articles…', $block['settings']['searchPlaceholder']['innerContent']['desktop']['value'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
+
+    // wcf--blog--post--paginate (post-paginate.php) — prev/next post nav.
+    // Its 'prev_title'/'next_title' map to divi/post-nav's
+    // links.advanced.prevText/nextText, and 'enable_prev'/'enable_next' to
+    // showPrev/showNext.
+    public function test_blog_post_paginate_builds_post_nav(): void {
+        [ $block, $result ] = $this->convert( 'wcf--blog--post--paginate', [
+            'enable_prev' => 'yes', 'prev_title' => 'Previous Post',
+            'enable_next' => 'yes', 'next_title' => 'Next Post',
+        ] );
+
+        $this->assertSame( 'divi/post-nav', $block['name'] );
+        $links = $block['settings']['links']['advanced'];
+        $this->assertSame( 'Previous Post', $links['prevText']['desktop']['value'] );
+        $this->assertSame( 'Next Post', $links['nextText']['desktop']['value'] );
+        $this->assertSame( 'on', $links['showPrev']['desktop']['value'] );
+        $this->assertSame( 'on', $links['showNext']['desktop']['value'] );
+        $this->assertSame( [], $result['report']['skipped_settings'] );
+    }
+
+    public function test_blog_post_paginate_hides_prev_when_disabled(): void {
+        [ $block ] = $this->convert( 'wcf--blog--post--paginate', [ 'enable_prev' => '' ] );
+
+        $this->assertSame( 'off', $block['settings']['links']['advanced']['showPrev']['desktop']['value'] );
+    }
 }

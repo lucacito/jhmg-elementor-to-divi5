@@ -288,6 +288,15 @@ class ConverterRegistry {
             return new \ElementorDivi5Converter\Converter\Handlers\GenericFallbackConverter( $engine, 'aae--weather', true );
         } );
 
+        // Dynamic post-context widgets (post-*.php, search-form.php): these read
+        // the current post/page at render time, so they map to Divi's own
+        // dynamic post-context modules rather than storing static content.
+        $this->registerWidget( 'wcf--blog--post--title', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfBlogPostTitleConverter' );
+        $this->registerWidget( 'wcf--theme-post-content', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfThemePostContentConverter' );
+        $this->registerWidget( 'wcf--blog--post--comment', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfBlogPostCommentConverter' );
+        $this->registerWidget( 'wcf--blog--search--form', '\\ElementorDivi5Converter\\Converter\\Handlers\\SearchConverter' );
+        $this->registerWidget( 'wcf--blog--post--paginate', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfBlogPostPaginateConverter' );
+
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );
         $this->registerWidget( 'e-paragraph', '\\ElementorDivi5Converter\\Converter\\Handlers\\TextEditorConverter' );
