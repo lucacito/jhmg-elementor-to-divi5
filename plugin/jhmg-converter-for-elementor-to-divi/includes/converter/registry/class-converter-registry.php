@@ -265,6 +265,14 @@ class ConverterRegistry {
         $this->registerWidget( 'wcf--image-compare', '\\ElementorDivi5Converter\\Converter\\Handlers\\WcfImageCompareConverter' );
         // Real get_name() prefix: 'aae--image-hotspot', not 'wcf--image-hotspot' (image-hotspot.php).
         $this->registerWidget( 'aae--image-hotspot', '\\ElementorDivi5Converter\\Converter\\Handlers\\AaeImageHotspotConverter' );
+        // wcf--mailchimp (mailchimp.php): a live email-signup form wired to a
+        // Mailchimp API key + audience via the plugin's own AJAX endpoint — no
+        // static settings mapping is possible (Divi's own Email Optin module
+        // needs its own separately-connected Mailchimp account). Explicit
+        // placeholder registration, not left to the unregistered-widget default.
+        $this->registerWidget( 'wcf--mailchimp', static function ( $engine ) {
+            return new \ElementorDivi5Converter\Converter\Handlers\GenericFallbackConverter( $engine, 'wcf--mailchimp', true );
+        } );
 
         // Legacy fixture widget type names (e- prefix).
         $this->registerWidget( 'e-heading', '\\ElementorDivi5Converter\\Converter\\Handlers\\HeadingConverter' );

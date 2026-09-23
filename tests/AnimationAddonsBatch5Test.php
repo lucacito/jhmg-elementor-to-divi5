@@ -623,4 +623,27 @@ final class AnimationAddonsBatch5Test extends TestCase {
         $this->assertSame( [], $result['report']['skipped_settings'] );
         $this->assertNotEmpty( $result['report']['not_carried_over'] );
     }
+
+    // -------------------------------------------------------------------------
+    // wcf--mailchimp (widgets/mailchimp/mailchimp.php) — a live email-signup
+    // form wired to a Mailchimp API key + audience/list ID via the plugin's
+    // own AJAX subscribe endpoint. There's no static settings-to-settings
+    // mapping possible: Divi's own Email Optin module requires its own
+    // separately-connected Mailchimp account (Divi's Bloom/Email-Optin account
+    // system), not an arbitrary API key pasted into widget settings, so
+    // there's no way to carry the connection over even approximately.
+    // Explicitly registered to GenericFallbackConverter (counted as a
+    // deliberate placeholder, not a hole nobody mapped) rather than left to
+    // the registry's silent unregistered-widget fallback.
+    // -------------------------------------------------------------------------
+
+    public function test_mailchimp_has_no_static_equivalent(): void {
+        [ $block, $result ] = $this->convert( 'wcf--mailchimp', [
+            'mailchimp_api' => 'fake-key-us1', 'mailchimp_lists' => 'abc123',
+        ] );
+
+        $this->assertSame( 'divi/code', $block['name'] );
+        $this->assertNotEmpty( $result['report']['warnings'] );
+        $this->assertSame( 1, $result['report']['converted']['code'] ?? 0 );
+    }
 }
