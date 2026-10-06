@@ -92,13 +92,28 @@ class DirectConversionPage {
         return array_slice( $this->verified_post_ids( $request ), 0, ConversionPreflight::limit() );
     }
 
+    /**
+     * The options a convert request carries. Replacing the original is opt-in
+     * per run: nothing but an explicit tick turns it on, so a stale or
+     * tampered form can only ever fall back to the safe copy.
+     *
+     * @param array $request Typically $_POST.
+     */
+    public function convert_options( array $request ): array {
+        $ticked = $request['edc_replace_original'] ?? '';
+
+        return [ 'replace_original' => is_scalar( $ticked ) && (string) $ticked === '1' ];
+    }
+
     /** A dry run over the selection. Writes nothing. */
     public function plan_for( array $post_ids ): ConversionPlan {
         return ( new ConversionPreflight() )->run( new InstalledPostSource( $post_ids ) );
     }
 
     /**
-     * Convert the selection. Creates new posts; never modifies the source.
+     * Convert the selection. By default creates new posts and never modifies
+     * the source; with the `replace_original` option an installed page is
+     * converted where it stands, after its Elementor version is backed up.
      *
      * @return array[] BatchImporter-shaped results.
      */
@@ -322,11 +337,18 @@ class DirectConversionPage {
                 $html .= '<input type="hidden" name="edc_post_ids[]" value="' . esc_attr( (string) $id ) . '">';
             }
 
+            $html .= '<p class="edc-direct-replace"><label>'
+                . '<input type="checkbox" name="edc_replace_original" value="1"> '
+                . esc_html__( 'Replace the original page instead of creating a copy', 'jhmg-converter-for-elementor-to-divi' )
+                . '</label><br><span class="description">'
+                . esc_html__( 'The page keeps its address, ID and menu entries, and stays published if it was. Its Elementor version is backed up, and Undo restores it.', 'jhmg-converter-for-elementor-to-divi' )
+                . '</span></p>';
             $html .= '<p><button type="submit" class="button button-primary">'
                 . esc_html__( 'Convert to Divi 5', 'jhmg-converter-for-elementor-to-divi' )
                 . '</button></p>';
             $html .= '<p class="description">'
                 . esc_html__( 'Creates a new Divi draft. Your Elementor page is left exactly as it is.', 'jhmg-converter-for-elementor-to-divi' )
+                . ' ' . esc_html__( 'Headers and footers are always added as new Theme Builder layouts.', 'jhmg-converter-for-elementor-to-divi' )
                 . '</p>';
             $html .= '</form>';
         }
@@ -412,7 +434,7 @@ class DirectConversionPage {
             wp_die( esc_html__( 'No pages were selected to convert.', 'jhmg-converter-for-elementor-to-divi' ) );
         }
 
-        $results = $this->convert( $ids );
+        $results = $this->convert( $ids, $this->convert_options( wp_unslash( $_POST ) ) );
 
         // Counted here rather than on the results screen: that view renders
         // from a transient keyed in the URL, so refreshing it would inflate

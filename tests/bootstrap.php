@@ -95,11 +95,18 @@ if ( ! function_exists( 'update_post_meta' ) ) {
 
     function update_post_meta( $post_id, $meta_key, $meta_value ) {
         $id = (int) $post_id;
+        // Lets a test simulate a database that refuses a write (e.g. a value
+        // over max_allowed_packet), which update_post_meta() reports as false.
+        if ( in_array( $meta_key, $GLOBALS['__test_meta_write_fails'] ?? [], true ) ) {
+            return false;
+        }
         if ( ! isset( $GLOBALS['__test_postmeta'][ $id ] ) ) {
             $GLOBALS['__test_postmeta'][ $id ] = [];
         }
+        // Like core, update_post_meta() unslashes what it is given, so callers
+        // must wp_slash() anything whose backslashes have to survive.
         // Store as a single-value array (overwrites previous single value).
-        $GLOBALS['__test_postmeta'][ $id ][ $meta_key ] = [ $meta_value ];
+        $GLOBALS['__test_postmeta'][ $id ][ $meta_key ] = [ wp_unslash( $meta_value ) ];
         return true;
     }
 
@@ -298,6 +305,9 @@ if ( ! function_exists( 'wp_json_encode' ) ) {
 
 if ( ! function_exists( 'wp_slash' ) ) {
     function wp_slash( $value ) {
+        if ( is_array( $value ) ) {
+            return array_map( 'wp_slash', $value );
+        }
         return addslashes( is_string( $value ) ? $value : '' );
     }
 }
@@ -620,7 +630,12 @@ if ( ! function_exists( 'wp_die' ) ) {
     }
 }
 if ( ! function_exists( 'wp_unslash' ) ) {
-    function wp_unslash( $v ) { return is_string( $v ) ? stripslashes( $v ) : $v; }
+    function wp_unslash( $v ) {
+        if ( is_array( $v ) ) {
+            return array_map( 'wp_unslash', $v );
+        }
+        return is_string( $v ) ? stripslashes( $v ) : $v;
+    }
 }
 if ( ! function_exists( 'register_activation_hook' ) ) {
     function register_activation_hook( $file, $cb ): void {}
@@ -722,3 +737,18 @@ if ( ! function_exists( 'wp_strip_all_tags' ) ) {
 }
 
 require_once __DIR__ . '/support/DiviModuleSchema.php';
+
+if ( ! function_exists( 'get_edit_post_link' ) ) {
+    function get_edit_post_link( $post_id ): string { return 'https://example.test/wp-admin/post.php?post=' . (int) $post_id . '&action=edit'; }
+}
+if ( ! function_exists( 'get_permalink' ) ) {
+    function get_permalink( $post_id ): string { return 'https://example.test/?p=' . (int) $post_id; }
+}
+if ( ! function_exists( 'wp_nonce_url' ) ) {
+    function wp_nonce_url( $url, $action = -1 ): string { return $url . ( str_contains( $url, '?' ) ? '&' : '?' ) . '_wpnonce=' . wp_create_nonce( (string) $action ); }
+}
+if ( ! function_exists( 'wp_http_validate_url' ) ) {
+    function wp_http_validate_url( $url ) {
+        return filter_var( $url, FILTER_VALIDATE_URL ) ? $url : false;
+    }
+}

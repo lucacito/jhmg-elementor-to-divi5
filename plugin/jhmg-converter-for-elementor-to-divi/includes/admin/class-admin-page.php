@@ -678,6 +678,9 @@ class AdminPage {
                         <td class="column-status">
                             <?php if ( $result['success'] ) : ?>
                                 <span class="edc-status edc-status--converted">&#10003; <?php esc_html_e( 'Converted', 'jhmg-converter-for-elementor-to-divi' ); ?></span>
+                                <?php if ( ! empty( $result['replaced'] ) ) : ?>
+                                    <br><small><?php esc_html_e( 'Original page replaced — Undo restores the Elementor version.', 'jhmg-converter-for-elementor-to-divi' ); ?></small>
+                                <?php endif; ?>
                             <?php else : ?>
                                 <span class="edc-status edc-status--error">&#10007; <?php esc_html_e( 'Failed', 'jhmg-converter-for-elementor-to-divi' ); ?></span>
                                 <?php if ( ! empty( $result['error'] ) ) : ?>

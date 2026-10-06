@@ -22,9 +22,16 @@ class ImportHistory {
 
     public function record( string $import_id, array $results ): void {
         $post_ids = [];
+        $replaced = [];
         foreach ( $results as $r ) {
             if ( ! empty( $r['success'] ) && ! empty( $r['post_id'] ) ) {
                 $post_ids[] = (int) $r['post_id'];
+
+                // A replaced page is an original converted in place: Undo
+                // restores it, where it would trash a page created by the run.
+                if ( ! empty( $r['replaced'] ) ) {
+                    $replaced[] = (int) $r['post_id'];
+                }
             }
         }
 
@@ -35,6 +42,7 @@ class ImportHistory {
             'id'          => $import_id,
             'at'          => gmdate( 'Y-m-d H:i:s' ),
             'post_ids'    => $post_ids,
+            'replaced'    => $replaced,
             'unsupported' => self::widget_types( $results ),
             'succeeded'   => $succeeded,
             'failed'      => count( $results ) - $succeeded,

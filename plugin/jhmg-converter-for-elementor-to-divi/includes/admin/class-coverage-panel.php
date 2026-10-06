@@ -99,19 +99,40 @@ class CoveragePanel {
         $trash_available = ImportRollback::trash_available();
 
         foreach ( $this->history->all() as $run ) {
+            $replaced_count = count( $run['replaced'] ?? [] );
+            $copies_count   = count( $run['post_ids'] ?? [] ) - $replaced_count;
+
             if ( ! empty( $run['rolled_back'] ) ) {
                 $undo = esc_html__( 'Undone', 'jhmg-converter-for-elementor-to-divi' );
-            } elseif ( ! $trash_available ) {
+            } elseif ( $copies_count > 0 && ! $trash_available ) {
                 // Never offer a control that would refuse to work: on a site
                 // configured with EMPTY_TRASH_DAYS = 0, wp_trash_post() would
-                // permanently delete instead of trashing.
+                // permanently delete instead of trashing. A run that only
+                // replaced pages trashes nothing, so it is not affected.
                 $undo = esc_html__( 'Undo is unavailable because this site empties the trash immediately.', 'jhmg-converter-for-elementor-to-divi' );
             } else {
-                $confirm_message = sprintf(
-                    /* translators: %d: number of pages this import created. */
-                    __( 'Move the %d page(s) this import created to the Trash?', 'jhmg-converter-for-elementor-to-divi' ),
-                    count( $run['post_ids'] ?? [] )
-                );
+                $confirm_parts = [];
+                if ( $replaced_count > 0 ) {
+                    $confirm_parts[] = sprintf(
+                        /* translators: %d: number of pages this import replaced. */
+                        __( 'Restore the %d page(s) this import replaced to their original Elementor version', 'jhmg-converter-for-elementor-to-divi' ),
+                        $replaced_count
+                    );
+                }
+                if ( $copies_count > 0 ) {
+                    $confirm_parts[] = $replaced_count > 0
+                        ? sprintf(
+                            /* translators: %d: number of pages this import created. */
+                            __( 'move the %d page(s) it created to the Trash', 'jhmg-converter-for-elementor-to-divi' ),
+                            $copies_count
+                        )
+                        : sprintf(
+                            /* translators: %d: number of pages this import created. */
+                            __( 'Move the %d page(s) this import created to the Trash', 'jhmg-converter-for-elementor-to-divi' ),
+                            $copies_count
+                        );
+                }
+                $confirm_message = implode( ' and ', $confirm_parts ) . '?';
 
                 $undo = sprintf(
                     '<a href="%1$s" class="button button-small" onclick="%2$s">%3$s</a>',
@@ -137,7 +158,7 @@ class CoveragePanel {
             . '<table class="widefat striped"><thead><tr><th>%3$s</th><th>%4$s</th><th></th></tr></thead>'
             . '<tbody>%5$s</tbody></table></div>',
             esc_html__( 'Recent imports', 'jhmg-converter-for-elementor-to-divi' ),
-            esc_html__( 'Undo moves the pages an import created to the trash. It skips only pages that are no longer linked to this import (already gone, or replaced) — editing a page does not exempt it from Undo.', 'jhmg-converter-for-elementor-to-divi' ),
+            esc_html__( 'Undo moves the pages an import created to the trash, and puts pages it replaced back to their original Elementor version. It skips only pages that are no longer linked to this import (already gone) — editing a page does not exempt it from Undo.', 'jhmg-converter-for-elementor-to-divi' ),
             esc_html__( 'When', 'jhmg-converter-for-elementor-to-divi' ),
             esc_html__( 'Pages', 'jhmg-converter-for-elementor-to-divi' ),
             $rows

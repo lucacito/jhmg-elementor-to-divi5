@@ -1,8 +1,9 @@
 <?php
 /**
- * Undo an import by moving the posts it created to the trash.
+ * Undo an import: move the posts it created to the trash, and put the pages it
+ * replaced back to their original Elementor version.
  *
- * Two deliberate safety properties:
+ * Deliberate safety properties:
  *  - It trashes, never deletes — and only when trash is actually available.
  *    On a site configured with `EMPTY_TRASH_DAYS` set to 0, WordPress core's
  *    own `wp_trash_post()` permanently deletes instead of trashing, so this
@@ -13,9 +14,14 @@
  *  - It only touches posts still carrying the `_edc_import_source` meta this
  *    plugin wrote. A post the user has since replaced or adopted by hand is
  *    skipped, so a stale batch record can never sweep away real work.
+ *  - A replaced page is restored from the backup kept on the page itself and
+ *    is never trashed. Restoring deletes nothing, so it does not need the
+ *    trash to be available. A page whose backup is gone is skipped.
  */
 
 namespace ElementorDivi5Converter\History;
+
+use ElementorDivi5Converter\Conversion\ReplaceBackup;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -40,35 +46,50 @@ class ImportRollback {
         add_action( 'admin_notices', [ $this, 'render_notice' ] );
     }
 
-    /** @return array{trashed:int, skipped:int, trash_unavailable:bool} */
+    /** @return array{trashed:int, restored:int, skipped:int, trash_unavailable:bool} */
     public function rollback( string $import_id ): array {
         $run = $this->history->find( $import_id );
 
         if ( $run === null ) {
-            return [ 'trashed' => 0, 'skipped' => 0, 'trash_unavailable' => false ];
+            return [ 'trashed' => 0, 'restored' => 0, 'skipped' => 0, 'trash_unavailable' => false ];
         }
 
-        if ( ! self::trash_available() ) {
+        $replaced = array_map( 'intval', $run['replaced'] ?? [] );
+        $copies   = array_values( array_diff( array_map( 'intval', $run['post_ids'] ?? [] ), $replaced ) );
+
+        $restored = 0;
+        $skipped  = 0;
+        $backup   = new ReplaceBackup();
+
+        foreach ( $replaced as $post_id ) {
+            if ( $backup->restore( $post_id ) ) {
+                $restored++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        if ( ! empty( $copies ) && ! self::trash_available() ) {
             // Never fall through to core's permanent-delete path: skip the
-            // whole run, and leave it eligible to be undone once trash is
+            // copies, and leave the run eligible to be undone once trash is
             // available again, rather than marking it rolled back.
             return [
                 'trashed'           => 0,
-                'skipped'           => count( $run['post_ids'] ?? [] ),
+                'restored'          => $restored,
+                'skipped'           => $skipped + count( $copies ),
                 'trash_unavailable' => true,
             ];
         }
 
         $trashed = 0;
-        $skipped = 0;
 
-        foreach ( $run['post_ids'] ?? [] as $post_id ) {
-            if ( get_post_meta( (int) $post_id, '_edc_import_source', true ) === '' ) {
+        foreach ( $copies as $post_id ) {
+            if ( get_post_meta( $post_id, '_edc_import_source', true ) === '' ) {
                 $skipped++;
                 continue;
             }
 
-            if ( wp_trash_post( (int) $post_id ) ) {
+            if ( wp_trash_post( $post_id ) ) {
                 $trashed++;
             } else {
                 $skipped++;
@@ -77,7 +98,7 @@ class ImportRollback {
 
         $this->history->mark_rolled_back( $import_id );
 
-        return [ 'trashed' => $trashed, 'skipped' => $skipped, 'trash_unavailable' => false ];
+        return [ 'trashed' => $trashed, 'restored' => $restored, 'skipped' => $skipped, 'trash_unavailable' => false ];
     }
 
     /**
@@ -129,7 +150,7 @@ class ImportRollback {
     }
 
     /**
-     * @param array{trashed:int, skipped:int, trash_unavailable:bool} $result
+     * @param array{trashed:int, restored?:int, skipped:int, trash_unavailable:bool} $result
      */
     public function notice_markup( array $result ): string {
         if ( ! empty( $result['trash_unavailable'] ) ) {
@@ -141,9 +162,25 @@ class ImportRollback {
             return '<div class="notice notice-warning is-dismissible edc-rollback-notice"><p>' . $body . '</p></div>';
         }
 
-        $trashed = (int) ( $result['trashed'] ?? 0 );
-        $skipped = (int) ( $result['skipped'] ?? 0 );
-        $parts   = [];
+        $trashed  = (int) ( $result['trashed'] ?? 0 );
+        $restored = (int) ( $result['restored'] ?? 0 );
+        $skipped  = (int) ( $result['skipped'] ?? 0 );
+        $parts    = [];
+
+        if ( $restored > 0 ) {
+            $parts[] = esc_html(
+                sprintf(
+                    /* translators: %d: number of pages put back to their original Elementor version. */
+                    _n(
+                        '%d page was restored to its original Elementor version.',
+                        '%d pages were restored to their original Elementor version.',
+                        $restored,
+                        'jhmg-converter-for-elementor-to-divi'
+                    ),
+                    $restored
+                )
+            );
+        }
 
         if ( $trashed > 0 ) {
             $parts[] = esc_html(

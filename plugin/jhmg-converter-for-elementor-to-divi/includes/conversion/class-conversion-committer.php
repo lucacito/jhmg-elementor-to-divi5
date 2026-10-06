@@ -35,6 +35,7 @@ class ConversionCommitter {
         $default_post_status = $options['post_status']     ?? 'draft';
         $convert_headers     = $options['convert_headers'] ?? true;
         $convert_footers     = $options['convert_footers'] ?? true;
+        $replace_original    = ! empty( $options['replace_original'] );
 
         $results = [];
 
@@ -58,6 +59,11 @@ class ConversionCommitter {
 
             if ( $wants_theme_builder ) {
                 $results[] = $this->commitTemplate( $item, $template_type );
+                continue;
+            }
+
+            if ( $replace_original && $this->canReplace( $item ) ) {
+                $results[] = $this->replacePage( $item );
                 continue;
             }
 
@@ -108,6 +114,62 @@ class ConversionCommitter {
                 'title'       => $title,
                 'post_id'     => $post_id,
                 'success'     => true,
+                'error'       => '',
+                'report'      => $item['report']      ?? [],
+                'unsupported' => $item['unsupported'] ?? [],
+            ];
+        } catch ( \Throwable $e ) {
+            return $this->failResult( $title, $e->getMessage() );
+        }
+    }
+
+    /**
+     * Only a page converted from this site has an original to replace — an
+     * uploaded file has none — and only an ordinary content post: an Elementor
+     * template (header, footer, popup) is something other pages may still
+     * render through, and a Theme Builder item is a layout, not the page.
+     */
+    private function canReplace( array $item ): bool {
+        if ( ( $item['source_ref']['kind'] ?? '' ) !== 'installed' || ( $item['template_type'] ?? '' ) !== '' ) {
+            return false;
+        }
+
+        $source = get_post( (int) ( $item['source_ref']['post_id'] ?? 0 ) );
+
+        return $source && ReplaceBackup::replaceable_type( (string) ( $source->post_type ?? '' ) );
+    }
+
+    /**
+     * Convert the source page where it stands: same post, same URL, same
+     * menu entries. The Elementor version is backed up first and is what Undo
+     * restores. If anything fails after the backup the page is put back as it
+     * was — a failed replace must never leave a half-converted original.
+     */
+    private function replacePage( array $item ): array {
+        $title   = (string) ( $item['title'] ?? 'Imported Page' );
+        $post_id = (int) $item['source_ref']['post_id'];
+        $backup  = new ReplaceBackup();
+
+        try {
+            if ( ! $backup->save( $post_id ) ) {
+                return $this->failResult( $title, 'The original page could not be backed up, so it was left unchanged.' );
+            }
+
+            try {
+                $backup->strip_elementor( $post_id );
+                $this->exporter->save( $post_id, $this->diviDataFor( $item ) );
+            } catch ( \Throwable $e ) {
+                $backup->restore( $post_id );
+                throw $e;
+            }
+
+            update_post_meta( $post_id, '_edc_import_source', 'replaced' );
+
+            return [
+                'title'       => $title,
+                'post_id'     => $post_id,
+                'success'     => true,
+                'replaced'    => true,
                 'error'       => '',
                 'report'      => $item['report']      ?? [],
                 'unsupported' => $item['unsupported'] ?? [],

@@ -121,4 +121,35 @@ class CoveragePanelTest extends TestCase {
         );
         $this->assertStringNotContainsString( 'Undone', $html, 'the run was never actually undone' );
     }
+
+    public function test_the_confirm_for_a_replacing_run_says_the_originals_are_restored(): void {
+        $h = new ImportHistory();
+        $h->record( 'run1', [
+            [ 'success' => true, 'post_id' => 7, 'replaced' => true, 'unsupported' => [] ],
+            [ 'success' => true, 'post_id' => 8, 'unsupported' => [] ],
+        ] );
+
+        $html = ( new CoveragePanel( $h ) )->markup();
+
+        $this->assertStringContainsString( 'Restore the 1 page(s) this import replaced', $html );
+        $this->assertStringContainsString( 'move the 1 page(s) it created to the Trash', $html );
+    }
+
+    public function test_the_panel_explains_that_undo_restores_replaced_pages(): void {
+        $h = new ImportHistory();
+        $h->record( 'run1', [ [ 'success' => true, 'post_id' => 7, 'replaced' => true, 'unsupported' => [] ] ] );
+
+        $this->assertStringContainsString( 'original Elementor version', ( new CoveragePanel( $h ) )->markup() );
+    }
+
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState( false )]
+    public function test_a_run_that_only_replaced_pages_stays_undoable_without_trash(): void {
+        define( 'EMPTY_TRASH_DAYS', 0 );
+
+        $h = new ImportHistory();
+        $h->record( 'run1', [ [ 'success' => true, 'post_id' => 7, 'replaced' => true, 'unsupported' => [] ] ] );
+
+        $this->assertStringContainsString( ImportRollback::QUERY_ACTION, ( new CoveragePanel( $h ) )->markup() );
+    }
 }
