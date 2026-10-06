@@ -171,6 +171,68 @@ final class ElementorImportParserTest extends TestCase {
         }
     }
 
+    private function kitItemsFor( array $entry, array $content, string $key = '4521' ): array {
+        if ( ! class_exists( 'ZipArchive' ) ) {
+            $this->markTestSkipped( 'ZipArchive extension not available.' );
+        }
+
+        $zip_path = $this->createKitZip( [
+            'manifest.json'          => json_encode( [ 'pages' => [ $key => $entry ] ] ),
+            'content/' . $key . '.json' => json_encode( $content ),
+        ] );
+
+        try {
+            return $this->parser->parse( $zip_path, 'export.zip' );
+        } finally {
+            @unlink( $zip_path );
+        }
+    }
+
+    private const SECTION = [ [ 'id' => 's1', 'elType' => 'section', 'settings' => [], 'elements' => [] ] ];
+
+    public function test_a_kit_entry_keyed_by_post_id_takes_its_title_from_the_manifest_title_field(): void {
+        // Elementor's own kit manifests name the field `title`, not `post_title`.
+        $items = $this->kitItemsFor( [ 'title' => 'About Us' ], [ 'content' => self::SECTION ] );
+
+        $this->assertSame( 'About Us', $items[0]['title'] );
+    }
+
+    public function test_a_kit_entry_without_a_manifest_title_uses_the_content_files_title(): void {
+        $items = $this->kitItemsFor( [], [ 'title' => 'Our Team', 'content' => self::SECTION ] );
+
+        $this->assertSame( 'Our Team', $items[0]['title'] );
+    }
+
+    public function test_a_title_less_kit_entry_keyed_by_post_id_is_never_titled_with_the_bare_id(): void {
+        // A page titled "4521" reads as a database row, and its slug "4521"
+        // collides into "4521-2" on a second run.
+        $items = $this->kitItemsFor( [], [ 'content' => self::SECTION ] );
+
+        $this->assertNotSame( '4521', $items[0]['title'] );
+        $this->assertSame( 'Imported page 4521', $items[0]['title'] );
+    }
+
+    public function test_a_title_less_kit_entry_keyed_by_slug_gets_a_readable_title(): void {
+        $items = $this->kitItemsFor( [], [ 'content' => self::SECTION ], 'contact-us' );
+
+        $this->assertSame( 'Contact Us', $items[0]['title'] );
+    }
+
+    public function test_a_numbered_file_is_not_titled_with_its_bare_number(): void {
+        if ( ! class_exists( 'ZipArchive' ) ) {
+            $this->markTestSkipped( 'ZipArchive extension not available.' );
+        }
+
+        $zip_path = $this->createKitZip( [ '4521.json' => json_encode( self::SECTION ) ] );
+
+        try {
+            $items = $this->parser->parse( $zip_path, 'export.zip' );
+            $this->assertSame( 'Imported page 4521', $items[0]['title'] );
+        } finally {
+            @unlink( $zip_path );
+        }
+    }
+
     public function test_parses_zip_fallback_without_manifest(): void {
         if ( ! class_exists( 'ZipArchive' ) ) {
             $this->markTestSkipped( 'ZipArchive extension not available.' );

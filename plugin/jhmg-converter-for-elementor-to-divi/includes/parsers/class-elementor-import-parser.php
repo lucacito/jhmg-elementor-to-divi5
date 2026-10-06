@@ -174,7 +174,7 @@ class ElementorImportParser {
                     $template_type = $this->templateTypeFor( (string) $raw_post_type, array_merge( is_array( $meta ) ? $meta : [], is_array( $entry ) ? $entry : [] ) );
                 }
                 $items[] = $this->makeItem(
-                    $entry['post_title'] ?? $meta['title'] ?? (string) $key,
+                    $this->manifestTitle( $entry, $meta, (string) $key ),
                     $elements,
                     $raw_post_type,
                     $entry['post_name'] ?? $meta['post_name'] ?? '',
@@ -331,10 +331,33 @@ class ElementorImportParser {
         return '';
     }
 
+    /**
+     * The title for a kit manifest entry. Elementor's own manifests name the
+     * field `title`; `post_title` is what a WordPress export uses. When neither
+     * the manifest nor the content file names the page, the entry's key is all
+     * that is left — and that key is usually a post ID, which must not become
+     * the page title (it reads as a database row, and its slug collides into
+     * "4521-2" on a second run).
+     */
+    private function manifestTitle( array $entry, array $meta, string $key ): string {
+        foreach ( [ $entry['post_title'] ?? null, $entry['title'] ?? null, $meta['title'] ?? null ] as $candidate ) {
+            if ( is_string( $candidate ) && trim( $candidate ) !== '' ) {
+                return trim( $candidate );
+            }
+        }
+
+        return $this->titleFromFileName( $key );
+    }
+
     private function titleFromFileName( string $file_name ): string {
         $base = pathinfo( $file_name, PATHINFO_FILENAME );
         if ( $base === '' ) {
             return '';
+        }
+        // A file named after a post ID (4521.json) would otherwise produce a
+        // page titled "4521".
+        if ( ctype_digit( $base ) ) {
+            return 'Imported page ' . $base;
         }
         return ucwords( str_replace( [ '-', '_' ], ' ', $base ) );
     }
