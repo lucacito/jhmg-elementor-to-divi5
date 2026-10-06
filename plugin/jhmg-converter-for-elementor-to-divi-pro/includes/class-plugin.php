@@ -75,6 +75,7 @@ class Plugin {
             'edcp'
         );
         add_filter( 'pre_set_site_transient_update_plugins', [ $license, 'inject_update' ] );
+        add_filter( 'auto_update_plugin', [ $license, 'block_auto_update' ], 10, 2 );
 
         if ( is_admin() ) {
             ( new Admin\KitPage( $license ) )->init();

@@ -62,12 +62,117 @@ class LicenseClientTest extends TestCase {
         $this->assertSame( 'https://divi5lab.com/plugins/elementor-to-divi-5', $entry->url );
     }
 
+    private const BASENAME = 'jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php';
+
     public function test_inject_update_without_package_sets_renewal_flag(): void {
         update_option( 'edcp_license_key', 'JHMG-AAAA-BBBB-CCCC-DDDD' );
         edc_test_http_queue( [ 'code' => 200, 'body' => [ 'update' => true, 'version' => '1.1.0', 'changelog' => 'x' ] ] );
-        $t = $this->client->inject_update( (object) [ 'response' => [] ] );
-        $this->assertArrayNotHasKey( 'jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php', $t->response );
+        $this->client->inject_update( (object) [ 'response' => [] ] );
         $this->assertNotEmpty( get_option( 'edcp_update_blocked' ) );
+    }
+
+    public function test_a_withheld_update_is_still_listed_so_the_plugins_screen_shows_it(): void {
+        // WordPress renders an entry with an empty package as "There is a new
+        // version available. Automatic update is unavailable for this plugin."
+        // Leaving the entry out meant an unlicensed site was never told.
+        edc_test_http_queue( [ 'code' => 200, 'body' => [ 'update' => true, 'version' => '1.1.0', 'changelog' => 'x' ] ] );
+
+        $t = $this->client->inject_update( (object) [ 'response' => [] ] ); // no licence key at all
+
+        $entry = $t->response[ self::BASENAME ];
+        $this->assertSame( '1.1.0', $entry->new_version );
+        $this->assertSame( '', $entry->package, 'there must be nothing for WordPress to download' );
+        $this->assertSame( self::BASENAME, $entry->plugin );
+    }
+
+    public function test_a_withheld_update_is_not_auto_installed(): void {
+        edc_test_http_queue( [ 'code' => 200, 'body' => [ 'update' => true, 'version' => '1.1.0' ] ] );
+        $this->client->inject_update( (object) [ 'response' => [] ] );
+
+        // Core would otherwise try to download an empty package on every
+        // background check and email the admin that the update failed.
+        $this->assertFalse( $this->client->block_auto_update( true, (object) [ 'plugin' => self::BASENAME ] ) );
+    }
+
+    public function test_auto_update_is_left_alone_when_the_update_is_not_withheld(): void {
+        $this->assertTrue( $this->client->block_auto_update( true, (object) [ 'plugin' => self::BASENAME ] ) );
+        $this->assertNull( $this->client->block_auto_update( null, (object) [ 'plugin' => self::BASENAME ] ) );
+    }
+
+    public function test_auto_update_for_another_plugin_is_never_touched(): void {
+        update_option( 'edcp_update_blocked', '1.1.0' );
+
+        $this->assertTrue( $this->client->block_auto_update( true, (object) [ 'plugin' => 'some-other/some-other.php' ] ) );
+    }
+
+    public function test_a_licensed_update_clears_the_withheld_flag(): void {
+        update_option( 'edcp_update_blocked', '1.1.0' );
+        update_option( 'edcp_license_key', 'JHMG-AAAA-BBBB-CCCC-DDDD' );
+        edc_test_http_queue( [ 'code' => 200, 'body' => [ 'update' => true, 'version' => '1.1.0', 'package' => 'https://divi5lab.com/api/plugin/download?product=x' ] ] );
+
+        $this->client->inject_update( (object) [ 'response' => [] ] );
+
+        $this->assertFalse( get_option( 'edcp_update_blocked' ) );
+        $this->assertTrue( $this->client->block_auto_update( true, (object) [ 'plugin' => self::BASENAME ] ) );
+    }
+
+    // ------------------------------------------------------------------
+    // A reply is only trusted as far as it can be verified
+    // ------------------------------------------------------------------
+
+    private function inject_with( array $body ): object {
+        update_option( 'edcp_license_key', 'JHMG-AAAA-BBBB-CCCC-DDDD' );
+        edc_test_http_queue( [ 'code' => 200, 'body' => $body ] );
+
+        return $this->client->inject_update( (object) [ 'response' => [] ] );
+    }
+
+    public function test_a_package_on_another_host_is_never_offered_to_wordpress(): void {
+        $t = $this->inject_with( [ 'update' => true, 'version' => '1.1.0', 'package' => 'https://evil.example/plugin.zip' ] );
+
+        $this->assertArrayNotHasKey( self::BASENAME, $t->response );
+    }
+
+    public function test_a_plain_http_package_is_never_offered(): void {
+        $t = $this->inject_with( [ 'update' => true, 'version' => '1.1.0', 'package' => 'http://divi5lab.com/api/plugin/download?product=x' ] );
+
+        $this->assertArrayNotHasKey( self::BASENAME, $t->response );
+    }
+
+    public function test_the_www_form_of_the_licence_host_is_accepted(): void {
+        $t = $this->inject_with( [ 'update' => true, 'version' => '1.1.0', 'package' => 'https://www.divi5lab.com/api/plugin/download?product=x' ] );
+
+        $this->assertArrayHasKey( self::BASENAME, $t->response );
+    }
+
+    public function test_a_lookalike_host_is_not_the_licence_host(): void {
+        $t = $this->inject_with( [ 'update' => true, 'version' => '1.1.0', 'package' => 'https://divi5lab.com.evil.example/x.zip' ] );
+
+        $this->assertArrayNotHasKey( self::BASENAME, $t->response );
+    }
+
+    public function test_a_version_that_is_not_newer_than_the_installed_one_is_ignored(): void {
+        $t = $this->inject_with( [ 'update' => true, 'version' => '1.0.0', 'package' => 'https://divi5lab.com/api/plugin/download?product=x' ] );
+
+        $this->assertArrayNotHasKey( self::BASENAME, $t->response );
+    }
+
+    public function test_a_withheld_update_that_is_not_newer_is_not_listed(): void {
+        $t = $this->inject_with( [ 'update' => true, 'version' => '1.0.0' ] );
+
+        $this->assertArrayNotHasKey( self::BASENAME, $t->response );
+        $this->assertFalse( get_option( 'edcp_update_blocked' ) );
+    }
+
+    public function test_a_reply_that_is_not_an_object_changes_nothing(): void {
+        $t = $this->inject_with( [] );
+        edc_test_http_queue( [ 'code' => 200, 'body' => 'not json at all' ] );
+        $GLOBALS['__test_transients'] = [];
+
+        $t = $this->client->inject_update( (object) [ 'response' => [] ] );
+
+        $this->assertSame( [], $t->response );
+        $this->assertFalse( property_exists( $t, 'no_update' ), 'an unreadable reply must not assert "up to date"' );
     }
 
     // ------------------------------------------------------------------

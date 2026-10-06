@@ -6,9 +6,11 @@
  * Constructor-parameterized per product; see sync script for consumers.
  * API contract (frozen): /api/license/{activate,validate,deactivate}, /api/plugin/update-check
  * Error codes: invalid_key | product_mismatch | license_not_usable | rate_limited | invalid_request
- * Enforcement policy (frozen): SOFT. License state gates update delivery + admin notices only —
- * it must never lock plugin features. status_notice() only ever informs; callers must not use
- * get_state()/get_key() to disable functionality.
+ * Enforcement policy: SOFT for the converter Pros (frozen — license state gates update
+ * delivery + admin notices only; conversion features never lock). Documented exception:
+ * the AI Editor for Divi 5 gates its premium tools behind a sticky unlock that only an
+ * explicit server verdict of `revoked` or `invalid` re-locks (see its Licensing adapter);
+ * lapse (expired/canceled) never locks features anywhere.
  */
 
 namespace ElementorDivi5Converter\Pro\Licensing;
@@ -124,6 +126,14 @@ class LicenseClient {
             set_transient( $cache_key, $body, self::UPDATE_CHECK_TTL );
         }
 
+        // A 200 is not a promise that the payload is well-formed: a proxy, a
+        // captive portal or a broken deploy can all answer 200 with something
+        // that json_decode()s to anything at all. Nothing below reads a field
+        // it has not first checked the type of. A reply we cannot read also
+        // leaves `no_update` alone rather than asserting "up to date" into
+        // core's auto-update UI on the strength of a body we did not parse.
+        if ( ! is_array( $body ) ) { return $transient; }
+
         if ( ! is_object( $transient ) ) { $transient = (object) [ 'response' => [] ]; }
 
         if ( empty( $body['update'] ) ) {
@@ -139,20 +149,80 @@ class LicenseClient {
             ];
             return $transient;
         }
-        if ( empty( $body['package'] ) ) {
-            update_option( $this->opt_blocked, $body['version'] ?? '1', false );
+        $version = $body['version'] ?? null;
+        $package = $body['package'] ?? null;
+
+        // Only a version that is genuinely newer than the installed one is an
+        // update at all, withheld or not.
+        if ( ! is_string( $version ) || '' === $version || ! version_compare( $version, $this->plugin_version, '>' ) ) {
             return $transient;
         }
+
+        // An update exists but the server withheld the package: that is the
+        // licence gate. The entry is still listed — with nothing to download —
+        // because WordPress then shows "a new version is available, automatic
+        // update is unavailable" on the Plugins screen. Without it a site with
+        // no licence key was never told an update existed.
+        if ( ! is_string( $package ) || '' === $package ) {
+            update_option( $this->opt_blocked, $version, false );
+            $transient->response[ $this->plugin_basename ] = $this->response_entry( $version, '' );
+            return $transient;
+        }
+
+        // What goes into $transient->response is a URL WordPress will download
+        // and unpack over the plugin directory, so it has to earn that: an
+        // https package on the licence host itself. Anything else, and this
+        // update check simply did not happen.
+        if ( ! $this->is_package_url( $package ) ) {
+            return $transient;
+        }
+
         delete_option( $this->opt_blocked );
-        $transient->response[ $this->plugin_basename ] = (object) [
+        $transient->response[ $this->plugin_basename ] = $this->response_entry( $version, $package );
+        return $transient;
+    }
+
+    private function response_entry( string $version, string $package ): object {
+        return (object) [
             'plugin'      => $this->plugin_basename,
             'id'          => $this->plugin_basename,
             'slug'        => dirname( $this->plugin_basename ),
-            'new_version' => $body['version'],
-            'package'     => $body['package'],
+            'new_version' => $version,
+            'package'     => $package,
             'url'         => $this->product_page_url,
         ];
-        return $transient;
+    }
+
+    /**
+     * `auto_update_plugin` filter. A withheld update has no package, so letting
+     * core's background updater try it would fail on every check and email the
+     * admin each time. The notice on the Plugins screen is the whole message.
+     *
+     * @param bool|null $update
+     * @return bool|null
+     */
+    public function block_auto_update( $update, $item ) {
+        if ( is_object( $item ) && ( $item->plugin ?? '' ) === $this->plugin_basename && get_option( $this->opt_blocked ) ) {
+            return false;
+        }
+
+        return $update;
+    }
+
+    /** An https package URL WordPress may fetch: valid, and on the licence host. */
+    private function is_package_url( string $package ): bool {
+        if ( ! wp_http_validate_url( $package ) ) {
+            return false;
+        }
+        if ( 'https' !== strtolower( (string) wp_parse_url( $package, PHP_URL_SCHEME ) ) ) {
+            return false;
+        }
+        // `www.` is the same site: the server builds this URL from its public
+        // origin, which need not match the host the plugin was configured with.
+        $strip_www = static fn( string $host ): string => preg_replace( '/^www\./', '', strtolower( $host ) );
+        $api_host  = $strip_www( (string) wp_parse_url( $this->api_base, PHP_URL_HOST ) );
+
+        return '' !== $api_host && $strip_www( (string) wp_parse_url( $package, PHP_URL_HOST ) ) === $api_host;
     }
 
     /** Cache key for a cached update-check response, scoped to product|version|key. */
