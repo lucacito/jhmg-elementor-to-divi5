@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: JHMG Converter For Elementor to Divi 5 3.0.2\n"
+"Project-Id-Version: JHMG Converter For Elementor to Divi 5 3.2.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/jhmg-converter-for-elementor-to-divi\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-16T11:25:24+00:00\n"
+"POT-Creation-Date: 2026-10-06T10:57:52+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: jhmg-converter-for-elementor-to-divi\n"
@@ -43,7 +43,7 @@ msgstr ""
 #: includes/admin/class-admin-page.php:125
 #: includes/admin/class-admin-page.php:334
 #: includes/admin/class-admin-page.php:356
-#: includes/admin/class-admin-page.php:792
+#: includes/admin/class-admin-page.php:795
 msgid "Elementor to Divi 5 Converter"
 msgstr ""
 
@@ -187,7 +187,7 @@ msgid "JSON File"
 msgstr ""
 
 #: includes/admin/class-admin-page.php:419
-msgid "Upload an Elementor page JSON export."
+msgid "Upload an Elementor page JSON export here — not through Divi's own Import & Export dialog, which does not accept Elementor files."
 msgstr ""
 
 #: includes/admin/class-admin-page.php:422
@@ -212,7 +212,7 @@ msgid "Draft (recommended)"
 msgstr ""
 
 #: includes/admin/class-admin-page.php:432
-#: includes/admin/class-admin-page.php:759
+#: includes/admin/class-admin-page.php:762
 msgid "Published"
 msgstr ""
 
@@ -365,7 +365,7 @@ msgid "Batch Import Results"
 msgstr ""
 
 #: includes/admin/class-admin-page.php:623
-#: includes/admin/class-admin-page.php:796
+#: includes/admin/class-admin-page.php:799
 msgid "Back to converter"
 msgstr ""
 
@@ -409,78 +409,82 @@ msgid "Converted"
 msgstr ""
 
 #: includes/admin/class-admin-page.php:682
+msgid "Original page replaced — Undo restores the Elementor version."
+msgstr ""
+
+#: includes/admin/class-admin-page.php:685
 msgid "Failed"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:693
+#: includes/admin/class-admin-page.php:696
 msgid "issues"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:701
+#: includes/admin/class-admin-page.php:704
 msgid "Unsupported:"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:707
+#: includes/admin/class-admin-page.php:710
 msgid "Skipped:"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:713
+#: includes/admin/class-admin-page.php:716
 msgid "Unresolved global — left unset:"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:727
+#: includes/admin/class-admin-page.php:730
 msgid "Clean"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:735
+#: includes/admin/class-admin-page.php:738
 msgid "Edit"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:738
+#: includes/admin/class-admin-page.php:741
 msgid "View"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:756
+#: includes/admin/class-admin-page.php:759
 msgid "Publish"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:786
+#: includes/admin/class-admin-page.php:789
 msgid "No checked selection found or it has expired. Please pick a page again."
 msgstr ""
 
-#: includes/admin/class-admin-page.php:815
+#: includes/admin/class-admin-page.php:818
 msgid "Converted Elements"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:819
+#: includes/admin/class-admin-page.php:822
 msgid "Type"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:820
+#: includes/admin/class-admin-page.php:823
 msgid "Count"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:838
+#: includes/admin/class-admin-page.php:841
 msgid "Unsupported Elements"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:857
+#: includes/admin/class-admin-page.php:860
 msgid "Warnings"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:871
+#: includes/admin/class-admin-page.php:874
 msgid "Skipped Settings"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:874
+#: includes/admin/class-admin-page.php:877
 msgid "These Elementor settings have no Divi 5 mapping yet and were not converted."
 msgstr ""
 
-#: includes/admin/class-admin-page.php:885
+#: includes/admin/class-admin-page.php:888
 msgid "Clean Conversion"
 msgstr ""
 
-#: includes/admin/class-admin-page.php:886
+#: includes/admin/class-admin-page.php:889
 msgid "No warnings, unsupported elements, or skipped settings."
 msgstr ""
 
@@ -525,117 +529,141 @@ msgstr ""
 msgid "Share these widget names"
 msgstr ""
 
-#: includes/admin/class-coverage-panel.php:103
+#: includes/admin/class-coverage-panel.php:106
 msgid "Undone"
 msgstr ""
 
-#: includes/admin/class-coverage-panel.php:108
+#: includes/admin/class-coverage-panel.php:112
 msgid "Undo is unavailable because this site empties the trash immediately."
 msgstr ""
 
-#. translators: %d: number of pages this import created.
-#: includes/admin/class-coverage-panel.php:112
+#. translators: %d: number of pages this import replaced.
+#: includes/admin/class-coverage-panel.php:118
 #, php-format
-msgid "Move the %d page(s) this import created to the Trash?"
+msgid "Restore the %d page(s) this import replaced to their original Elementor version"
 msgstr ""
 
-#: includes/admin/class-coverage-panel.php:123
+#. translators: %d: number of pages this import created.
+#: includes/admin/class-coverage-panel.php:126
+#, php-format
+msgid "move the %d page(s) it created to the Trash"
+msgstr ""
+
+#. translators: %d: number of pages this import created.
+#: includes/admin/class-coverage-panel.php:131
+#, php-format
+msgid "Move the %d page(s) this import created to the Trash"
+msgstr ""
+
+#: includes/admin/class-coverage-panel.php:144
 msgid "Undo"
 msgstr ""
 
-#: includes/admin/class-coverage-panel.php:139
+#: includes/admin/class-coverage-panel.php:160
 msgid "Recent imports"
 msgstr ""
 
-#: includes/admin/class-coverage-panel.php:140
-msgid "Undo moves the pages an import created to the trash. It skips only pages that are no longer linked to this import (already gone, or replaced) — editing a page does not exempt it from Undo."
+#: includes/admin/class-coverage-panel.php:161
+msgid "Undo moves the pages an import created to the trash, and puts pages it replaced back to their original Elementor version. It skips only pages that are no longer linked to this import (already gone) — editing a page does not exempt it from Undo."
 msgstr ""
 
-#: includes/admin/class-coverage-panel.php:141
+#: includes/admin/class-coverage-panel.php:162
 msgid "When"
 msgstr ""
 
-#: includes/admin/class-coverage-panel.php:142
+#: includes/admin/class-coverage-panel.php:163
 msgid "Pages"
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:164
+#: includes/admin/class-direct-conversion-page.php:179
 msgid "No Elementor pages found on this site. If your pages live elsewhere, use the JSON import above."
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:183
+#: includes/admin/class-direct-conversion-page.php:198
 msgid "already converted"
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:191
+#: includes/admin/class-direct-conversion-page.php:206
 msgid "Check this page"
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:196
+#: includes/admin/class-direct-conversion-page.php:211
 msgid "Free converts one page at a time, as many times as you like. Pro converts your whole site in one run."
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:211
+#: includes/admin/class-direct-conversion-page.php:226
 msgid "Search Elementor pages"
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:215
+#: includes/admin/class-direct-conversion-page.php:230
 msgid "Search by title…"
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:217
+#: includes/admin/class-direct-conversion-page.php:232
 msgid "Search"
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:239
+#: includes/admin/class-direct-conversion-page.php:254
 msgid "Previous"
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:245
+#: includes/admin/class-direct-conversion-page.php:260
 msgid "Next"
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:258
+#: includes/admin/class-direct-conversion-page.php:273
 msgid "Conversion report"
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:260
+#: includes/admin/class-direct-conversion-page.php:275
 msgid "Nothing has been written yet. This is what the conversion will produce."
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:265
+#: includes/admin/class-direct-conversion-page.php:280
 msgid "Only the first page was checked. Converting several pages in one run is a Pro feature."
 msgstr ""
 
 #. translators: %d: number of Divi modules the conversion produced
-#: includes/admin/class-direct-conversion-page.php:287
+#: includes/admin/class-direct-conversion-page.php:302
 #, php-format
 msgid "%d module converted."
 msgid_plural "%d modules converted."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/admin/class-direct-conversion-page.php:304
+#: includes/admin/class-direct-conversion-page.php:319
 msgid "Could not be converted:"
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:326
+#: includes/admin/class-direct-conversion-page.php:342
+msgid "Replace the original page instead of creating a copy"
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:344
+msgid "The page keeps its address, ID and menu entries, and stays published if it was. Its Elementor version is backed up, and Undo restores it."
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:347
 msgid "Convert to Divi 5"
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:329
+#: includes/admin/class-direct-conversion-page.php:350
 msgid "Creates a new Divi draft. Your Elementor page is left exactly as it is."
 msgstr ""
 
 #: includes/admin/class-direct-conversion-page.php:351
+msgid "Headers and footers are always added as new Theme Builder layouts."
+msgstr ""
+
+#: includes/admin/class-direct-conversion-page.php:373
 msgid "You do not have permission to do that."
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:381
+#: includes/admin/class-direct-conversion-page.php:403
 msgid "Pick a page to check first."
 msgstr ""
 
-#: includes/admin/class-direct-conversion-page.php:412
+#: includes/admin/class-direct-conversion-page.php:434
 msgid "No pages were selected to convert."
 msgstr ""
 
@@ -746,7 +774,7 @@ msgid "Unknown page"
 msgstr ""
 
 #. translators: %d: number of form fields that were discarded
-#: includes/converter/class-converter-engine.php:352
+#: includes/converter/class-converter-engine.php:353
 #, php-format
 msgid "%d field"
 msgid_plural "%d fields"
@@ -765,12 +793,20 @@ msgstr ""
 msgid "Elementor to Divi 5 Converter is inactive: this site runs Divi %1$s, and the converter writes Divi 5 block content that requires Divi %2$s or newer. Converting now would produce pages that render blank."
 msgstr ""
 
-#: includes/history/class-import-rollback.php:136
+#: includes/history/class-import-rollback.php:157
 msgid "Undo did not run: this site is configured to empty the Trash immediately, so nothing could be trashed. No pages were changed."
 msgstr ""
 
+#. translators: %d: number of pages put back to their original Elementor version.
+#: includes/history/class-import-rollback.php:174
+#, php-format
+msgid "%d page was restored to its original Elementor version."
+msgid_plural "%d pages were restored to their original Elementor version."
+msgstr[0] ""
+msgstr[1] ""
+
 #. translators: %d: number of pages moved to the Trash.
-#: includes/history/class-import-rollback.php:152
+#: includes/history/class-import-rollback.php:189
 #, php-format
 msgid "%d page was moved to the Trash. You can restore it from Posts → Trash if needed."
 msgid_plural "%d pages were moved to the Trash. You can restore them from Posts → Trash if needed."
@@ -778,13 +814,13 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of pages skipped.
-#: includes/history/class-import-rollback.php:167
+#: includes/history/class-import-rollback.php:204
 #, php-format
 msgid "%d page was skipped because it is no longer owned by this plugin (already gone, or replaced since the import)."
 msgid_plural "%d pages were skipped because they are no longer owned by this plugin (already gone, or replaced since the import)."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/history/class-import-rollback.php:179
+#: includes/history/class-import-rollback.php:216
 msgid "Nothing to undo: this import had already been undone or had no pages left to trash."
 msgstr ""

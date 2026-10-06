@@ -3,7 +3,7 @@ Contributors: lucaslopvet
 Tags: divi migration, elementor export, page builder converter, elementor to divi, divi 5
 Requires at least: 5.9
 Tested up to: 7.1
-Stable tag: 3.1.0
+Stable tag: 3.2.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -14,7 +14,7 @@ Convert Elementor pages to native Divi 5: pick a page from your site or upload a
 
 Convert Elementor pages and templates into native Divi 5 blocks. If Elementor is installed on this site, pick the page from a list; otherwise upload an Elementor page JSON export. No Elementor is needed on the destination.
 
-Click **Check this page** first: the report shows the structure the conversion will produce and names anything that cannot be carried over. Converting creates a new Divi draft, never touches the Elementor page, and can be undone from the import history.
+Click **Check this page** first: the report shows the structure the conversion will produce and names anything that cannot be carried over. Converting creates a new Divi draft and leaves the Elementor page alone, unless you tick **Replace the original page** to convert it in place. Either way it can be undone from the import history.
 
 Supported: Elementor's core widgets and layouts, plus Essential Addons, Header Footer Elementor, ElementsKit, Animation Addons for Elementor and Premium Addons widgets. Converted pages render as designed in Divi 5.7.4: backgrounds, typography, buttons, galleries, counters and add-on modules included.
 
@@ -52,7 +52,7 @@ The plugin preserves all text, images, videos, and basic styling. Some advanced 
 
 = Will this affect my live Elementor pages? =
 
-No. Whether you pick a page from the list or upload a JSON export, the plugin never modifies the Elementor page — it always creates a new Divi draft. Your original Elementor pages remain untouched, and every conversion run can be undone with one click.
+Not unless you ask it to. By default, whether you pick a page from the list or upload a JSON export, the plugin never modifies the Elementor page — it creates a new Divi draft. If you would rather keep the page's address and menu entries, tick **Replace the original page** on the report screen: the page is converted in place, its Elementor version is backed up on the page itself, and Undo restores it. Every conversion run can be undone with one click.
 
 = What about custom CSS from Elementor? =
 
@@ -98,6 +98,11 @@ commonly missing Elementor widgets get built first.
 * Terms: https://divi5lab.com/terms — Privacy policy: https://divi5lab.com/privacy
 
 == Changelog ==
+
+= 3.2.0 =
+* New: **Replace the original page** — an optional checkbox on the conversion report converts a page in place instead of creating a copy, so it keeps its address, ID and menu entries (and stays published if it was). Nothing is lost: the Elementor version is backed up on the page, and Undo restores it. Off by default; headers, footers and uploaded files are always added as new items
+* New: Undo now restores replaced pages to their original Elementor version, and still moves copies to the Trash
+* Fixed: a page imported from an Elementor kit that had no title in its export was named after its database ID ("4521"). It now uses the title from the kit manifest, and falls back to "Imported page 4521"
 
 = 3.1.0 =
 * New: support for Animation Addons for Elementor — 50 of its widgets now convert to native Divi 5 modules, including its slider/carousel widgets, image box, image accordion, author box, advanced pricing table, team slider, one-page navigation and the widgets that read the current post (title, content, comments, pagination, search)
@@ -187,6 +192,9 @@ commonly missing Elementor widgets get built first.
 * Detailed conversion logging
 
 == Upgrade Notice ==
+
+= 3.2.0 =
+New: tick "Replace the original page" to convert a page in place and keep its address and menu entries, with the Elementor version backed up and restorable from Undo. Fixes pages from Elementor kits being named after their database ID.
 
 = 3.1.0 =
 Adds support for Animation Addons for Elementor (50 widgets). Also fixes the native Price Table and Search widgets, which converted with missing content in every prior version.

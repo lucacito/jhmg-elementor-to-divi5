@@ -10,9 +10,9 @@ class ReleaseMetadataTest extends TestCase {
         $main   = (string) file_get_contents( self::FREE . '/jhmg-converter-for-elementor-to-divi.php' );
         $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
 
-        $this->assertStringContainsString( 'Version:     3.1.0', $main );
-        $this->assertStringContainsString( "EDC_PLUGIN_VERSION', '3.1.0'", $main );
-        $this->assertStringContainsString( 'Stable tag: 3.1.0', $readme );
+        $this->assertStringContainsString( 'Version:     3.2.0', $main );
+        $this->assertStringContainsString( "EDC_PLUGIN_VERSION', '3.2.0'", $main );
+        $this->assertStringContainsString( 'Stable tag: 3.2.0', $readme );
     }
 
     public function test_readme_discloses_the_external_service(): void {
@@ -61,12 +61,37 @@ class ReleaseMetadataTest extends TestCase {
         );
     }
 
-    public function test_version_is_three_one_zero_everywhere(): void {
+    public function test_version_is_three_two_zero_everywhere(): void {
         $main   = (string) file_get_contents( self::FREE . '/jhmg-converter-for-elementor-to-divi.php' );
         $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
 
-        $this->assertMatchesRegularExpression( '/^\s*\*\s*Version:\s*3\.1\.0\s*$/m', $main );
-        $this->assertMatchesRegularExpression( '/^Stable tag:\s*3\.1\.0\s*$/m', $readme );
+        $this->assertMatchesRegularExpression( '/^\s*\*\s*Version:\s*3\.2\.0\s*$/m', $main );
+        $this->assertMatchesRegularExpression( '/^Stable tag:\s*3\.2\.0\s*$/m', $readme );
+    }
+
+    public function test_readme_documents_3_2_0_in_changelog_and_upgrade_notice(): void {
+        $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
+
+        $this->assertSame( 2, substr_count( $readme, '= 3.2.0 =' ), 'a changelog entry and an upgrade notice' );
+    }
+
+    public function test_readme_no_longer_promises_the_original_is_never_modified_unconditionally(): void {
+        // 3.2.0 can convert a page in place when the user ticks the checkbox,
+        // so the FAQ and the description must say "unless you ask".
+        $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
+        // Past changelog entries were true when written; only the live
+        // description and FAQ, above the changelog, have to stay accurate.
+        $live = substr( $readme, 0, (int) strpos( $readme, '== Changelog ==' ) );
+
+        $this->assertStringNotContainsString( 'always creates a new Divi draft', $live );
+        $this->assertStringContainsString( 'Replace the original page', $live );
+    }
+
+    public function test_pro_version_is_consistent(): void {
+        $pro = (string) file_get_contents( __DIR__ . '/../plugin/jhmg-converter-for-elementor-to-divi-pro/jhmg-converter-for-elementor-to-divi-pro.php' );
+
+        $this->assertMatchesRegularExpression( '/^\s*\*\s*Version:\s*1\.2\.2\s*$/m', $pro );
+        $this->assertStringContainsString( "EDCP_PLUGIN_VERSION', '1.2.2'", $pro );
     }
 
     public function test_readme_documents_3_1_0_in_changelog_and_upgrade_notice(): void {
