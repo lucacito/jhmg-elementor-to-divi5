@@ -30,6 +30,10 @@ class Plugin {
             // when it actually runs, on an admin hook, by which time it is.
             add_action( 'admin_notices', [ \ElementorDivi5Converter\Helpers\DiviRequirement::class, 'render_notice' ] );
 
+            // A plugin update does not fire the activation hook, so the job
+            // tables are also (cheaply) checked on every admin load.
+            add_action( 'admin_init', [ \ElementorDivi5Converter\Jobs\Schema::class, 'maybe_upgrade' ] );
+
             ( new \ElementorDivi5Converter\Admin\AdminPage() )->init();
             ( new \ElementorDivi5Converter\Admin\DirectConversionPage() )->init();
             ( new \ElementorDivi5Converter\Admin\PriceDropNotice() )->init();
