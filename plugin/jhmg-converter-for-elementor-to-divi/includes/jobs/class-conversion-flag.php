@@ -66,8 +66,10 @@ final class ConversionFlag {
         }
     }
 
+    // The (string) casts matter: get_post_meta() returns false, not '', for an
+    // invalid post ID, and false !== '' would make post 0 look converted.
     public static function is_converted( int $post_id ): bool {
-        return get_post_meta( $post_id, self::AT, true ) !== '';
+        return (string) get_post_meta( $post_id, self::AT, true ) !== '';
     }
 
     public static function converted_at( int $post_id ): string {
@@ -79,7 +81,7 @@ final class ConversionFlag {
     }
 
     public static function is_manual( int $post_id ): bool {
-        return get_post_meta( $post_id, self::MANUAL, true ) !== '';
+        return (string) get_post_meta( $post_id, self::MANUAL, true ) !== '';
     }
 
     /** The page has no usable Elementor content: it leaves the pending list without being "converted". */
@@ -88,7 +90,7 @@ final class ConversionFlag {
     }
 
     public static function is_unconvertible( int $post_id ): bool {
-        return get_post_meta( $post_id, self::UNCONVERTIBLE, true ) !== '';
+        return (string) get_post_meta( $post_id, self::UNCONVERTIBLE, true ) !== '';
     }
 
     public static function clear_unconvertible( int $post_id ): void {

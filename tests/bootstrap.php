@@ -128,6 +128,10 @@ if ( ! function_exists( 'update_post_meta' ) ) {
 
     function get_post_meta( $post_id, $meta_key = '', $single = false ) {
         $id = (int) $post_id;
+        // Core returns false (not '' or []) for an invalid object id.
+        if ( $id <= 0 ) {
+            return false;
+        }
         if ( $meta_key === '' ) {
             return $GLOBALS['__test_postmeta'][ $id ] ?? [];
         }

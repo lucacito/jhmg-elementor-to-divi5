@@ -73,7 +73,6 @@ class ConversionFlagTest extends TestCase {
         $r = $this->commit( [ 'source_ref' => [ 'kind' => 'upload', 'post_id' => null, 'file' => 'x.json' ] ] );
 
         $this->assertTrue( $r[0]['success'] );
-        $this->assertSame( '', get_post_meta( 0, '_edc_converted_at', true ) );
         $this->assertSame( '', get_post_meta( $r[0]['post_id'], '_edc_converted_at', true ), 'the new draft is the output, not a converted source' );
     }
 
@@ -193,5 +192,12 @@ class ConversionFlagTest extends TestCase {
         ConversionFlag::clear( 77 );
         $this->assertFalse( ConversionFlag::is_converted( 77 ) );
         $this->assertFalse( ConversionFlag::is_manual( 77 ) );
+    }
+
+    public function test_an_invalid_post_id_is_never_reported_as_converted(): void {
+        // get_post_meta() returns false (not '') for post 0 in real WordPress.
+        $this->assertFalse( ConversionFlag::is_converted( 0 ) );
+        $this->assertFalse( ConversionFlag::is_manual( 0 ) );
+        $this->assertFalse( ConversionFlag::is_unconvertible( 0 ) );
     }
 }

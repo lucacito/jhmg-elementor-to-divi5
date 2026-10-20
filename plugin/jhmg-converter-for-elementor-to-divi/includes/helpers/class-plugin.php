@@ -33,6 +33,9 @@ class Plugin {
             // A plugin update does not fire the activation hook, so the job
             // tables are also (cheaply) checked on every admin load.
             add_action( 'admin_init', [ \ElementorDivi5Converter\Jobs\Schema::class, 'maybe_upgrade' ] );
+            // After the tables, so a site that converted pages before job tracking
+            // existed sees them as converted rather than pending.
+            add_action( 'admin_init', [ \ElementorDivi5Converter\Jobs\Backfill::class, 'maybe_run' ], 20 );
 
             ( new \ElementorDivi5Converter\Admin\AdminPage() )->init();
             ( new \ElementorDivi5Converter\Admin\DirectConversionPage() )->init();
