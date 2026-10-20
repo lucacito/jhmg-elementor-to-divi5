@@ -1,0 +1,58 @@
+/* Tools → Conversion Jobs. Uses WordPress admin colours and the plugin's existing .edc-card / .edc-badge. */
+
+/* Sticky summary bar: stays visible below the admin bar while a long list scrolls. */
+.edc-bar { position: sticky; top: 32px; z-index: 50; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center;
+    margin: 12px 0 16px; padding: 10px 16px; background: #fff; border: 1px solid #c3c4c7; border-left: 4px solid #2271b1;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .06); }
+.edc-bar__stat { font-size: 14px; color: #50575e; }
+.edc-bar__stat strong { font-size: 20px; margin-right: 2px; color: #1d2327; font-variant-numeric: tabular-nums; }
+.edc-bar__stat--converted strong { color: #00a32a; }
+.edc-bar__stat--pending strong { color: #2271b1; }
+.edc-bar__stat--failed strong { color: #d63638; }
+.edc-bar__live { margin-left: auto; font-size: 13px; color: #50575e; }
+@media screen and (max-width: 782px) { .edc-bar { top: 46px; } }
+@media screen and (max-width: 600px) { .edc-bar { position: static; } }
+
+.edc-jobs-wrap .edc-card { margin-bottom: 20px; }
+.edc-jobs-filters { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 8px 0 16px; }
+.edc-jobs-filters label { display: inline-flex; gap: 4px; align-items: center; }
+.edc-empty { color: #646970; font-style: italic; }
+
+/* One job: a <details>; finished jobs are closed, unfinished ones open. */
+.edc-job { border: 1px solid #dcdcde; border-radius: 3px; margin: 0 0 8px; background: #fff; }
+.edc-job > summary { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; padding: 10px 14px; cursor: pointer; list-style-position: inside; }
+.edc-job[open] > summary { border-bottom: 1px solid #dcdcde; background: #f6f7f7; }
+.edc-job--running { border-left: 4px solid #2271b1; }
+.edc-job--interrupted { border-left: 4px solid #dba617; }
+.edc-job--done_errors { border-left: 4px solid #d63638; }
+.edc-job--done { border-left: 4px solid #00a32a; }
+.edc-job__title { font-weight: 600; }
+.edc-job__date, .edc-job__scope { color: #646970; }
+.edc-job__status { padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; background: #f0f0f1; color: #3c434a; }
+.edc-job__status--running { background: #dbeafe; color: #1d4ed8; }
+.edc-job__status--interrupted { background: #fcf0c3; color: #755100; }
+.edc-job__status--done { background: #d1e7dd; color: #0a3622; }
+.edc-job__status--done_errors { background: #fcd9d9; color: #8a2424; }
+.edc-job__progress { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.edc-progress { display: inline-block; width: 140px; height: 8px; background: #dcdcde; border-radius: 4px; overflow: hidden; }
+.edc-progress__fill { display: block; height: 100%; background: #2271b1; transition: width .3s ease; }
+.edc-job--done .edc-progress__fill { background: #00a32a; }
+.edc-job__failed { color: #d63638; font-weight: 600; }
+.edc-job__body { padding: 12px 14px; }
+.edc-job__actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 8px; }
+.edc-job__note { color: #646970; }
+.edc-job__undone { color: #646970; font-weight: 600; }
+.edc-job__filter { margin: 0 0 8px; }
+.edc-state-filter { margin-right: 10px !important; text-decoration: none; }
+.edc-state-filter.is-active { font-weight: 700; text-decoration: underline; }
+
+.edc-items td, .edc-items th { vertical-align: top; }
+.edc-state { font-weight: 600; }
+.edc-state--converted { color: #00a32a; }
+.edc-state--failed { color: #d63638; }
+.edc-state--skipped { color: #996800; }
+.edc-state--pending, .edc-state--running { color: #2271b1; }
+.edc-item-message { color: #646970; }
+.edc-item-actions { white-space: nowrap; }
+.edc-pager { display: flex; gap: 8px; align-items: center; margin: 10px 0 0; }
+.edc-loading { color: #646970; padding: 8px 0; }

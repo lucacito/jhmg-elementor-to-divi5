@@ -769,3 +769,17 @@ if ( ! function_exists( 'wp_http_validate_url' ) ) {
         return filter_var( $url, FILTER_VALIDATE_URL ) ? $url : false;
     }
 }
+if ( ! function_exists( 'get_date_from_gmt' ) ) {
+    function get_date_from_gmt( $gmt, $format = 'Y-m-d H:i:s' ): string { return gmdate( $format, strtotime( $gmt . ' UTC' ) ); }
+}
+if ( ! function_exists( 'number_format_i18n' ) ) {
+    function number_format_i18n( $n, $decimals = 0 ): string { return number_format( (float) $n, (int) $decimals ); }
+}
+if ( ! function_exists( 'esc_textarea' ) ) {
+    function esc_textarea( $t ): string { return htmlspecialchars( (string) $t, ENT_QUOTES ); }
+}
+if ( ! function_exists( 'get_post_types' ) ) {
+    function get_post_types( $args = [], $output = 'names' ): array {
+        return [ 'page' => 'page', 'post' => 'post', 'attachment' => 'attachment', 'elementor_library' => 'elementor_library' ];
+    }
+}

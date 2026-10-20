@@ -39,6 +39,8 @@ class Plugin {
 
             ( new \ElementorDivi5Converter\Admin\AdminPage() )->init();
             ( new \ElementorDivi5Converter\Admin\DirectConversionPage() )->init();
+            ( new \ElementorDivi5Converter\Admin\JobsPage() )->init();
+            ( new \ElementorDivi5Converter\Admin\JobsAjax() )->init();
             ( new \ElementorDivi5Converter\Admin\PriceDropNotice() )->init();
             ( new \ElementorDivi5Converter\Admin\ReviewPrompt() )->init();
             ( new \ElementorDivi5Converter\Admin\HfeConflictNotice() )->init();
