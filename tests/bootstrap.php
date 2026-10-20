@@ -225,6 +225,16 @@ if ( ! function_exists( 'wp_insert_post' ) ) {
             if ( $key !== '' && (string) get_post_meta( $id, $key, true ) !== (string) $value ) {
                 continue;
             }
+            // Like core: 'any' skips trashed posts, an explicit list is exact.
+            // Absent keeps the old behaviour (no filtering) for existing callers.
+            if ( isset( $args['post_status'] ) ) {
+                $status   = $post->post_status ?? 'publish';
+                $wanted   = (array) $args['post_status'];
+                $accepted = in_array( 'any', $wanted, true ) ? $status !== 'trash' : in_array( $status, $wanted, true );
+                if ( ! $accepted ) {
+                    continue;
+                }
+            }
             $matches[] = (int) $id;
         }
 
@@ -650,6 +660,9 @@ if ( ! function_exists( 'wp_trash_post' ) ) {
             return false;
         }
         $GLOBALS['__test_trashed'][] = $post_id;
+        if ( isset( $GLOBALS['__test_posts'][ $post_id ] ) ) {
+            $GLOBALS['__test_posts'][ $post_id ]->post_status = 'trash';
+        }
         return (object) [ 'ID' => $post_id ];
     }
 }

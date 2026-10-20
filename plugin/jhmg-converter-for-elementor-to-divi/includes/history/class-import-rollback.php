@@ -22,6 +22,7 @@
 namespace ElementorDivi5Converter\History;
 
 use ElementorDivi5Converter\Conversion\ReplaceBackup;
+use ElementorDivi5Converter\Jobs\ConversionFlag;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -64,6 +65,8 @@ class ImportRollback {
         foreach ( $replaced as $post_id ) {
             if ( $backup->restore( $post_id ) ) {
                 $restored++;
+                // Elementor owns the page again, so it is pending again.
+                ConversionFlag::clear_after_undo( $post_id );
             } else {
                 $skipped++;
             }
@@ -89,8 +92,13 @@ class ImportRollback {
                 continue;
             }
 
+            $source_id = (int) get_post_meta( $post_id, '_edc_source_post_id', true );
+
             if ( wp_trash_post( $post_id ) ) {
                 $trashed++;
+                if ( $source_id > 0 ) {
+                    ConversionFlag::clear_after_undo( $source_id );
+                }
             } else {
                 $skipped++;
             }

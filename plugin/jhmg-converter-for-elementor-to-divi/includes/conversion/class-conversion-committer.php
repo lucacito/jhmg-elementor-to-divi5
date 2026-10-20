@@ -9,6 +9,7 @@
 namespace ElementorDivi5Converter\Conversion;
 
 use ElementorDivi5Converter\Exporters\DiviExporter;
+use ElementorDivi5Converter\Jobs\ConversionFlag;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -36,6 +37,7 @@ class ConversionCommitter {
         $convert_headers     = $options['convert_headers'] ?? true;
         $convert_footers     = $options['convert_footers'] ?? true;
         $replace_original    = ! empty( $options['replace_original'] );
+        $skip_converted      = ! empty( $options['skip_converted'] );
 
         $results = [];
 
@@ -43,6 +45,16 @@ class ConversionCommitter {
             if ( ( $item['error'] ?? '' ) !== '' ) {
                 $results[] = $this->failResult( $item['title'], $item['error'] );
                 continue;
+            }
+
+            // Callers that ask (the jobs runner) never convert a page twice. The
+            // picker does not ask: re-converting from it is a deliberate act.
+            if ( $skip_converted ) {
+                $source_id = $this->sourcePostId( $item );
+                if ( $source_id > 0 && ConversionFlag::is_converted( $source_id ) ) {
+                    $results[] = $this->skippedResult( $item['title'], $source_id );
+                    continue;
+                }
             }
 
             $template_type = (string) ( $item['template_type'] ?? '' );
@@ -70,7 +82,45 @@ class ConversionCommitter {
             $results[] = $this->commitPage( $item, $default_post_type, $default_post_status );
         }
 
+        $this->flagConvertedSources( $plan->items(), $results );
+
         return $results;
+    }
+
+    private function sourcePostId( array $item ): int {
+        return ( $item['source_ref']['kind'] ?? '' ) === 'installed' ? (int) ( $item['source_ref']['post_id'] ?? 0 ) : 0;
+    }
+
+    /**
+     * Records on each successfully converted installed page that it is done,
+     * so it leaves the pending list. Items and results line up one to one.
+     * (A skipped item has success=false, so an existing flag is never touched.)
+     */
+    private function flagConvertedSources( array $items, array $results ): void {
+        foreach ( array_values( $items ) as $i => $item ) {
+            $source_id = $this->sourcePostId( $item );
+            if ( $source_id > 0 && ! empty( $results[ $i ]['success'] ) ) {
+                ConversionFlag::mark( $source_id );
+            }
+        }
+    }
+
+    private function skippedResult( string $title, int $source_id ): array {
+        $when = ConversionFlag::converted_at( $source_id );
+
+        return [
+            'title'       => $title,
+            'post_id'     => $source_id,
+            'success'     => false,
+            'skipped'     => true,
+            'error'       => sprintf(
+                /* translators: %s: date the page was converted */
+                __( 'Already converted on %s, so it was skipped.', 'jhmg-converter-for-elementor-to-divi' ),
+                $when !== '' ? $when : __( 'an earlier run', 'jhmg-converter-for-elementor-to-divi' )
+            ),
+            'report'      => [],
+            'unsupported' => [],
+        ];
     }
 
     /**
