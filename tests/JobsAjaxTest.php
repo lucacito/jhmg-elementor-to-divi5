@@ -127,4 +127,148 @@ class JobsAjaxTest extends TestCase {
         $this->assertSame( 1, $r['bar']['pending'] );
         $this->assertSame( 0, $r['bar']['failed'] );
     }
+
+    // ---- pending list --------------------------------------------------------
+
+    public function test_pending_returns_the_table_html_for_the_requested_filters(): void {
+        $this->seed( 11 );
+        $this->seed( 12, 'post' );
+
+        $r = $this->ajax->handle( 'pending', $this->req( [ 'types' => [ 'post' ], 'search' => '', 'paged' => 1 ] ) );
+
+        $this->assertTrue( $r['ok'] );
+        $this->assertStringContainsString( 'Page 12', $r['html'] );
+        $this->assertStringNotContainsString( 'Page 11<', $r['html'] );
+    }
+
+    public function test_pending_ignores_post_types_outside_the_allowed_set(): void {
+        $this->seed( 11 );
+
+        $r = $this->ajax->handle( 'pending', $this->req( [ 'types' => [ 'elementor_library', 'shop_order' ] ] ) );
+
+        $this->assertTrue( $r['ok'] );
+        $this->assertStringContainsString( 'Page 11', $r['html'], 'unknown types are dropped and the default (all allowed) applies' );
+    }
+
+    // ---- create ----------------------------------------------------------------
+
+    private function allowMany(): void {
+        add_filter( 'edc_direct_conversion_limit', fn() => PHP_INT_MAX );
+    }
+
+    public function test_create_from_selected_posts_starts_a_job_and_returns_its_markup(): void {
+        $this->allowMany();
+        $this->seed( 11 );
+        $this->seed( 12 );
+
+        $r = $this->ajax->handle( 'create', $this->req( [ 'post_ids' => [ 11, 12 ], 'mode' => 'copy' ] ) );
+
+        $this->assertTrue( $r['ok'] );
+        $this->assertGreaterThan( 0, $r['job_id'] );
+        $this->assertStringContainsString( 'Job #' . $r['job_id'], $r['job_html'] );
+        $this->assertSame( 2, $this->store->get_job( $r['job_id'] )['total'] );
+        $this->assertSame( 'copy', $this->store->get_job( $r['job_id'] )['mode'] );
+        $this->assertSame( (int) get_current_user_id(), $this->store->get_job( $r['job_id'] )['created_by'] );
+    }
+
+    public function test_create_drops_posts_that_are_not_pending_elementor_pages(): void {
+        $this->allowMany();
+        $this->seed( 11 );
+        $GLOBALS['__test_posts'][13] = (object) [ 'ID' => 13, 'post_title' => 'Plain', 'post_type' => 'page', 'post_status' => 'publish' ]; // no Elementor meta
+        $this->seed( 14, 'shop_order' ); // not an allowed type
+
+        $r = $this->ajax->handle( 'create', $this->req( [ 'post_ids' => [ 11, 13, 14 ], 'mode' => 'copy' ] ) );
+
+        $this->assertSame( 1, $this->store->get_job( $r['job_id'] )['total'] );
+    }
+
+    public function test_create_does_not_requeue_an_already_converted_page(): void {
+        $this->allowMany();
+        $this->seed( 11 );
+        ConversionFlag::mark( 11 );
+
+        $r = $this->ajax->handle( 'create', $this->req( [ 'post_ids' => [ 11 ], 'mode' => 'copy' ] ) );
+
+        $this->assertFalse( $r['ok'] );
+        $this->assertSame( 'empty', $r['code'] );
+    }
+
+    public function test_free_creating_more_than_one_gets_the_upsell_details_not_a_job(): void {
+        $this->seed( 11 );
+        $this->seed( 12 );
+        $this->seed( 13 );
+
+        $r = $this->ajax->handle( 'create', $this->req( [ 'remaining' => 1, 'post_types' => [ 'page' ] ] ) );
+
+        $this->assertFalse( $r['ok'] );
+        $this->assertSame( 'pro_required', $r['code'] );
+        $this->assertSame( 3, $r['count'] );
+        $this->assertStringContainsString( 'Convert all 3 remaining with Pro', $r['upsell'] );
+        $this->assertSame( 0, $this->store->count_jobs( [] ) );
+    }
+
+    public function test_create_remaining_over_fifty_demands_a_confirmed_explicit_mode(): void {
+        $this->allowMany();
+        for ( $i = 0; $i < 51; $i++ ) { $this->seed( 100 + $i ); }
+
+        $no_mode    = $this->ajax->handle( 'create', $this->req( [ 'remaining' => 1, 'post_types' => [ 'page' ] ] ) );
+        $no_confirm = $this->ajax->handle( 'create', $this->req( [ 'remaining' => 1, 'post_types' => [ 'page' ], 'mode' => 'replace' ] ) );
+        $ok         = $this->ajax->handle( 'create', $this->req( [ 'remaining' => 1, 'post_types' => [ 'page' ], 'mode' => 'replace', 'confirmed' => '1' ] ) );
+
+        $this->assertSame( 'choose_mode', $no_mode['code'] );
+        $this->assertSame( 'confirm_required', $no_confirm['code'] );
+        $this->assertTrue( $ok['ok'] );
+        $this->assertSame( 'replace', $this->store->get_job( $ok['job_id'] )['mode'] );
+        $this->assertSame( 51, $this->store->get_job( $ok['job_id'] )['total'] );
+    }
+
+    public function test_a_confirmation_that_is_not_literally_true_does_not_count(): void {
+        $this->allowMany();
+        for ( $i = 0; $i < 51; $i++ ) { $this->seed( 100 + $i ); }
+
+        foreach ( [ '0', '', 'false', 'no' ] as $falsy ) {
+            $r = $this->ajax->handle( 'create', $this->req( [ 'remaining' => 1, 'post_types' => [ 'page' ], 'mode' => 'copy', 'confirmed' => $falsy ] ) );
+            $this->assertSame( 'confirm_required', $r['code'], var_export( $falsy, true ) );
+        }
+    }
+
+    // ---- run -------------------------------------------------------------------
+
+    public function test_run_converts_a_chunk_and_returns_progress_and_the_bar(): void {
+        $this->allowMany();
+        $this->seed( 11 );
+        $this->seed( 12 );
+        $created = $this->ajax->handle( 'create', $this->req( [ 'post_ids' => [ 11, 12 ], 'mode' => 'copy' ] ) );
+
+        $r = $this->ajax->handle( 'run', $this->req( [ 'job_id' => $created['job_id'] ] ) );
+
+        $this->assertTrue( $r['ok'] );
+        $this->assertTrue( $r['summary']['done'] );
+        $this->assertSame( 2, $r['summary']['converted'] );
+        $this->assertSame( [ 11, 12 ], $this->calls );
+        $this->assertSame( 100, $r['ui']['percent'] );
+        $this->assertSame( 'done', $r['ui']['status'] );
+        $this->assertSame( 2, $r['bar']['converted'] );
+        $this->assertSame( 0, $r['bar']['pending'] );
+    }
+
+    public function test_run_for_a_missing_job_is_a_clean_error(): void {
+        $r = $this->ajax->handle( 'run', $this->req( [ 'job_id' => 4242 ] ) );
+
+        $this->assertFalse( $r['ok'] );
+        $this->assertSame( 'not_found', $r['code'] );
+    }
+
+    public function test_run_reports_busy_when_another_tab_holds_the_job(): void {
+        $this->allowMany();
+        $this->seed( 11 );
+        $created = $this->ajax->handle( 'create', $this->req( [ 'post_ids' => [ 11 ], 'mode' => 'copy' ] ) );
+        $this->store->claim_lock( $created['job_id'], 60 );
+
+        $r = $this->ajax->handle( 'run', $this->req( [ 'job_id' => $created['job_id'] ] ) );
+
+        $this->assertTrue( $r['ok'] );
+        $this->assertTrue( $r['busy'] );
+        $this->assertSame( [], $this->calls );
+    }
 }

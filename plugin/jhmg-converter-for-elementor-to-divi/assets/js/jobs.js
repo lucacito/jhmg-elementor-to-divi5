@@ -54,13 +54,17 @@
             .fail( function ( xhr ) { $box.html( $( '<p class="edc-empty"/>' ).text( failureMessage( xhr ) ) ); } );
     }
 
-    $( document ).on( 'toggle', '.edc-job', function () {
-        var $job = $( this );
-        if ( this.open && ! $job.data( 'loaded' ) ) {
+    // <details> fires "toggle" without bubbling, so a delegated jQuery handler never
+    // sees it; a capture-phase listener on the document does.
+    document.addEventListener( 'toggle', function ( e ) {
+        var el = e.target;
+        if ( ! el.classList || ! el.classList.contains( 'edc-job' ) || ! el.open ) { return; }
+        var $job = $( el );
+        if ( ! $job.data( 'loaded' ) ) {
             $job.data( 'loaded', true );
             loadItems( $job, '', 1 );
         }
-    } );
+    }, true );
 
     $( document ).on( 'click', '.edc-state-filter', function () {
         var $job = $( this ).closest( '.edc-job' );
@@ -81,5 +85,274 @@
         } );
     } );
 
-    window.edcJobsApi = { request: request, failureMessage: failureMessage, updateBar: updateBar, refreshBar: refreshBar, loadItems: loadItems };
+
+    // ------------------------------------------------------- progress painting
+
+    function paint( $job, ui ) {
+        if ( ! ui ) { return; }
+        $job.find( '.edc-progress__fill' ).css( 'width', ui.percent + '%' );
+        $job.find( '.edc-job__counts' ).text( ui.counts );
+        $job.find( '.edc-job__failed' ).text( ui.failed );
+        $job.find( '.edc-job__status' ).text( ui.status_label )
+            .attr( 'class', 'edc-job__status edc-job__status--' + ui.status );
+        $job.attr( 'class', $job.attr( 'class' ).replace( /edc-job--\S+/, 'edc-job--' + ui.status ) ).attr( 'data-status', ui.status );
+    }
+
+    function setLive( text ) { $( '.edc-bar__live' ).text( text || '' ); }
+
+    // ------------------------------------------------------------- the runner
+
+    var runningJob = null;
+
+    function later( fn, ms ) { return window.setTimeout( fn, ms ); }
+
+    /**
+     * Runs a job one server-sized chunk at a time. Each chunk is a separate
+     * request that finishes inside the host's time limit, so a closed tab or a
+     * dropped connection just pauses the job: it is all on the server.
+     */
+    function runJob( jobId ) {
+        if ( runningJob ) { return; }
+        runningJob = jobId;
+
+        var $job = $( '.edc-job[data-job-id="' + jobId + '"]' );
+        var failures = 0;
+
+        setLive( t.converting );
+        $job.find( '[data-edc-action="resume"]' ).prop( 'disabled', true );
+
+        function stop( message ) {
+            runningJob = null;
+            setLive( '' );
+            $job.find( '.edc-job__note' ).text( message || '' );
+            ensureResume( $job );
+        }
+
+        ( function step() {
+            request( 'run', { job_id: jobId } ).done( function ( r ) {
+                failures = 0;
+                paint( $job, r.ui );
+                updateBar( r.bar );
+
+                if ( r.busy ) {
+                    setLive( t.busy );
+                    later( step, 3000 );
+                    return;
+                }
+
+                setLive( t.converting + ' ' + r.ui.counts );
+                $job.find( '.edc-job__note' ).text( '' );
+
+                if ( r.summary.done ) {
+                    runningJob = null;
+                    setLive( t.finished + ' ' + r.ui.counts );
+                    $job.find( '[data-edc-action="resume"]' ).remove();
+                    $job.data( 'loaded', true );
+                    loadItems( $job, '', 1 );
+                    loadPending();
+                    return;
+                }
+
+                step();
+            } ).fail( function ( xhr ) {
+                // 4xx: the server understood and refused (expired nonce, job gone) — retrying cannot help.
+                if ( xhr.status >= 400 && xhr.status < 500 ) { stop( failureMessage( xhr ) ); return; }
+                // 5xx / timeout / offline: the chunk may or may not have landed; the server copes with both.
+                if ( ++failures <= 3 ) { later( step, 2000 * failures ); return; }
+                stop( t.connection );
+            } );
+        }() );
+    }
+
+    /** After a stop the server still says "running" for a couple of minutes; offer Resume right away. */
+    function ensureResume( $job ) {
+        if ( $job.find( '[data-edc-action="resume"]' ).length ) {
+            $job.find( '[data-edc-action="resume"]' ).prop( 'disabled', false );
+            return;
+        }
+        $( '<button type="button" class="button button-primary" data-edc-action="resume"/>' )
+            .attr( 'data-job-id', $job.data( 'job-id' ) ).text( t.resume || 'Resume' )
+            .prependTo( $job.find( '.edc-job__actions' ) );
+    }
+
+    $( document ).on( 'click', '[data-edc-action="resume"]', function () {
+        runJob( Number( $( this ).data( 'job-id' ) ) );
+    } );
+
+    // A job that was running when the page loaded: carry on from where it is.
+    $( function () {
+        var $live = $( '.edc-job[data-status="running"]' ).first();
+        if ( $live.length ) { runJob( Number( $live.data( 'job-id' ) ) ); }
+    } );
+
+    // ----------------------------------------------------------- pending view
+
+    var pending = { types: [], search: '', paged: 1 };
+    var selected = {};
+
+    function selectedIds() { return Object.keys( selected ).map( Number ); }
+
+    function syncSelection() {
+        var n = selectedIds().length;
+        $( '.edc-selected-count' ).text( n );
+        $( '[data-edc-action="convert-selected"]' ).prop( 'disabled', n === 0 );
+        $( '#edc-pending-table input[name="post_ids[]"]' ).each( function () {
+            this.checked = !! selected[ this.value ];
+        } );
+        $( '#edc-select-all' ).prop( 'checked',
+            $( '#edc-pending-table input[name="post_ids[]"]' ).length > 0 &&
+            $( '#edc-pending-table input[name="post_ids[]"]:not(:checked)' ).length === 0 );
+    }
+
+    function loadPending() {
+        var $table = $( '#edc-pending-table' );
+        if ( ! $table.length ) { return $.Deferred().resolve().promise(); }
+        $table.css( 'opacity', 0.5 );
+
+        return request( 'pending', { types: pending.types, search: pending.search, paged: pending.paged } )
+            .done( function ( r ) {
+                $table.html( r.html ).css( 'opacity', 1 );
+                if ( r.actions ) { $( '.edc-pending__actions' ).replaceWith( r.actions ); }
+                $( '#edc-pending > summary h2' ).text( function ( _, old ) { return old.replace( /[\d,.]+/, Number( r.count ).toLocaleString() ); } );
+                syncSelection();
+            } )
+            .fail( function ( xhr ) { $table.css( 'opacity', 1 ).html( $( '<p class="edc-empty"/>' ).text( failureMessage( xhr ) ) ); } );
+    }
+
+    $( document ).on( 'change', '#edc-pending-table input[name="post_ids[]"]', function () {
+        if ( this.checked ) { selected[ this.value ] = true; } else { delete selected[ this.value ]; }
+        syncSelection();
+    } );
+
+    $( document ).on( 'change', '#edc-select-all', function () {
+        var on = this.checked;
+        $( '#edc-pending-table input[name="post_ids[]"]' ).each( function () {
+            if ( on ) { selected[ this.value ] = true; } else { delete selected[ this.value ]; }
+        } );
+        syncSelection();
+    } );
+
+    $( document ).on( 'click', '.edc-chip', function () {
+        var type = String( $( this ).data( 'edc-type' ) );
+        pending.types = type ? [ type ] : [];
+        pending.paged = 1;
+        $( '.edc-chip' ).removeClass( 'is-active' );
+        $( this ).addClass( 'is-active' );
+        loadPending();
+    } );
+
+    function doSearch() { pending.search = $.trim( $( '#edc-pending-search' ).val() ); pending.paged = 1; loadPending(); }
+    $( document ).on( 'click', '[data-edc-action="pending-search"]', doSearch );
+    $( document ).on( 'keydown', '#edc-pending-search', function ( e ) { if ( e.key === 'Enter' ) { e.preventDefault(); doSearch(); } } );
+
+    $( document ).on( 'click', '[data-edc-pending-page]', function () {
+        pending.paged = Number( $( this ).data( 'edc-pending-page' ) );
+        loadPending();
+    } );
+
+    // ------------------------------------------------------------ start panel
+
+    var $panel = function () { return $( '#edc-start-panel' ); };
+
+    function fmt( template, n ) { return template.replace( '%s', Number( n ).toLocaleString() ); }
+
+    function removeUpsell() { $( '.edc-upsell-inline' ).remove(); }
+
+    function showSelectedUpsell( count ) {
+        removeUpsell();
+        $( '<p class="edc-upsell-inline"/>' )
+            .append( $( '<a class="button button-primary" target="_blank" rel="noopener"/>' ).attr( 'href', cfg.proUrl ).text( fmt( t.upsellSelected, count ) ) )
+            .append( document.createTextNode( ' ' + ( t.upsellNote || '' ) ) )
+            .insertAfter( '.edc-pending__actions' );
+    }
+
+    /**
+     * spec = { remaining: bool, ids: [], count: n }. Past the licence limit the
+     * answer is the upsell, not a panel the server would then refuse. Past the
+     * bulk threshold the user has to pick a mode (Replace is preselected) and
+     * tick a confirmation before Start enables.
+     */
+    function openStart( spec ) {
+        removeUpsell();
+        if ( spec.count > Number( cfg.limit ) ) { showSelectedUpsell( spec.count ); return; }
+
+        var bulk = spec.count > Number( cfg.bulkThreshold );
+        var $p = $panel();
+
+        $p.data( 'spec', spec );
+        $p.find( '.edc-start-panel__summary' ).text( spec.count === 1 ? t.summaryOne : fmt( t.summary, spec.count ) );
+        $p.find( '.edc-start-panel__error' ).text( '' );
+        $p.find( 'input[name="edc_mode"]' ).prop( 'checked', false )
+            .filter( '[value="' + ( bulk ? 'replace' : 'copy' ) + '"]' ).prop( 'checked', true );
+        $p.find( 'input[name="edc_confirm"]' ).prop( 'checked', false );
+        $p.find( '.edc-start-panel__confirm' ).prop( 'hidden', ! bulk );
+        syncPanel();
+        $p.prop( 'hidden', false )[ 0 ].scrollIntoView( { block: 'nearest' } );
+    }
+
+    function syncPanel() {
+        var $p = $panel();
+        var spec = $p.data( 'spec' ) || { count: 0 };
+        var mode = $p.find( 'input[name="edc_mode"]:checked' ).val();
+        var bulk = spec.count > Number( cfg.bulkThreshold );
+
+        $p.find( '.edc-start-panel__warning' ).prop( 'hidden', mode !== 'replace' );
+        if ( bulk ) {
+            $p.find( '.edc-start-panel__confirm span' ).text( fmt( mode === 'replace' ? t.confirmReplace : t.confirmCopy, spec.count ) );
+        }
+        $p.find( '[data-edc-action="start-job"]' ).prop( 'disabled', ! mode || ( bulk && ! $p.find( 'input[name="edc_confirm"]' ).prop( 'checked' ) ) );
+    }
+
+    $( document ).on( 'change', '#edc-start-panel input', syncPanel );
+
+    $( document ).on( 'click', '[data-edc-action="convert-selected"]', function () {
+        var ids = selectedIds();
+        if ( ids.length ) { openStart( { remaining: false, ids: ids, count: ids.length } ); }
+    } );
+
+    $( document ).on( 'click', '[data-edc-action="convert-all"]', function () {
+        openStart( { remaining: true, ids: [], count: Number( $( this ).data( 'count' ) ) } );
+    } );
+
+    $( document ).on( 'click', '[data-edc-action="cancel-start"]', function () { $panel().prop( 'hidden', true ); } );
+
+    $( document ).on( 'click', '[data-edc-action="start-job"]', function () {
+        var $p = $panel();
+        var spec = $p.data( 'spec' );
+        var mode = $p.find( 'input[name="edc_mode"]:checked' ).val();
+        var $btn = $( this );
+
+        if ( ! mode ) { $p.find( '.edc-start-panel__error' ).text( t.chooseMode ); return; }
+
+        $btn.prop( 'disabled', true );
+        var data = { mode: mode, confirmed: $p.find( 'input[name="edc_confirm"]' ).prop( 'checked' ) ? '1' : '0', types: pending.types };
+        if ( spec.remaining ) { data.remaining = 1; } else { data.post_ids = spec.ids; }
+
+        request( 'create', data ).done( function ( r ) {
+            if ( ! r.ok ) {
+                $p.find( '.edc-start-panel__error' ).text( r.message || t.error );
+                if ( r.code === 'pro_required' && r.upsell ) { showSelectedUpsell( r.count ); }
+                syncPanel();
+                return;
+            }
+
+            $p.prop( 'hidden', true );
+            selected = {};
+            syncSelection();
+            updateBar( r.bar );
+
+            $( '#edc-jobs-list .edc-empty' ).remove();
+            var $job = $( r.job_html ).prependTo( '#edc-jobs-list' );
+            $job.data( 'loaded', true );
+            loadItems( $job, '', 1 );
+            $job[ 0 ].scrollIntoView( { block: 'nearest' } );
+            loadPending();
+            runJob( r.job_id );
+        } ).fail( function ( xhr ) {
+            $p.find( '.edc-start-panel__error' ).text( failureMessage( xhr ) );
+            syncPanel();
+        } );
+    } );
+
+    window.edcJobsApi = { runJob: runJob, loadPending: loadPending, request: request, failureMessage: failureMessage, updateBar: updateBar, refreshBar: refreshBar, loadItems: loadItems };
 }( jQuery ) );

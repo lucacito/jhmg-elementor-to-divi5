@@ -13,6 +13,7 @@
 
 namespace ElementorDivi5Converter\Admin;
 
+use ElementorDivi5Converter\Conversion\ConversionPreflight;
 use ElementorDivi5Converter\History\ImportHistory;
 use ElementorDivi5Converter\History\ImportRollback;
 use ElementorDivi5Converter\Jobs\Factory;
@@ -31,6 +32,7 @@ class JobsPage {
     const SLUG          = 'edc-converter-jobs';
     const JOBS_PER_PAGE = 20;
     const ITEMS_PER_PAGE = 50;
+    const PENDING_PER_PAGE = 50;
 
     const STATUS_FILTERS = [ 'pending', 'running', 'interrupted', 'done', 'done_errors' ];
 
@@ -91,6 +93,7 @@ class JobsPage {
 
         // Every fragment below escapes at the point of use.
         echo $this->render_bar(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        echo $this->render_pending_section( [] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         echo $this->render_jobs_section( $filters, $paged ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         echo '</div>';
     }
@@ -120,6 +123,7 @@ class JobsPage {
             . $stat( 'converted', $d['converted'], __( 'converted', 'jhmg-converter-for-elementor-to-divi' ) )
             . $stat( 'pending', $d['pending'], __( 'pending', 'jhmg-converter-for-elementor-to-divi' ) )
             . $stat( 'failed', $d['failed'], __( 'failed', 'jhmg-converter-for-elementor-to-divi' ) )
+            . '<span class="edc-bar__live" aria-live="polite"></span>'
             . '</div>';
     }
 
@@ -242,11 +246,10 @@ class JobsPage {
     // ------------------------------------------------------------------
 
     public function render_job( array $job ): string {
-        $status    = $this->service->effective_status( $job );
+        $status     = $this->service->effective_status( $job );
         $unfinished = in_array( $status, [ 'running', 'pending', 'interrupted' ], true );
-        $finished  = $job['converted'] + $job['skipped'];
-        // Integer maths: floor( 158 / 200 * 100 ) can come out as 78.
-        $percent   = $job['total'] > 0 ? intdiv( $finished * 100, $job['total'] ) : 0;
+        $ui         = $this->progress_ui( $job );
+        $percent    = $ui['percent'];
 
         $html  = sprintf( '<details class="edc-job edc-job--%1$s" data-job-id="%2$d" data-status="%1$s"%3$s>', esc_attr( $status ), (int) $job['id'], $unfinished ? ' open' : '' );
         $html .= '<summary>';
@@ -255,10 +258,8 @@ class JobsPage {
         $html .= '<span class="edc-job__date">' . esc_html( get_date_from_gmt( $job['created_at'], 'Y-m-d H:i' ) ) . '</span> ';
         $html .= '<span class="edc-job__scope">' . esc_html( $this->scope_label( $job ) ) . '</span> ';
         $html .= '<span class="edc-job__progress"><span class="edc-progress"><span class="edc-progress__fill" style="width:' . (int) $percent . '%"></span></span> ';
-        $html .= '<span class="edc-job__counts">' . esc_html( sprintf( /* translators: 1: pages finished, 2: total pages */ __( '%1$s of %2$s', 'jhmg-converter-for-elementor-to-divi' ), number_format_i18n( $finished ), number_format_i18n( $job['total'] ) ) ) . '</span>';
-        if ( $job['failed'] > 0 ) {
-            $html .= ' <span class="edc-job__failed">' . esc_html( sprintf( /* translators: %s: failed pages */ __( '%s failed', 'jhmg-converter-for-elementor-to-divi' ), number_format_i18n( $job['failed'] ) ) ) . '</span>';
-        }
+        $html .= '<span class="edc-job__counts">' . esc_html( $ui['counts'] ) . '</span>';
+        $html .= ' <span class="edc-job__failed">' . esc_html( $ui['failed'] ) . '</span>';
         $html .= '</span></summary>';
 
         $html .= '<div class="edc-job__body">' . $this->render_job_actions( $job, $status );
@@ -267,6 +268,26 @@ class JobsPage {
         $html .= '</div></details>';
 
         return $html;
+    }
+
+    /**
+     * What the progress line of a job shows. Shared by the server-rendered row
+     * and the run endpoint, so what JS paints is what a reload would show.
+     *
+     * @return array{percent:int,counts:string,failed:string,status:string,status_label:string}
+     */
+    public function progress_ui( array $job ): array {
+        $status   = $this->service->effective_status( $job );
+        $finished = $job['converted'] + $job['skipped'];
+
+        return [
+            // Integer maths: floor( 158 / 200 * 100 ) can come out as 78.
+            'percent'      => $job['total'] > 0 ? intdiv( $finished * 100, $job['total'] ) : 0,
+            'counts'       => sprintf( /* translators: 1: pages finished, 2: total pages */ __( '%1$s of %2$s', 'jhmg-converter-for-elementor-to-divi' ), number_format_i18n( $finished ), number_format_i18n( $job['total'] ) ),
+            'failed'       => $job['failed'] > 0 ? sprintf( /* translators: %s: failed pages */ __( '%s failed', 'jhmg-converter-for-elementor-to-divi' ), number_format_i18n( $job['failed'] ) ) : '',
+            'status'       => $status,
+            'status_label' => $this->status_label( $status ),
+        ];
     }
 
     private function status_label( string $status ): string {
@@ -452,5 +473,152 @@ class JobsPage {
         }
 
         return '<a href="' . esc_url( (string) $url ) . '"' . ( $new_tab ? ' target="_blank" rel="noopener"' : '' ) . '>' . esc_html( $label ) . '</a>';
+    }
+
+    // ------------------------------------------------------------------
+    // Pending view
+    // ------------------------------------------------------------------
+
+    /**
+     * Every Elementor page not yet converted, with the actions that start a job.
+     * This is what lets a customer stop remembering what is done.
+     *
+     * @param array $args types (string[]; default all allowed), search, paged.
+     */
+    public function render_pending_section( array $args ): string {
+        $allowed = PendingQuery::allowed_types();
+        $types   = array_values( array_intersect( (array) ( $args['types'] ?? [] ), $allowed ) ) ?: $allowed;
+        $search  = trim( (string) ( $args['search'] ?? '' ) );
+        $paged   = max( 1, (int) ( $args['paged'] ?? 1 ) );
+        $total   = $this->pending->count( $types );
+        $limit   = ConversionPreflight::limit();
+        $failed  = $this->store->count_failed_posts();
+
+        $html  = '<details class="edc-card edc-pending" id="edc-pending" open>';
+        $html .= '<summary><h2>' . esc_html( sprintf( /* translators: %s: number of pages */ __( 'Pending — %s waiting', 'jhmg-converter-for-elementor-to-divi' ), number_format_i18n( $total ) ) ) . '</h2></summary>';
+        $html .= '<div class="edc-pending__body">';
+
+        if ( $failed > 0 ) {
+            $html .= '<p class="edc-pending__failed notice notice-warning inline">' . esc_html( sprintf(
+                /* translators: %s: number of pages */
+                _n( '%s page failed and is not listed here — retry it from its job below.', '%s pages failed and are not listed here — retry them from their job below.', $failed, 'jhmg-converter-for-elementor-to-divi' ),
+                number_format_i18n( $failed )
+            ) ) . '</p>';
+        }
+
+        if ( $total === 0 ) {
+            return $html . '<p class="edc-empty">' . esc_html__( 'Nothing is waiting to be converted. New Elementor pages will show up here.', 'jhmg-converter-for-elementor-to-divi' ) . '</p></div></details>';
+        }
+
+        $html .= $this->render_type_chips( $types, $allowed );
+        $html .= '<p class="edc-pending__search"><input type="search" id="edc-pending-search" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Search by title…', 'jhmg-converter-for-elementor-to-divi' ) . '"> ';
+        $html .= '<button type="button" class="button" data-edc-action="pending-search">' . esc_html__( 'Search', 'jhmg-converter-for-elementor-to-divi' ) . '</button></p>';
+        $html .= '<div id="edc-pending-table" data-types="' . esc_attr( implode( ',', $types ) ) . '">' . $this->render_pending_table( $types, $search, $paged ) . '</div>';
+        $html .= $this->render_pending_actions( $total, $limit );
+        $html .= $this->render_start_panel();
+
+        return $html . '</div></details>';
+    }
+
+    private function render_type_chips( array $selected, array $allowed ): string {
+        $counts = $this->pending->counts_by_type( $allowed );
+        $all    = count( $selected ) === count( $allowed );
+
+        $html = '<p class="edc-chips"><button type="button" class="edc-chip' . ( $all ? ' is-active' : '' ) . '" data-edc-type="">'
+            . esc_html__( 'All', 'jhmg-converter-for-elementor-to-divi' ) . ' <span class="edc-chip__n">' . (int) array_sum( $counts ) . '</span></button> ';
+        foreach ( $counts as $type => $n ) {
+            $html .= '<button type="button" class="edc-chip' . ( ! $all && $selected === [ $type ] ? ' is-active' : '' ) . '" data-edc-type="' . esc_attr( $type ) . '">'
+                . esc_html( $type ) . ' <span class="edc-chip__n">' . (int) $n . '</span></button> ';
+        }
+
+        return $html . '</p>';
+    }
+
+    /** The table and its pager: the fragment the pending endpoint swaps in. */
+    public function render_pending_table( array $types, string $search, int $paged ): string {
+        $paged = max( 1, $paged );
+        $rows  = $this->pending->list( $types, self::PENDING_PER_PAGE, ( $paged - 1 ) * self::PENDING_PER_PAGE, $search );
+        $total = $this->pending->count_matching( $types, $search );
+
+        if ( ! $rows ) {
+            return '<p class="edc-empty">' . esc_html__( 'No pending pages match.', 'jhmg-converter-for-elementor-to-divi' ) . '</p>';
+        }
+
+        $html  = '<table class="widefat striped edc-pending-table"><thead><tr>';
+        $html .= '<td class="check-column"><input type="checkbox" id="edc-select-all" aria-label="' . esc_attr__( 'Select all on this page', 'jhmg-converter-for-elementor-to-divi' ) . '"></td>';
+        $html .= '<th>' . esc_html__( 'Page', 'jhmg-converter-for-elementor-to-divi' ) . '</th><th>' . esc_html__( 'Type', 'jhmg-converter-for-elementor-to-divi' ) . '</th>';
+        $html .= '<th>' . esc_html__( 'Status', 'jhmg-converter-for-elementor-to-divi' ) . '</th><th>' . esc_html__( 'Actions', 'jhmg-converter-for-elementor-to-divi' ) . '</th></tr></thead><tbody>';
+        foreach ( $rows as $row ) {
+            $title = trim( (string) $row['post_title'] );
+            $html .= '<tr data-post-id="' . (int) $row['ID'] . '">';
+            $html .= '<th scope="row" class="check-column"><input type="checkbox" name="post_ids[]" value="' . (int) $row['ID'] . '"></th>';
+            $html .= '<td><strong>' . esc_html( $title !== '' ? $title : __( '(no title)', 'jhmg-converter-for-elementor-to-divi' ) ) . '</strong></td>';
+            $html .= '<td>' . esc_html( $row['post_type'] ) . '</td>';
+            $html .= '<td>' . esc_html( (string) ( $row['post_status'] ?? '' ) ) . '</td>';
+            $html .= '<td class="edc-item-actions">' . $this->link( get_edit_post_link( (int) $row['ID'] ), __( 'Edit', 'jhmg-converter-for-elementor-to-divi' ) )
+                . ' | ' . $this->link( get_permalink( (int) $row['ID'] ), __( 'View', 'jhmg-converter-for-elementor-to-divi' ), true ) . '</td></tr>';
+        }
+        $html .= '</tbody></table>';
+
+        $pages = (int) ceil( $total / self::PENDING_PER_PAGE );
+        if ( $pages > 1 ) {
+            $html .= '<p class="edc-pager">';
+            if ( $paged > 1 ) {
+                $html .= '<button type="button" class="button" data-edc-pending-page="' . ( $paged - 1 ) . '">« ' . esc_html__( 'Previous', 'jhmg-converter-for-elementor-to-divi' ) . '</button> ';
+            }
+            $html .= '<span>' . esc_html( sprintf( /* translators: 1: current page, 2: total pages */ __( 'Page %1$d of %2$d', 'jhmg-converter-for-elementor-to-divi' ), $paged, $pages ) ) . '</span> ';
+            if ( $paged < $pages ) {
+                $html .= '<button type="button" class="button" data-edc-pending-page="' . ( $paged + 1 ) . '">' . esc_html__( 'Next', 'jhmg-converter-for-elementor-to-divi' ) . ' »</button>';
+            }
+            $html .= '</p>';
+        }
+
+        return $html;
+    }
+
+    /**
+     * Convert selected, and Convert all remaining. When "all" is more than the
+     * licence allows in one job, the button is not rendered at all — an inline
+     * upsell that says how many pages are waiting takes its place — so there is
+     * no live control for the server to refuse.
+     */
+    public function render_pending_actions( int $total, int $limit ): string {
+        $html  = '<p class="edc-pending__actions">';
+        $html .= '<button type="button" class="button" data-edc-action="convert-selected" data-limit="' . esc_attr( (string) $limit ) . '" disabled>'
+            . esc_html__( 'Convert selected', 'jhmg-converter-for-elementor-to-divi' ) . ' (<span class="edc-selected-count">0</span>)</button> ';
+
+        if ( $total > $limit ) {
+            $html .= '<a class="button button-primary edc-upsell" target="_blank" rel="noopener" href="' . esc_url( JobsAjax::PRO_URL ) . '">'
+                . esc_html( sprintf( /* translators: %s: number of pages */ __( 'Convert all %s remaining with Pro', 'jhmg-converter-for-elementor-to-divi' ), number_format_i18n( $total ) ) ) . '</a> ';
+            $html .= '<span class="description">' . esc_html__( 'The free plugin converts one page at a time. Pro converts a whole site in one job.', 'jhmg-converter-for-elementor-to-divi' ) . '</span>';
+        } else {
+            $html .= '<button type="button" class="button button-primary" data-edc-action="convert-all" data-count="' . (int) $total . '">'
+                . esc_html( sprintf( /* translators: %s: number of pages */ __( 'Convert all %s remaining', 'jhmg-converter-for-elementor-to-divi' ), number_format_i18n( $total ) ) ) . '</button>';
+        }
+
+        return $html . '</p>';
+    }
+
+    /**
+     * The step between "Convert" and a job existing. Bulk jobs (JobService::BULK_THRESHOLD
+     * and above) cannot start without choosing a mode and ticking the box; the
+     * server enforces the same rule, this only makes it visible.
+     */
+    private function render_start_panel(): string {
+        $html  = '<div id="edc-start-panel" class="edc-start-panel" hidden>';
+        $html .= '<h3>' . esc_html__( 'Start a conversion job', 'jhmg-converter-for-elementor-to-divi' ) . '</h3>';
+        $html .= '<p class="edc-start-panel__summary"></p>';
+        $html .= '<fieldset><legend class="screen-reader-text">' . esc_html__( 'How should the pages be converted?', 'jhmg-converter-for-elementor-to-divi' ) . '</legend>';
+        $html .= '<label><input type="radio" name="edc_mode" value="copy"> ' . esc_html__( 'Create a copy of each page as a draft — your Elementor pages stay exactly as they are', 'jhmg-converter-for-elementor-to-divi' ) . '</label><br>';
+        $html .= '<label><input type="radio" name="edc_mode" value="replace"> ' . esc_html__( 'Replace the original pages — they keep their address, ID and menu entries', 'jhmg-converter-for-elementor-to-divi' ) . '</label></fieldset>';
+        $html .= '<div class="edc-start-panel__warning notice notice-warning inline" hidden><p>'
+            . esc_html__( 'Replacing changes your live pages. A backup of each Elementor version is kept on the page and Undo restores it, but edits you make in Divi afterwards are lost if you undo. Take a full site backup before you start.', 'jhmg-converter-for-elementor-to-divi' )
+            . '</p></div>';
+        $html .= '<label class="edc-start-panel__confirm" hidden><input type="checkbox" name="edc_confirm" value="1"> <span></span></label>';
+        $html .= '<p><button type="button" class="button button-primary" data-edc-action="start-job">' . esc_html__( 'Start conversion', 'jhmg-converter-for-elementor-to-divi' ) . '</button> ';
+        $html .= '<button type="button" class="button-link" data-edc-action="cancel-start">' . esc_html__( 'Cancel', 'jhmg-converter-for-elementor-to-divi' ) . '</button></p>';
+        $html .= '<p class="edc-start-panel__error" role="alert"></p></div>';
+
+        return $html;
     }
 }

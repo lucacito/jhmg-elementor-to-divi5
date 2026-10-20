@@ -13,9 +13,11 @@ namespace ElementorDivi5Converter\Admin;
 
 use ElementorDivi5Converter\Conversion\ConversionPreflight;
 use ElementorDivi5Converter\Helpers\DiviRequirement;
+use ElementorDivi5Converter\Jobs\ConversionFlag;
 use ElementorDivi5Converter\Jobs\Factory;
 use ElementorDivi5Converter\Jobs\JobService;
 use ElementorDivi5Converter\Jobs\JobStore;
+use ElementorDivi5Converter\Jobs\PendingQuery;
 use ElementorDivi5Converter\Jobs\PendingSource;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -28,7 +30,7 @@ class JobsAjax {
     const CAPABILITY   = 'manage_options';
 
     /** Action names without the edc_jobs_ prefix. */
-    const ACTIONS = [ 'items', 'bar' ];
+    const ACTIONS = [ 'items', 'bar', 'pending', 'create', 'run' ];
 
     const PRO_URL = 'https://divi5lab.com/plugins/elementor-to-divi-5?utm_source=plugin&utm_medium=upsell&utm_campaign=jobs-panel';
 
@@ -62,6 +64,22 @@ class JobsAjax {
             'proUrl'        => self::PRO_URL,
             'i18n'          => [
                 'loading'   => __( 'Loading…', 'jhmg-converter-for-elementor-to-divi' ),
+                'converting' => __( 'Converting…', 'jhmg-converter-for-elementor-to-divi' ),
+                'busy'      => __( 'Another window is running this job. Waiting…', 'jhmg-converter-for-elementor-to-divi' ),
+                'finished'  => __( 'Finished.', 'jhmg-converter-for-elementor-to-divi' ),
+                'resume'    => __( 'Resume', 'jhmg-converter-for-elementor-to-divi' ),
+                'chooseMode' => __( 'Choose how the pages should be converted.', 'jhmg-converter-for-elementor-to-divi' ),
+                /* translators: %s: number of pages */
+                'summary'   => __( '%s pages will be converted.', 'jhmg-converter-for-elementor-to-divi' ),
+                /* translators: %s: number of pages */
+                'summaryOne' => __( '1 page will be converted.', 'jhmg-converter-for-elementor-to-divi' ),
+                /* translators: %s: number of pages */
+                'confirmCopy' => __( 'I understand this creates %s new draft pages.', 'jhmg-converter-for-elementor-to-divi' ),
+                /* translators: %s: number of pages */
+                'confirmReplace' => __( 'I understand this replaces %s live pages and have taken a backup.', 'jhmg-converter-for-elementor-to-divi' ),
+                /* translators: %s: number of pages */
+                'upsellSelected' => __( 'Convert %s selected pages with Pro', 'jhmg-converter-for-elementor-to-divi' ),
+                'upsellNote' => __( 'The free plugin converts one page at a time.', 'jhmg-converter-for-elementor-to-divi' ),
                 'error'     => __( 'Something went wrong. Please try again.', 'jhmg-converter-for-elementor-to-divi' ),
                 'connection' => __( 'The connection dropped. The job is saved — use Resume to continue where it stopped.', 'jhmg-converter-for-elementor-to-divi' ),
             ],
@@ -126,6 +144,103 @@ class JobsAjax {
 
     private function handle_bar( array $request ): array {
         return [ 'ok' => true, 'bar' => $this->page->bar_data() ];
+    }
+
+    // ------------------------------------------------------------------
+    // Pending list
+    // ------------------------------------------------------------------
+
+    /** Request post types, narrowed to the ones this screen may touch (default: all of them). */
+    private function types_from( array $request ): array {
+        $allowed = PendingQuery::allowed_types();
+        $types   = array_values( array_intersect( array_map( 'sanitize_key', (array) ( $request['types'] ?? [] ) ), $allowed ) );
+
+        return $types ?: $allowed;
+    }
+
+    private function handle_pending( array $request ): array {
+        $types = $this->types_from( $request );
+        $count = $this->pending->count( $types );
+
+        return [
+            'ok'    => true,
+            'html'  => $this->page->render_pending_table( $types, sanitize_text_field( (string) ( $request['search'] ?? '' ) ), max( 1, (int) ( $request['paged'] ?? 1 ) ) ),
+            'count' => $count,
+            // The "Convert all N remaining" row depends on the filter: N changes, and
+            // so can whether it is a button or the Pro upsell.
+            'actions' => $this->page->render_pending_actions( $count, ConversionPreflight::limit() ),
+        ];
+    }
+
+    // ------------------------------------------------------------------
+    // Starting and running jobs
+    // ------------------------------------------------------------------
+
+    private function handle_create( array $request ): array {
+        $mode      = isset( $request['mode'] ) && $request['mode'] !== '' ? (string) $request['mode'] : null;
+        $confirmed = in_array( $request['confirmed'] ?? null, [ '1', 1, true ], true );
+        $types     = $this->types_from( $request );
+
+        if ( ! empty( $request['remaining'] ) ) {
+            $spec = [ 'remaining' => true, 'post_types' => $types ];
+        } else {
+            $spec = [ 'post_ids' => $this->eligible_ids( (array) ( $request['post_ids'] ?? [] ) ) ];
+        }
+
+        $result = $this->service->create( $spec + [ 'mode' => $mode, 'confirmed' => $confirmed, 'created_by' => get_current_user_id() ] );
+
+        if ( ! $result['ok'] ) {
+            if ( $result['code'] === 'pro_required' ) {
+                $result['upsell'] = ! empty( $request['remaining'] )
+                    ? sprintf( /* translators: %s: number of pages */ __( 'Convert all %s remaining with Pro', 'jhmg-converter-for-elementor-to-divi' ), number_format_i18n( $result['count'] ) )
+                    : sprintf( /* translators: %s: number of pages */ __( 'Convert %s selected pages with Pro', 'jhmg-converter-for-elementor-to-divi' ), number_format_i18n( $result['count'] ) );
+                $result['proUrl'] = self::PRO_URL;
+            }
+
+            return $result + [ 'status' => 200 ];
+        }
+
+        return [
+            'ok'       => true,
+            'job_id'   => $result['job_id'],
+            'job_html' => $this->page->render_job( $this->store->get_job( $result['job_id'] ) ),
+            'bar'      => $this->page->bar_data(),
+        ];
+    }
+
+    /** The submitted IDs are never trusted: each must still be a pending Elementor page of an allowed type. */
+    private function eligible_ids( array $ids ): array {
+        $allowed = PendingQuery::allowed_types();
+        $ok      = [];
+
+        foreach ( array_unique( array_filter( array_map( 'intval', $ids ) ) ) as $id ) {
+            $post = get_post( $id );
+            if ( $post
+                && in_array( (string) ( $post->post_type ?? '' ), $allowed, true )
+                && get_post_meta( $id, '_elementor_edit_mode', true ) === 'builder'
+                && ! ConversionFlag::is_converted( $id ) ) {
+                $ok[] = $id;
+            }
+        }
+
+        return $ok;
+    }
+
+    private function handle_run( array $request ): array {
+        $job_id = (int) ( $request['job_id'] ?? 0 );
+        $result = $this->service->run_chunk( $job_id );
+
+        if ( empty( $result['ok'] ) ) {
+            return $this->error( 'not_found', __( 'That job no longer exists.', 'jhmg-converter-for-elementor-to-divi' ), 404 );
+        }
+
+        return [
+            'ok'      => true,
+            'busy'    => ! empty( $result['busy'] ),
+            'summary' => $result,
+            'ui'      => $this->page->progress_ui( $this->store->get_job( $job_id ) ),
+            'bar'     => $this->page->bar_data(),
+        ];
     }
 
     private function error( string $code, string $message, int $status, array $extra = [] ): array {

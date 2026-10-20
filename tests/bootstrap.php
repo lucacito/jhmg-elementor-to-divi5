@@ -783,3 +783,6 @@ if ( ! function_exists( 'get_post_types' ) ) {
         return [ 'page' => 'page', 'post' => 'post', 'attachment' => 'attachment', 'elementor_library' => 'elementor_library' ];
     }
 }
+if ( ! function_exists( 'esc_attr__' ) ) {
+    function esc_attr__( string $text, string $domain = 'default' ): string { return htmlspecialchars( $text, ENT_QUOTES ); }
+}
