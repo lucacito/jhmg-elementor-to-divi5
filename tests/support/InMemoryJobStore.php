@@ -122,11 +122,12 @@ final class InMemoryJobStore implements JobStore {
         return $n;
     }
 
-    public function resolve_posts( array $post_ids, array $from_states, array $result ): array {
+    public function resolve_posts( array $post_ids, array $from_states, array $result, ?int $only_result_post_id = null ): array {
         $affected = [];
         foreach ( $this->items as $job_id => $items ) {
             foreach ( $post_ids as $pid ) {
-                if ( isset( $items[ $pid ] ) && in_array( $items[ $pid ]['state'], $from_states, true ) ) {
+                if ( isset( $items[ $pid ] ) && in_array( $items[ $pid ]['state'], $from_states, true )
+                    && ( $only_result_post_id === null || $items[ $pid ]['result_post_id'] === $only_result_post_id ) ) {
                     $this->set_item_result( $job_id, $pid, $result );
                     $affected[ $job_id ] = $job_id;
                 }

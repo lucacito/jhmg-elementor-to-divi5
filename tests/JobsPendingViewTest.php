@@ -208,4 +208,21 @@ class JobsPendingViewTest extends TestCase {
         $this->assertStringContainsString( 'undo restores', $html );
         $this->assertStringContainsString( 'edits you make in divi afterwards are lost', $html );
     }
+
+    // ---- marking by hand -------------------------------------------------------
+
+    public function test_each_pending_row_can_be_marked_converted(): void {
+        $this->seed( 2 );
+
+        $html = $this->section();
+
+        $this->assertSame( 2, substr_count( $html, 'data-edc-action="mark-converted"' ) );
+        $this->assertStringContainsString( 'data-post-id="100"', $html );
+    }
+
+    public function test_selected_pending_pages_can_be_marked_in_bulk(): void {
+        $this->seed( 2 );
+
+        $this->assertStringContainsString( 'data-edc-action="mark-selected"', $this->section() );
+    }
 }

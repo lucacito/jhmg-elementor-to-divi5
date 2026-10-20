@@ -70,6 +70,8 @@ $affected = $s->resolve_posts( [ 13, 999 ], [ 'pending', 'failed' ], [ 'state' =
 $check( 'resolve_posts reports the jobs it changed', $affected === [ $id ], json_encode( $affected ) );
 $check( 'resolve_posts moved the item and set its message', $s->list_items( $id, 'converted', 10, 0 )[1]['message'] === 'Marked as converted manually' );
 $check( 'resolve_posts leaves other states alone', $s->resolve_posts( [ 13 ], [ 'failed' ], [ 'state' => 'skipped' ] ) === [] );
+$check( 'resolve_posts can be limited to hand-marked items (result_post_id = 0)', $s->resolve_posts( [ 11 ], [ 'converted' ], [ 'state' => 'skipped' ], 0 ) === [], 'item 11 was built (result 900), so it is left alone' );
+$check( '...and does touch a hand-marked one', $s->resolve_posts( [ 13 ], [ 'converted' ], [ 'state' => 'skipped', 'message' => 'removed' ], 0 ) === [ $id ] );
 
 // --- lock -----------------------------------------------------------------
 $check( 'first claim wins',  $s->claim_lock( $id, 60 ) === true );

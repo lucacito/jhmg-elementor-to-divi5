@@ -5,29 +5,9 @@ use ElementorDivi5Converter\History\ImportHistory;
 use ElementorDivi5Converter\History\ImportRollback;
 use ElementorDivi5Converter\Jobs\ConversionFlag;
 use ElementorDivi5Converter\Jobs\JobService;
-use ElementorDivi5Converter\Jobs\PendingSource;
 
 require_once __DIR__ . '/support/InMemoryJobStore.php';
-
-/** Mirrors PendingQuery's rules over the in-memory post store. */
-final class FakePendingSource implements PendingSource {
-    public function rows( array $types ): array {
-        $rows = [];
-        foreach ( $GLOBALS['__test_posts'] as $id => $p ) {
-            if ( in_array( $p->post_type, $types, true ) && get_post_meta( $id, '_elementor_edit_mode', true ) === 'builder'
-                && ! ConversionFlag::is_converted( $id ) && ! ConversionFlag::is_unconvertible( $id ) ) {
-                $rows[] = [ 'ID' => $id, 'post_type' => $p->post_type, 'post_title' => $p->post_title ];
-            }
-        }
-        usort( $rows, fn( $a, $b ) => $a['ID'] <=> $b['ID'] );
-
-        return $rows;
-    }
-    public function count( array $post_types ): int { return count( $this->rows( $post_types ) ); }
-    public function page( array $post_types, int $after_id, int $limit ): array {
-        return array_slice( array_values( array_filter( $this->rows( $post_types ), fn( $r ) => $r['ID'] > $after_id ) ), 0, $limit );
-    }
-}
+require_once __DIR__ . '/support/FakePendingSource.php';
 
 class JobServiceTest extends TestCase {
 
@@ -389,6 +369,16 @@ class JobServiceTest extends TestCase {
         $this->assertSame( 'interrupted', $svc->effective_status( $this->store->get_job( $id ) ) );
     }
 
+    public function test_a_finished_jobs_label_follows_its_failure_count_not_a_stale_stored_status(): void {
+        $id  = $this->job( $this->seedMany( 2 ) );
+        $svc = $this->service();
+        $this->store->update_job( $id, [ 'status' => 'done', 'failed' => 1 ] );
+        $this->assertSame( 'done_errors', $svc->effective_status( $this->store->get_job( $id ) ) );
+
+        $this->store->update_job( $id, [ 'status' => 'done_errors', 'failed' => 0 ] );
+        $this->assertSame( 'done', $svc->effective_status( $this->store->get_job( $id ) ) );
+    }
+
     // ---- retry -----------------------------------------------------------------
 
     public function test_retrying_failed_items_reruns_only_those(): void {
@@ -483,6 +473,40 @@ class JobServiceTest extends TestCase {
 
         $this->assertFalse( ConversionFlag::is_converted( 11 ) );
         $this->assertSame( 1, ( new FakePendingSource() )->count( [ 'page' ] ) );
+    }
+
+    public function test_taking_back_a_mark_is_reflected_in_the_job_that_had_counted_it(): void {
+        $ids = $this->seedMany( 2 );
+        $this->canned[100] = [ 'title' => 'x', 'post_id' => 0, 'success' => false, 'error' => 'boom', 'report' => [], 'unsupported' => [] ];
+        $id  = $this->job( $ids );
+        $svc = $this->service();
+        $svc->run_chunk( $id );
+        $svc->mark_converted( [ 100 ] );
+        $this->assertSame( 'done', $this->store->get_job( $id )['status'] );
+
+        $svc->unmark_converted( [ 100 ] );
+
+        $first = $this->store->list_items( $id, null, 1, 0 )[0];
+        $this->assertSame( 'skipped', $first['state'], 'no longer counted as converted' );
+        $this->assertStringContainsString( 'mark', strtolower( $first['message'] ) );
+        $job = $this->store->get_job( $id );
+        $this->assertSame( 1, $job['converted'] );
+        $this->assertSame( 1, $job['skipped'] );
+        $this->assertSame( 'done', $job['status'] );
+        $this->assertSame( 1, ( new FakePendingSource() )->count( [ 'page' ] ), 'and the page is pending again' );
+    }
+
+    public function test_taking_back_a_mark_does_not_rewrite_a_genuine_conversion_in_another_job(): void {
+        $ids = $this->seedMany( 1 );
+        $id  = $this->job( $ids );
+        $this->service()->run_chunk( $id ); // genuinely converted, result_post_id > 0
+        ConversionFlag::clear( 100 );
+        $this->service()->mark_converted( [ 100 ] ); // later marked by hand
+        $before = $this->store->list_items( $id, null, 1, 0 )[0];
+
+        $this->service()->unmark_converted( [ 100 ] );
+
+        $this->assertSame( $before, $this->store->list_items( $id, null, 1, 0 )[0] );
     }
 
     public function test_unmarking_leaves_a_genuine_conversion_alone(): void {

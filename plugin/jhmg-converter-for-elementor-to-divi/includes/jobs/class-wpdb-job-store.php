@@ -246,7 +246,7 @@ class WpdbJobStore implements JobStore {
         return (int) $wpdb->query( $wpdb->prepare( $sql, $args ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
     }
 
-    public function resolve_posts( array $post_ids, array $from_states, array $result ): array {
+    public function resolve_posts( array $post_ids, array $from_states, array $result, ?int $only_result_post_id = null ): array {
         global $wpdb;
 
         $post_ids = array_values( array_filter( array_map( 'intval', $post_ids ) ) );
@@ -268,6 +268,10 @@ class WpdbJobStore implements JobStore {
         $in_states = implode( ', ', array_fill( 0, count( $states ), '%s' ) );
         $where     = " WHERE post_id IN ({$in_posts}) AND state IN ({$in_states})";
         $where_arg = array_merge( $post_ids, $states );
+        if ( $only_result_post_id !== null ) {
+            $where      .= ' AND result_post_id = %d';
+            $where_arg[] = $only_result_post_id;
+        }
 
         // Which jobs are about to change, read before the UPDATE removes the evidence.
         $job_ids = $wpdb->get_col( $wpdb->prepare( 'SELECT DISTINCT job_id FROM ' . Schema::items_table() . $where, $where_arg ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared

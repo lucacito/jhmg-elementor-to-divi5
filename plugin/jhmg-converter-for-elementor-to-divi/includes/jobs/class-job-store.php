@@ -85,9 +85,11 @@ interface JobStore {
      * @param int[]    $post_ids
      * @param string[] $from_states
      * @param array    $result      As for set_item_result().
+     * @param int|null $only_result_post_id When given, only items whose result_post_id is exactly
+     *   this (0 = "nothing was built", i.e. marked by hand) are touched.
      * @return int[] Ids of the jobs that changed.
      */
-    public function resolve_posts( array $post_ids, array $from_states, array $result ): array;
+    public function resolve_posts( array $post_ids, array $from_states, array $result, ?int $only_result_post_id = null ): array;
 
     /** Atomically takes the job's run lock. False if someone else holds it. */
     public function claim_lock( int $job_id, int $seconds ): bool;

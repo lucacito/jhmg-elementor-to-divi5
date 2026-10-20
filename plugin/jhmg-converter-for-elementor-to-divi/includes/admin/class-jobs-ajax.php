@@ -30,7 +30,7 @@ class JobsAjax {
     const CAPABILITY   = 'manage_options';
 
     /** Action names without the edc_jobs_ prefix. */
-    const ACTIONS = [ 'items', 'bar', 'pending', 'create', 'run' ];
+    const ACTIONS = [ 'items', 'bar', 'pending', 'create', 'run', 'retry', 'mark', 'job' ];
 
     const PRO_URL = 'https://divi5lab.com/plugins/elementor-to-divi-5?utm_source=plugin&utm_medium=upsell&utm_campaign=jobs-panel';
 
@@ -68,6 +68,8 @@ class JobsAjax {
                 'busy'      => __( 'Another window is running this job. Waiting…', 'jhmg-converter-for-elementor-to-divi' ),
                 'finished'  => __( 'Finished.', 'jhmg-converter-for-elementor-to-divi' ),
                 'resume'    => __( 'Resume', 'jhmg-converter-for-elementor-to-divi' ),
+                /* translators: %s: number of pages */
+                'confirmMark' => __( 'Mark %s pages as converted? They will leave the pending list.', 'jhmg-converter-for-elementor-to-divi' ),
                 'chooseMode' => __( 'Choose how the pages should be converted.', 'jhmg-converter-for-elementor-to-divi' ),
                 /* translators: %s: number of pages */
                 'summary'   => __( '%s pages will be converted.', 'jhmg-converter-for-elementor-to-divi' ),
@@ -139,7 +141,18 @@ class JobsAjax {
             'ok'      => true,
             'html'    => $this->page->render_items( $job_id, $state, max( 1, (int) ( $request['paged'] ?? 1 ) ) ),
             'summary' => $this->service->summary( $job_id ),
+            'ui'      => $this->page->progress_ui( $this->store->get_job( $job_id ) ),
         ];
+    }
+
+    /** A job's header, buttons and progress, freshly rendered: used after retries and marks change them. */
+    private function handle_job( array $request ): array {
+        $job = $this->store->get_job( (int) ( $request['job_id'] ?? 0 ) );
+        if ( ! $job ) {
+            return $this->error( 'not_found', __( 'That job no longer exists.', 'jhmg-converter-for-elementor-to-divi' ), 404 );
+        }
+
+        return [ 'ok' => true, 'html' => $this->page->render_job( $job ) ];
     }
 
     private function handle_bar( array $request ): array {
@@ -161,6 +174,21 @@ class JobsAjax {
     private function handle_pending( array $request ): array {
         $types = $this->types_from( $request );
         $count = $this->pending->count( $types );
+
+        // The whole section, not just its table: after pages are marked, retried or
+        // un-done the section can go from "nothing waiting" (which has no table to
+        // swap) to a list, and its failed-pages note changes too.
+        if ( ! empty( $request['section'] ) ) {
+            return [
+                'ok'    => true,
+                'count' => $count,
+                'html'  => $this->page->render_pending_section( [
+                    'types'  => $types,
+                    'search' => sanitize_text_field( (string) ( $request['search'] ?? '' ) ),
+                    'paged'  => max( 1, (int) ( $request['paged'] ?? 1 ) ),
+                ] ),
+            ];
+        }
 
         return [
             'ok'    => true,
@@ -241,6 +269,44 @@ class JobsAjax {
             'ui'      => $this->page->progress_ui( $this->store->get_job( $job_id ) ),
             'bar'     => $this->page->bar_data(),
         ];
+    }
+
+    // ------------------------------------------------------------------
+    // Retry and manual marks
+    // ------------------------------------------------------------------
+
+    /** Re-queues failed pages (all of the job's, or just the ones named). The browser then runs the job. */
+    private function handle_retry( array $request ): array {
+        $job_id = (int) ( $request['job_id'] ?? 0 );
+        if ( ! $this->store->get_job( $job_id ) ) {
+            return $this->error( 'not_found', __( 'That job no longer exists.', 'jhmg-converter-for-elementor-to-divi' ), 404 );
+        }
+
+        $ids = isset( $request['post_ids'] ) ? array_values( array_filter( array_map( 'intval', (array) $request['post_ids'] ) ) ) : null;
+
+        return [
+            'ok'      => true,
+            'retried' => $this->service->retry( $job_id, $ids ),
+            'ui'      => $this->page->progress_ui( $this->store->get_job( $job_id ) ),
+            'bar'     => $this->page->bar_data(),
+        ];
+    }
+
+    /** The user fixed these pages by hand (or changed their mind: undo=1). */
+    private function handle_mark( array $request ): array {
+        $allowed = PendingQuery::allowed_types();
+        $ids     = [];
+        foreach ( array_unique( array_filter( array_map( 'intval', (array) ( $request['post_ids'] ?? [] ) ) ) ) as $id ) {
+            $post = get_post( $id );
+            if ( $post && in_array( (string) ( $post->post_type ?? '' ), $allowed, true ) ) {
+                $ids[] = $id;
+            }
+        }
+
+        $undo  = in_array( $request['undo'] ?? null, [ '1', 1, true ], true );
+        $count = $undo ? $this->service->unmark_converted( $ids ) : $this->service->mark_converted( $ids );
+
+        return [ 'ok' => true, 'count' => $count, 'bar' => $this->page->bar_data() ];
     }
 
     private function error( string $code, string $message, int $status, array $extra = [] ): array {

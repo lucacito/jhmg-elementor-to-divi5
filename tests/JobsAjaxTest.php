@@ -150,6 +150,30 @@ class JobsAjaxTest extends TestCase {
         $this->assertStringContainsString( 'Page 11', $r['html'], 'unknown types are dropped and the default (all allowed) applies' );
     }
 
+    public function test_pending_can_return_the_whole_section_so_it_recovers_from_empty(): void {
+        // The section renders an empty state (no table to swap) when nothing is
+        // pending; once a page becomes pending again it has to be re-rendered whole.
+        $empty = $this->ajax->handle( 'pending', $this->req( [ 'section' => '1' ] ) );
+        $this->assertStringContainsString( 'Nothing is waiting', $empty['html'] );
+
+        $this->seed( 11 );
+        $full = $this->ajax->handle( 'pending', $this->req( [ 'section' => '1' ] ) );
+
+        $this->assertStringContainsString( 'id="edc-pending"', $full['html'] );
+        $this->assertStringContainsString( 'Page 11', $full['html'] );
+        $this->assertStringContainsString( 'id="edc-pending-table"', $full['html'] );
+    }
+
+    public function test_the_section_keeps_the_filters_the_user_chose(): void {
+        $this->seed( 11 );
+        $this->seed( 12, 'post' );
+
+        $r = $this->ajax->handle( 'pending', $this->req( [ 'section' => '1', 'types' => [ 'post' ], 'search' => '' ] ) );
+
+        $this->assertStringContainsString( 'Page 12', $r['html'] );
+        $this->assertStringNotContainsString( 'Page 11<', $r['html'] );
+    }
+
     // ---- create ----------------------------------------------------------------
 
     private function allowMany(): void {
@@ -270,5 +294,111 @@ class JobsAjaxTest extends TestCase {
         $this->assertTrue( $r['ok'] );
         $this->assertTrue( $r['busy'] );
         $this->assertSame( [], $this->calls );
+    }
+
+    // ---- retry (resume is just `run` on an unfinished job) --------------------
+
+    private function failedJob( array $ids = [ 11, 12, 13 ], array $failed = [ 12, 13 ] ): int {
+        $this->allowMany();
+        foreach ( $ids as $id ) { $this->seed( $id ); }
+        $created = $this->ajax->handle( 'create', $this->req( [ 'post_ids' => $ids, 'mode' => 'copy' ] ) );
+        foreach ( $ids as $id ) {
+            $this->store->set_item_result( $created['job_id'], $id, in_array( $id, $failed, true )
+                ? [ 'state' => 'failed', 'message' => 'boom' ]
+                : [ 'state' => 'converted', 'result_post_id' => $id + 5000 ] );
+        }
+        $this->store->sync_counts( $created['job_id'] );
+        $this->store->update_job( $created['job_id'], [ 'status' => 'done_errors' ] );
+
+        return $created['job_id'];
+    }
+
+    public function test_retry_requeues_every_failed_item_of_the_job(): void {
+        $job = $this->failedJob();
+
+        $r = $this->ajax->handle( 'retry', $this->req( [ 'job_id' => $job ] ) );
+
+        $this->assertTrue( $r['ok'] );
+        $this->assertSame( 2, $r['retried'] );
+        $this->assertSame( 2, $this->store->counts_by_state( $job )['pending'] );
+        $this->assertSame( 'pending', $r['ui']['status'], 'the job is unfinished again, so the browser can run it' );
+    }
+
+    public function test_retry_can_target_one_page(): void {
+        $job = $this->failedJob();
+
+        $r = $this->ajax->handle( 'retry', $this->req( [ 'job_id' => $job, 'post_ids' => [ 13 ] ] ) );
+
+        $this->assertSame( 1, $r['retried'] );
+        $this->assertSame( 1, $this->store->counts_by_state( $job )['failed'] );
+    }
+
+    public function test_retry_with_nothing_failed_is_harmless(): void {
+        $job = $this->failedJob( [ 11 ], [] );
+
+        $r = $this->ajax->handle( 'retry', $this->req( [ 'job_id' => $job ] ) );
+
+        $this->assertTrue( $r['ok'] );
+        $this->assertSame( 0, $r['retried'] );
+    }
+
+    public function test_retry_for_a_missing_job_is_a_clean_error(): void {
+        $this->assertSame( 'not_found', $this->ajax->handle( 'retry', $this->req( [ 'job_id' => 9999 ] ) )['code'] );
+    }
+
+    public function test_retried_pages_actually_convert_on_the_next_run(): void {
+        $job = $this->failedJob();
+        $this->ajax->handle( 'retry', $this->req( [ 'job_id' => $job ] ) );
+
+        $run = $this->ajax->handle( 'run', $this->req( [ 'job_id' => $job ] ) );
+
+        $this->assertSame( [ 12, 13 ], $this->calls );
+        $this->assertSame( 'done', $run['ui']['status'] );
+    }
+
+    // ---- marking by hand -------------------------------------------------------
+
+    public function test_mark_flags_pages_so_they_leave_the_pending_list(): void {
+        $this->seed( 11 );
+        $this->seed( 12 );
+
+        $r = $this->ajax->handle( 'mark', $this->req( [ 'post_ids' => [ 11 ] ] ) );
+
+        $this->assertTrue( $r['ok'] );
+        $this->assertSame( 1, $r['count'] );
+        $this->assertTrue( ConversionFlag::is_manual( 11 ) );
+        $this->assertSame( 1, $r['bar']['pending'] );
+        $this->assertSame( 1, $r['bar']['converted'] );
+    }
+
+    public function test_mark_can_be_taken_back(): void {
+        $this->seed( 11 );
+        $this->ajax->handle( 'mark', $this->req( [ 'post_ids' => [ 11 ] ] ) );
+
+        $r = $this->ajax->handle( 'mark', $this->req( [ 'post_ids' => [ 11 ], 'undo' => '1' ] ) );
+
+        $this->assertSame( 1, $r['count'] );
+        $this->assertFalse( ConversionFlag::is_converted( 11 ) );
+        $this->assertSame( 1, $r['bar']['pending'] );
+    }
+
+    public function test_mark_ignores_posts_outside_the_allowed_types(): void {
+        $this->seed( 11, 'shop_order' );
+
+        $r = $this->ajax->handle( 'mark', $this->req( [ 'post_ids' => [ 11 ] ] ) );
+
+        $this->assertSame( 0, $r['count'] );
+        $this->assertFalse( ConversionFlag::is_converted( 11 ) );
+    }
+
+    public function test_marking_a_failed_page_completes_its_job(): void {
+        $job = $this->failedJob( [ 11, 12 ], [ 12 ] );
+        $this->store->set_item_result( $job, 11, [ 'state' => 'converted', 'result_post_id' => 5011 ] );
+        $this->store->sync_counts( $job );
+
+        $this->ajax->handle( 'mark', $this->req( [ 'post_ids' => [ 12 ] ] ) );
+
+        $this->assertSame( 'done', $this->store->get_job( $job )['status'] );
+        $this->assertSame( 0, $this->store->get_job( $job )['failed'] );
     }
 }

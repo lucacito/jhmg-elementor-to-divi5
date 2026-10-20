@@ -146,10 +146,8 @@
                 if ( r.summary.done ) {
                     runningJob = null;
                     setLive( t.finished + ' ' + r.ui.counts );
-                    $job.find( '[data-edc-action="resume"]' ).remove();
-                    $job.data( 'loaded', true );
-                    loadItems( $job, '', 1 );
-                    loadPending();
+                    refreshJob( jobId );
+                    refreshPendingSection();
                     return;
                 }
 
@@ -195,7 +193,7 @@
     function syncSelection() {
         var n = selectedIds().length;
         $( '.edc-selected-count' ).text( n );
-        $( '[data-edc-action="convert-selected"]' ).prop( 'disabled', n === 0 );
+        $( '[data-edc-action="convert-selected"], [data-edc-action="mark-selected"]' ).prop( 'disabled', n === 0 );
         $( '#edc-pending-table input[name="post_ids[]"]' ).each( function () {
             this.checked = !! selected[ this.value ];
         } );
@@ -204,9 +202,30 @@
             $( '#edc-pending-table input[name="post_ids[]"]:not(:checked)' ).length === 0 );
     }
 
+    /**
+     * Re-renders the whole Pending section (keeping the filters and whether it was
+     * folded). Used wherever counts can change for reasons the table alone cannot
+     * show: the empty state has no table, and the failed-pages note moves too.
+     */
+    function refreshPendingSection() {
+        var $old = $( '#edc-pending' );
+        if ( ! $old.length ) { return $.Deferred().resolve().promise(); }
+        var wasOpen = $old[ 0 ].open;
+
+        return request( 'pending', { section: 1, types: pending.types, search: pending.search, paged: pending.paged } )
+            .done( function ( r ) {
+                var $new = $( r.html );
+                $new.prop( 'open', wasOpen );
+                $old.replaceWith( $new );
+                $( '.edc-chip' ).removeClass( 'is-active' )
+                    .filter( function () { return String( $( this ).data( 'edc-type' ) ) === ( pending.types[ 0 ] || '' ); } ).addClass( 'is-active' );
+                syncSelection();
+            } );
+    }
+
     function loadPending() {
         var $table = $( '#edc-pending-table' );
-        if ( ! $table.length ) { return $.Deferred().resolve().promise(); }
+        if ( ! $table.length ) { return refreshPendingSection(); }
         $table.css( 'opacity', 0.5 );
 
         return request( 'pending', { types: pending.types, search: pending.search, paged: pending.paged } )
@@ -346,7 +365,7 @@
             $job.data( 'loaded', true );
             loadItems( $job, '', 1 );
             $job[ 0 ].scrollIntoView( { block: 'nearest' } );
-            loadPending();
+            refreshPendingSection();
             runJob( r.job_id );
         } ).fail( function ( xhr ) {
             $p.find( '.edc-start-panel__error' ).text( failureMessage( xhr ) );
@@ -354,5 +373,68 @@
         } );
     } );
 
-    window.edcJobsApi = { runJob: runJob, loadPending: loadPending, request: request, failureMessage: failureMessage, updateBar: updateBar, refreshBar: refreshBar, loadItems: loadItems };
+
+    // ----------------------------------------------- retry, and fixing by hand
+
+    /** Re-renders a job's header and buttons from the server, keeping it open if it was. */
+    function refreshJob( jobId ) {
+        var $old = $( '.edc-job[data-job-id="' + jobId + '"]' );
+        var wasOpen = $old.length && $old[ 0 ].open;
+
+        return request( 'job', { job_id: jobId } ).done( function ( r ) {
+            var $new = $( r.html );
+            $old.replaceWith( $new );
+            if ( wasOpen ) {
+                $new.prop( 'open', true ).data( 'loaded', true );
+                loadItems( $new, '', 1 );
+            }
+        } );
+    }
+
+    function jobIdOf( el ) { return Number( $( el ).closest( '.edc-job' ).data( 'job-id' ) ); }
+
+    function retry( jobId, postIds ) {
+        var data = { job_id: jobId };
+        if ( postIds ) { data.post_ids = postIds; }
+
+        return request( 'retry', data ).done( function ( r ) {
+            updateBar( r.bar );
+            refreshPendingSection();
+            refreshJob( jobId ).always( function () { if ( r.retried > 0 ) { runJob( jobId ); } } );
+        } ).fail( function ( xhr ) {
+            $( '.edc-job[data-job-id="' + jobId + '"] .edc-job__note' ).text( failureMessage( xhr ) );
+        } );
+    }
+
+    $( document ).on( 'click', '[data-edc-action="retry-failed"]', function () { retry( jobIdOf( this ) ); } );
+    $( document ).on( 'click', '[data-edc-action="retry-item"]', function () {
+        retry( jobIdOf( this ), [ Number( $( this ).data( 'post-id' ) ) ] );
+    } );
+
+    /** Marks (or, with undo, un-marks) pages and brings every view that shows them up to date. */
+    function mark( ids, undo, $from ) {
+        return request( 'mark', { post_ids: ids, undo: undo ? '1' : '0' } ).done( function ( r ) {
+            updateBar( r.bar );
+            var $job = $from && $from.closest( '.edc-job' );
+            if ( $job && $job.length ) { refreshJob( Number( $job.data( 'job-id' ) ) ); }
+            refreshPendingSection();
+        } ).fail( function ( xhr ) { setLive( failureMessage( xhr ) ); } );
+    }
+
+    $( document ).on( 'click', '[data-edc-action="mark-converted"]', function () {
+        mark( [ Number( $( this ).data( 'post-id' ) ) ], false, $( this ) );
+    } );
+
+    $( document ).on( 'click', '[data-edc-action="unmark-converted"]', function () {
+        mark( [ Number( $( this ).data( 'post-id' ) ) ], true, $( this ) );
+    } );
+
+    $( document ).on( 'click', '[data-edc-action="mark-selected"]', function () {
+        var ids = selectedIds();
+        if ( ! ids.length || ! window.confirm( ( t.confirmMark || 'Mark %s pages as converted?' ).replace( '%s', ids.length ) ) ) { return; }
+        selected = {};
+        mark( ids, false, null );
+    } );
+
+    window.edcJobsApi = { runJob: runJob, loadPending: loadPending, refreshPendingSection: refreshPendingSection, request: request, failureMessage: failureMessage, updateBar: updateBar, refreshBar: refreshBar, loadItems: loadItems };
 }( jQuery ) );

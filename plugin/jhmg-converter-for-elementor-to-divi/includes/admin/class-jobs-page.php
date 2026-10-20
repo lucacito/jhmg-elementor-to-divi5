@@ -15,6 +15,7 @@ namespace ElementorDivi5Converter\Admin;
 
 use ElementorDivi5Converter\Conversion\ConversionPreflight;
 use ElementorDivi5Converter\History\ImportHistory;
+use ElementorDivi5Converter\Jobs\ConversionFlag;
 use ElementorDivi5Converter\History\ImportRollback;
 use ElementorDivi5Converter\Jobs\Factory;
 use ElementorDivi5Converter\Jobs\JobService;
@@ -459,6 +460,14 @@ class JobsPage {
             $links[] = '<button type="button" class="button-link" data-edc-action="retry-item" data-post-id="' . (int) $item['post_id'] . '">' . esc_html__( 'Retry', 'jhmg-converter-for-elementor-to-divi' ) . '</button>';
         }
 
+        // Fixed by hand? Take it off the books. Only a hand-made mark can be taken back:
+        // a page the converter really converted has nothing to un-mark.
+        if ( in_array( $item['state'], [ 'failed', 'skipped' ], true ) ) {
+            $links[] = '<button type="button" class="button-link" data-edc-action="mark-converted" data-post-id="' . (int) $item['post_id'] . '">' . esc_html__( 'Mark as converted', 'jhmg-converter-for-elementor-to-divi' ) . '</button>';
+        } elseif ( $item['state'] === 'converted' && ConversionFlag::is_manual( $item['post_id'] ) ) {
+            $links[] = '<button type="button" class="button-link" data-edc-action="unmark-converted" data-post-id="' . (int) $item['post_id'] . '">' . esc_html__( 'Undo mark', 'jhmg-converter-for-elementor-to-divi' ) . '</button>';
+        }
+
         return implode( ' | ', array_filter( $links ) );
     }
 
@@ -556,7 +565,8 @@ class JobsPage {
             $html .= '<td>' . esc_html( $row['post_type'] ) . '</td>';
             $html .= '<td>' . esc_html( (string) ( $row['post_status'] ?? '' ) ) . '</td>';
             $html .= '<td class="edc-item-actions">' . $this->link( get_edit_post_link( (int) $row['ID'] ), __( 'Edit', 'jhmg-converter-for-elementor-to-divi' ) )
-                . ' | ' . $this->link( get_permalink( (int) $row['ID'] ), __( 'View', 'jhmg-converter-for-elementor-to-divi' ), true ) . '</td></tr>';
+                . ' | ' . $this->link( get_permalink( (int) $row['ID'] ), __( 'View', 'jhmg-converter-for-elementor-to-divi' ), true )
+                . ' | <button type="button" class="button-link" data-edc-action="mark-converted" data-post-id="' . (int) $row['ID'] . '">' . esc_html__( 'Mark as converted', 'jhmg-converter-for-elementor-to-divi' ) . '</button></td></tr>';
         }
         $html .= '</tbody></table>';
 
@@ -586,6 +596,8 @@ class JobsPage {
         $html  = '<p class="edc-pending__actions">';
         $html .= '<button type="button" class="button" data-edc-action="convert-selected" data-limit="' . esc_attr( (string) $limit ) . '" disabled>'
             . esc_html__( 'Convert selected', 'jhmg-converter-for-elementor-to-divi' ) . ' (<span class="edc-selected-count">0</span>)</button> ';
+        $html .= '<button type="button" class="button" data-edc-action="mark-selected" disabled>'
+            . esc_html__( 'Mark selected as converted', 'jhmg-converter-for-elementor-to-divi' ) . '</button> ';
 
         if ( $total > $limit ) {
             $html .= '<a class="button button-primary edc-upsell" target="_blank" rel="noopener" href="' . esc_url( JobsAjax::PRO_URL ) . '">'

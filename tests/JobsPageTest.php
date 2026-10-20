@@ -269,4 +269,34 @@ class JobsPageTest extends TestCase {
         $this->assertStringContainsString( 'data-edc-bar="pending"', $html );
         $this->assertStringContainsString( 'data-edc-bar="failed"', $html );
     }
+
+    // ---- manual marks in the results ------------------------------------------
+
+    public function test_a_failed_item_can_be_marked_converted(): void {
+        $html = $this->items_html( [ 'post_id' => 11, 'state' => 'failed', 'message' => 'boom' ] );
+
+        $this->assertStringContainsString( 'data-edc-action="mark-converted"', $html );
+    }
+
+    public function test_a_skipped_item_can_be_marked_converted(): void {
+        $html = $this->items_html( [ 'post_id' => 11, 'state' => 'skipped', 'message' => 'No Elementor content found on that page.' ] );
+
+        $this->assertStringContainsString( 'data-edc-action="mark-converted"', $html );
+    }
+
+    public function test_a_hand_marked_item_says_so_and_can_be_taken_back(): void {
+        $GLOBALS['__test_postmeta'][11]['_edc_converted_manually'] = [ '1' ];
+        $html = $this->items_html( [ 'post_id' => 11, 'state' => 'converted', 'result_post_id' => 0, 'message' => 'Marked as converted manually.' ] );
+
+        $this->assertStringContainsString( 'Marked as converted manually', $html );
+        $this->assertStringContainsString( 'data-edc-action="unmark-converted"', $html );
+        $this->assertStringNotContainsString( 'et_fb=1', $html, 'nothing was built by the converter, so no builder link' );
+    }
+
+    public function test_a_genuinely_converted_item_cannot_be_unmarked(): void {
+        $html = $this->items_html( [ 'post_id' => 11, 'state' => 'converted', 'result_post_id' => 900 ] );
+
+        $this->assertStringNotContainsString( 'data-edc-action="unmark-converted"', $html );
+        $this->assertStringNotContainsString( 'data-edc-action="mark-converted"', $html );
+    }
 }

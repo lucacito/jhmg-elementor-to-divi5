@@ -172,6 +172,163 @@ test.describe.serial('Conversion Jobs (Pro: no limit)', () => {
   });
 });
 
+/** Creates a job through the same endpoint the screen uses, without running it. */
+async function createJob(page: Page, ids: string[], mode = 'copy') {
+  return page.evaluate(async ({ ids, mode }) => {
+    const cfg = (window as any).edcJobs;
+    const body = new URLSearchParams({ action: 'edc_jobs_create', nonce: cfg.nonce, mode });
+    ids.forEach((i) => body.append('post_ids[]', i));
+    return (await fetch(cfg.ajaxUrl, { method: 'POST', body })).json();
+  }, { ids, mode });
+}
+
+/** Runs exactly one server chunk, as the browser's loop does. */
+async function runChunk(page: Page, jobId: number) {
+  return page.evaluate(async (jobId) => {
+    const cfg = (window as any).edcJobs;
+    const body = new URLSearchParams({ action: 'edc_jobs_run', nonce: cfg.nonce, job_id: String(jobId) });
+    return (await fetch(cfg.ajaxUrl, { method: 'POST', body })).json();
+  }, jobId);
+}
+
+const pendingIds = (page: Page) =>
+  page.evaluate(() => Array.from(document.querySelectorAll<HTMLInputElement>('#edc-pending-table input[name="post_ids[]"]')).map((i) => i.value));
+
+test.describe.serial('Conversion Jobs: resume, retry and marking by hand', () => {
+  test.beforeAll(() => { wp('reset'); });
+
+  test('an interrupted job is labelled, offers Resume, and finishes without converting anything twice', async ({ page }) => {
+    test.setTimeout(120000);
+    wp('seed 40');
+    await logIn(page);
+    await page.goto(jobsUrl);
+
+    // Convert-all in a throwaway tab session: create the job, run one chunk, then "close the browser".
+    const ids = (await pendingIds(page)).slice(0, 40);
+    const created = await createJob(page, ids);
+    expect(created.ok).toBe(true);
+    const first = await runChunk(page, created.job_id);
+    expect(first.summary.done).toBe(false); // 25 pages per chunk: 15 are left
+    wp(`stale ${created.job_id}`);
+
+    await page.reload();
+    const job = page.locator(`.edc-job[data-job-id="${created.job_id}"]`);
+    await expect(job).toHaveAttribute('data-status', 'interrupted');
+    await expect(job.locator('.edc-job__status')).toHaveText('Interrupted');
+    await expect(job).toHaveAttribute('open', ''); // unfinished jobs are open
+    await shot(page, '6-interrupted');
+
+    await job.locator('[data-edc-action="resume"]').click();
+    await expect(job.locator('.edc-job__status')).toHaveText('Done', { timeout: 60000 });
+    await expect(job.locator('.edc-job__counts')).toHaveText('40 of 40');
+
+    const st = wp('state');
+    expect(st.copies).toBe(40); // exactly one copy per page: nothing converted twice
+  });
+
+  test('a job that was running when the page loaded carries on by itself', async ({ page }) => {
+    test.setTimeout(120000);
+    wp('reset');
+    wp('seed 40');
+    await logIn(page);
+    await page.goto(jobsUrl);
+
+    const ids = (await pendingIds(page)).slice(0, 40);
+    const created = await createJob(page, ids);
+    await runChunk(page, created.job_id); // fresh heartbeat: it is still "running"
+
+    await page.reload();
+    const job = page.locator(`.edc-job[data-job-id="${created.job_id}"]`);
+    await expect(job.locator('.edc-job__status')).toHaveText('Done', { timeout: 60000 });
+    expect(wp('state').copies).toBe(40);
+  });
+
+  test('failed pages can be retried one at a time and then all at once', async ({ page }) => {
+    test.setTimeout(120000);
+    wp('reset');
+    const seeded: number[] = wp('seed 3');
+    await logIn(page);
+    await page.goto(jobsUrl);
+
+    const created = await createJob(page, seeded.map(String));
+    await runChunk(page, created.job_id);
+    wp(`fail ${created.job_id} ${seeded[0]}`);
+    wp(`fail ${created.job_id} ${seeded[1]}`);
+
+    await page.reload();
+    // Failed pages are not in the pending list; the list says where they went.
+    await expect(page.locator('.edc-pending__failed')).toContainText('2 pages failed');
+    await expect(bar(page, 'failed')).toHaveText('2');
+
+    const job = page.locator(`.edc-job[data-job-id="${created.job_id}"]`);
+    await job.locator('summary').click();
+    await expect(job.locator('[data-edc-action="retry-failed"]')).toHaveText('Retry 2 failed');
+    await expect(job.locator('.edc-state--failed')).toHaveCount(2);
+    await expect(job.locator('.edc-item-message').first()).toContainText('Forced failure');
+
+    await job.locator('[data-edc-action="retry-item"]').first().click();
+    await expect(job.locator('[data-edc-action="retry-failed"]')).toHaveText('Retry 1 failed', { timeout: 30000 });
+
+    await job.locator('[data-edc-action="retry-failed"]').click();
+    await expect(job.locator('.edc-job__status')).toHaveText('Done', { timeout: 30000 });
+    await expect(job.locator('[data-edc-action="retry-failed"]')).toHaveCount(0);
+    await expect(bar(page, 'failed')).toHaveText('0');
+  });
+
+  test('marking a pending page as converted takes it off the pending list, and it can be taken back', async ({ page }) => {
+    test.setTimeout(60000);
+    wp('reset');
+    wp('seed 3');
+    await logIn(page);
+    await page.goto(jobsUrl);
+
+    const pendingBefore = await num(page, 'pending');
+    const convertedBefore = await num(page, 'converted');
+    await page.locator('#edc-pending-table tr', { hasText: 'E2E Job Page 001' }).locator('[data-edc-action="mark-converted"]').click();
+
+    await expect(page.getByText('E2E Job Page 001')).toHaveCount(0);
+    await expect.poll(() => num(page, 'pending')).toBe(pendingBefore - 1);
+    await expect.poll(() => num(page, 'converted')).toBe(convertedBefore + 1);
+
+    // Bulk: select the other two and mark them.
+    page.once('dialog', (d) => d.accept());
+    await page.locator('#edc-select-all').check();
+    await page.locator('[data-edc-action="mark-selected"]').click();
+    await expect.poll(() => num(page, 'pending')).toBe(pendingBefore - 3);
+    expect(wp('state').flagged).toBe(3);
+  });
+
+  test('a failed page marked as converted completes its job, and the mark can be undone', async ({ page }) => {
+    test.setTimeout(90000);
+    wp('reset');
+    const seeded: number[] = wp('seed 2');
+    await logIn(page);
+    await page.goto(jobsUrl);
+
+    const created = await createJob(page, seeded.map(String));
+    await runChunk(page, created.job_id);
+    wp(`fail ${created.job_id} ${seeded[0]}`);
+    await page.reload();
+
+    const job = page.locator(`.edc-job[data-job-id="${created.job_id}"]`);
+    await expect(job.locator('.edc-job__status')).toHaveText('Done with errors');
+    await job.locator('summary').click();
+    await job.locator('[data-edc-action="mark-converted"]').click();
+
+    await expect(job.locator('.edc-job__status')).toHaveText('Done', { timeout: 15000 });
+    await expect(job.locator('.edc-job__counts')).toHaveText('2 of 2');
+    await expect(job.getByText('Marked as converted manually')).toBeVisible();
+    await shot(page, '7-marked');
+
+    await job.locator('[data-edc-action="unmark-converted"]').click();
+    await expect(job.getByText('The manual mark was removed')).toBeVisible({ timeout: 15000 });
+    await expect(job.locator('.edc-state--skipped')).toHaveCount(1); // a skip is finished work, not a failure
+    await expect(job.locator('.edc-job__status')).toHaveText('Done');
+    // ...and the page is pending again.
+    await expect(page.locator('#edc-pending-table').getByText('E2E Job Page 001')).toBeVisible();
+  });
+});
+
 test.describe.serial('Conversion Jobs (free: one page at a time)', () => {
   test.beforeAll(() => {
     wp('reset');

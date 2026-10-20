@@ -344,6 +344,12 @@ class JobService {
 
     /** A job that says "running" but has gone quiet is "interrupted": resumable, not live. */
     public function effective_status( array $job ): string {
+        // A finished job is "with errors" exactly when something in it has failed,
+        // whatever the stored status last said: the counts are the truth.
+        if ( in_array( $job['status'], [ 'done', 'done_errors' ], true ) ) {
+            return $job['failed'] > 0 ? 'done_errors' : 'done';
+        }
+
         if ( $job['status'] !== 'running' ) {
             return $job['status'];
         }
@@ -431,16 +437,31 @@ class JobService {
         return count( $marked );
     }
 
-    /** Takes back a manual mark. A page the converter really converted keeps its flag. */
+    /**
+     * Takes back a manual mark. A page the converter really converted keeps its
+     * flag. A job that had counted the page as converted-by-hand now counts it
+     * as skipped, so its totals match the page being pending again.
+     */
     public function unmark_converted( array $post_ids ): int {
-        $n = 0;
+        $cleared = [];
         foreach ( array_unique( array_filter( array_map( 'intval', $post_ids ) ) ) as $id ) {
             if ( ConversionFlag::is_manual( $id ) ) {
                 ConversionFlag::clear( $id );
-                $n++;
+                $cleared[] = $id;
             }
         }
 
-        return $n;
+        if ( $cleared ) {
+            // result_post_id 0 = "marked by hand"; an item the converter built (> 0) is left alone.
+            $jobs = $this->store->resolve_posts( $cleared, [ 'converted' ], [
+                'state'   => 'skipped',
+                'message' => __( 'The manual mark was removed — this page has not been converted.', 'jhmg-converter-for-elementor-to-divi' ),
+            ], 0 );
+            foreach ( $jobs as $job_id ) {
+                $this->store->sync_counts( $job_id );
+            }
+        }
+
+        return count( $cleared );
     }
 }
