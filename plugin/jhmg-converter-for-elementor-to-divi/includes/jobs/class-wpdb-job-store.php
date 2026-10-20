@@ -246,6 +246,40 @@ class WpdbJobStore implements JobStore {
         return (int) $wpdb->query( $wpdb->prepare( $sql, $args ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
     }
 
+    public function resolve_posts( array $post_ids, array $from_states, array $result ): array {
+        global $wpdb;
+
+        $post_ids = array_values( array_filter( array_map( 'intval', $post_ids ) ) );
+        $states   = array_values( array_intersect( $from_states, self::STATES ) );
+        if ( ! $post_ids || ! $states ) {
+            return [];
+        }
+
+        $set  = [ 'updated_at = %s' ];
+        $args = [ self::now() ];
+        foreach ( self::ITEM_FIELDS as $field ) {
+            if ( array_key_exists( $field, $result ) ) {
+                $set[]  = "{$field} = " . ( is_int( $result[ $field ] ) ? '%d' : '%s' );
+                $args[] = $result[ $field ];
+            }
+        }
+
+        $in_posts  = implode( ', ', array_fill( 0, count( $post_ids ), '%d' ) );
+        $in_states = implode( ', ', array_fill( 0, count( $states ), '%s' ) );
+        $where     = " WHERE post_id IN ({$in_posts}) AND state IN ({$in_states})";
+        $where_arg = array_merge( $post_ids, $states );
+
+        // Which jobs are about to change, read before the UPDATE removes the evidence.
+        $job_ids = $wpdb->get_col( $wpdb->prepare( 'SELECT DISTINCT job_id FROM ' . Schema::items_table() . $where, $where_arg ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+        if ( ! $job_ids ) {
+            return [];
+        }
+
+        $wpdb->query( $wpdb->prepare( 'UPDATE ' . Schema::items_table() . ' SET ' . implode( ', ', $set ) . $where, array_merge( $args, $where_arg ) ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+
+        return array_map( 'intval', $job_ids );
+    }
+
     public function claim_lock( int $job_id, int $seconds ): bool {
         global $wpdb;
 

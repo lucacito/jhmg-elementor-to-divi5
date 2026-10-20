@@ -40,6 +40,11 @@ class InstalledPostSource implements ConversionSource {
         return $items;
     }
 
+    /** Shared so the jobs runner can tell "nothing to convert" from a real failure. */
+    public static function no_content_message(): string {
+        return __( 'No Elementor content found on that page.', 'jhmg-converter-for-elementor-to-divi' );
+    }
+
     private function itemFor( int $post_id ): array {
         $post = get_post( $post_id );
 
@@ -54,7 +59,7 @@ class InstalledPostSource implements ConversionSource {
         if ( empty( $elements ) ) {
             return $this->failed(
                 $post_id,
-                __( 'No Elementor content found on that page.', 'jhmg-converter-for-elementor-to-divi' ),
+                self::no_content_message(),
                 (string) ( $post->post_title ?? '' )
             );
         }

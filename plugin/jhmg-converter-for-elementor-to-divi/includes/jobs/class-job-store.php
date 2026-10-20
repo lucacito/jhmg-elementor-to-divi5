@@ -78,6 +78,17 @@ interface JobStore {
      */
     public function reset_items( int $job_id, array $states, ?array $post_ids ): int;
 
+    /**
+     * Moves a post's items, in every job, from the given states to a result
+     * (used when the user marks a page converted by hand).
+     *
+     * @param int[]    $post_ids
+     * @param string[] $from_states
+     * @param array    $result      As for set_item_result().
+     * @return int[] Ids of the jobs that changed.
+     */
+    public function resolve_posts( array $post_ids, array $from_states, array $result ): array;
+
     /** Atomically takes the job's run lock. False if someone else holds it. */
     public function claim_lock( int $job_id, int $seconds ): bool;
 

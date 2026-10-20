@@ -64,6 +64,13 @@ $check( 'count_items', $s->count_items( $id, null ) === 3 && $s->count_items( $i
 $check( 'reset_items puts failed items back to pending', $s->reset_items( $id, [ 'failed' ], null ) === 1 && $s->counts_by_state( $id )['pending'] === 1 );
 $check( 'reset_items can target specific posts', $s->reset_items( $id, [ 'skipped' ], [ 13 ] ) === 1 );
 
+// --- resolve_posts (manual mark) -----------------------------------------
+$s->set_item_result( $id, 13, [ 'state' => 'failed', 'message' => 'x' ] );
+$affected = $s->resolve_posts( [ 13, 999 ], [ 'pending', 'failed' ], [ 'state' => 'converted', 'message' => 'Marked as converted manually' ] );
+$check( 'resolve_posts reports the jobs it changed', $affected === [ $id ], json_encode( $affected ) );
+$check( 'resolve_posts moved the item and set its message', $s->list_items( $id, 'converted', 10, 0 )[1]['message'] === 'Marked as converted manually' );
+$check( 'resolve_posts leaves other states alone', $s->resolve_posts( [ 13 ], [ 'failed' ], [ 'state' => 'skipped' ] ) === [] );
+
 // --- lock -----------------------------------------------------------------
 $check( 'first claim wins',  $s->claim_lock( $id, 60 ) === true );
 $check( 'second claim is refused while locked', $s->claim_lock( $id, 60 ) === false );

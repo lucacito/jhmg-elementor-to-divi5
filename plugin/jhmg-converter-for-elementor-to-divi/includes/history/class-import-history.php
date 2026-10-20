@@ -37,7 +37,9 @@ class ImportHistory {
 
         $succeeded = count( array_filter( $results, static fn( $r ) => ! empty( $r['success'] ) ) );
 
-        $runs = $this->all();
+        // A job that is retried finishes again under the same id; its newer
+        // record replaces the old one instead of listing the job twice.
+        $runs = array_values( array_filter( $this->all(), static fn( $run ) => ( $run['id'] ?? '' ) !== $import_id ) );
         array_unshift( $runs, [
             'id'          => $import_id,
             'at'          => gmdate( 'Y-m-d H:i:s' ),
@@ -49,7 +51,9 @@ class ImportHistory {
             'rolled_back' => false,
         ] );
 
-        update_option( self::OPTION, array_slice( $runs, 0, self::MAX_RUNS ) );
+        // Not autoloaded: a job can list thousands of post IDs, and this option
+        // would otherwise be read into memory on every request of the site.
+        update_option( self::OPTION, array_slice( $runs, 0, self::MAX_RUNS ), false );
     }
 
     /** @return array Newest first. */
