@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: JHMG Converter For Elementor to Divi 5 3.2.0\n"
+"Project-Id-Version: JHMG Converter For Elementor to Divi 5 3.3.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/jhmg-converter-for-elementor-to-divi\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-06T10:57:52+00:00\n"
+"POT-Creation-Date: 2026-10-21T19:02:38+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: jhmg-converter-for-elementor-to-divi\n"
@@ -52,6 +52,7 @@ msgid "Elementor → Divi 5"
 msgstr ""
 
 #: includes/admin/class-admin-page.php:96
+#: includes/admin/class-jobs-page.php:81
 msgid "You do not have permission to access this page."
 msgstr ""
 
@@ -195,6 +196,8 @@ msgid "Create as"
 msgstr ""
 
 #: includes/admin/class-admin-page.php:424
+#: includes/admin/class-jobs-page.php:398
+#: includes/admin/class-jobs-page.php:558
 msgid "Page"
 msgstr ""
 
@@ -204,6 +207,8 @@ msgstr ""
 
 #: includes/admin/class-admin-page.php:429
 #: includes/admin/class-admin-page.php:656
+#: includes/admin/class-jobs-page.php:176
+#: includes/admin/class-jobs-page.php:559
 msgid "Status"
 msgstr ""
 
@@ -265,7 +270,7 @@ msgstr ""
 msgid "Priority support and regular updates"
 msgstr ""
 
-#. translators: %s: Pro subscription price, e.g. $25/yr
+#. translators: %s: Pro subscription price, e.g. $47/yr
 #: includes/admin/class-admin-page.php:486
 #: includes/admin/class-admin-page.php:550
 #, php-format
@@ -396,15 +401,22 @@ msgid "Issues"
 msgstr ""
 
 #: includes/admin/class-admin-page.php:658
+#: includes/admin/class-jobs-page.php:399
+#: includes/admin/class-jobs-page.php:559
 msgid "Actions"
 msgstr ""
 
 #: includes/admin/class-admin-page.php:676
 #: includes/admin/class-elementor-page-repository.php:83
+#: includes/admin/class-jobs-page.php:564
+#: includes/jobs/class-job-service.php:140
+#: includes/jobs/class-job-service.php:161
 msgid "(no title)"
 msgstr ""
 
 #: includes/admin/class-admin-page.php:680
+#: includes/admin/class-jobs-page.php:321
+#: includes/admin/class-jobs-page.php:423
 msgid "Converted"
 msgstr ""
 
@@ -413,6 +425,8 @@ msgid "Original page replaced — Undo restores the Elementor version."
 msgstr ""
 
 #: includes/admin/class-admin-page.php:685
+#: includes/admin/class-jobs-page.php:323
+#: includes/admin/class-jobs-page.php:425
 msgid "Failed"
 msgstr ""
 
@@ -437,10 +451,14 @@ msgid "Clean"
 msgstr ""
 
 #: includes/admin/class-admin-page.php:738
+#: includes/admin/class-jobs-page.php:449
+#: includes/admin/class-jobs-page.php:567
 msgid "Edit"
 msgstr ""
 
 #: includes/admin/class-admin-page.php:741
+#: includes/admin/class-jobs-page.php:450
+#: includes/admin/class-jobs-page.php:568
 msgid "View"
 msgstr ""
 
@@ -457,6 +475,8 @@ msgid "Converted Elements"
 msgstr ""
 
 #: includes/admin/class-admin-page.php:822
+#: includes/admin/class-jobs-page.php:398
+#: includes/admin/class-jobs-page.php:558
 msgid "Type"
 msgstr ""
 
@@ -530,6 +550,7 @@ msgid "Share these widget names"
 msgstr ""
 
 #: includes/admin/class-coverage-panel.php:106
+#: includes/admin/class-jobs-page.php:363
 msgid "Undone"
 msgstr ""
 
@@ -596,18 +617,24 @@ msgid "Search Elementor pages"
 msgstr ""
 
 #: includes/admin/class-direct-conversion-page.php:230
+#: includes/admin/class-jobs-page.php:523
 msgid "Search by title…"
 msgstr ""
 
 #: includes/admin/class-direct-conversion-page.php:232
+#: includes/admin/class-jobs-page.php:524
 msgid "Search"
 msgstr ""
 
 #: includes/admin/class-direct-conversion-page.php:254
+#: includes/admin/class-jobs-page.php:409
+#: includes/admin/class-jobs-page.php:577
 msgid "Previous"
 msgstr ""
 
 #: includes/admin/class-direct-conversion-page.php:260
+#: includes/admin/class-jobs-page.php:413
+#: includes/admin/class-jobs-page.php:581
 msgid "Next"
 msgstr ""
 
@@ -656,6 +683,7 @@ msgid "Headers and footers are always added as new Theme Builder layouts."
 msgstr ""
 
 #: includes/admin/class-direct-conversion-page.php:373
+#: includes/admin/class-jobs-ajax.php:102
 msgid "You do not have permission to do that."
 msgstr ""
 
@@ -669,6 +697,377 @@ msgstr ""
 
 #: includes/admin/class-hfe-conflict-notice.php:42
 msgid "Deactivate Header Footer Elementor: with Divi active and a Divi Theme Builder header or footer in place, every page fails to load (HFE removes the wp_head actions while Divi is rendering its header). Your converted header and footer live in Divi → Theme Builder now."
+msgstr ""
+
+#: includes/admin/class-jobs-ajax.php:66
+msgid "Loading…"
+msgstr ""
+
+#: includes/admin/class-jobs-ajax.php:67
+#: includes/admin/class-jobs-page.php:427
+msgid "Converting…"
+msgstr ""
+
+#: includes/admin/class-jobs-ajax.php:68
+msgid "Another window is running this job. Waiting…"
+msgstr ""
+
+#: includes/admin/class-jobs-ajax.php:69
+msgid "Finished."
+msgstr ""
+
+#: includes/admin/class-jobs-ajax.php:70
+#: includes/admin/class-jobs-page.php:339
+msgid "Resume"
+msgstr ""
+
+#. translators: %s: number of pages
+#: includes/admin/class-jobs-ajax.php:72
+#, php-format
+msgid "Mark %s pages as converted? They will leave the pending list."
+msgstr ""
+
+#: includes/admin/class-jobs-ajax.php:73
+msgid "Choose how the pages should be converted."
+msgstr ""
+
+#. translators: %s: number of pages
+#: includes/admin/class-jobs-ajax.php:75
+#, php-format
+msgid "%s pages will be converted."
+msgstr ""
+
+#. translators: %s: number of pages
+#: includes/admin/class-jobs-ajax.php:77
+msgid "1 page will be converted."
+msgstr ""
+
+#. translators: %s: number of pages
+#: includes/admin/class-jobs-ajax.php:79
+#, php-format
+msgid "I understand this creates %s new draft pages."
+msgstr ""
+
+#. translators: %s: number of pages
+#: includes/admin/class-jobs-ajax.php:81
+#, php-format
+msgid "I understand this replaces %s live pages and have taken a backup."
+msgstr ""
+
+#. translators: %s: number of pages
+#: includes/admin/class-jobs-ajax.php:83
+#: includes/admin/class-jobs-ajax.php:224
+#, php-format
+msgid "Convert %s selected pages with Pro"
+msgstr ""
+
+#: includes/admin/class-jobs-ajax.php:84
+msgid "The free plugin converts one page at a time."
+msgstr ""
+
+#: includes/admin/class-jobs-ajax.php:85
+msgid "Something went wrong. Please try again."
+msgstr ""
+
+#: includes/admin/class-jobs-ajax.php:86
+msgid "The connection dropped. The job is saved — use Resume to continue where it stopped."
+msgstr ""
+
+#: includes/admin/class-jobs-ajax.php:105
+msgid "This page has expired. Reload it and try again."
+msgstr ""
+
+#: includes/admin/class-jobs-ajax.php:116
+msgid "Unknown action."
+msgstr ""
+
+#: includes/admin/class-jobs-ajax.php:134
+#: includes/admin/class-jobs-ajax.php:152
+#: includes/admin/class-jobs-ajax.php:262
+#: includes/admin/class-jobs-ajax.php:282
+msgid "That job no longer exists."
+msgstr ""
+
+#. translators: %s: number of pages
+#: includes/admin/class-jobs-ajax.php:223
+#: includes/admin/class-jobs-page.php:604
+#, php-format
+msgid "Convert all %s remaining with Pro"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:57
+#: includes/admin/class-jobs-page.php:58
+#: includes/admin/class-jobs-page.php:84
+msgid "Conversion Jobs"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:124
+msgid "converted"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:125
+msgid "pending"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:126
+msgid "failed"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:160
+msgid "Jobs"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:167
+msgid "Any status"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:168
+#: includes/admin/class-jobs-page.php:296
+msgid "Waiting to start"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:169
+#: includes/admin/class-jobs-page.php:297
+msgid "Running"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:170
+#: includes/admin/class-jobs-page.php:298
+msgid "Interrupted"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:171
+#: includes/admin/class-jobs-page.php:299
+msgid "Done"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:172
+#: includes/admin/class-jobs-page.php:300
+msgid "Done with errors"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:180
+msgid "Post type"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:180
+msgid "Any post type"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:185
+msgid "From"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:186
+msgid "To"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:187
+msgid "Filter"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:189
+msgid "Reset"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:202
+msgid "No jobs match these filters."
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:203
+msgid "No conversion jobs yet. Pick pages from the pending list to start one."
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:240
+msgid "Newer"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:241
+msgid "Older"
+msgstr ""
+
+#. translators: %d: job number
+#: includes/admin/class-jobs-page.php:257
+#, php-format
+msgid "Job #%d"
+msgstr ""
+
+#. translators: 1: pages finished, 2: total pages
+#: includes/admin/class-jobs-page.php:287
+#, php-format
+msgid "%1$s of %2$s"
+msgstr ""
+
+#. translators: %s: failed pages
+#: includes/admin/class-jobs-page.php:288
+#, php-format
+msgid "%s failed"
+msgstr ""
+
+#. translators: %s: post types, e.g. "page, post"
+#: includes/admin/class-jobs-page.php:308
+#, php-format
+msgid "All remaining (%s)"
+msgstr ""
+
+#. translators: 1: number of pages, 2: post types
+#: includes/admin/class-jobs-page.php:310
+#, php-format
+msgid "%1$d selected (%2$s)"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:312
+msgid "originals replaced"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:313
+msgid "copies created"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:320
+#: includes/admin/class-jobs-page.php:537
+msgid "All"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:322
+#: includes/admin/class-jobs-page.php:424
+msgid "Skipped"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:324
+#: includes/admin/class-jobs-page.php:426
+msgid "Pending"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:339
+msgid "Start"
+msgstr ""
+
+#. translators: %d: failed pages
+#: includes/admin/class-jobs-page.php:344
+#, php-format
+msgid "Retry %d failed"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:372
+msgid "Restore these pages to their original Elementor version?"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:373
+msgid "Move the pages this job created to the Trash?"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:379
+msgid "Undo job"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:394
+msgid "Nothing here."
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:399
+msgid "Result"
+msgstr ""
+
+#. translators: 1: current page, 2: total pages
+#: includes/admin/class-jobs-page.php:411
+#: includes/admin/class-jobs-page.php:579
+#, php-format
+msgid "Page %1$d of %2$d"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:452
+msgid "Open in Divi 5 builder"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:456
+msgid "Edit original"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:460
+msgid "Retry"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:466
+#: includes/admin/class-jobs-page.php:569
+msgid "Mark as converted"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:468
+msgid "Undo mark"
+msgstr ""
+
+#. translators: %s: number of pages
+#: includes/admin/class-jobs-page.php:507
+#, php-format
+msgid "Pending — %s waiting"
+msgstr ""
+
+#. translators: %s: number of pages
+#: includes/admin/class-jobs-page.php:513
+#, php-format
+msgid "%s page failed and is not listed here — retry it from its job below."
+msgid_plural "%s pages failed and are not listed here — retry them from their job below."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-jobs-page.php:519
+msgid "Nothing is waiting to be converted. New Elementor pages will show up here."
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:553
+msgid "No pending pages match."
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:557
+msgid "Select all on this page"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:598
+msgid "Convert selected"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:600
+msgid "Mark selected as converted"
+msgstr ""
+
+#. translators: %s: number of pages
+#: includes/admin/class-jobs-page.php:605
+msgid "The free plugin converts one page at a time. Pro converts a whole site in one job."
+msgstr ""
+
+#. translators: %s: number of pages
+#: includes/admin/class-jobs-page.php:608
+#, php-format
+msgid "Convert all %s remaining"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:621
+msgid "Start a conversion job"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:623
+msgid "How should the pages be converted?"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:624
+msgid "Create a copy of each page as a draft — your Elementor pages stay exactly as they are"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:625
+msgid "Replace the original pages — they keep their address, ID and menu entries"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:627
+msgid "Replacing changes your live pages. A backup of each Elementor version is kept on the page and Undo restores it, but edits you make in Divi afterwards are lost if you undo. Take a full site backup before you start."
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:630
+msgid "Start conversion"
+msgstr ""
+
+#: includes/admin/class-jobs-page.php:631
+msgid "Cancel"
 msgstr ""
 
 #: includes/admin/class-not-carried-over-renderer.php:35
@@ -715,24 +1114,6 @@ msgstr ""
 msgid "Nothing to show — this page converted to no Divi modules."
 msgstr ""
 
-#. translators: 1: new price e.g. $25/yr, 2: previous price e.g. $49/yr
-#: includes/admin/class-price-drop-notice.php:120
-#, php-format
-msgid "Pro is now %1$s — down from %2$s."
-msgstr ""
-
-#: includes/admin/class-price-drop-notice.php:125
-msgid "Same unlimited-sites license: full kit ZIP import, global headers and footers, and global styles."
-msgstr ""
-
-#: includes/admin/class-price-drop-notice.php:141
-msgid "Get Pro"
-msgstr ""
-
-#: includes/admin/class-price-drop-notice.php:143
-msgid "Dismiss"
-msgstr ""
-
 #. translators: %d: number of pages converted so far
 #: includes/admin/class-review-prompt.php:161
 #, php-format
@@ -757,19 +1138,29 @@ msgstr ""
 msgid "Don't ask again"
 msgstr ""
 
-#: includes/conversion/class-installed-post-source.php:47
-msgid "That page no longer exists."
+#. translators: %s: date the page was converted
+#: includes/conversion/class-conversion-committer.php:118
+#, php-format
+msgid "Already converted on %s, so it was skipped."
 msgstr ""
 
-#: includes/conversion/class-installed-post-source.php:57
+#: includes/conversion/class-conversion-committer.php:119
+msgid "an earlier run"
+msgstr ""
+
+#: includes/conversion/class-installed-post-source.php:45
 msgid "No Elementor content found on that page."
 msgstr ""
 
-#: includes/conversion/class-installed-post-source.php:79
+#: includes/conversion/class-installed-post-source.php:52
+msgid "That page no longer exists."
+msgstr ""
+
+#: includes/conversion/class-installed-post-source.php:84
 msgid "Imported Page"
 msgstr ""
 
-#: includes/conversion/class-installed-post-source.php:111
+#: includes/conversion/class-installed-post-source.php:116
 msgid "Unknown page"
 msgstr ""
 
@@ -793,12 +1184,12 @@ msgstr ""
 msgid "Elementor to Divi 5 Converter is inactive: this site runs Divi %1$s, and the converter writes Divi 5 block content that requires Divi %2$s or newer. Converting now would produce pages that render blank."
 msgstr ""
 
-#: includes/history/class-import-rollback.php:157
+#: includes/history/class-import-rollback.php:165
 msgid "Undo did not run: this site is configured to empty the Trash immediately, so nothing could be trashed. No pages were changed."
 msgstr ""
 
 #. translators: %d: number of pages put back to their original Elementor version.
-#: includes/history/class-import-rollback.php:174
+#: includes/history/class-import-rollback.php:182
 #, php-format
 msgid "%d page was restored to its original Elementor version."
 msgid_plural "%d pages were restored to their original Elementor version."
@@ -806,7 +1197,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of pages moved to the Trash.
-#: includes/history/class-import-rollback.php:189
+#: includes/history/class-import-rollback.php:197
 #, php-format
 msgid "%d page was moved to the Trash. You can restore it from Posts → Trash if needed."
 msgid_plural "%d pages were moved to the Trash. You can restore them from Posts → Trash if needed."
@@ -814,13 +1205,49 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %d: number of pages skipped.
-#: includes/history/class-import-rollback.php:204
+#: includes/history/class-import-rollback.php:212
 #, php-format
 msgid "%d page was skipped because it is no longer owned by this plugin (already gone, or replaced since the import)."
 msgid_plural "%d pages were skipped because they are no longer owned by this plugin (already gone, or replaced since the import)."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/history/class-import-rollback.php:216
+#: includes/history/class-import-rollback.php:224
 msgid "Nothing to undo: this import had already been undone or had no pages left to trash."
+msgstr ""
+
+#: includes/jobs/class-job-service.php:73
+msgid "Choose whether to create copies or replace the original pages."
+msgstr ""
+
+#: includes/jobs/class-job-service.php:88
+msgid "There is nothing to convert."
+msgstr ""
+
+#: includes/jobs/class-job-service.php:93
+msgid "Converting more than one page at a time is a Pro feature."
+msgstr ""
+
+#: includes/jobs/class-job-service.php:100
+msgid "This job is large. Choose whether to create copies or replace the original pages."
+msgstr ""
+
+#: includes/jobs/class-job-service.php:103
+msgid "Tick the confirmation box to start this job."
+msgstr ""
+
+#: includes/jobs/class-job-service.php:273
+msgid "The conversion failed."
+msgstr ""
+
+#: includes/jobs/class-job-service.php:281
+msgid "The server stopped while converting this page (a timeout or memory limit). It was not retried automatically — use Retry to try it again."
+msgstr ""
+
+#: includes/jobs/class-job-service.php:429
+msgid "Marked as converted manually."
+msgstr ""
+
+#: includes/jobs/class-job-service.php:458
+msgid "The manual mark was removed — this page has not been converted."
 msgstr ""

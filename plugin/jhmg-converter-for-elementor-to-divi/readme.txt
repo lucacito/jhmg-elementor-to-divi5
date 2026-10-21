@@ -3,7 +3,7 @@ Contributors: lucaslopvet
 Tags: divi migration, elementor export, page builder converter, elementor to divi, divi 5
 Requires at least: 5.9
 Tested up to: 7.1
-Stable tag: 3.2.1
+Stable tag: 3.3.0
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -17,6 +17,8 @@ Convert Elementor pages and templates into native Divi 5 blocks. If Elementor is
 Click **Check this page** first: the report shows the structure the conversion will produce and names anything that cannot be carried over. Converting creates a new Divi draft and leaves the Elementor page alone, unless you tick **Replace the original page** to convert it in place. Either way it can be undone from the import history.
 
 Supported: Elementor's core widgets and layouts, plus Essential Addons, Header Footer Elementor, ElementsKit, Animation Addons for Elementor and Premium Addons widgets. Converted pages render as designed in Divi 5.7.4: backgrounds, typography, buttons, galleries, counters and add-on modules included.
+
+For a large site, **Tools → Conversion Jobs** tracks what is converted, pending and failed, and lets you resume, retry and undo.
 
 The free plugin converts unlimited single pages. The [Pro add-on](https://divi5lab.com/plugins/elementor-to-divi-5) converts whole sites from a Kit ZIP, turns headers and footers into Divi Theme Builder layouts, and applies your kit's global colours, fonts and button styles.
 
@@ -99,9 +101,14 @@ commonly missing Elementor widgets get built first.
 
 == Changelog ==
 
-= 3.2.1 =
-* Changed: the upgrade screen now shows Pro's current price, $47/yr
-* Removed: the earlier "Pro price dropped" announcement, which no longer applies
+= 3.3.0 =
+* New: **Conversion Jobs** (Tools → Conversion Jobs) for converting a large site over many sessions. A bar always shows how many pages are converted, pending and failed. The pending list shows every Elementor page not yet converted, filterable by post type and title. Every run is saved as a job you can reopen down to each page, with links to edit it and open it in the Divi 5 builder; finished jobs fold away, unfinished ones stay open
+* New: an interrupted job can be resumed, failed pages can be retried one at a time or all at once, and a page you fixed by hand can be marked as converted so it leaves the pending list
+* New: a job never converts a page twice, and pages you converted with an earlier version are recognised as converted automatically
+* New: a job of more than 50 pages makes you choose between creating copies and replacing the originals, and confirm the choice. More than one page in a job is part of Pro; the free plugin still converts one page at a time
+* Changed: converting a page now records on that page that it has been converted, and Undo removes the record
+* Changed: the upgrade screen shows Pro's current price, $47/yr, and the old price announcement is gone
+* Dev: adds two small database tables (wp_edc_jobs and wp_edc_job_items) that are removed when the plugin is deleted. Verified on a 12,000-page site: the pending count takes under a tenth of a second
 
 = 3.2.0 =
 * New: **Replace the original page** — an optional checkbox on the conversion report converts a page in place instead of creating a copy, so it keeps its address, ID and menu entries (and stays published if it was). Nothing is lost: the Elementor version is backed up on the page, and Undo restores it. Off by default; headers, footers and uploaded files are always added as new items
@@ -197,8 +204,8 @@ commonly missing Elementor widgets get built first.
 
 == Upgrade Notice ==
 
-= 3.2.1 =
-Shows Pro's current price ($47/yr) on the upgrade screen and removes an outdated price announcement. No change to conversions.
+= 3.3.0 =
+New Conversion Jobs screen (Tools → Conversion Jobs): run a large site in many sessions with a live converted / pending / failed count, resume, retry and Undo. Adds two small database tables. Also updates the Pro price shown on the upgrade screen.
 
 = 3.2.0 =
 New: tick "Replace the original page" to convert a page in place and keep its address and menu entries, with the Elementor version backed up and restorable from Undo. Fixes pages from Elementor kits being named after their database ID.
