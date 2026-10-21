@@ -30,8 +30,17 @@ class Plugin {
             // when it actually runs, on an admin hook, by which time it is.
             add_action( 'admin_notices', [ \ElementorDivi5Converter\Helpers\DiviRequirement::class, 'render_notice' ] );
 
+            // A plugin update does not fire the activation hook, so the job
+            // tables are also (cheaply) checked on every admin load.
+            add_action( 'admin_init', [ \ElementorDivi5Converter\Jobs\Schema::class, 'maybe_upgrade' ] );
+            // After the tables, so a site that converted pages before job tracking
+            // existed sees them as converted rather than pending.
+            add_action( 'admin_init', [ \ElementorDivi5Converter\Jobs\Backfill::class, 'maybe_run' ], 20 );
+
             ( new \ElementorDivi5Converter\Admin\AdminPage() )->init();
             ( new \ElementorDivi5Converter\Admin\DirectConversionPage() )->init();
+            ( new \ElementorDivi5Converter\Admin\JobsPage() )->init();
+            ( new \ElementorDivi5Converter\Admin\JobsAjax() )->init();
             ( new \ElementorDivi5Converter\Admin\ReviewPrompt() )->init();
             ( new \ElementorDivi5Converter\Admin\HfeConflictNotice() )->init();
             ( new \ElementorDivi5Converter\History\ImportRollback() )->init();

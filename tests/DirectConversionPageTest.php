@@ -163,7 +163,11 @@ class DirectConversionPageTest extends TestCase {
         ( new DirectConversionPage() )->convert( [ $id ] );
 
         $this->assertEquals( $source_before, $GLOBALS['__test_posts'][ $id ] );
-        $this->assertSame( $meta_before, $GLOBALS['__test_postmeta'][ $id ] );
+
+        // Only the "converted" flag is added to the source; see ConversionFlagTest.
+        $meta_after = $GLOBALS['__test_postmeta'][ $id ];
+        unset( $meta_after['_edc_converted_at'], $meta_after['_edc_converted_version'] );
+        $this->assertSame( $meta_before, $meta_after );
     }
 
     public function test_convert_defaults_to_a_draft(): void {

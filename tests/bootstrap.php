@@ -128,6 +128,10 @@ if ( ! function_exists( 'update_post_meta' ) ) {
 
     function get_post_meta( $post_id, $meta_key = '', $single = false ) {
         $id = (int) $post_id;
+        // Core returns false (not '' or []) for an invalid object id.
+        if ( $id <= 0 ) {
+            return false;
+        }
         if ( $meta_key === '' ) {
             return $GLOBALS['__test_postmeta'][ $id ] ?? [];
         }
@@ -224,6 +228,16 @@ if ( ! function_exists( 'wp_insert_post' ) ) {
             }
             if ( $key !== '' && (string) get_post_meta( $id, $key, true ) !== (string) $value ) {
                 continue;
+            }
+            // Like core: 'any' skips trashed posts, an explicit list is exact.
+            // Absent keeps the old behaviour (no filtering) for existing callers.
+            if ( isset( $args['post_status'] ) ) {
+                $status   = $post->post_status ?? 'publish';
+                $wanted   = (array) $args['post_status'];
+                $accepted = in_array( 'any', $wanted, true ) ? $status !== 'trash' : in_array( $status, $wanted, true );
+                if ( ! $accepted ) {
+                    continue;
+                }
             }
             $matches[] = (int) $id;
         }
@@ -650,6 +664,9 @@ if ( ! function_exists( 'wp_trash_post' ) ) {
             return false;
         }
         $GLOBALS['__test_trashed'][] = $post_id;
+        if ( isset( $GLOBALS['__test_posts'][ $post_id ] ) ) {
+            $GLOBALS['__test_posts'][ $post_id ]->post_status = 'trash';
+        }
         return (object) [ 'ID' => $post_id ];
     }
 }
@@ -751,4 +768,21 @@ if ( ! function_exists( 'wp_http_validate_url' ) ) {
     function wp_http_validate_url( $url ) {
         return filter_var( $url, FILTER_VALIDATE_URL ) ? $url : false;
     }
+}
+if ( ! function_exists( 'get_date_from_gmt' ) ) {
+    function get_date_from_gmt( $gmt, $format = 'Y-m-d H:i:s' ): string { return gmdate( $format, strtotime( $gmt . ' UTC' ) ); }
+}
+if ( ! function_exists( 'number_format_i18n' ) ) {
+    function number_format_i18n( $n, $decimals = 0 ): string { return number_format( (float) $n, (int) $decimals ); }
+}
+if ( ! function_exists( 'esc_textarea' ) ) {
+    function esc_textarea( $t ): string { return htmlspecialchars( (string) $t, ENT_QUOTES ); }
+}
+if ( ! function_exists( 'get_post_types' ) ) {
+    function get_post_types( $args = [], $output = 'names' ): array {
+        return [ 'page' => 'page', 'post' => 'post', 'attachment' => 'attachment', 'elementor_library' => 'elementor_library' ];
+    }
+}
+if ( ! function_exists( 'esc_attr__' ) ) {
+    function esc_attr__( string $text, string $domain = 'default' ): string { return htmlspecialchars( $text, ENT_QUOTES ); }
 }

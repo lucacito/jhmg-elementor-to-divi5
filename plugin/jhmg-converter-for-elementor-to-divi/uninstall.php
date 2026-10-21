@@ -16,3 +16,8 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 // Remove premium activation flag. Defensive: harmless if Pro was never
 // installed, and Pro's own uninstall.php also clears its edcp_* options.
 delete_option( 'edc_premium_active' );
+
+// Conversion Jobs history. The post meta the converter wrote (_edc_*) is
+// deliberately left alone: it is the user's record of what was converted.
+require_once plugin_dir_path( __FILE__ ) . 'includes/jobs/class-schema.php';
+\ElementorDivi5Converter\Jobs\Schema::drop();

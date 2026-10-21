@@ -96,7 +96,13 @@ class ConversionCommitterTest extends TestCase {
         ( new ConversionCommitter() )->commit( $plan );
 
         $this->assertEquals( $source_post_before, $GLOBALS['__test_posts'][ 77 ] );
-        $this->assertSame( $source_meta_before, $GLOBALS['__test_postmeta'][ 77 ] );
+
+        // The one thing a copy conversion adds to its source is the "converted"
+        // flag (the pending list depends on it). Everything else is untouched.
+        $source_meta_after = $GLOBALS['__test_postmeta'][ 77 ];
+        $this->assertArrayHasKey( '_edc_converted_at', $source_meta_after );
+        unset( $source_meta_after['_edc_converted_at'], $source_meta_after['_edc_converted_version'] );
+        $this->assertSame( $source_meta_before, $source_meta_after );
     }
 
     public function test_an_item_carrying_an_error_is_reported_as_a_failure_and_creates_no_post(): void {
