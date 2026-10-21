@@ -3,7 +3,7 @@ Contributors: lucaslopvet
 Tags: divi migration, elementor export, page builder converter, elementor to divi, divi 5
 Requires at least: 5.9
 Tested up to: 7.1
-Stable tag: 3.2.0
+Stable tag: 3.2.1
 Requires PHP: 8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -99,6 +99,10 @@ commonly missing Elementor widgets get built first.
 
 == Changelog ==
 
+= 3.2.1 =
+* Changed: the upgrade screen now shows Pro's current price, $47/yr
+* Removed: the earlier "Pro price dropped" announcement, which no longer applies
+
 = 3.2.0 =
 * New: **Replace the original page** — an optional checkbox on the conversion report converts a page in place instead of creating a copy, so it keeps its address, ID and menu entries (and stays published if it was). Nothing is lost: the Elementor version is backed up on the page, and Undo restores it. Off by default; headers, footers and uploaded files are always added as new items
 * New: Undo now restores replaced pages to their original Elementor version, and still moves copies to the Trash
@@ -192,6 +196,9 @@ commonly missing Elementor widgets get built first.
 * Detailed conversion logging
 
 == Upgrade Notice ==
+
+= 3.2.1 =
+Shows Pro's current price ($47/yr) on the upgrade screen and removes an outdated price announcement. No change to conversions.
 
 = 3.2.0 =
 New: tick "Replace the original page" to convert a page in place and keep its address and menu entries, with the Elementor version backed up and restorable from Undo. Fixes pages from Elementor kits being named after their database ID.

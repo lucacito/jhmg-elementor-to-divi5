@@ -28,10 +28,20 @@ class FreeAdminSurgeryTest extends TestCase {
             'Pro price must live in one constant, not be inlined in copy.'
         );
         $this->assertMatchesRegularExpression(
-            '/const PRO_PRICE\s*=\s*\'\$25\/yr\'/',
+            '/const PRO_PRICE\s*=\s*\'\$47\/yr\'/',
             $admin,
-            'PRO_PRICE must match the live divi5lab.com price ($25/yr).'
+            'PRO_PRICE must match the live divi5lab.com price ($47/yr).'
         );
+    }
+
+    /**
+     * The "Pro is now $25/yr, down from $49/yr" announcement was a campaign. At
+     * $47/yr it would be false, so it is retired entirely, not just edited.
+     */
+    public function test_the_price_drop_announcement_is_retired(): void {
+        $plugin = (string) file_get_contents( self::FREE . '/includes/helpers/class-plugin.php' );
+        $this->assertStringNotContainsString( 'PriceDropNotice', $plugin );
+        $this->assertFileDoesNotExist( self::FREE . '/includes/admin/class-price-drop-notice.php' );
     }
 
     /**

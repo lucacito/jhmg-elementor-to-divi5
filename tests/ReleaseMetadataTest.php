@@ -10,9 +10,9 @@ class ReleaseMetadataTest extends TestCase {
         $main   = (string) file_get_contents( self::FREE . '/jhmg-converter-for-elementor-to-divi.php' );
         $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
 
-        $this->assertStringContainsString( 'Version:     3.2.0', $main );
-        $this->assertStringContainsString( "EDC_PLUGIN_VERSION', '3.2.0'", $main );
-        $this->assertStringContainsString( 'Stable tag: 3.2.0', $readme );
+        $this->assertStringContainsString( 'Version:     3.2.1', $main );
+        $this->assertStringContainsString( "EDC_PLUGIN_VERSION', '3.2.1'", $main );
+        $this->assertStringContainsString( 'Stable tag: 3.2.1', $readme );
     }
 
     public function test_readme_discloses_the_external_service(): void {
@@ -61,12 +61,19 @@ class ReleaseMetadataTest extends TestCase {
         );
     }
 
-    public function test_version_is_three_two_zero_everywhere(): void {
+    public function test_version_is_three_two_one_everywhere(): void {
         $main   = (string) file_get_contents( self::FREE . '/jhmg-converter-for-elementor-to-divi.php' );
         $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
 
-        $this->assertMatchesRegularExpression( '/^\s*\*\s*Version:\s*3\.2\.0\s*$/m', $main );
-        $this->assertMatchesRegularExpression( '/^Stable tag:\s*3\.2\.0\s*$/m', $readme );
+        $this->assertMatchesRegularExpression( '/^\s*\*\s*Version:\s*3\.2\.1\s*$/m', $main );
+        $this->assertMatchesRegularExpression( '/^Stable tag:\s*3\.2\.1\s*$/m', $readme );
+    }
+
+    public function test_readme_documents_3_2_1_in_changelog_and_upgrade_notice(): void {
+        $readme = (string) file_get_contents( self::FREE . '/readme.txt' );
+
+        $this->assertSame( 2, substr_count( $readme, '= 3.2.1 =' ), 'a changelog entry and an upgrade notice' );
+        $this->assertStringContainsString( '$47/yr', $readme );
     }
 
     public function test_readme_documents_3_2_0_in_changelog_and_upgrade_notice(): void {

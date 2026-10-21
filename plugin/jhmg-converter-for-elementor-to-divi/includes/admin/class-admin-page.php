@@ -28,7 +28,7 @@ class AdminPage {
      * live price on divi5lab.com. Shipping a stale literal here quotes free users
      * the wrong price with no other symptom.
      */
-    const PRO_PRICE             = '$25/yr';
+    const PRO_PRICE             = '$47/yr';
 
     public function init(): void {
         add_action( 'admin_menu', [ $this, 'register_menu' ] );
@@ -482,7 +482,7 @@ class AdminPage {
                             '<a class="button button-primary button-hero edc-lp-btn-premium" href="%s" target="_blank" rel="noopener">%s</a>',
                             esc_url( 'https://divi5lab.com/plugins/elementor-to-divi-5?utm_source=plugin&utm_medium=upsell&utm_campaign=free-landing' ),
                             esc_html( sprintf(
-                                /* translators: %s: Pro subscription price, e.g. $25/yr */
+                                /* translators: %s: Pro subscription price, e.g. $47/yr */
                                 __( 'Get Pro — %s, unlimited sites', 'jhmg-converter-for-elementor-to-divi' ),
                                 self::PRO_PRICE
                             ) )
@@ -546,7 +546,7 @@ class AdminPage {
                         '<a class="button button-primary button-hero" href="%s" target="_blank" rel="noopener">%s</a>',
                         esc_url( 'https://divi5lab.com/plugins/elementor-to-divi-5?utm_source=plugin&utm_medium=upsell&utm_campaign=free-landing' ),
                         esc_html( sprintf(
-                            /* translators: %s: Pro subscription price, e.g. $25/yr */
+                            /* translators: %s: Pro subscription price, e.g. $47/yr */
                             __( 'Get Pro — %s, unlimited sites', 'jhmg-converter-for-elementor-to-divi' ),
                             self::PRO_PRICE
                         ) )

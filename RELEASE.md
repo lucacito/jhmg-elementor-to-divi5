@@ -109,10 +109,9 @@ svn ci -m "Release <version>"
 
 ## 8. After release
 
-- [ ] `PriceDropNotice::CAMPAIGN_END` — the notice is hard-expired at
-      `2026-10-27` and quotes `$49/yr` as the old price. If the price changed,
-      `AdminPage::PRO_PRICE`, this notice and the divi5lab.com listing must all
-      agree; nothing enforces that.
+- [ ] `AdminPage::PRO_PRICE` must equal the price on divi5lab.com and the
+      Stripe price behind `STRIPE_PRICE_ELEM2DIVI_PRO`. Nothing enforces that
+      across the two repos, so check all three when the price changes.
 - [ ] Watch the wordpress.org support forum for the first few days.
 
 ---
